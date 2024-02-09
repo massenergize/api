@@ -764,7 +764,7 @@ class CampaignTechnologyTestimonial(BaseModel):
         res["community"] = {
             **get_summary_info(self.testimonial.community),
             "alias": get_comm_alias(self.campaign_technology.campaign, self.testimonial.community.id)
-        } if self.testimonial else None
+        } if self.testimonial.community else None
         res["image"] = get_json_if_not_none(self.testimonial.image) if self.testimonial else None
         res["body"] = self.testimonial.body if self.testimonial else None
         res["title"] = self.testimonial.title if self.testimonial else None

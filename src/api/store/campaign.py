@@ -55,14 +55,14 @@ class CampaignStore:
             campaign_id = args.get("id", None)
             if not campaign_id:
                 return None, CustomMassenergizeError("id is required")
-            
+
             campaign = None
             try:
                 uuid_id = UUID(campaign_id, version=4)
                 campaign = Campaign.objects.filter(id=uuid_id, is_deleted=False).first()
             except ValueError:
                 campaign = Campaign.objects.filter(slug=campaign_id, is_deleted=False).first()
-            
+
             if not campaign:
                 return None, CustomMassenergizeError("Campaign with id does not exist")
 
@@ -76,7 +76,6 @@ class CampaignStore:
         try:
             campaign_account_id = args.get("campaign_account_id", None)
             subdomain = args.get("subdomain", None)
-            campaigns = Campaign.objects.filter(is_deleted=False, is_template=False)
 
             if campaign_account_id:
                 campaigns = Campaign.objects.filter(account__id=campaign_account_id)
@@ -177,6 +176,14 @@ class CampaignStore:
                 args.pop("is_approved", None)
                 args.pop("is_published", None)
 
+            if not context.user_is_super_admin:
+                if not context.user_email == campaigns.first().owner.email:
+                    campaign_manager = CampaignManager.objects.filter(user__id=context.user_id, campaign__id=campaign_id)
+                    if not campaign_manager:
+                        return None, NotAuthorizedError()
+
+
+
             if primary_logo:
                 args["primary_logo"] = create_media_file(primary_logo, f"PrimaryLogoFor {campaign_id} Campaign")
             if secondary_logo:
@@ -238,7 +245,7 @@ class CampaignStore:
             campaign_manager_campaign_ids = CampaignManager.objects.filter(user__id=context.user_id, is_deleted=False).values_list('campaign', flat=True)
             campaign_manager_campaigns = Campaign.objects.filter(id__in=campaign_manager_campaign_ids)
             campaigns = campaigns | campaign_manager_campaigns
-            
+
 
             return campaigns.order_by("-created_at"), None
 
@@ -266,13 +273,20 @@ class CampaignStore:
 
             if not campaign:
                 return None, CustomMassenergizeError("campaign with id not found!")
+
+            if not context.user_is_super_admin:
+                if context.user_email != campaign.owner.email:
+                    campaign_manager = CampaignManager.objects.filter(user__id=context.user_id,campaign__id=campaign_id, is_deleted=False)
+                    if not campaign_manager:
+                        return None, CustomMassenergizeError("Not authorized to add manager")
+
             if not email:
                 return None, CustomMassenergizeError("email is required!")
             user = UserProfile.objects.filter(email=email).first()
             if not user:
                 return None, CustomMassenergizeError("user with email not found!")
-            
-            manager,_ = CampaignManager.objects.get_or_create(campaign=campaign, user=user, **args)
+
+            manager, _ = CampaignManager.objects.get_or_create(campaign=campaign, user=user, **args)
             if not _:
                 return None, CustomMassenergizeError("campaign manager already exists!")
             return manager, None
@@ -288,7 +302,7 @@ class CampaignStore:
             campaign_manager = CampaignManager.objects.filter(id=campaign_manager_id).first()
             if not campaign_manager:
                 return None, CustomMassenergizeError("manager with id not found!")
-            
+
             if campaign_manager.is_key_contact:
                 return None, CustomMassenergizeError("Cannot delete key contact!")
 
@@ -298,7 +312,7 @@ class CampaignStore:
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
-        
+
 
     def update_campaign_manager(self, context: Context, args):
         try:
@@ -308,6 +322,13 @@ class CampaignStore:
             campaign_manager = CampaignManager.objects.filter(id=campaign_manager_id)
             if not campaign_manager:
                 return None, CustomMassenergizeError("campaign manager with id not found!")
+
+            # check if user is authorized to update
+            if not context.user_is_super_admin:
+                if context.user_email != campaign_manager.first().campaign.owner.email:
+                    campaign_manager = CampaignManager.objects.filter(user__id=context.user_id,campaign__id=campaign_manager.first().campaign.id, is_deleted=False)
+                    if not campaign_manager:
+                        return None, CustomMassenergizeError("Not authorized to update manager")
 
             campaign_manager.update(**args)
 
@@ -328,7 +349,14 @@ class CampaignStore:
 
             if not community_id:
                 return None, CustomMassenergizeError("community_ids is required!")
-            
+
+            # check if user is authorized to update
+            if not context.user_is_super_admin:
+                if context.user_email != campaign.owner.email:
+                    campaign_manager = CampaignManager.objects.filter(user__id=context.user_id,campaign__id=campaign_id, is_deleted=False)
+                    if not campaign_manager:
+                        return None, CustomMassenergizeError("Not authorized to add community")
+
             campaign_communities = []
             for community_id in community_id:
                 community = Community.objects.filter(id=community_id).first()
@@ -351,16 +379,25 @@ class CampaignStore:
             if not campaign_community_id:
                 return None, CustomMassenergizeError("id is required!")
 
+
             campaign_community = CampaignCommunity.objects.filter(id=campaign_community_id).first()
             if not campaign_community:
                 return None, CustomMassenergizeError("campaign Community with id not found!")
+
+            if not context.user_is_super_admin:
+                if context.user_email != campaign_community.campaign.owner.email:
+                    campaign_manager = CampaignManager.objects.filter(user__id=context.user_id,
+                                                                      campaign__id=campaign_community.campaign.id,
+                                                                      is_deleted=False)
+                    if not campaign_manager:
+                        return None, CustomMassenergizeError("Not authorized to remove community")
 
             campaign_community.delete()
             return campaign_community, None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
-        
+
     def update_campaign_community(self, context: Context, args):
         try:
             extra_links = args.pop("extra_links", [])
@@ -373,6 +410,13 @@ class CampaignStore:
             if extra_links:
                 info = campaign_community.first().info or {}
                 args["info"] = {**info, "extra_links": extra_links}
+
+            # check if user is authorized to update
+            if not context.user_is_super_admin:
+                if context.user_email != campaign_community.first().campaign.owner.email:
+                    campaign_manager = CampaignManager.objects.filter(user__id=context.user_id,campaign__id=campaign_community.first().campaign.id, is_deleted=False)
+                    if not campaign_manager:
+                        return None, CustomMassenergizeError("Not authorized to update community")
 
             campaign_community.update(**args)
 
@@ -394,7 +438,15 @@ class CampaignStore:
 
             if not technology_ids:
                 return None, CustomMassenergizeError("technology_ids is required!")
-            
+
+            # check if user is authorized to update
+            if not context.user_is_super_admin:
+                if context.user_email != campaign.owner.email:
+                    campaign_manager = CampaignManager.objects.filter(user__id=context.user_id,campaign__id=campaign_id, is_deleted=False)
+                    if not campaign_manager:
+                        return None, CustomMassenergizeError("Not authorized to add technology")
+
+
             for technology_id in technology_ids:
                 technology = Technology.objects.filter(id=technology_id).first()
                 if not technology:
@@ -403,7 +455,7 @@ class CampaignStore:
                 CampaignTechnology.objects.get_or_create(campaign=campaign, technology=technology, is_deleted=False)
 
             return CampaignTechnology.objects.filter(campaign=campaign, is_deleted=False), None
-                
+
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
@@ -435,6 +487,12 @@ class CampaignStore:
             ).first()
             if not campaign_technology:
                 return None, CustomMassenergizeError("Campaign Technology with id not found!")
+
+            if not context.user_is_super_admin:
+                if context.user_email != campaign_technology.campaign.owner.email:
+                    campaign_manager = CampaignManager.objects.filter(user__id=context.user_id,campaign__id=campaign_technology.campaign.id, is_deleted=False)
+                    if not campaign_manager:
+                        return None, CustomMassenergizeError("Not authorized to remove technology")
 
             campaign_technology.is_deleted = True
             campaign_technology.save()
@@ -511,12 +569,12 @@ class CampaignStore:
                 return None, CustomMassenergizeError("id is required !")
 
             campaign_technology_testimonial = CampaignTechnologyTestimonial.objects.get(id=campaign_technology_testimonial_id)
-            
+
             is_featured = args.pop("is_featured", campaign_technology_testimonial.is_featured)
-            
+
             if not campaign_technology_testimonial:
                 return None, CustomMassenergizeError("Campaign Technology testimonial with id not found!")
-            
+
             testimonial = campaign_technology_testimonial.testimonial
 
             if image:
@@ -634,6 +692,12 @@ class CampaignStore:
             campaign_technology_testimonial = CampaignTechnologyTestimonial.objects.filter(id= campaign_technology_testimonial_id).first()
             if not campaign_technology_testimonial:
                 return None, CustomMassenergizeError("Campaign Technology testimonial with id not found!")
+
+            if not context.user_is_super_admin:
+                if context.user_email != campaign_technology_testimonial.campaign_technology.campaign.owner.email:
+                    campaign_manager = CampaignManager.objects.filter(user__id=context.user_id,campaign__id=campaign_technology_testimonial.campaign_technology.campaign.id, is_deleted=False)
+                    if not campaign_manager:
+                        return None, CustomMassenergizeError("Not authorized to remove testimonial")
 
             campaign_technology_testimonial.is_deleted = True
             campaign_technology_testimonial.save()
@@ -853,7 +917,7 @@ class CampaignStore:
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
-        
+
 
     def add_campaign_technology_follower(self, context, args):
         try:
@@ -925,10 +989,10 @@ class CampaignStore:
             campaign_technology = CampaignTechnology.objects.filter(id=campaign_technology_id).first()
             if not campaign_technology:
                 return None, CustomMassenergizeError("Campaign technology with id not found!")
-            
+
             link_id = url.split("&link_id=")
             link_id = link_id[1] if len(link_id) > 1 else None
-            
+
             if link_id:
                 campaign_link = CampaignLink.objects.filter(id=link_id).first()
                 if campaign_link:
@@ -971,6 +1035,14 @@ class CampaignStore:
             if not campaign:
                 return None, CustomMassenergizeError("Campaign with id not found!")
 
+            # check if user is authorized to view analytics add user not a manager
+            if not context.user_is_super_admin:
+                if not context.user_email == campaign.owner.email:
+                    campaign_manager = CampaignManager.objects.filter(user__id=context.user_id, campaign__id=campaign_id)
+                    if not campaign_manager:
+                        return None, NotAuthorizedError()
+
+
             stats = generate_analytics_data(campaign.id)
             stats["campaign"] = {
                 "title": campaign.title,
@@ -986,7 +1058,7 @@ class CampaignStore:
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
-        
+
 
     def add_campaign_like(self, context: Context, args):
         try:
@@ -1039,9 +1111,7 @@ class CampaignStore:
     ) -> Tuple[dict, MassEnergizeAPIError]:
         try:
             campaign_technology_id = args.get("campaign_technology_id", None)
-            campaign_technology: CampaignTechnology = CampaignTechnology.objects.filter(
-                id=campaign_technology_id
-            ).first()
+            campaign_technology: CampaignTechnology = CampaignTechnology.objects.filter(id=campaign_technology_id).first()
 
             if not campaign_technology:
                 return None, CustomMassenergizeError("Campaign Technology not found")
@@ -1187,7 +1257,7 @@ class CampaignStore:
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
-    
+
 
     def add_campaign_view(self, context: Context, args):
         try:
@@ -1207,7 +1277,7 @@ class CampaignStore:
             if url:
                 link_id = url.split("&link_id=")
                 link_id = link_id[1] if len(link_id) > 1 else None
-                
+
                 if link_id:
                     campaign_link = CampaignLink.objects.filter(id=link_id).first()
                     if campaign_link:
@@ -1222,7 +1292,7 @@ class CampaignStore:
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
-        
+
 
     def delete_campaign_technology_comment(self, context: Context, args):
         try:
@@ -1245,7 +1315,7 @@ class CampaignStore:
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
-        
+
 
 
     def create_campaign_technology(self, context, args):
@@ -1270,7 +1340,13 @@ class CampaignStore:
             if not account:
                 return None, CustomMassenergizeError("campaign_account with id not found!")
 
-            
+            if not context.user_is_super_admin:
+                if not context.user_email == campaign.owner.email:
+                    campaign_manager = CampaignManager.objects.filter(user__id=context.user_id, campaign__id=campaign_id)
+                    if not campaign_manager:
+                        return None, NotAuthorizedError()
+
+
             if image:
                 name = f"ImageFor {campaign.title} technology"
                 media = Media.objects.create(name=name, file=image)
@@ -1292,9 +1368,9 @@ class CampaignStore:
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
-        
 
-    
+
+
     def list_campaign_communities_events(self, context: Context, args):
         try:
             campaign_id = args.pop("campaign_id", None)
@@ -1340,8 +1416,8 @@ class CampaignStore:
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
-        
-    
+
+
     def add_campaign_technology_testimonial(self, context:Context, args:dict):
         try:
             technology_id = args.pop("technology_id", None)
@@ -1349,14 +1425,21 @@ class CampaignStore:
             testimonial_ids = args.pop("testimonial_ids", [])
             if not campaign_id and not technology_id:
                 return None, CustomMassenergizeError("campaign_id and technology_id are required !")
-            
+
             campaign_technology = CampaignTechnology.objects.filter(campaign__id=campaign_id, technology__id=technology_id, is_deleted=False).first()
             if not campaign_technology:
                 return None, CustomMassenergizeError("Campaign Technology  not found!")
-            
+
             if not testimonial_ids:
                 return None, CustomMassenergizeError("testimonial_ids is required !")
-            
+
+            # check if user is authorized to add testimonial
+            if not context.user_is_super_admin:
+                if context.user_email != campaign_technology.campaign.owner.email:
+                    campaign_manager = CampaignManager.objects.filter(user__id=context.user_id, campaign__id=campaign_id, is_deleted=False)
+                    if not campaign_manager:
+                        return None, NotAuthorizedError()
+
             testimonials = []
             for testimonial_id in testimonial_ids:
                 testimonial = Testimonial.objects.get(pk=testimonial_id, is_deleted=False)
@@ -1365,42 +1448,53 @@ class CampaignStore:
                 tech_testimonial.is_imported = True
                 tech_testimonial.save()
 
-                testimonials.append(tech_testimonial)
+                testimonials.append(tech_testimonial.simple_json())
 
-            return [testimonial.simple_json() for testimonial in testimonials], None
+            return testimonials, None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
-        
+
 
     def remove_campaign_technology_event(self, context:Context, args:dict):
         try:
             tech_event_id = args.pop("id", None)
             if not tech_event_id:
                 return None, CustomMassenergizeError("id is required !")
-            
+
             campaign_technology_event = CampaignTechnologyEvent.objects.filter(pk=tech_event_id).first()
             if not campaign_technology_event:
                 return None, CustomMassenergizeError("Campaign Technology Event not found!")
-            
+
             campaign_technology_event.delete()
 
             return campaign_technology_event, None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
-        
-    
+
+
     def update_campaign_key_contact(self, context:Context, args:dict):
         try:
             manager_id = args.pop("manager_id", None)
             campaign_id = args.pop("campaign_id", None)
             if not campaign_id:
                 return None, CustomMassenergizeError("campaign_id is required !")
-            
+
+            campaign = Campaign.objects.get(id=campaign_id, is_deleted=False)
+            if not campaign:
+                return None, CustomMassenergizeError("Campaign with id not found!")
+
             if not manager_id:
                 return None, CustomMassenergizeError("manager_id is required !")
-            # unassign the existing key contact
+
+            if not context.user_is_super_admin:
+                if not context.user_email == campaign.owner.email:
+                    campaign_manager = CampaignManager.objects.filter(user__id=context.user_id,campaign__id=campaign_id)
+                    if not campaign_manager:
+                        return None, NotAuthorizedError()
+
+
             campaign_managers = CampaignManager.objects.filter(campaign__id=campaign_id, is_deleted=False)
             campaign_managers.update(is_key_contact=False)
             # assign the new key contact
@@ -1409,10 +1503,9 @@ class CampaignStore:
                 return None, CustomMassenergizeError("Campaign Manager not found!")
             campaign_manager.is_key_contact = True
             campaign_manager.save()
-        
+
 
             return campaign_managers.order_by("-created_at"), None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
-        
