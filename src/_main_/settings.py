@@ -43,9 +43,6 @@ IS_PROD = False
 IS_CANARY = False
 IS_LOCAL = False
 
-if DJANGO_ENV == "local":
-    IS_LOCAL = True
-
 try:
     if IS_PROD:
         env_path = Path('.') / 'prod.env'
