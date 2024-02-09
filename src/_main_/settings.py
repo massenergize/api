@@ -41,7 +41,7 @@ if DJANGO_ENV == "local":
 # Database selection, development DB unless one of these chosen
 IS_PROD = False
 IS_CANARY = False
-IS_LOCAL = False
+IS_LOCAL = True
 
 try:
     if IS_PROD:
@@ -52,9 +52,7 @@ try:
         env_path = Path('.') / 'local.env'
     else:
         env_path = Path('.') / 'dev.env'
-    if not is_test_mode():
-         load_dotenv(dotenv_path=env_path, verbose=True)
-
+    load_dotenv(dotenv_path=env_path, verbose=True)
 except Exception:
     load_dotenv()
 
