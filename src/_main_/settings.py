@@ -40,7 +40,7 @@ if DJANGO_ENV == "local":
 
 # Database selection, development DB unless one of these chosen
 IS_PROD = False
-IS_CANARY = False
+IS_CANARY = True
 IS_LOCAL = False
 
 try:
@@ -52,9 +52,7 @@ try:
         env_path = Path('.') / 'local.env'
     else:
         env_path = Path('.') / 'dev.env'
-
     load_dotenv(dotenv_path=env_path, verbose=True)
-
 except Exception:
     load_dotenv()
 
@@ -84,7 +82,7 @@ ALLOWED_HOSTS = [
 
 if RUN_SERVER_LOCALLY:
     ALLOWED_HOSTS = ['*']
-
+    
 
 INSTALLED_APPS = [
     # 'channels',
@@ -281,9 +279,9 @@ USE_L10N = True
 USE_TZ = True
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_USE_TLS = True
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
+EMAIL_USE_TLS = True 
+EMAIL_HOST = 'smtp.gmail.com' 
+EMAIL_PORT = 587 
 EMAIL_HOST_USER = os.environ.get('EMAIL')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD')
