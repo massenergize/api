@@ -90,7 +90,7 @@ def get_technology_details(technology_id, for_campaign=False):
     tech = Technology.objects.get(id=technology_id)
     coaches = tech.technology_coach.filter(is_deleted=False)
     incentives = tech.technology_overview.filter(is_deleted=False)
-    vendors = TechnologyVendor.objects.filter(technology__id=technology_id, is_deleted=False).order_by("vendor_name")
+    vendors = TechnologyVendor.objects.filter(technology__id=technology_id, is_deleted=False).order_by("vendor__name")
     deals = tech.technology_deal.filter(is_deleted=False)
     technology_actions = tech.technology_action.filter(is_deleted=False)
 
