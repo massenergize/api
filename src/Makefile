@@ -9,7 +9,7 @@ init:
 env=remote
 export DJANGO_ENV=$(env)
 start:
-	python3 deployment/prepare_to_deploy.py local 1
+ 	DJANGO_ENV=local python3 deployment/prepare_to_deploy.py local 1
 	DJANGO_ENV=local python3 manage.py runserver
 .PHONY: start
 
@@ -110,8 +110,6 @@ migrate:
 	python manage.py makemigrations
 	python manage.py migrate
 
-
-create-default-template:
-	python manage.py create-base-template
-
-.PHONY: create-default-template
+migrate-local:
+	DJANGO_ENV=local python manage.py makemigrations
+	DJANGO_ENV=local python manage.py migrate

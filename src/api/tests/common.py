@@ -154,8 +154,8 @@ def makeAction(**kwargs):
 
 
 def makeAdminGroup(**kwargs):
-    key = round(time.time() * 1000)
-    name = kwargs.get("name") or f"New Group - {key}"
+    key = datetime.now()
+    name = kwargs.get("name") or f"New Group - {str(key)}"
     members = kwargs.pop("members")
     group, exists= CommunityAdminGroup.objects.get_or_create(**{**kwargs, "name": name})
     if members:
