@@ -52,8 +52,8 @@ try:
         env_path = Path('.') / 'local.env'
     else:
         env_path = Path('.') / 'dev.env'
-
-    load_dotenv(dotenv_path=env_path, verbose=True)
+    if not is_test_mode():
+         load_dotenv(dotenv_path=env_path, verbose=True)
 
 except Exception:
     load_dotenv()
