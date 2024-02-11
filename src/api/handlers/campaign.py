@@ -61,19 +61,17 @@ class CampaignHandler(RouteHandler):
 
         self.add("/campaigns.technology.events.add", self.add_campaign_technology_event)
         self.add("/campaigns.technology.events.remove", self.remove_campaign_technology_event)
-        self.add("/campaigns.technology.events.list", self.list_campaign_technology_event)
+        self.add("/campaigns.technology.events.list", self.list_campaign_technology_event) # Not used at the moment
 
 
         self.add("/campaigns.testimonials.list", self.list_campaign_technology_testimonials)
         self.add("/campaigns.comments.list", self.list_campaign_technology_comments)
-        self.add("/campaigns.technologies.list", self.list_campaign_technologies)
+        self.add("/campaigns.technologies.list", self.list_campaign_technologies) # Not used at the moment
         self.add("/campaigns.managers.list", self.list_campaign_managers)
         self.add("/campaigns.communities.list", self.list_campaign_communities)
 
-
-
         self.add("/campaigns.links.generate", self.generate_campaign_links)
-        self.add("/campaigns.links.visits.count", self.campaign_link_visits_count)
+        self.add("/campaigns.links.visits.count", self.campaign_link_visits_count) # Not used at the moment
 
         self.add("/campaigns.follow", self.add_campaign_follower)
         self.add("/campaigns.technology.follow", self.add_campaign_technology_follower)
@@ -817,12 +815,7 @@ class CampaignHandler(RouteHandler):
         context: Context = request.context
         args: dict = context.args
 
-        (self.validator
-         .expect("campaign_id", str, is_required=True)
-         .expect("zipcode", str, is_required=False)
-         .expect("email", str, is_required=False)
-          .expect("community", str, is_required=False)
-         )
+        self.validator.expect("campaign_id", str, is_required=True)
         args, err = self.validator.verify(args)
         if err:
           return err
@@ -1030,7 +1023,7 @@ class CampaignHandler(RouteHandler):
     
 
 
-
+    @admins_only
     def list_campaign_communities_events(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -1046,6 +1039,7 @@ class CampaignHandler(RouteHandler):
           return err
         return MassenergizeResponse(data=res)
     
+    @admins_only
     def list_campaign_communities_testimonials(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -1061,7 +1055,7 @@ class CampaignHandler(RouteHandler):
           return err
         return MassenergizeResponse(data=res)
     
-
+    @admins_only
     def list_campaign_communities_vendors(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -1095,7 +1089,7 @@ class CampaignHandler(RouteHandler):
           return err
         return MassenergizeResponse(data=res)
     
-
+    @admins_only
     def remove_campaign_technology_event(self, request):
       context: Context = request.context
       args: dict = context.args

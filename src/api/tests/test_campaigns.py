@@ -2,9 +2,9 @@ import datetime
 
 from django.test import TestCase, Client
 from api.tests.common import signinAs, setupCC, createUsers, makeCommunity, makeUser, make_technology, createImage, \
-    makeTestimonial
+    makeTestimonial, makeEvent
 from _main_.utils.utils import Console
-from apps__campaigns.models import Campaign, CampaignAccount, CampaignManager, CampaignCommunity, CampaignTechnology, \
+from apps__campaigns.models import Campaign, CampaignAccount, CampaignManager, CampaignCommunity, CampaignTechnology, CampaignTechnologyEvent, \
     CampaignTechnologyTestimonial, Comment
 
 
@@ -16,7 +16,6 @@ class CampaignsIntegrationTestCase(TestCase):
         pass
 
     def setUp(self):
-        Console.underline(f"Testing Campaigns API Endpoints")
         self.client = Client()
         self.USER, self.CADMIN, self.SADMIN = createUsers()
         signinAs(self.client, self.SADMIN)
@@ -26,6 +25,8 @@ class CampaignsIntegrationTestCase(TestCase):
         self.COMMUNITY_1 = makeCommunity()
         self.COMMUNITY_2 = makeCommunity()
         self.COMMUNITY_3 = makeCommunity()
+        self.event_1 = makeEvent()
+        self.event_2 = makeEvent()
 
         self.CAMPAIGN_ACCOUNT = CampaignAccount.objects.create(**{
             "name": "Test Campaign Account",
@@ -76,6 +77,10 @@ class CampaignsIntegrationTestCase(TestCase):
             'community': self.COMMUNITY_1,
             'user': self.USER,
         })
+        self.EVENT = CampaignTechnologyEvent.objects.create(**{
+            "campaign_technology": self.CAMPAIGN_TECHNOLOGY,
+            "event": self.event_1,
+        })
 
     def make_request(self, endpoint, data):
         return self.client.post(f'/api/{endpoint}', data=data, format='multipart').json()
@@ -110,8 +115,7 @@ class CampaignsIntegrationTestCase(TestCase):
         signinAs(self.client, self.CADMIN)
         response = self.make_request("campaigns.list", {})
         self.assertEqual(response['success'], True)
-        self.assertEqual(len(response['data']),
-                         1)  # one because the community admin is the owner of the campaign(CAMPAIGN_TO_DELETE)
+        self.assertEqual(len(response['data']),1)  # one because the community admin is the owner of the campaign(CAMPAIGN_TO_DELETE)
 
         Console.header("Testing the campaigns.list endpoint as a user.")
         signinAs(self.client, self.USER)
@@ -155,6 +159,7 @@ class CampaignsIntegrationTestCase(TestCase):
         signinAs(self.client, self.USER)
         response = self.make_request("campaigns.createFromTemplate", payload)
         self.assertEqual(response['success'], False)
+        self.assertEqual(response['error'], "permission_denied")
 
     def test_update_campaign(self):
         payload = {"id": self.CAMPAIGN.id, "title": "UPDATED TITLE", "description": "UPDATED DESCRIPTION", }
@@ -175,6 +180,7 @@ class CampaignsIntegrationTestCase(TestCase):
         signinAs(self.client, self.USER)
         response = self.make_request("campaigns.update", payload)
         self.assertEqual(response['success'], False)
+        self.assertEqual(response['error'], "permission_denied")
 
     def test_delete_campaign(self):
         payload = {"id": self.CAMPAIGN_TO_DELETE.id}
@@ -192,6 +198,7 @@ class CampaignsIntegrationTestCase(TestCase):
         signinAs(self.client, self.USER)
         response = self.make_request("campaigns.delete", payload)
         self.assertEqual(response['success'], False)
+        self.assertEqual(response['error'], "permission_denied")
 
     def test_get_campaign_analytics(self):
         Console.header("Testing the campaigns.get_campaign_analytics endpoint as a super admin.")
@@ -213,25 +220,26 @@ class CampaignsIntegrationTestCase(TestCase):
         signinAs(self.client, self.USER)
         response = self.make_request("campaigns.stats.get", {"campaign_id": self.CAMPAIGN.id})
         self.assertEqual(response['success'], False)
+        self.assertEqual(response['error'], "permission_denied")
+
 
     def test_add_campaign_manager(self):
         Console.header("Testing the campaigns.add_manager endpoint as a super admin.")
+        payload = {"campaign_id": self.CAMPAIGN.id, "email": self.USER.email}
         signinAs(self.client, self.SADMIN)
-        response = self.make_request("campaigns.managers.add",
-                                     {"campaign_id": self.CAMPAIGN.id, "email": self.USER.email})
+        response = self.make_request("campaigns.managers.add", payload)
         self.assertEqual(response['success'], True)
 
         Console.header("Testing the campaigns.add_manager endpoint as a community admin.")
         signinAs(self.client, self.CADMIN)
-        response = self.make_request("campaigns.managers.add",
-                                     {"campaign_id": self.CAMPAIGN.id, "email": self.USER.email})
+        response = self.make_request("campaigns.managers.add", payload)
         self.assertEqual(response['success'], False)
 
         Console.header("Testing the campaigns.add_manager endpoint as a user.")
         signinAs(self.client, self.USER)
-        response = self.make_request("campaigns.managers.add",
-                                     {"campaign_id": self.CAMPAIGN.id, "email": self.USER.email})
+        response = self.make_request("campaigns.managers.add",payload)
         self.assertEqual(response['success'], False)
+        self.assertEqual(response['error'], "permission_denied")
 
     def test_remove_campaign_manager(self):
         payload = {"campaign_manager_id": self.CAMPAIGN_MANAGER.id, }
@@ -249,6 +257,7 @@ class CampaignsIntegrationTestCase(TestCase):
         signinAs(self.client, self.USER)
         response = self.make_request("campaigns.managers.remove", payload)
         self.assertEqual(response['success'], False)
+        self.assertEqual(response['error'], "permission_denied")
 
     def test_update_campaign_managers(self):
         payload = {"campaign_manager_id": self.CAMPAIGN_MANAGER.id, "role": "Creator", "is_key_contact": True}
@@ -268,6 +277,7 @@ class CampaignsIntegrationTestCase(TestCase):
         signinAs(self.client, self.USER)
         response = self.make_request("campaigns.managers.update", payload)
         self.assertEqual(response['success'], False)
+        self.assertEqual(response['error'], "permission_denied")
 
     def test_update_campaign_key_contact(self):
         payload = {"campaign_id": self.CAMPAIGN.id, "manager_id": self.CAMPAIGN_MANAGER.id}
@@ -285,6 +295,7 @@ class CampaignsIntegrationTestCase(TestCase):
         signinAs(self.client, self.USER)
         response = self.make_request("campaigns.managers.updateKeyContact", payload)
         self.assertEqual(response['success'], False)
+        self.assertEqual(response['error'], "permission_denied")
 
     # Test case for adding a community to a campaign
     def test_add_campaign_community(self):
@@ -310,8 +321,9 @@ class CampaignsIntegrationTestCase(TestCase):
         response = self.make_request("campaigns.communities.add",
                                      {"campaign_id": self.CAMPAIGN.id, "community_ids": [self.COMMUNITY_3.id]})
         self.assertEqual(response['success'], False)
+        self.assertEqual(response['error'], "permission_denied")
 
-    # Test case for removing a community from a campaign
+
     def test_remove_campaign_community(self):
         Console.header("Testing the campaigns.communities.remove endpoint")
         # Sign in as a super admin or community admin
@@ -329,6 +341,7 @@ class CampaignsIntegrationTestCase(TestCase):
         signinAs(self.client, self.USER)
         response = self.make_request("campaigns.communities.remove", {"id": self.CAMPAIGN_COMMUNITY.id})
         self.assertEqual(response['success'], False)
+        self.assertEqual(response['error'], "permission_denied")
 
     def test_update_campaign_community(self):
         payload = {
@@ -352,6 +365,7 @@ class CampaignsIntegrationTestCase(TestCase):
         signinAs(self.client, self.USER)
         response = self.make_request("campaigns.communities.update", payload)
         self.assertEqual(response['success'], False)
+        self.assertEqual(response['error'], "permission_denied")
 
     def test_add_campaign_technology(self):
         payload = {"campaign_id": self.CAMPAIGN.id, "technology_ids": [self.tech_1.id, self.tech_2.id, self.tech_3.id]}
@@ -370,6 +384,7 @@ class CampaignsIntegrationTestCase(TestCase):
         signinAs(self.client, self.USER)
         response = self.make_request("campaigns.technologies.add", payload)
         self.assertEqual(response['success'], False)
+        self.assertEqual(response['error'], "permission_denied")
 
     def test_create_campaign_technology(self):
         payload = {"campaign_id": self.CAMPAIGN.id, "campaign_account_id": self.CAMPAIGN_ACCOUNT.id,
@@ -390,6 +405,7 @@ class CampaignsIntegrationTestCase(TestCase):
         signinAs(self.client, self.USER)
         response = self.make_request("campaigns.technologies.create", payload)
         self.assertEqual(response['success'], False)
+        self.assertEqual(response['error'], "permission_denied")
 
     def test_remove_campaign_technology(self):
         payload = {"id": self.CAMPAIGN_TECHNOLOGY.id}
@@ -407,6 +423,7 @@ class CampaignsIntegrationTestCase(TestCase):
         signinAs(self.client, self.USER)
         response = self.make_request("campaigns.technologies.remove", payload)
         self.assertEqual(response['success'], False)
+        self.assertEqual(response['error'], "permission_denied")
 
     def test_get_campaign_technology_info(self):
         payload = {"campaign_technology_id": self.CAMPAIGN_TECHNOLOGY.id, }
@@ -588,7 +605,6 @@ class CampaignsIntegrationTestCase(TestCase):
         Console.header("Testing the campaigns.technologies.comments.delete endpoint")
         signinAs(self.client, self.SADMIN)
         response = self.make_request("campaigns.technologies.comments.delete", {**payload, "user_id": self.USER.id})
-        print("RESPONSE: ", response)
         self.assertEqual(response['success'], True)
 
         Console.header("Testing the campaigns.technologies.comments.delete endpoint as a community admin.")
@@ -601,7 +617,315 @@ class CampaignsIntegrationTestCase(TestCase):
         response = self.make_request("campaigns.technologies.comments.delete", {**payload, "user_id": self.USER.id})
         self.assertEqual(response['success'], True)
 
+    def test_add_campaign_technology_event(self):
+        payload = {"campaign_technology_id": self.CAMPAIGN_TECHNOLOGY.id, "event_ids": [self.event_1.id],}
+        Console.header("Testing the campaigns.technology.events.add endpoint")
+        signinAs(self.client, self.SADMIN)
+        response = self.make_request("campaigns.technology.events.add", payload)
+        self.assertEqual(response['success'], True)
+        self.assertIsInstance(response['data'], list)
+
+        Console.header("Testing the campaigns.technology.events.add endpoint as a community admin.")
+        signinAs(self.client, self.CADMIN)
+        response = self.make_request("campaigns.technology.events.add", payload)
+        self.assertEqual(response['success'], True) # true because the community admin is the owner of the campaign
+        self.assertIsInstance(response['data'], list)
+
+
+
+        Console.header("Testing the campaigns.technology.events.add endpoint as a user.")
+        signinAs(self.client, self.USER)
+        response = self.make_request("campaigns.technology.events.add", payload)
+        self.assertEqual(response['success'], False)
+        self.assertEqual(response['error'], "permission_denied")
+
+
+    def test_remove_campaign_technology_event(self):
+        payload = {"id": self.EVENT.id,}
+        Console.header("Testing the campaigns.technology.events.remove endpoint")
+        signinAs(self.client, self.SADMIN)
+        response = self.make_request("campaigns.technology.events.remove", payload)
+        self.assertEqual(response['success'], True)
+
+        Console.header("Testing the campaigns.technology.events.remove endpoint as a community admin.")
+        signinAs(self.client, self.CADMIN)
+        response = self.make_request("campaigns.technology.events.remove", payload)
+        self.assertEqual(response['success'], False)
+        self.assertEqual(response['error'], "Campaign Technology Event not found!") #delete the event first
+
+        Console.header("Testing the campaigns.technology.events.remove endpoint as a user.")
+        signinAs(self.client, self.USER)
+        response = self.make_request("campaigns.technology.events.remove", payload)
+        self.assertEqual(response['success'], False)
+        self.assertEqual(response['error'], "permission_denied")
+
+    
+    def test_list_campaign_technology_testimonials(self):
+        payload = {"campaign_id": self.CAMPAIGN.id,}
+        Console.header("Testing the campaigns.testimonials.list endpoint")
+        signinAs(self.client, self.SADMIN)
+        response = self.make_request("campaigns.testimonials.list", payload)
+        self.assertEqual(response['success'], True)
+        self.assertIsInstance(response['data'], list)
+
+        Console.header("Testing the campaigns.testimonials.list endpoint as a community admin.")
+        signinAs(self.client, self.CADMIN)
+        response = self.make_request("campaigns.testimonials.list", payload)
+        self.assertEqual(response['success'], True)
+
+
+        Console.header("Testing the campaigns.testimonials.list endpoint as a user.")
+        signinAs(self.client, self.USER)
+        response = self.make_request("campaigns.testimonials.list", payload)
+        self.assertEqual(response['success'], True)
+
+
+
+    def test_list_campaign_technology_comments(self):
+        payload = {"campaign_id": self.CAMPAIGN.id,}
+        Console.header("Testing the campaigns.comments.list endpoint")
+        signinAs(self.client, self.SADMIN)
+        response = self.make_request("campaigns.comments.list", payload)
+        self.assertEqual(response['success'], True)
+        self.assertIsInstance(response['data'], list)
+
+        Console.header("Testing the campaigns.comments.list endpoint as a community admin.")
+        signinAs(self.client, self.CADMIN)
+        response = self.make_request("campaigns.comments.list", payload)
+        self.assertEqual(response['success'], True)
+
+
+        Console.header("Testing the campaigns.comments.list endpoint as a user.")
+        signinAs(self.client, self.USER)
+        response = self.make_request("campaigns.comments.list", payload)
+        self.assertEqual(response['success'], True)
+
+
+    def test_generate_campaign_links(self):
+        payload = {"campaign_id": self.CAMPAIGN.id,"url":"https://www.example.com", "source":"campaigns", "medium":"whatsapp"}
+        Console.header("Testing the campaigns.links.generate endpoint")
+        signinAs(self.client, self.SADMIN)
+        response = self.make_request("campaigns.links.generate", payload)
+        self.assertEqual(response['success'], True)
+        self.assertIn("link", response['data'])
+
+        Console.header("Testing the campaigns.links.generate endpoint as a community admin.")
+        signinAs(self.client, self.CADMIN)
+        response = self.make_request("campaigns.links.generate", payload)
+        self.assertEqual(response['success'], True)
+
+        Console.header("Testing the campaigns.links.generate endpoint as a user.")
+        signinAs(self.client, self.USER)
+        response = self.make_request("campaigns.links.generate", payload)
+        self.assertEqual(response['success'], True)
+
+
+    def test_add_campaign_follower(self):
+        payload = {"campaign_id": self.CAMPAIGN.id,"email":"follower@test.com", "community_id": self.COMMUNITY_1.id, }
+        Console.header("Testing the campaigns.follow endpoint")
+        signinAs(self.client, self.SADMIN)
+        response = self.make_request("campaigns.follow", payload)
+        self.assertEqual(response['success'], True)
+
+        Console.header("Testing the campaigns.follow endpoint as a community admin.")
+        signinAs(self.client, self.CADMIN)
+        response = self.make_request("campaigns.follow", payload)
+        self.assertEqual(response['success'], True)
+
+
+        Console.header("Testing the campaigns.follow endpoint as a user.")
+        signinAs(self.client, self.USER)
+        response = self.make_request("campaigns.follow", payload)
+        self.assertEqual(response['success'], True)
+
+
+    def test_add_campaign_technology_follower(self):
+        payload = {"campaign_technology_id": self.CAMPAIGN_TECHNOLOGY.id,"email":"tes@gmail.com","community_id": self.COMMUNITY_1.id, }
+        Console.header("Testing the campaigns.technology.follow endpoint")
+        signinAs(self.client, self.SADMIN)
+        response = self.make_request("campaigns.technology.follow", payload)
+        self.assertEqual(response['success'], True)
+
+        Console.header("Testing the campaigns.technology.follow endpoint as a community admin.")
+        signinAs(self.client, self.CADMIN)
+        response = self.make_request("campaigns.technology.follow", payload)
+        self.assertEqual(response['success'], True)
+
+        Console.header("Testing the campaigns.technology.follow endpoint as a user.")
+        signinAs(self.client, self.USER)
+        response = self.make_request("campaigns.technology.follow", payload)
+        self.assertEqual(response['success'], True)
+
+
+    def test_add_campaign_technology_like(self):
+        payload = {"campaign_technology_id": self.CAMPAIGN_TECHNOLOGY.id,"email":"campaign@gnail.com","community_id": self.COMMUNITY_1.id, }
+        Console.header("Testing the campaigns.technology.like endpoint")
+        signinAs(self.client, self.SADMIN)
+        response = self.make_request("campaigns.technology.like", payload)
+        self.assertEqual(response['success'], True)
+
+        Console.header("Testing the campaigns.technology.like endpoint as a community admin.")
+        signinAs(self.client, self.CADMIN)
+        response = self.make_request("campaigns.technology.like", payload)
+        self.assertEqual(response['success'], True)
+
+        Console.header("Testing the campaigns.technology.like endpoint as a user.")
+        signinAs(self.client, self.USER)
+        response = self.make_request("campaigns.technology.like", payload)
+        self.assertEqual(response['success'], True)
+
+
+
+    def test_add_campaign_like(self):
+        payload = {"campaign_id": self.CAMPAIGN.id }
+        Console.header("Testing the campaigns.like endpoint")
+        signinAs(self.client, self.SADMIN)
+        response = self.make_request("campaigns.like", payload)
+        self.assertEqual(response['success'], True)
+
+        Console.header("Testing the campaigns.like endpoint as a community admin.")
+        signinAs(self.client, self.CADMIN)
+        response = self.make_request("campaigns.like", payload)
+        self.assertEqual(response['success'], True)
+
+        Console.header("Testing the campaigns.like endpoint as a user.")
+        signinAs(self.client, self.USER)
+        response = self.make_request("campaigns.like", payload)
+        self.assertEqual(response['success'], True)
+
+
+    def test_add_campaign_technology_view(self):
+        payload = {"campaign_technology_id": self.CAMPAIGN_TECHNOLOGY.id, "url":"https://www.example.com" }
+        Console.header("Testing the campaigns.technology.view endpoint")
+        signinAs(self.client, self.SADMIN)
+        response = self.make_request("campaigns.technology.view", payload)
+        self.assertEqual(response['success'], True)
+
+        Console.header("Testing the campaigns.technology.view endpoint as a community admin.")
+        signinAs(self.client, self.CADMIN)
+        response = self.make_request("campaigns.technology.view", payload)
+        self.assertEqual(response['success'], True)
+
+        Console.header("Testing the campaigns.technology.view endpoint as a user.")
+        signinAs(self.client, self.USER)
+        response = self.make_request("campaigns.technology.view", payload)
+        self.assertEqual(response['success'], True)
+
+    
+    def test_add_campaign_view(self):
+        payload = {"campaign_id": self.CAMPAIGN.id}
+        Console.header("Testing the campaigns.view endpoint")
+        signinAs(self.client, self.SADMIN)
+        response = self.make_request("campaigns.view", payload)
+        self.assertEqual(response['success'], True)
+
+        Console.header("Testing the campaigns.view endpoint as a community admin.")
+        signinAs(self.client, self.CADMIN)
+        response = self.make_request("campaigns.view", payload)
+        self.assertEqual(response['success'], True)
+
+        Console.header("Testing the campaigns.view endpoint as a user.")
+        signinAs(self.client, self.USER)
+        response = self.make_request("campaigns.view", payload)
+        self.assertEqual(response['success'], True)
+
+
+    def test_list_campaigns_for_admins(self):
+        payload = {}
+        Console.header("Testing the campaigns.listForAdmin endpoint")
+        signinAs(self.client, self.SADMIN)
+        response = self.make_request("campaigns.listForAdmin", payload)
+        self.assertEqual(response['success'], True)
+        self.assertIsInstance(response['data'], list)
+
+        Console.header("Testing the campaigns.listForAdmin endpoint as a community admin.")
+        signinAs(self.client, self.CADMIN)
+        response = self.make_request("campaigns.listForAdmin", payload)
+        self.assertEqual(response['success'], True)
+
+        Console.header("Testing the campaigns.listForAdmin endpoint as a user.")
+        signinAs(self.client, self.USER)
+        response = self.make_request("campaigns.listForAdmin", payload)
+        self.assertEqual(response['success'], False)
+        self.assertEqual(response['error'], "permission_denied")
+
+    def test_track_activity(self):
+        payload = {"campaign_id": self.CAMPAIGN.id, "button_type": "Test Activity", "email":"track@gmail.com", "target":"Home Page", "source":"hello campaign"}
+        Console.header("Testing the campaigns.activities.track endpoint")
+        signinAs(self.client, self.SADMIN)
+        response = self.make_request("campaigns.activities.track", payload)
+        self.assertEqual(response['success'], True)
+
+        Console.header("Testing the campaigns.activities.track endpoint as a community admin.")
+        signinAs(self.client, self.CADMIN)
+        response = self.make_request("campaigns.activities.track", payload)
+        self.assertEqual(response['success'], True)
+
+        Console.header("Testing the campaigns.activities.track endpoint as a user.")
+        signinAs(self.client, self.USER)
+        response = self.make_request("campaigns.activities.track", payload)
+        self.assertEqual(response['success'], True)
+
+
+    def test_list_campaign_communities_events(self):
+        payload = {"campaign_id": self.CAMPAIGN.id,}
+        Console.header("Testing the campaigns.communities.events.list endpoint")
+        signinAs(self.client, self.SADMIN)
+        response = self.make_request("campaigns.communities.events.list", payload)
+        self.assertEqual(response['success'], True)
+        self.assertIsInstance(response['data'], list)
+
+        Console.header("Testing the campaigns.communities.events.list endpoint as a community admin.")
+        signinAs(self.client, self.CADMIN)
+        response = self.make_request("campaigns.communities.events.list", payload)
+        self.assertEqual(response['success'], True)
+
+        Console.header("Testing the campaigns.communities.events.list endpoint as a user.")
+        signinAs(self.client, self.USER)
+        response = self.make_request("campaigns.communities.events.list", payload)
+        self.assertEqual(response['success'], False)
+        self.assertEqual(response['error'], "permission_denied")
+
+
+    def test_list_campaign_communities_testimonials(self):
+        payload = {"campaign_id": self.CAMPAIGN.id,}
+        Console.header("Testing the campaigns.communities.testimonials.list endpoint")
+        signinAs(self.client, self.SADMIN)
+        response = self.make_request("campaigns.communities.testimonials.list", payload)
+        self.assertEqual(response['success'], True)
+        self.assertIsInstance(response['data'], list)
+
+        Console.header("Testing the campaigns.communities.testimonials.list endpoint as a community admin.")
+        signinAs(self.client, self.CADMIN)
+        response = self.make_request("campaigns.communities.testimonials.list", payload)
+        self.assertEqual(response['success'], True)
+
+        Console.header("Testing the campaigns.communities.testimonials.list endpoint as a user.")
+        signinAs(self.client, self.USER)
+        response = self.make_request("campaigns.communities.testimonials.list", payload)
+        self.assertEqual(response['success'], False)
+        self.assertEqual(response['error'], "permission_denied")
+
+    
+    def test_list_campaign_communities_vendors(self):
+        payload = {"campaign_id": self.CAMPAIGN.id,}
+        Console.header("Testing the campaigns.communities.vendors.list endpoint")
+        signinAs(self.client, self.SADMIN)
+        response = self.make_request("campaigns.communities.vendors.list", payload)
+        self.assertEqual(response['success'], True)
+        self.assertIsInstance(response['data'], list)
+
+        Console.header("Testing the campaigns.communities.vendors.list endpoint as a community admin.")
+        signinAs(self.client, self.CADMIN)
+        response = self.make_request("campaigns.communities.vendors.list", payload)
+        self.assertEqual(response['success'], True)
+
+        Console.header("Testing the campaigns.communities.vendors.list endpoint as a user.")
+        signinAs(self.client, self.USER)
+        response = self.make_request("campaigns.communities.vendors.list", payload)
+        self.assertEqual(response['success'], False)
+        self.assertEqual(response['error'], "permission_denied")
+
     @classmethod
     def tearDownClass(cls):
-        # Clean up any data after running the test case class
         pass
