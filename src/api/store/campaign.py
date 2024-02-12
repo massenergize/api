@@ -1304,10 +1304,25 @@ class CampaignStore:
             events = []
             for community in communities:
                 events.extend(Event.objects.filter(community__id=community.community.id, is_deleted=False, is_published=True))
-            return events, None
+            to_return = []
+            for event in events:
+                obj = {
+                    "id": event.id,
+                    "name": event.name,
+                    "community":{
+                        "id": event.community.id,
+                        "name": event.community.name,
+                        "alias": communities.get(campaign__id=campaign_id, community__id=event.community.id).alias
+                    }
+                }
+                to_return.append(obj)
+
+
+            return to_return, None
+        
         except Exception as e:
             capture_message(str(e), level="error")
-            return None, CustomMassenergizeError(e)
+            return None, CustomMassenergizeError(str(e))
 
 
 
@@ -1327,11 +1342,27 @@ class CampaignStore:
                 is_deleted=False
             ).exclude(id__in=existing_testimonials)
 
-            return testimonials, None
+            to_return = []
+
+            for testimonial in testimonials:
+                obj = {
+                    "id": testimonial.id,
+                    "title": testimonial.title,
+                    "community":{
+                        "id": testimonial.community.id,
+                        "name": testimonial.community.name,
+                        "alias": CampaignCommunity.objects.get(campaign__id=campaign_id, community__id=testimonial.community.id).alias
+                    }
+                }
+                to_return.append(obj)
+
+            return to_return, None
 
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(str(e))
+
+
 
     def list_campaign_communities_vendors(self, context: Context, args):
         try:
