@@ -14,7 +14,7 @@ class CampaignHandler(RouteHandler):
     def registerRoutes(self):
         self.add("/campaigns.info", self.info)
         self.add("/campaigns.infoForUser", self.get_campaign_info_for_user)
-        self.add("/campaigns.create", self.create)
+        self.add("/campaigns.create", self.create) #Not used at the moment
 
         self.add("/campaigns.createFromTemplate", self.create_campaign_from_template)
         
@@ -22,12 +22,11 @@ class CampaignHandler(RouteHandler):
         self.add("/campaigns.update", self.update)
         self.add("/campaigns.delete", self.delete)
 
-        self.add("/campaigns.config.create", self.create_campaign_config)
-        self.add("/campaigns.config.update", self.update_campaign_config)
-        self.add("/campaigns.config.info", self.get_campaign_config)
+        self.add("/campaigns.config.create", self.create_campaign_config) # Not used at the moment
+        self.add("/campaigns.config.update", self.update_campaign_config) # Not used at the moment
+        self.add("/campaigns.config.info", self.get_campaign_config) # Not used at the moment
 
-        self.add("/campaigns.navigation.create", self.create_campaign_navigation)
-
+        self.add("/campaigns.navigation.create", self.create_campaign_navigation) # Not used at the moment
         self.add("/campaigns.stats.get", self.get_campaign_analytics)
 
         self.add("/campaigns.managers.add", self.add_campaign_manager)
@@ -56,25 +55,23 @@ class CampaignHandler(RouteHandler):
         self.add("/campaigns.technologies.comments.delete", self.delete_campaign_technology_comment)
 
 
-        self.add("/campaigns.partners.add", self.add_campaign_partner)
-        self.add("/campaigns.partners.remove", self.remove_campaign_partner)
+        self.add("/campaigns.partners.add", self.add_campaign_partner) # Not used at the moment
+        self.add("/campaigns.partners.remove", self.remove_campaign_partner) # Not used at the moment
 
 
         self.add("/campaigns.technology.events.add", self.add_campaign_technology_event)
         self.add("/campaigns.technology.events.remove", self.remove_campaign_technology_event)
-        self.add("/campaigns.technology.events.list", self.list_campaign_technology_event)
+        self.add("/campaigns.technology.events.list", self.list_campaign_technology_event) # Not used at the moment
 
 
         self.add("/campaigns.testimonials.list", self.list_campaign_technology_testimonials)
         self.add("/campaigns.comments.list", self.list_campaign_technology_comments)
-        self.add("/campaigns.technologies.list", self.list_campaign_technologies)
+        self.add("/campaigns.technologies.list", self.list_campaign_technologies) # Not used at the moment
         self.add("/campaigns.managers.list", self.list_campaign_managers)
         self.add("/campaigns.communities.list", self.list_campaign_communities)
 
-
-
         self.add("/campaigns.links.generate", self.generate_campaign_links)
-        self.add("/campaigns.links.visits.count", self.campaign_link_visits_count)
+        self.add("/campaigns.links.visits.count", self.campaign_link_visits_count) # Not used at the moment
 
         self.add("/campaigns.follow", self.add_campaign_follower)
         self.add("/campaigns.technology.follow", self.add_campaign_technology_follower)
@@ -98,7 +95,7 @@ class CampaignHandler(RouteHandler):
 
 
 
-
+    @admins_only
     def info(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -163,7 +160,7 @@ class CampaignHandler(RouteHandler):
       return MassenergizeResponse(data=campaign_info)
     
 
-    # @admins_only
+    @admins_only
     def create_campaign_from_template(self, request):
        context: Context = request.context
        args = context.args
@@ -818,12 +815,7 @@ class CampaignHandler(RouteHandler):
         context: Context = request.context
         args: dict = context.args
 
-        (self.validator
-         .expect("campaign_id", str, is_required=True)
-         .expect("zipcode", str, is_required=False)
-         .expect("email", str, is_required=False)
-          .expect("community", str, is_required=False)
-         )
+        self.validator.expect("campaign_id", str, is_required=True)
         args, err = self.validator.verify(args)
         if err:
           return err
@@ -1007,7 +999,7 @@ class CampaignHandler(RouteHandler):
         return MassenergizeResponse(data=res)
     
 
-
+    @admins_only
     def create_campaign_technology(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -1031,7 +1023,7 @@ class CampaignHandler(RouteHandler):
     
 
 
-
+    @admins_only
     def list_campaign_communities_events(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -1047,6 +1039,7 @@ class CampaignHandler(RouteHandler):
           return err
         return MassenergizeResponse(data=res)
     
+    @admins_only
     def list_campaign_communities_testimonials(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -1062,7 +1055,7 @@ class CampaignHandler(RouteHandler):
           return err
         return MassenergizeResponse(data=res)
     
-
+    @admins_only
     def list_campaign_communities_vendors(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -1078,7 +1071,7 @@ class CampaignHandler(RouteHandler):
           return err
         return MassenergizeResponse(data=res)
     
-
+    @admins_only
     def add_campaign_technology_testimonial(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -1096,7 +1089,7 @@ class CampaignHandler(RouteHandler):
           return err
         return MassenergizeResponse(data=res)
     
-
+    @admins_only
     def remove_campaign_technology_event(self, request):
       context: Context = request.context
       args: dict = context.args
@@ -1112,7 +1105,7 @@ class CampaignHandler(RouteHandler):
         return err
       return MassenergizeResponse(data=res)
     
-
+    @admins_only
     def update_campaign_key_contact(self, request):
       context: Context = request.context
       args: dict = context.args
