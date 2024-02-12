@@ -1,6 +1,6 @@
 {
   "IS_PROD": false,
-  "IS_CANARY": false,
+  "IS_CANARY": true,
   "BUILD_VERSION": "5.1.16",
   "BUILD_VERSION_NOTES": "Jan 31, 2024: Campaigns initial prod deployment\n"
 }
