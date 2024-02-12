@@ -1319,6 +1319,10 @@ class CampaignStore:
 
 
             return to_return, None
+        
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(str(e))
 
 
 
@@ -1357,6 +1361,8 @@ class CampaignStore:
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(str(e))
+
+
 
     def list_campaign_communities_vendors(self, context: Context, args):
         try:
