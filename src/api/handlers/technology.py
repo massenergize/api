@@ -58,7 +58,7 @@ class TechnologyHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=res)
     
-
+    @admins_only
     def list(self, request):
         context: Context = request.context
         args: dict = context.args

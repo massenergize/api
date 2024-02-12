@@ -299,7 +299,7 @@ class CampaignService:
         if err:
             return None, err
 
-        return res, None
+        return serialize(res), None
 
     def transfer_ownership(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
         res, err = self.store.transfer_ownership(context, args)
@@ -385,15 +385,13 @@ class CampaignService:
         res, err = self.store.list_campaign_communities_events(context, args)
         if err:
             return None, err
-
-        return serialize_all(res), None
+        return res, None
 
     def list_campaign_communities_testimonials(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
         res, err = self.store.list_campaign_communities_testimonials(context, args)
         if err:
             return None, err
-
-        return serialize_all(res), None
+        return res, None
 
     def list_campaign_communities_vendors(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
         res, err = self.store.list_campaign_communities_vendors(context, args)

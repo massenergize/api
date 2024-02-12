@@ -40,7 +40,7 @@ if DJANGO_ENV == "local":
 
 # Database selection, development DB unless one of these chosen
 IS_PROD = False
-IS_CANARY = True
+IS_CANARY = False
 IS_LOCAL = False
 
 try:
