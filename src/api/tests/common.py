@@ -33,6 +33,8 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 
 from apps__campaigns.models import Technology
 
+from database.models import Vendor
+
 RESET = "reset"
 ME_DEFAULT_TEST_IMAGE = "https://www.whitehouse.gov/wp-content/uploads/2021/04/P20210303AS-1901-cropped.jpg"
 
@@ -366,3 +368,12 @@ def make_technology(**kwargs):
     })
 
     return tech
+
+def make_vendor(**kwargs):
+    vendor = Vendor.objects.create(**{
+        **kwargs,
+        "name": kwargs.get("name") or f"New Vendor-{datetime.now().timestamp()}",
+        "description": kwargs.get("description") or "New Vendor Description",
+    })
+
+    return vendor

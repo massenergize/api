@@ -8,6 +8,8 @@ from apps__campaigns.models import Technology, TechnologyAction, TechnologyCoach
 from database.models import Media, Vendor
 from django.db.models import Q
 
+from apps__campaigns.models import CampaignAccount
+
 
 class TechnologyStore:
     def __init__(self):
@@ -29,6 +31,9 @@ class TechnologyStore:
     def list_technologies(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
         try:
             campaign_account_id = args.get("campaign_account_id", None)
+            if context.user_is_admin and not campaign_account_id:
+                technologies = Technology.objects.filter(is_deleted=False)
+                return technologies.distinct(), None
             technologies = Technology.objects.filter(Q(campaign_account_id=campaign_account_id)|Q(user__id=context.user_id), is_deleted=False)
             return technologies.distinct(), None
         except Exception as e:
@@ -38,10 +43,15 @@ class TechnologyStore:
     def create_technology(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
         try:
             image = args.pop('image', None)
+            campaign_account_id = args.pop('campaign_account_id', None)
             technology = Technology.objects.create(**args)
             if image:
                 media = Media.objects.create(file=image, name=f"FileUpload for {technology.id} Technology")
                 technology.image = media
+
+            if campaign_account_id:
+                account = CampaignAccount.objects.filter(id=campaign_account_id).first()
+                technology.campaign_account = account
             technology.save()
             return technology, None
         except Exception as e:
@@ -55,6 +65,10 @@ class TechnologyStore:
             technology = Technology.objects.filter(id=technology_id)
             if not technology:
                 return None, CustomMassenergizeError("Technology does not exist")
+            # check if the user is the owner of the technology  or a superadmin
+            if not context.user_is_admin:
+                if technology.first().user.id != context.user_id:
+                    return None, CustomMassenergizeError("You are not authorized to perform this action")
             technology.update(**args)
             technology = technology.first()
 
@@ -74,6 +88,10 @@ class TechnologyStore:
             technology = Technology.objects.filter(id=technology_id)
             if not technology:
                 return None, CustomMassenergizeError("Technology does not exist")
+
+            if not context.user_is_admin:
+                if technology.first().user.id != context.user_id:
+                    return None, CustomMassenergizeError("You are not authorized to perform this action")
 
             technology.update(is_deleted=True)
             return technology.first(), None
@@ -389,7 +407,6 @@ class TechnologyStore:
             if not technology_id:
                 return None, CustomMassenergizeError("technology_id is required")
 
-
             technology_vendor = TechnologyVendor.objects.filter(technology__id=technology_id, vendor__id=vendor_id, is_deleted=False).first()
             if not technology_vendor:
                 return None, CustomMassenergizeError("technology vendor not found")
@@ -397,7 +414,8 @@ class TechnologyStore:
             if name:
                 vendor.name = name
             if website:
-                vendor.more_info = {**vendor.more_info, "website": website}
+                more_info = vendor.more_info or {}
+                vendor.more_info = {**more_info, "website": website}
             if logo and not (isinstance(logo, str) and logo.startswith("http")):
                 logo = create_media_file(logo, f"FileUpload for {vendor.name} vendor")
                 vendor.logo = logo
