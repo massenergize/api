@@ -864,8 +864,7 @@ class CampaignStore:
             )
 
             generated_link = f"{url}?utm_source={utm_source}&utm_medium={utm_medium}&link_id={campaign_link.id}"
-
-            return {"link": shorten_url(generated_link)}, None
+            return {"link": generated_link}, None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
