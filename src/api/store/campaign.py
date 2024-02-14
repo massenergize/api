@@ -847,6 +847,10 @@ class CampaignStore:
             url = args.pop("url", None)
             email = args.pop("email", None)
 
+            # remove trailing slash in url if it exists
+            if url and url[-1] == "/":
+                url = url[:-1]
+
             if not campaign_id:
                 return None, CustomMassenergizeError("Campaign id not found!")
 
