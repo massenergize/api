@@ -152,9 +152,11 @@ def write_json_contents(path, data) -> bool:
   return True
 
 def write_any_content(path, data):
-  f = open(path, "w+")
-  f.write(data)
-  f.close()
+  try:
+    with open(path, 'w+') as f:
+      f.write(data)
+  except Exception as e:
+      print(e)
 
 
 def generate_config(target, is_local, is_deploy):
