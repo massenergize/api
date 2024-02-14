@@ -847,6 +847,10 @@ class CampaignStore:
             url = args.pop("url", None)
             email = args.pop("email", None)
 
+            # remove trailing slash in url if it exists
+            if url and url[-1] == "/":
+                url = url[:-1]
+
             if not campaign_id:
                 return None, CustomMassenergizeError("Campaign id not found!")
 
@@ -864,8 +868,7 @@ class CampaignStore:
             )
 
             generated_link = f"{url}?utm_source={utm_source}&utm_medium={utm_medium}&link_id={campaign_link.id}"
-
-            return {"link": shorten_url(generated_link)}, None
+            return {"link": generated_link}, None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)

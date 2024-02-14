@@ -153,9 +153,8 @@ def write_json_contents(path, data) -> bool:
 
 def write_any_content(path, data):
   try:
-      f = open(path, "w+")
+    with open(path, 'w+') as f:
       f.write(data)
-      f.close()
   except Exception as e:
       print(e)
 
