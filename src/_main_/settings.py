@@ -39,8 +39,8 @@ if DJANGO_ENV == "local":
     RUN_CELERY_LOCALLY = True
 
 # Database selection, development DB unless one of these chosen
-IS_PROD = True
-IS_CANARY = False
+IS_PROD = False
+IS_CANARY = True
 IS_LOCAL = False
 
 try:
@@ -52,9 +52,7 @@ try:
         env_path = Path('.') / 'local.env'
     else:
         env_path = Path('.') / 'dev.env'
-
     load_dotenv(dotenv_path=env_path, verbose=True)
-
 except Exception:
     load_dotenv()
 

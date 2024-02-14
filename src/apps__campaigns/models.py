@@ -12,6 +12,11 @@ def generate_rand_between(start=2, end=10):
     length = random.randint(start, start)  # Random length between 2 and 10
     return  random.randint(end**(length-1), end**length - 1)
 
+
+def get_comm_alias(campaign, community_id):
+    com = campaign.campaign_community.filter(community_id=community_id).first()
+    return com.alias if com else None
+
 class CampaignAccount(BaseModel):
     '''
     This model represents a campaign account. An account created by a user or a community to
@@ -616,7 +621,10 @@ class Comment(BaseModel):
         res.update(model_to_dict(self))
         res["campaign_technology"] = get_summary_info(self.campaign_technology)
         res["user"] = get_summary_info(self.user)
-        res["community"] = get_summary_info(self.community)
+        res["community"] = {
+            **get_summary_info(self.community),
+            "alias": get_comm_alias(self.campaign_technology.campaign, self.community.id)
+        } if self.community else None
         return res
     
     def full_json(self):
@@ -653,6 +661,7 @@ class CampaignTechnologyEvent(BaseModel):
                 "end_date": self.event.end_date_and_time,
                 "description": self.event.description,
                 "image": get_json_if_not_none(self.event.image),
+                "event_type": "Online" if not self.event.location else "In person",
         }
         }
         return res
@@ -752,7 +761,10 @@ class CampaignTechnologyTestimonial(BaseModel):
             }
         }
         res["user"] = get_summary_info(self.testimonial.user) if self.testimonial else None
-        res["community"] = get_summary_info(self.testimonial.community) if self.testimonial else None
+        res["community"] = {
+            **get_summary_info(self.testimonial.community),
+            "alias": get_comm_alias(self.campaign_technology.campaign, self.testimonial.community.id)
+        } if self.testimonial.community else None
         res["image"] = get_json_if_not_none(self.testimonial.image) if self.testimonial else None
         res["body"] = self.testimonial.body if self.testimonial else None
         res["title"] = self.testimonial.title if self.testimonial else None

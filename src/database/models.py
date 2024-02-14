@@ -1854,6 +1854,13 @@ class Vendor(models.Model):
         data["logo"] = get_json_if_not_none(self.logo)
         return data
 
+    def get_field_from_more_info(self, key):
+        if self.more_info:
+            if isinstance(self.more_info, str):
+                self.more_info = json.loads(self.more_info)
+            return self.more_info.get(key, None)
+        return None
+
     def simple_json(self):
         data = model_to_dict(
             self,
@@ -1871,7 +1878,7 @@ class Vendor(models.Model):
         data["communities"] = [c.simple_json() for c in self.communities.all()]
         data["tags"] = [t.simple_json() for t in self.tags.all()]
         data["logo"] = get_json_if_not_none(self.logo)
-        data["website"] = self.more_info and self.more_info.get("website", None)
+        data["website"] = self.get_field_from_more_info("website")
         data["key_contact"] = self.key_contact
         return data
 
@@ -1886,7 +1893,7 @@ class Vendor(models.Model):
         data["banner"] = get_json_if_not_none(self.banner)
         data["services"] = [s.simple_json() for s in self.services.all()]
         data["communities"] = [c.simple_json() for c in self.communities.all()]
-        data["website"] = self.more_info and self.more_info.get("website", None)
+        data["website"] = self.get_field_from_more_info("website")
         data["key_contact"] = self.key_contact
         data["location"] = self.location
         if self.user:
