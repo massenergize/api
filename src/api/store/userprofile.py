@@ -144,6 +144,8 @@ def _update_action_data_totals(action, household, delta):
       d.save()
 
 def can_be_deleted(user, context):
+  if context.user_is_super_admin and not user.is_super_admin:
+    return True
   if user.is_super_admin:
     return False
   if context.user_is_community_admin and  user.is_community_admin:
