@@ -2222,7 +2222,7 @@ class EventNudgeSetting(models.Model):
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="nudge_settings")
-    communities = models.ManyToManyField(Community, related_name="nudge_settings_communities", blank=True, null=True)
+    communities = models.ManyToManyField(Community, related_name="nudge_settings_communities", blank=True)
     settings = models.JSONField(blank=True, null=True)
     creator = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True, related_name="nudge_settings_creator", blank=True)
     more_info = models.JSONField(blank=True, null=True)
