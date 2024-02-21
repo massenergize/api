@@ -108,7 +108,7 @@ class EventService:
             'logo': community_logo,
             'privacylink': f"{homelink}/policies?name=Privacy%20Policy"
           }
-          
+
 
           send_massenergize_rich_email(
               subject, user_email, 'event_rsvp_email.html', content_variables, from_email)
@@ -133,7 +133,7 @@ class EventService:
 
   def list_recurring_event_exceptions(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
     exceptions, err = self.store.list_recurring_event_exceptions(context, args)
-    if err: 
+    if err:
       print(err)
       return None, err
     return exceptions, None
@@ -142,11 +142,11 @@ class EventService:
     events, err = self.store.update_recurring_event_date(context, args)
     if err:
       return None, err
-    
+
     return serialize_all(events), None
 
   def list_events(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
-    
+
     events, err = self.store.list_events(context, args)
     if err:
       return None, err
@@ -159,7 +159,7 @@ class EventService:
       event, err = self.store.create_event(context, args, user_submitted)
       if err:
         return None, err
-      
+
       if add_to_home_page:
         add_event_to_community_home_page(event)
 
@@ -207,7 +207,7 @@ class EventService:
             "message": event.description,
             "url": f"{ADMIN_URL_ROOT}/admin/edit/{event.id}/event",
             "community": community_name
-        }) 
+        })
 
       return serialize(event), None
     except Exception as e:
@@ -220,7 +220,7 @@ class EventService:
     if err:
       return None, err
     return serialize(event), None
-  
+
 
   def share_event(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
     event, err = self.store.share_event(context, args)
@@ -263,3 +263,16 @@ class EventService:
       return None, err
     sorted = sort_items(events, context.get_params())
     return paginate(sorted, context.get_pagination_data()), None
+
+
+  def create_nudge_settings(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    nudge_settings, err = self.store.create_nudge_settings(context, args)
+    if err:
+      return None, err
+    return serialize(nudge_settings), None
+
+  def delete_nudge_settings(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    nudge_settings, err = self.store.delete_nudge_settings(context, args)
+    if err:
+      return None, err
+    return {"deleted":True}, None
