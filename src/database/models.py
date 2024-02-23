@@ -2196,6 +2196,7 @@ class Event(models.Model):
 
         data["shared_to"] = [c.info() for c in self.shared_to.all()]
         data["is_on_home_page"] = self.is_on_homepage()
+        data["event_type"] = self.event_type if self.event_type else "Online" if not self.location else "In person"
         return data
 
     def full_json(self):

@@ -138,6 +138,7 @@ class Campaign(BaseModel):
     technologies_section = models.JSONField(blank=True, null=True)
     newsletter_section = models.JSONField(blank=True, null=True)
     coaches_section = models.JSONField(blank=True, null=True)
+    about_us_title = models.CharField(max_length=255, blank=True, null=True)
 
 
 
