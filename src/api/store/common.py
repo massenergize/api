@@ -201,14 +201,13 @@ def make_media_info(args):
             obj[name] = value
     return obj
 
-
 def get_media_info(media):
     """Retrieves media info from media object"""
     if not media:
         return {}, False
     if hasattr(media, "user_upload"):
-        if hasattr(media.user_upload, "info"):
-            return media.user_upload.info or {}, True
+        if hasattr(media.user_upload, "info") and media.user_upload.info is not None:
+            return media.user_upload.info, True
     return {}, False
 
 
