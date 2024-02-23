@@ -411,7 +411,7 @@ class EventHandler(RouteHandler):
         args: dict = context.args
 
         self.validator.expect("event_id", int, is_required=True)
-        self.validator.expect("settings", str, is_required=True)
+        self.validator.expect("settings", dict, is_required=True)
         self.validator.expect("community_ids", "str_list", is_required=True)
         self.validator.expect("nudge_settings_id", str, is_required=False)
 

@@ -1000,7 +1000,7 @@ class EventStore:
         try:
 
             event_id = args.get("event_id", None)
-            settings = json.loads(args.pop("settings"))
+            settings = args.pop("settings")
             communities = args.get("community_ids", [])
             user = get_user_from_context(context)
 
@@ -1028,7 +1028,7 @@ class EventStore:
                 existing_settings.communities.add(*communities)
                 existing_settings.more_info = {**existing_settings.more_info, "last_updated_by": user.full_name if user else None}
                 existing_settings.save()
-                return existing_settings, None
+
             else:
                 new_settings = EventNudgeSetting()
                 new_settings.event = event
@@ -1037,7 +1037,8 @@ class EventStore:
                 new_settings.more_info = {"last_updated_by": user.full_name if user else None}
                 new_settings.save()
                 new_settings.communities.set(communities)
-                return new_settings, None
+
+            return event, None
 
         except Exception as e:
             capture_message(str(e), level="error")

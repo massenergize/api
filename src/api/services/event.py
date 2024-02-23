@@ -266,10 +266,10 @@ class EventService:
 
 
   def create_nudge_settings(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
-    nudge_settings, err = self.store.create_nudge_settings(context, args)
+    event, err = self.store.create_nudge_settings(context, args)
     if err:
       return None, err
-    return serialize(nudge_settings), None
+    return serialize(event), None
 
   def delete_nudge_settings(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
     nudge_settings, err = self.store.delete_nudge_settings(context, args)
