@@ -221,6 +221,7 @@ class CampaignHandler(RouteHandler):
         .expect("technologies_section", dict, is_required=False)
         .expect("newsletter_section", dict, is_required=False)
         .expect("coaches_section", dict, is_required=False)
+        .expect("about_us_title", str, is_required=False)
         )
 
 

@@ -2199,6 +2199,7 @@ class Event(models.Model):
         data["settings"] = {
             "notifications": [x.simple_json() for x in self.nudge_settings.all()]
         }
+        data["event_type"] = self.event_type if self.event_type else "Online" if not self.location else "In person"
         return data
 
     def full_json(self):
