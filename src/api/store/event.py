@@ -513,7 +513,7 @@ class EventStore:
       if event.image:
         old_image_info, can_save_info = get_media_info(event.image)
         # There are media objects that do not  have user upload references. (because we didnt have that model at the time of upload) thats why we need to check first
-        if can_save_info: 
+        if can_save_info:
           event.image.user_upload.info.update({**old_image_info,**image_info})
           event.image.user_upload.save()
     
