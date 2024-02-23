@@ -16,7 +16,7 @@ from django.utils import timezone
 WEEKLY = "per_week"
 BI_WEEKLY = "biweekly"
 MONTHLY = "per_month"
- DAILY = "per_day"
+DAILY = "per_day"
 
 eastern_tz = pytz.timezone("US/Eastern")
 
@@ -121,7 +121,6 @@ def is_event_eligible(event, community_id, task=None):
     last_run = task.last_run if task else None
     freq = task.frequency if task else None
     last_last_run = None
-    print("===freq: " + str(freq) + "===")
 
     freq_to_delta = {
         "EVERY_WEEK": relativedelta(weeks=1),
@@ -226,7 +225,7 @@ def send_events_report_email(name, email, event_list, comm, login_method=""):
         data["cadmin_email"] = comm.owner_email if comm.owner_email else ""
         data["community"] = comm.name
         from_email = get_sender_email(comm.id)
-        send_massenergize_email_with_attachments(USER_EVENTS_NUDGE_TEMPLATE, data, ["onetachyon1@gmail.com"], None, None, from_email)
+        send_massenergize_email_with_attachments(USER_EVENTS_NUDGE_TEMPLATE, data, [email], None, None, from_email)
         print("Email sent to " + email)
         return True
     except Exception as e:
