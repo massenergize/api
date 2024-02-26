@@ -668,6 +668,104 @@ class EventStore:
         elif user_id:
             events = EventAttendee.objects.filter(user_id=user_id)
 
+          if image[0] == RESET: #if image is reset, delete the existing image
+            event.image = None
+          else:
+            media = Media.objects.filter(id = image[0]).first()
+            event.image = media
+
+      if event.image:
+        old_image_info, can_save_info = get_media_info(event.image)
+        # There are media objects that do not  have user upload references. (because we didnt have that model at the time of upload) thats why we need to check first
+        if can_save_info:
+          event.image.user_upload.info.update({**old_image_info,**image_info})
+          event.image.user_upload.save()
+    
+      
+      
+
+      if tags:
+        event.tags.set(tags)
+
+      if publicity_selections:
+        event.communities_under_publicity.set(publicity_selections)
+
+      if shared_to:
+        first = shared_to[0]
+        if first == "reset": 
+          event.shared_to.clear()
+        else: event.shared_to.set(shared_to)
+
+      if is_recurring:
+
+        event.is_recurring = True
+        event.recurring_details = {
+            "recurring_type": recurring_type, 
+            "separation_count": separation_count, 
+            "day_of_week": day_of_week, 
+            "week_of_month": week_of_month,
+            "final_date": str(final_date)
+        } 
+
+        # CAdmin is cancelling the upcoming event instance     
+        event.recurring_details["is_cancelled"] = upcoming_is_cancelled
+
+        # check if there was a previously rescheduled event instance
+        rescheduled: RecurringEventException = RecurringEventException.objects.filter(event=event).first()
+
+        #CAdmin is rescheduling the upcoming event instance
+        if upcoming_is_rescheduled:
+          # only create the event and recurring event exception if the event is being newly rescheduled, 
+          # otherwise, don't do anything
+          if not rescheduled:
+
+            rescheduled_event = Event.objects.create(
+              name = event.name + " (rescheduled)", 
+              featured_summary = event.featured_summary, 
+              start_date_and_time = rescheduled_start_datetime,
+              end_date_and_time = rescheduled_end_datetime,
+              description = event.description, 
+              community = event.community, 
+              location = event.location, 
+              image = event.image, 
+              archive = event.archive, 
+              is_global = event.is_global, 
+              external_link = event.external_link, 
+              external_link_type = event.external_link_type, 
+              more_info = event.more_info, 
+              is_deleted = event.is_deleted, 
+              is_published = event.is_published,
+              rank = event.rank, 
+              is_recurring = False, 
+              recurring_details = None
+            )
+            rescheduled_event.save()
+
+            old_tags = event.tags.all()
+            old_communities = event.invited_communities.all()
+
+            for t in old_tags:
+              rescheduled_event.tags.add(t)
+            for c in old_communities:
+              rescheduled_event.invited_communities.add(c)
+
+            rescheduled_event.save()
+
+            rescheduled = RecurringEventException.objects.create(
+            event = event,  
+            former_time = event.start_date_and_time, 
+            rescheduled_event = rescheduled_event
+            )
+#
+          # they are trying to modify an existing event that is rescheduled
+          elif rescheduled:
+            ev = rescheduled.rescheduled_event
+            ev.start_date_and_time = rescheduled_start_datetime
+            ev.end_date_and_time = rescheduled_end_datetime
+            ev.save()
+          rescheduled.save()
+
+        # CAdmin is not rescheduling the upcoming event instance
         else:
             events = []
 
