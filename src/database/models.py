@@ -2191,7 +2191,7 @@ class Event(models.Model):
         data["is_on_home_page"] = self.is_on_homepage()
 
         data["event_type"] = self.event_type if self.event_type else "Online" if not self.location else "In person"
-        data["settings"] = dict(notifications=[x.simple_json() for x in self.nudge_settings.all() if x.communities.exists()])
+        data["settings"] = dict(notifications=[x.simple_json() for x in self.nudge_settings.all().order_by("-created_at") if x.communities.exists()])
 
         return data
 
@@ -2220,6 +2220,8 @@ class EventNudgeSetting(models.Model):
     settings = models.JSONField(blank=True, null=True)
     creator = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True, related_name="nudge_settings_creator", blank=True)
     more_info = models.JSONField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.event.name} - {str(self.id)}"

@@ -1018,11 +1018,15 @@ class EventStore:
             other_nudge_settings = EventNudgeSetting.objects.filter(event=event, communities__in=communities).exclude(
                 id=existing_settings.id if existing_settings else None)
 
-
-            for nudge_setting in other_nudge_settings:
-                for community in communities:
-                    nudge_setting.communities.remove(community)
-                    nudge_setting.save()
+            # if its all communities, remove all other nudge settings
+            if "All" in communities:
+                other_nudge_settings.delete()
+                communities = Community.objects.filter(is_deleted=False).values_list('id', flat=True)
+            else:
+                for nudge_setting in other_nudge_settings:
+                    for community in communities:
+                        nudge_setting.communities.remove(community)
+                        nudge_setting.save()
 
             if existing_settings:
                 existing_settings.communities.add(*communities)
