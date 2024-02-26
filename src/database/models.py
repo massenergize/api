@@ -2149,13 +2149,11 @@ class Event(models.Model):
         data = model_to_dict(self, ["id", "name"])
         return data
 
-    def is_on_homepage(self):
+    def is_on_homepage(self) -> bool:
         is_used = False
         home_page = HomePageSettings.objects.filter(community=self.community).first()
         if home_page and home_page.featured_events:
-            is_used = home_page.featured_events.filter(
-                id=self.id, start_date_and_time__gte=timezone.now()
-            ).exists()
+            is_used = home_page.featured_events.filter(id=self.id, start_date_and_time__gte=timezone.now()).exists()
         return is_used
 
     def simple_json(self):
@@ -2178,15 +2176,10 @@ class Event(models.Model):
         data["invited_communities"] = [
             c.simple_json() for c in self.invited_communities.all()
         ]
-        data["is_open"] = (
-            False if not self.publicity else EventConstants.is_open(self.publicity)
-        )
-        data["is_open_to"] = (
-            False if not self.publicity else EventConstants.is_open_to(self.publicity)
-        )
-        data["is_closed_to"] = (
-            False if not self.publicity else EventConstants.is_closed_to(self.publicity)
-        )
+        data["is_open"] =  False if not self.publicity else EventConstants.is_open(self.publicity)
+        data["is_open_to"] = False if not self.publicity else EventConstants.is_open_to(self.publicity)
+
+        data["is_closed_to"] = False if not self.publicity else EventConstants.is_closed_to(self.publicity)
 
         data["communities_under_publicity"] = [
             c.simple_json() for c in self.communities_under_publicity.all()
@@ -2196,10 +2189,10 @@ class Event(models.Model):
 
         data["shared_to"] = [c.info() for c in self.shared_to.all()]
         data["is_on_home_page"] = self.is_on_homepage()
-        data["settings"] = {
-            "notifications": [x.simple_json() for x in self.nudge_settings.all()]
-        }
+
         data["event_type"] = self.event_type if self.event_type else "Online" if not self.location else "In person"
+        data["settings"] = dict(notifications=[x.simple_json() for x in self.nudge_settings.all() if x.communities.exists()])
+
         return data
 
     def full_json(self):

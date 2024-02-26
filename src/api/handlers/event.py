@@ -405,7 +405,7 @@ class EventHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=event_info)
 
-
+    @admins_only
     def create_nudge_settings(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -423,7 +423,7 @@ class EventHandler(RouteHandler):
         if err:
             return err
         return MassenergizeResponse(data=event_info)
-
+    @admins_only
     def delete_nudge_settings(self, request):
         context: Context = request.context
         args: dict = context.args
