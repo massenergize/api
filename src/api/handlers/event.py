@@ -36,8 +36,8 @@ class EventHandler(RouteHandler):
         self.add("/events.exceptions.list", self.list_exceptions)
         self.add("/events.date.update", self.update_recurring_date)
         self.add("/events.share", self.share_event)
-        self.add("/events.nudge.settings.create", self.create_nudge_settings)
-        self.add("/events.nudge.settings.delete", self.delete_nudge_settings)
+        self.add("/events.reminders.settings.create", self .create_event_reminder_settings)
+        self.add("/events.reminders.settings.delete", self.delete_event_reminder_settings)
 
         # admin routes
         self.add("/events.listForCommunityAdmin", self.community_admin_list)
@@ -406,25 +406,28 @@ class EventHandler(RouteHandler):
         return MassenergizeResponse(data=event_info)
 
     @admins_only
-    def create_nudge_settings(self, request):
+    def create_event_reminder_settings(self, request):
         context: Context = request.context
         args: dict = context.args
 
         self.validator.expect("event_id", int, is_required=True)
-        self.validator.expect("settings", dict, is_required=True)
+        self.validator.expect("when_first_posted", bool, is_required=True)
+        self.validator.expect("within_30_days", bool, is_required=True)
+        self.validator.expect("within_1_week", bool, is_required=True)
+        self.validator.expect("never", bool, is_required=True)
         self.validator.expect("community_ids", "str_list", is_required=True)
-        self.validator.expect("nudge_settings_id", str, is_required=False)
+
 
         args, err = self.validator.verify(args, strict=True)
         if err:
             return err
 
-        event_info, err = self.service.create_nudge_settings(context, args)
+        event_info, err = self.service.create_event_reminder_settings(context, args)
         if err:
             return err
         return MassenergizeResponse(data=event_info)
     @admins_only
-    def delete_nudge_settings(self, request):
+    def delete_event_reminder_settings(self, request):
         context: Context = request.context
         args: dict = context.args
 
@@ -434,7 +437,7 @@ class EventHandler(RouteHandler):
         if err:
             return err
 
-        event_info, err = self.service.delete_nudge_settings(context, args)
+        event_info, err = self.service.delete_event_reminder_settings(context, args)
         if err:
             return err
         return MassenergizeResponse(data=event_info)

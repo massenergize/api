@@ -265,14 +265,14 @@ class EventService:
     return paginate(sorted, context.get_pagination_data()), None
 
 
-  def create_nudge_settings(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
-    event, err = self.store.create_nudge_settings(context, args)
+  def create_event_reminder_settings(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    event, err = self.store.create_event_reminder_settings(context, args)
     if err:
       return None, err
     return serialize(event), None
 
-  def delete_nudge_settings(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
-    nudge_settings, err = self.store.delete_nudge_settings(context, args)
+  def delete_event_reminder_settings(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    nudge_settings, err = self.store.delete_event_reminder_settings(context, args)
     if err:
       return None, err
-    return {"deleted":True}, None
+    return nudge_settings, None

@@ -2217,9 +2217,13 @@ class EventNudgeSetting(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="nudge_settings")
     communities = models.ManyToManyField(Community, related_name="nudge_settings_communities", blank=True)
-    settings = models.JSONField(blank=True, null=True)
+
+    when_first_posted = models.BooleanField(default=False, blank=True)
+    within_30_days = models.BooleanField(default=True, blank=True)
+    within_1_week = models.BooleanField(default=True, blank=True)
+    never = models.BooleanField(default=False, blank=True)
+    last_updated_by = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True, related_name="nudge_settings_last_updated_by", blank=True)
     creator = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True, related_name="nudge_settings_creator", blank=True)
-    more_info = models.JSONField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -2227,13 +2231,16 @@ class EventNudgeSetting(models.Model):
         return f"{self.event.name} - {str(self.id)}"
 
     def simple_json(self):
-        return {
-            "id": self.id,
-            "communities": [c.info() for c in self.communities.all()],
-            "settings": self.settings,
-            "creator": get_summary_info(self.creator),
-            "more_info": self.more_info
+        data = model_to_dict(self, exclude=["event", "communities", "last_updated_by", "creator"])
+        data["id"] =str(self.id)
+        data["communities"] = [c.simple_json() for c in self.communities.all()]
+        data["settings"] = {
+            "when_first_posted": self.when_first_posted,
+            "within_30_days": self.within_30_days,
+            "within_1_week": self.within_1_week,
+            "never": self.never,
         }
+        return data
 
     def full_json(self):
         res = self.simple_json()
