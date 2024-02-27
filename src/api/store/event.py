@@ -994,7 +994,7 @@ class EventStore:
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
-
+          
     def create_event_reminder_settings(self, context: Context, args) -> Tuple[EventNudgeSetting, MassEnergizeAPIError]:
         try:
 
@@ -1029,13 +1029,17 @@ class EventStore:
                 settings.communities.set(communities)
                 settings.last_updated_by = user
                 settings.save()
+                
             return event, None
+
 
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
 
+
     def delete_event_reminder_settings(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+
         try:
             nudge_settings_id = args.pop("nudge_settings_id", None)
             nudge_settings = EventNudgeSetting.objects.filter(id=nudge_settings_id).first()
@@ -1043,7 +1047,9 @@ class EventStore:
                 return None, CustomMassenergizeError("Nudge settings with the given ID does not exist")
 
             nudge_settings.delete()
+
             return {"success":True}, None
+
 
         except Exception as e:
             capture_message(str(e), level="error")
