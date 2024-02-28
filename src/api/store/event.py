@@ -994,56 +994,52 @@ class EventStore:
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
-
-
-    def create_nudge_settings(self, context: Context, args) -> Tuple[EventNudgeSetting, MassEnergizeAPIError]:
+          
+    def create_event_reminder_settings(self, context: Context, args) -> Tuple[EventNudgeSetting, MassEnergizeAPIError]:
         try:
 
-            event_id = args.get("event_id", None)
-            settings = json.loads(args.pop("settings"))
-            communities = args.get("community_ids", [])
+            event_id = args.pop("event_id", None)
+            communities = args.pop("community_ids", [])
+
             user = get_user_from_context(context)
+            is_all_communities = communities and communities[0].lower() == "all"
 
             event = Event.objects.filter(id=event_id).first()
             if not event:
                 return None, CustomMassenergizeError("Event with the given ID does not exist")
-            if not settings:
-                return None, CustomMassenergizeError("Please provide settings for the nudge")
 
-            keys = settings.keys()
+            settings, exists = EventNudgeSetting.objects.get_or_create(event=event, **args)
 
-            queries = [Q(settings__contains={key: settings[key]}) for key in keys]
-            existing_settings = EventNudgeSetting.objects.filter(event=event, *queries).first()
-
-            other_nudge_settings = EventNudgeSetting.objects.filter(event=event, communities__in=communities).exclude(
-                id=existing_settings.id if existing_settings else None)
-
-
-            for nudge_setting in other_nudge_settings:
-                for community in communities:
-                    nudge_setting.communities.remove(community)
-                    nudge_setting.save()
-
-            if existing_settings:
-                existing_settings.communities.add(*communities)
-                existing_settings.more_info = {**existing_settings.more_info, "last_updated_by": user.full_name if user else None}
-                existing_settings.save()
-                return existing_settings, None
+            if is_all_communities:
+                communities = Community.objects.filter(is_deleted=False).values_list('id', flat=True)
+                EventNudgeSetting.objects.filter(event=event).exclude( id=settings.id if settings else None).delete()
             else:
-                new_settings = EventNudgeSetting()
-                new_settings.event = event
-                new_settings.creator = user
-                new_settings.settings = settings
-                new_settings.more_info = {"last_updated_by": user.full_name if user else None}
-                new_settings.save()
-                new_settings.communities.set(communities)
-                return new_settings, None
+                 other_nudge_settings = EventNudgeSetting.objects.filter(event=event, communities__in=communities).exclude(id=settings.id)
+                 for nudge_setting in other_nudge_settings:
+                    for community in communities:
+                        nudge_setting.communities.remove(community)
+                        nudge_setting.save()
+
+            if exists:
+                settings.communities.add(*communities)
+                settings.last_updated_by = user
+                settings.save()
+            else:
+                settings.creator = user
+                settings.communities.set(communities)
+                settings.last_updated_by = user
+                settings.save()
+                
+            return event, None
+
 
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
 
-    def delete_nudge_settings(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+
+    def delete_event_reminder_settings(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+
         try:
             nudge_settings_id = args.pop("nudge_settings_id", None)
             nudge_settings = EventNudgeSetting.objects.filter(id=nudge_settings_id).first()
@@ -1051,7 +1047,9 @@ class EventStore:
                 return None, CustomMassenergizeError("Nudge settings with the given ID does not exist")
 
             nudge_settings.delete()
-            return nudge_settings, None
+
+            return {"success":True}, None
+
 
         except Exception as e:
             capture_message(str(e), level="error")

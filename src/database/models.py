@@ -229,8 +229,8 @@ class Tag(models.Model):
 
     def __str__(self):
         return "%s - %s" % (self.name, self.tag_collection)
-    
-    def info(self): 
+
+    def info(self):
         return model_to_dict(self, ["id", "name"])
 
     def simple_json(self):
@@ -278,17 +278,17 @@ class Media(models.Model):
 
     def __str__(self):
         return str(self.id) + "-" + self.name + "(" + self.file.name + ")"
-    
-    def info(self): 
+
+    def info(self):
         return self.simple_json()
 
     def simple_json(self):
         obj = {
             "id": self.id,
             "name": self.name,
-            "url": self.file.url,   
+            "url": self.file.url,
         }
-        if hasattr(self, "user_upload"): 
+        if hasattr(self, "user_upload"):
             obj["created_at"] = self.user_upload.created_at
             obj["info"] = self.user_upload.info
 
@@ -318,14 +318,14 @@ class Media(models.Model):
             calculated_hash =  make_hash_from_file(image_data)
             return calculated_hash
         return None
-    
+
     def save(self, *args, **kwargs):
         if self.file and not self.hash:
             hash = self.calculate_hash(self.file.file)
-            if hash: 
+            if hash:
                 self.hash = hash
         super().save(*args, **kwargs)
-    
+
 
     class Meta:
         db_table = "media"
@@ -1263,9 +1263,9 @@ class UserMediaUpload(models.Model):
     def __str__(self):
         if self.user:
             return f"{str(self.id)} - {self.media.name} from {self.user.preferred_name or self.user.full_name} "
-        
+
         return f"{str(self.id)} - {self.media.name} from ..."
-    
+
     def simple_json(self):
         res = model_to_dict(
             self, ["settings", "media", "created_at", "id", "is_universal", "info", "publicity"]
@@ -2149,13 +2149,11 @@ class Event(models.Model):
         data = model_to_dict(self, ["id", "name"])
         return data
 
-    def is_on_homepage(self):
+    def is_on_homepage(self) -> bool:
         is_used = False
         home_page = HomePageSettings.objects.filter(community=self.community).first()
         if home_page and home_page.featured_events:
-            is_used = home_page.featured_events.filter(
-                id=self.id, start_date_and_time__gte=timezone.now()
-            ).exists()
+            is_used = home_page.featured_events.filter(id=self.id, start_date_and_time__gte=timezone.now()).exists()
         return is_used
 
     def simple_json(self):
@@ -2178,15 +2176,10 @@ class Event(models.Model):
         data["invited_communities"] = [
             c.simple_json() for c in self.invited_communities.all()
         ]
-        data["is_open"] = (
-            False if not self.publicity else EventConstants.is_open(self.publicity)
-        )
-        data["is_open_to"] = (
-            False if not self.publicity else EventConstants.is_open_to(self.publicity)
-        )
-        data["is_closed_to"] = (
-            False if not self.publicity else EventConstants.is_closed_to(self.publicity)
-        )
+        data["is_open"] =  False if not self.publicity else EventConstants.is_open(self.publicity)
+        data["is_open_to"] = False if not self.publicity else EventConstants.is_open_to(self.publicity)
+
+        data["is_closed_to"] = False if not self.publicity else EventConstants.is_closed_to(self.publicity)
 
         data["communities_under_publicity"] = [
             c.simple_json() for c in self.communities_under_publicity.all()
@@ -2196,7 +2189,10 @@ class Event(models.Model):
 
         data["shared_to"] = [c.info() for c in self.shared_to.all()]
         data["is_on_home_page"] = self.is_on_homepage()
+
         data["event_type"] = self.event_type if self.event_type else "Online" if not self.location else "In person"
+        data["settings"] = dict(notifications=[x.simple_json() for x in self.nudge_settings.all().order_by("-created_at") if x.communities.exists()])
+
         return data
 
     def full_json(self):
@@ -2208,6 +2204,49 @@ class Event(models.Model):
             "-start_date_and_time",
         )
         db_table = "events"
+
+
+class EventNudgeSetting(models.Model):
+    """
+    A class used to represent the settings for nudges for an event.
+    Communities: the list of communities this setting apply to for the event
+    settings: the settings for the event. sample:{'when_first_posted': False,'within_30_days': True,'within_1_week': False, 'never': False}
+    creator: the user who created this setting
+    more_info: any other information about this settings
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="nudge_settings")
+    communities = models.ManyToManyField(Community, related_name="nudge_settings_communities", blank=True)
+
+    when_first_posted = models.BooleanField(default=False, blank=True)
+    within_30_days = models.BooleanField(default=True, blank=True)
+    within_1_week = models.BooleanField(default=True, blank=True)
+    never = models.BooleanField(default=False, blank=True)
+    last_updated_by = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True, related_name="nudge_settings_last_updated_by", blank=True)
+    creator = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True, related_name="nudge_settings_creator", blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.event.name} - {str(self.id)}"
+
+    def simple_json(self):
+        data = model_to_dict(self, exclude=["event", "communities", "last_updated_by", "creator"])
+        data["id"] =str(self.id)
+        data["communities"] = [c.simple_json() for c in self.communities.all()]
+        data["settings"] = {
+            "when_first_posted": self.when_first_posted,
+            "within_30_days": self.within_30_days,
+            "within_1_week": self.within_1_week,
+            "never": self.never,
+        }
+        return data
+
+    def full_json(self):
+        res = self.simple_json()
+        res["event"] = self.event.info()
+        return res
+
 
 
 # leaner class that stores information about events that have already passed
@@ -2421,6 +2460,7 @@ class Testimonial(models.Model):
     anonymous = models.BooleanField(default=False, blank=True)
     preferred_name = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
     other_vendor = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
+    more_info = models.JSONField(blank=True, null=True)
     # is_user_submitted = models.BooleanField(default=False, blank=True, null=True)
 
     def __str__(self):
@@ -3263,8 +3303,8 @@ class HomePageSettings(models.Model):
 
     def __str__(self):
         return "HomePageSettings - %s" % (self.community)
-    
-    def info(self): 
+
+    def info(self):
         return model_to_dict(self, ["id", "title", "community"])
 
     def simple_json(self):
@@ -3811,8 +3851,8 @@ class FeatureFlag(models.Model):
         """
             Returns : List of communities as a QuerySet
         """
-        if not communities_in: 
-            communities_in = Community.objects.filter(is_deleted=False) 
+        if not communities_in:
+            communities_in = Community.objects.filter(is_deleted=False)
 
         if self.audience == "EVERYONE":
             return communities_in
