@@ -411,12 +411,11 @@ class EventHandler(RouteHandler):
         args: dict = context.args
 
         self.validator.expect("event_id", int, is_required=True)
-        self.validator.expect("when_first_posted", bool, is_required=True)
-        self.validator.expect("within_30_days", bool, is_required=True)
-        self.validator.expect("within_1_week", bool, is_required=True)
-        self.validator.expect("never", bool, is_required=True)
         self.validator.expect("community_ids", "str_list", is_required=True)
-
+        self.validator.expect("when_first_posted", bool, is_required=False)
+        self.validator.expect("within_30_days", bool, is_required=False)
+        self.validator.expect("within_1_week", bool, is_required=False)
+        self.validator.expect("never", bool, is_required=False)
 
         args, err = self.validator.verify(args, strict=True)
         if err:
@@ -426,6 +425,7 @@ class EventHandler(RouteHandler):
         if err:
             return err
         return MassenergizeResponse(data=event_info)
+
     @admins_only
     def delete_event_reminder_settings(self, request):
         context: Context = request.context
