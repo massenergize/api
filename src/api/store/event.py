@@ -994,7 +994,7 @@ class EventStore:
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
-          
+
     def create_event_reminder_settings(self, context: Context, args) -> Tuple[EventNudgeSetting, MassEnergizeAPIError]:
         try:
 
@@ -1011,7 +1011,10 @@ class EventStore:
             settings, exists = EventNudgeSetting.objects.get_or_create(event=event, **args)
 
             if is_all_communities:
-                communities = Community.objects.filter(is_deleted=False).values_list('id', flat=True)
+                if context.user_is_super_admin:
+                    communities = Community.objects.filter(is_deleted=False).values_list('id', flat=True)
+                elif context.user_is_community_admin:
+                    communities = [c.id for c in user.communityadmingroup_set.all()] if user else []
                 EventNudgeSetting.objects.filter(event=event).exclude( id=settings.id if settings else None).delete()
             else:
                  other_nudge_settings = EventNudgeSetting.objects.filter(event=event, communities__in=communities).exclude(id=settings.id)
@@ -1039,18 +1042,23 @@ class EventStore:
 
 
     def delete_event_reminder_settings(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
-
         try:
-            nudge_settings_id = args.pop("nudge_settings_id", None)
-            nudge_settings = EventNudgeSetting.objects.filter(id=nudge_settings_id).first()
-            if not nudge_settings:
-                return None, CustomMassenergizeError("Nudge settings with the given ID does not exist")
+            nudge_settings_id = args.get("nudge_settings_id")
+            if not nudge_settings_id:
+                return None, CustomMassenergizeError("Nudge settings ID not provided")
+
+            try:
+                nudge_settings = EventNudgeSetting.objects.get(id=nudge_settings_id)
+            except EventNudgeSetting.DoesNotExist:
+                return None, CustomMassenergizeError(f"Nudge settings with ID {nudge_settings_id} does not exist")
+
+            if not context.user_is_super_admin and (nudge_settings.creator_id != context.user_id or not is_admin_of_community(context, nudge_settings.event.community.id)):
+                return None, NotAuthorizedError()
 
             nudge_settings.delete()
 
-            return {"success":True}, None
-
+            return {"success": True}, None
 
         except Exception as e:
             capture_message(str(e), level="error")
-            return None, CustomMassenergizeError(e)
+            return None, CustomMassenergizeError(str(e))
