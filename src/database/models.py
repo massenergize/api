@@ -2167,23 +2167,17 @@ class Event(models.Model):
                 "user",
                 "communities_under_publicity",
                 "shared_to",
-
             ],
         )
-        data["tags"] = [t.simple_json() for t in self.tags.all()]
-        data["community"] = get_json_if_not_none(self.community)
-        data["image"] = None if not self.image else self.image.full_json()
-        data["invited_communities"] = [
-            c.simple_json() for c in self.invited_communities.all()
-        ]
+        data["tags"] = [t.info() for t in self.tags.all()]
+        data["community"] = None if not self.community else self.community.info()
+        data["image"] = None if not self.image else self.image.info()
+        data["invited_communities"] = [ c.info() for c in self.invited_communities.all()]
         data["is_open"] =  False if not self.publicity else EventConstants.is_open(self.publicity)
         data["is_open_to"] = False if not self.publicity else EventConstants.is_open_to(self.publicity)
-
         data["is_closed_to"] = False if not self.publicity else EventConstants.is_closed_to(self.publicity)
+        data["communities_under_publicity"] = [c.info() for c in self.communities_under_publicity.all()]
 
-        data["communities_under_publicity"] = [
-            c.simple_json() for c in self.communities_under_publicity.all()
-        ]
         if self.user:
             data["user_email"] = self.user.email
 
@@ -2477,12 +2471,12 @@ class Testimonial(models.Model):
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["image", "tags"])
-        res["user"] = self._get_user_info()
-        res["action"] = get_json_if_not_none(self.action)
+        res["user"] = None if not self.user else self.user.info()
+        res["action"] = None if not self.action else self.action.info()
         res["vendor"] = None if not self.vendor else self.vendor.info()
-        res["community"] = get_json_if_not_none(self.community)
+        res["community"] = None if not self.community else self.community.info()
         res["created_at"] = self.created_at.date()
-        res["file"] = get_json_if_not_none(self.image)
+        res["file"] = None if not self.image else self.image.info()
         res["tags"] = [t.simple_json() for t in self.tags.all()]
         res["anonymous"] = self.anonymous
         res["preferred_name"] = self.preferred_name
