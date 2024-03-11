@@ -2003,7 +2003,7 @@ class Action(models.Model):
                 # "is_user_submitted",
             ],
         )
-        data["image"] = get_json_if_not_none(self.image)
+        data["image"] = get_summary_info(self.image)
         data["calculator_action"] = get_summary_info(self.calculator_action)
         data["tags"] = [t.simple_json() for t in self.tags.all()]
         data["community"] = get_summary_info(self.community)
