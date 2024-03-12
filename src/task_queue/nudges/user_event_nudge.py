@@ -3,6 +3,7 @@ import pytz
 from _main_.utils.common import encode_data_for_URL, serialize_all
 from _main_.utils.constants import COMMUNITY_URL_ROOT
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
+from _main_.utils.feature_flag_keys import USER_EVENTS_NUDGES_FF
 from api.utils.api_utils import get_sender_email
 from api.utils.constants import USER_EVENTS_NUDGE_TEMPLATE
 from database.models import Community, CommunityMember, Event, UserProfile, FeatureFlag
@@ -36,8 +37,6 @@ USER_PREFERENCE_DEFAULTS = {
         "your_activity_updates": {"never": {"value": True}},
     },
 }
-
-USER_EVENT_NUDGE_KEY = "user-event-nudge-feature-flag"
 
 DEFAULT_EVENT_SETTINGS = {
     "when_first_posted": False,
@@ -294,7 +293,7 @@ def prepare_user_events_nudge(task=None, email=None, community_id=None):
 
             return True
 
-        flag = FeatureFlag.objects.get(key=USER_EVENT_NUDGE_KEY)
+        flag = FeatureFlag.objects.get(key=USER_EVENTS_NUDGES_FF)
         if not flag or not flag.enabled():
             return False
 
