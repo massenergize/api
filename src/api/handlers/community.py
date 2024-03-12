@@ -31,6 +31,9 @@ class CommunityHandler(RouteHandler):
     self.add("/communities.custom.website.add", self.add_custom_website)
     self.add("/communities.actions.completed", self.actions_completed)
 
+    self.add("/communities.nudge.settings.create", self.create_nudge_settings)
+    self.add("/communities.nudge.settings.list", self.list_nudge_settings)
+
     #admin routes
     self.add("/communities.listForCommunityAdmin", self.community_admin_list)
     self.add("/communities.others.listForCommunityAdmin", self.list_other_communities_for_cadmin)
@@ -307,4 +310,42 @@ class CommunityHandler(RouteHandler):
     if err:
       return err
     return MassenergizeResponse(data=community_completed_actions)
+
+
+  # @admins_only
+  def create_nudge_settings(self, request):
+      context: Context  = request.context
+      args: dict = context.args
+      # verify the body of the incoming request
+      self.validator.expect("community_id", int, is_required=True)
+      self.validator.expect("feature_flag_key", int, is_required=True)
+      self.validator.expect("is_active", bool, is_required=True)
+      self.validator.expect("activate_on", str, is_required=False)
+
+      args, err = self.validator.verify(args, strict=True)
+      if err:
+        return err
+
+      data, err = self.service.create_nudge_settings(context, args)
+      if err:
+        return err
+      return MassenergizeResponse(data=data)
+
+
+  @admins_only
+  def list_nudge_settings(self, request):
+        context: Context = request.context
+        args: dict = context.args
+        # verify the body of the incoming request
+        self.validator.expect("community_id", int, is_required=True)
+        self.validator.expect("feature_flag_keys", "str_list", is_required=True)
+
+        args, err = self.validator.verify(args, strict=True)
+        if err:
+            return err
+
+        data, err = self.service.list_nudge_settings(context, args)
+        if err:
+            return err
+        return MassenergizeResponse(data=data)
 

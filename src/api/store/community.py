@@ -9,8 +9,8 @@ from api.utils.filter_functions import get_communities_filter_params
 from database.models import (
     Community,
     CommunityMember,
-    CustomCommunityWebsiteDomain,
-    UserProfile,
+    CommunityNudgeSetting, CustomCommunityWebsiteDomain,
+    FeatureFlag, UserProfile,
     Action,
     Graph,
     Media,
@@ -1202,6 +1202,70 @@ class CommunityStore:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
 
+    def create_nudge_settings(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        try:
+            community_id = args.get("community_id")
+            is_active = args.get("is_active", False)
+            feature_flag_key = args.get("feature_flag_key")
+            activate_on = args.get("activate_on")
+
+            if not feature_flag_key:
+                return None, CustomMassenergizeError("feature_flag_key is required")
+
+            feature_flag = FeatureFlag.objects.filter(key=feature_flag_key).first()
+            if not feature_flag:
+                return None, CustomMassenergizeError("Feature Flag not found")
+
+            if not community_id:
+                return None, CustomMassenergizeError("community_id is required")
+
+            community = Community.objects.filter(id=community_id).first()
+            if not community:
+                return None, CustomMassenergizeError("Community not found")
+
+            nudge_settings, _ = CommunityNudgeSetting.objects.get_or_create(community=community, feature_flag=feature_flag)
+            nudge_settings.is_active = is_active
+            nudge_settings.activate_on = activate_on
+            nudge_settings.save()
+
+            return {"feature_is_enabled": True, **nudge_settings.simple_json()}, None
+
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
+
+    def list_nudge_settings(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        try:
+            feature_flag_keys = args.get("feature_flag_keys")
+            community_id = args.get("community_id")
+
+            if not community_id:
+                return None, CustomMassenergizeError("community_id is required")
+            if not feature_flag_keys:
+                return None, CustomMassenergizeError("feature_flag_keys are required")
+
+            community = Community.objects.filter(id=community_id).first()
+            if not community:
+                return None, CustomMassenergizeError("Community not found")
+
+            settings = {}
+            feature_flags = FeatureFlag.objects.filter(key__in=feature_flag_keys)
+
+            for feature_flag in feature_flags:
+                feature_is_enabled = community in feature_flag.enabled_communities()
+
+                nudge_settings, exists = CommunityNudgeSetting.objects.get_or_create(community=community, feature_flag=feature_flag)
+                if not exists:
+                    nudge_settings.is_active = feature_is_enabled
+                    nudge_settings.save()
+
+                settings[feature_flag.key] = {"feature_is_enabled": feature_is_enabled, **nudge_settings.simple_json()}
+
+            return settings, None
+
+        except Exception as e:
+            capture_exception(e)
+            return None, CustomMassenergizeError(e)
 
 ########### Helper functions  ###########
 

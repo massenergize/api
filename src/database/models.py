@@ -3943,3 +3943,34 @@ class Footage(models.Model):
     class Meta:
         db_table = "footages"
         ordering = ("-id",)
+
+
+class CommunityNudgeSetting(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
+    feature_flag = models.ForeignKey(FeatureFlag, on_delete= models.CASCADE , blank=True, null=True)
+    updated_by = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True, blank=True)
+    is_active = models.BooleanField(default=True, blank=True)
+    activate_on = models.DateField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    more_info = models.JSONField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.community.name} - {self.feature_flag.key}"
+
+    def info(self):
+        return model_to_dict(self, fields=["id", "is_active", "activate_on", "more_info"])
+
+    def simple_json(self):
+        data = model_to_dict(self, fields=["is_active", "activate_on", "more_info"])
+        data["feature_flag"] = {
+            "id": self.feature_flag.id,
+            "name": self.feature_flag.name,
+            "key": self.feature_flag.key,
+        }
+        data["community"] = self.community.info()
+        return data
+
+    def full_json(self):
+        return self.simple_json()
