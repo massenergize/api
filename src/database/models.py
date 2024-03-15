@@ -26,7 +26,7 @@ from .utils.common import (
     get_summary_info,
     make_hash_from_file,
 )
-from api.constants import STANDARD_USER, GUEST_USER
+from api.constants import COMMUNITY_NOTIFICATION_TYPES, STANDARD_USER, GUEST_USER
 from django.forms.models import model_to_dict
 from carbon_calculator.models import Action as CCAction
 from carbon_calculator.carbonCalculator import AverageImpact
@@ -3945,11 +3945,13 @@ class Footage(models.Model):
         ordering = ("-id",)
 
 
-class CommunityNudgeSetting(models.Model):
+class CommunityNotificationSetting(models.Model):
+    COMMUNITY_NOTIFICATION_TYPES_CHOICES = [(item, item) for item in COMMUNITY_NOTIFICATION_TYPES]
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
-    feature_flag = models.ForeignKey(FeatureFlag, on_delete= models.CASCADE , blank=True, null=True)
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True, related_name="notification_settings",related_query_name="notification_setting")
     updated_by = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True, blank=True)
+    notification_type = models.CharField(max_length=SHORT_STR_LEN, null=False, blank=False,choices=COMMUNITY_NOTIFICATION_TYPES_CHOICES)
     is_active = models.BooleanField(default=True, blank=True)
     activate_on = models.DateField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -3957,20 +3959,18 @@ class CommunityNudgeSetting(models.Model):
     more_info = models.JSONField(blank=True, null=True)
 
     def __str__(self):
-        return f"{self.community.name} - {self.feature_flag.key}"
+        return f"{self.community.name} - {self.notification_type}"
 
     def info(self):
-        return model_to_dict(self, fields=["id", "is_active", "activate_on", "more_info"])
+        return {"id": self.id, "is_active": self.is_active, "activate_on": str(self.activate_on), "notification_type": self.notification_type,}
 
     def simple_json(self):
-        data = model_to_dict(self, fields=["is_active", "activate_on", "more_info"])
-        data["feature_flag"] = {
-            "id": self.feature_flag.id,
-            "name": self.feature_flag.name,
-            "key": self.feature_flag.key,
-        }
-        data["community"] = self.community.info()
-        return data
+        return {"id": self.id, "notification_type": self.notification_type, "is_active": self.is_active,
+                "activate_on": str(self.activate_on), "created_at": str(self.created_at),
+                "updated_at": str(self.updated_at)}
 
     def full_json(self):
-        return self.simple_json()
+        data = self.simple_json()
+        data["community"] = self.community.info()
+        data["updated_by"] = self.updated_by.info() if self.updated_by else None
+        return data
