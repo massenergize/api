@@ -1,13 +1,13 @@
 """Handler file for all routes pertaining to communities"""
 
-from _main_.utils.route_handler import RouteHandler
-from _main_.utils.common import parse_location, parse_bool, check_length, rename_field
-from api.services.community import CommunityService
-from _main_.utils.massenergize_response import MassenergizeResponse
-from types import FunctionType as function
+from _main_.utils.common import check_length, parse_bool, parse_location, rename_field
 from _main_.utils.context import Context
-from api.decorators import admins_only, super_admins_only, login_required
 from _main_.utils.massenergize_errors import CustomMassenergizeError
+from _main_.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.route_handler import RouteHandler
+from api.decorators import admins_only, login_required, super_admins_only
+from api.services.community import CommunityService
+
 
 class CommunityHandler(RouteHandler):
 
@@ -31,8 +31,8 @@ class CommunityHandler(RouteHandler):
     self.add("/communities.custom.website.add", self.add_custom_website)
     self.add("/communities.actions.completed", self.actions_completed)
 
-    self.add("/communities.nudge.settings.create", self.create_nudge_settings)
-    self.add("/communities.nudge.settings.list", self.list_nudge_settings)
+    self.add("/communities.notifications.settings.set", self.set_community_notification_settings)
+    self.add("/communities.notifications.settings.list", self.list_community_notification_settings)
 
     #admin routes
     self.add("/communities.listForCommunityAdmin", self.community_admin_list)
@@ -312,13 +312,12 @@ class CommunityHandler(RouteHandler):
     return MassenergizeResponse(data=community_completed_actions)
 
 
-  # @admins_only
-  def create_nudge_settings(self, request):
+  @admins_only
+  def set_community_notification_settings(self, request):
       context: Context  = request.context
       args: dict = context.args
       # verify the body of the incoming request
-      self.validator.expect("community_id", int, is_required=True)
-      self.validator.expect("feature_flag_key", int, is_required=True)
+      self.validator.expect("id", str, is_required=True)
       self.validator.expect("is_active", bool, is_required=True)
       self.validator.expect("activate_on", str, is_required=False)
 
@@ -326,25 +325,24 @@ class CommunityHandler(RouteHandler):
       if err:
         return err
 
-      data, err = self.service.create_nudge_settings(context, args)
+      data, err = self.service.set_community_notification_settings(context, args)
       if err:
         return err
       return MassenergizeResponse(data=data)
 
 
   @admins_only
-  def list_nudge_settings(self, request):
+  def list_community_notification_settings(self, request):
         context: Context = request.context
         args: dict = context.args
-        # verify the body of the incoming request
+        
         self.validator.expect("community_id", int, is_required=True)
-        self.validator.expect("feature_flag_keys", "str_list", is_required=True)
 
         args, err = self.validator.verify(args, strict=True)
         if err:
             return err
 
-        data, err = self.service.list_nudge_settings(context, args)
+        data, err = self.service.list_community_notification_settings(context, args)
         if err:
             return err
         return MassenergizeResponse(data=data)

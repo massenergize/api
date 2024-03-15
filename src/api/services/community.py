@@ -133,15 +133,14 @@ class CommunityService:
       return None, err
     return serialize_all(completed_actions_list), None
 
-  def create_nudge_settings(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
-    nudge_settings, err = self.store.create_nudge_settings(context, args)
+  def set_community_notification_settings(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    nudge_settings, err = self.store.set_community_notification_settings(context, args)
     if err:
       return None, err
     return nudge_settings, None
 
-
-  def list_nudge_settings(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
-        nudge_settings, err = self.store.list_nudge_settings(context, args)
+  def list_community_notification_settings(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+        nudge_settings, err = self.store.list_community_notification_settings(context, args)
         if err:
             return None, err
         return nudge_settings, None
