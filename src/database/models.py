@@ -3946,6 +3946,7 @@ class Footage(models.Model):
 
 
 class CommunityNotificationSetting(models.Model):
+    
     COMMUNITY_NOTIFICATION_TYPES_CHOICES = [(item, item) for item in COMMUNITY_NOTIFICATION_TYPES]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

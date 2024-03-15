@@ -1164,6 +1164,7 @@ class CommunityStore:
             notification_setting_id = args.get("id")
             is_active = args.get("is_active", False)
             activate_on = args.get("activate_on")
+            user = get_user_from_context(context)
 
             if not notification_setting_id:
                 return None, CustomMassenergizeError("id is required")
@@ -1174,6 +1175,7 @@ class CommunityStore:
 
             notification_setting.is_active = is_active
             notification_setting.activate_on = to_django_date(activate_on)
+            notification_setting.updated_by = user
             notification_setting.save()
             
             # ----------------------------------------------------------------
@@ -1190,6 +1192,7 @@ class CommunityStore:
     def list_community_notification_settings(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
         try:
             community_id = args.get("community_id")
+            user = get_user_from_context(context)
 
             if not community_id:
                 return None, CustomMassenergizeError("community_id is required")
@@ -1207,7 +1210,7 @@ class CommunityStore:
                 feature_is_enabled = community in feature_flag.enabled_communities()
                 notification_setting = CommunityNotificationSetting.objects.filter(community=community, notification_type=item).first()
                 if not notification_setting:
-                    notification_setting = CommunityNotificationSetting.objects.create(community=community, notification_type=item,is_active=True)
+                    notification_setting = CommunityNotificationSetting.objects.create(community=community, notification_type=item,is_active=True, updated_by=user)
                 settings[item] = {"feature_is_enabled": feature_is_enabled, **notification_setting.simple_json()}
 
             return settings, None
