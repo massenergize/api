@@ -4,6 +4,8 @@ from _main_.utils.common import encode_data_for_URL, serialize_all
 from _main_.utils.constants import COMMUNITY_URL_ROOT
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
 from _main_.utils.feature_flag_keys import USER_EVENTS_NUDGES_FF
+from _main_.utils.footage.FootageConstants import FootageConstants
+from _main_.utils.footage.spy import Spy
 from api.utils.api_utils import get_sender_email
 from api.utils.constants import USER_EVENTS_NUDGE_TEMPLATE
 from database.models import Community, CommunityMember, CommunityNotificationSetting, Event, UserProfile, FeatureFlag
@@ -207,11 +209,18 @@ def community_has_altered_flow(community, feature_flag_key) -> bool:
         return False
     if community_nudge_settings.is_active:
         return True
+    
+    activate_on = community_nudge_settings.activate_on
 
-    if community_nudge_settings.activate_on and community_nudge_settings.activate_on >= today:
+    if activate_on and activate_on >= today:
         community_nudge_settings.is_active = True
         community_nudge_settings.activate_on = None
         community_nudge_settings.save()
+        
+        # ----------------------------------------------------------------
+        notification_type = feature_flag_key.split('-feature-flag')[0]
+        Spy.create_community_notification_settings_footage(communities=[community], actor="Automatic", type=FootageConstants.update(),notes=f"{notification_type} automatically updated as the resuming date {activate_on} elapsed")
+        # ----------------------------------------------------------------
         return True
     return False
 

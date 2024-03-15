@@ -1175,7 +1175,12 @@ class CommunityStore:
             notification_setting.is_active = is_active
             notification_setting.activate_on = to_django_date(activate_on)
             notification_setting.save()
-
+            
+            # ----------------------------------------------------------------
+            notification_type = notification_setting.notification_type.split('-feature-flag')[0]
+            Spy.create_community_notification_settings_footage(communities=[notification_setting.community], context=context,type=FootageConstants.update(), notes=f"{notification_type} ID({notification_setting_id})")
+            # ----------------------------------------------------------------
+            
             return {"feature_is_enabled": True, **notification_setting.simple_json()}, None
 
         except Exception as e:
