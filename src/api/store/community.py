@@ -1172,6 +1172,10 @@ class CommunityStore:
             notification_setting = CommunityNotificationSetting.objects.filter(id=notification_setting_id).first()
             if not notification_setting:
                 return None, CustomMassenergizeError("Community notification settings with ID not found")
+            
+            if not context.user_is_super_admin:
+                if not is_admin_of_community(context, notification_setting.community.id):
+                    return NotAuthorizedError()
 
             notification_setting.is_active = is_active
             notification_setting.activate_on = to_django_date(activate_on)
@@ -1200,6 +1204,10 @@ class CommunityStore:
             community = Community.objects.filter(id=community_id).first()
             if not community:
                 return None, CustomMassenergizeError("Community not found")
+            
+            if not context.user_is_super_admin:
+                if not is_admin_of_community(context, community.id):
+                    return NotAuthorizedError()
 
             settings = {}
 
