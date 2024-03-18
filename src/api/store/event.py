@@ -1013,8 +1013,7 @@ class EventStore:
                     communities = Community.objects.filter(is_deleted=False).values_list('id', flat=True)
                 
                 elif context.user_is_community_admin:
-                    community_admin_group_id_set = set(
-                        user.communityadmingroup_set.values_list('id', flat=True)) if user else set()
+                    community_admin_group_id_set = set(user.communityadmingroup_set.values_list('id', flat=True)) if user else set()
                     communities_shared_to_set = set(event.communities_shared_to())
                     communities = list(community_admin_group_id_set.union(communities_shared_to_set))
                 
@@ -1022,9 +1021,7 @@ class EventStore:
             
             else:
                 communities_set = set(communities)
-                other_nudge_settings = EventNudgeSetting.objects.filter(event=event,
-                                                                        communities__in=communities).exclude(
-                    id=settings_id)
+                other_nudge_settings = EventNudgeSetting.objects.filter(event=event,communities__in=communities).exclude(id=settings_id)
                 
                 for nudge_setting in other_nudge_settings:
                     current_communities = set(nudge_setting.communities.values_list('id', flat=True))
