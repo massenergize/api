@@ -2148,7 +2148,14 @@ class Event(models.Model):
     def info(self):
         data = model_to_dict(self, ["id", "name"])
         return data
-
+    def communities_shared_to(self):
+        communities = self.communities_under_publicity.all()
+        if self.publicity == EventConstants.open_to():
+            return communities
+        elif self.publicity == EventConstants.closed_to():
+            communities_ids = communities.values_list('id', flat=True)
+            return Community.objects.exclude(id__in=communities_ids)
+        return []
     def is_on_homepage(self) -> bool:
         is_used = False
         home_page = HomePageSettings.objects.filter(community=self.community).first()

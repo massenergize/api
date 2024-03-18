@@ -989,32 +989,38 @@ class EventStore:
 
     def create_event_reminder_settings(self, context: Context, args) -> Tuple[EventNudgeSetting, MassEnergizeAPIError]:
         try:
-
             event_id = args.pop("event_id", None)
             communities = args.pop("community_ids", [])
-
             user = get_user_from_context(context)
             is_all_communities = communities and communities[0].lower() == "all"
-
+            
             event = Event.objects.filter(id=event_id).first()
             if not event:
                 return None, CustomMassenergizeError("Event with the given ID does not exist")
-
+            
             settings, exists = EventNudgeSetting.objects.get_or_create(event=event, **args)
-
+            settings_id = settings.id if settings else None
+            
             if is_all_communities:
                 if context.user_is_super_admin:
                     communities = Community.objects.filter(is_deleted=False).values_list('id', flat=True)
+                
                 elif context.user_is_community_admin:
-                    communities = [c.id for c in user.communityadmingroup_set.all()] if user else []
-                EventNudgeSetting.objects.filter(event=event).exclude( id=settings.id if settings else None).delete()
+                    community_admin_group_id_set = set(user.communityadmingroup_set.values_list('id', flat=True)) if user else set()
+                    communities_shared_to_set = set(event.communities_shared_to())
+                    communities = list(community_admin_group_id_set.union(communities_shared_to_set))
+                
+                EventNudgeSetting.objects.filter(event=event).exclude(id=settings_id).delete()
+            
             else:
-                 other_nudge_settings = EventNudgeSetting.objects.filter(event=event, communities__in=communities).exclude(id=settings.id)
-                 for nudge_setting in other_nudge_settings:
-                    for community in communities:
-                        nudge_setting.communities.remove(community)
-                        nudge_setting.save()
-
+                communities_set = set(communities)
+                other_nudge_settings = EventNudgeSetting.objects.filter(event=event, communities__in=communities).exclude(id=settings_id)
+                
+                for nudge_setting in other_nudge_settings:
+                    current_communities = set(nudge_setting.communities.values_list('id', flat=True))
+                    communities_to_remove = communities_set.intersection(current_communities)
+                    nudge_setting.communities.remove(*communities_to_remove)
+            
             if exists:
                 settings.communities.add(*communities)
                 settings.last_updated_by = user
@@ -1026,7 +1032,6 @@ class EventStore:
                 settings.save()
                 
             return event, None
-
 
         except Exception as e:
             capture_message(str(e), level="error")
