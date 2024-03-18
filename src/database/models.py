@@ -3967,8 +3967,7 @@ class CommunityNotificationSetting(models.Model):
 
     def simple_json(self):
         return {"id": self.id, "notification_type": self.notification_type, "is_active": self.is_active,
-                "activate_on": str(self.activate_on), "created_at": str(self.created_at),
-                "updated_at": str(self.updated_at)}
+                "activate_on": str(self.activate_on) if self.activate_on else self.activate_on}
 
     def full_json(self):
         data = self.simple_json()

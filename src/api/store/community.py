@@ -1205,13 +1205,12 @@ class CommunityStore:
 
             feature_flags = FeatureFlag.objects.filter(key__in=COMMUNITY_NOTIFICATION_TYPES)
 
-            for item in COMMUNITY_NOTIFICATION_TYPES:
-                feature_flag = feature_flags.filter(key=item).first()
+            for feature_flag in feature_flags:
                 feature_is_enabled = community in feature_flag.enabled_communities()
-                notification_setting = CommunityNotificationSetting.objects.filter(community=community, notification_type=item).first()
+                notification_setting = CommunityNotificationSetting.objects.filter(community=community, notification_type=feature_flag.key).first()
                 if not notification_setting:
-                    notification_setting = CommunityNotificationSetting.objects.create(community=community, notification_type=item,is_active=True, updated_by=user)
-                settings[item] = {"feature_is_enabled": feature_is_enabled, **notification_setting.simple_json()}
+                    notification_setting = CommunityNotificationSetting.objects.create(community=community, notification_type=feature_flag.key,is_active=True, updated_by=user)
+                settings[feature_flag.key] = {"feature_is_enabled": feature_is_enabled, **notification_setting.simple_json()}
 
             return settings, None
 
