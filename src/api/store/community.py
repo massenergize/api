@@ -6,6 +6,7 @@ import zipcodes
 from django.db.models import Q
 from sentry_sdk import capture_exception, capture_message
 
+from _main_.settings import IS_PROD, SLACK_SUPER_ADMINS_WEBHOOK_URL
 from _main_.utils.constants import PUBLIC_EMAIL_DOMAINS, RESERVED_SUBDOMAIN_LIST
 from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import add_sender_signature, update_sender_signature
@@ -14,6 +15,7 @@ from _main_.utils.footage.spy import Spy
 from _main_.utils.massenergize_errors import (CustomMassenergizeError, InvalidResourceError, MassEnergizeAPIError,
                                               NotAuthorizedError)
 from _main_.utils.utils import strip_website
+from api.services.utils import send_slack_message
 from api.store.common import count_action_completed_and_todos
 from api.store.graph import GraphStore
 from api.tests.common import RESET
@@ -1170,16 +1172,17 @@ class CommunityStore:
             current_date_and_time = datetime.now(timezone.utc)
             feature_flags = FeatureFlag.objects.filter(Q(expires_on__gt=current_date_and_time) | Q(expires_on=None), allow_opt_in=True)
             
-            arr = []
+            obj = {}
             for feature_flag in feature_flags:
                 enabled_communities = feature_flag.enabled_communities()
-                arr.append({
+                obj[feature_flag.key] = {
                     "key": feature_flag.key,
                     "notes": feature_flag.notes,
                     "is_enabled": community in enabled_communities,
-                })
+                    'name': feature_flag.name
+                }
             
-            return arr, None
+            return obj, None
         
         except Exception as e:
             capture_message(str(e), level="error")
@@ -1190,6 +1193,7 @@ class CommunityStore:
             community_id = args.get("community_id")
             feature_flag_key = args.get("feature_flag_key")
             should_enable = args.get("enable")
+            user = get_user_from_context(context)
             
             if not community_id:
                 return None, CustomMassenergizeError("community_id is required")
@@ -1208,10 +1212,14 @@ class CommunityStore:
             
             if should_enable:
                 feature_flag.communities.add(community)
+                if IS_PROD:
+                    send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL,{"text":f"{user.full_name if user else context.user_email} requested '{feature_flag.name}' to be enabled for {community.name} "})
             else:
                 feature_flag.communities.remove(community)
+                if IS_PROD:
+                    send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL, {"text":f"{user.full_name if user else context.user_email} requested {feature_flag.name} to be disabled for {community.name} "})
             
-            return {"key": feature_flag.key, "notes": feature_flag.notes, "is_enabled": should_enable}, None
+            return {"key": feature_flag.key, "notes": feature_flag.notes, "is_enabled": should_enable, "name":feature_flag.name}, None
         
         except Exception as e:
             capture_message(str(e), level="error")

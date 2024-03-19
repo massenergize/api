@@ -143,7 +143,6 @@ class CommunityService:
     feature_flag, err = self.store.request_feature_for_community(context, args)
     if err:
       return None, err
-    # send slack message to notify of this change
     return feature_flag, None
   
   
