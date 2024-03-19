@@ -310,6 +310,7 @@ class CommunityHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=community_completed_actions)
   
+  @admins_only
   def list_community_feature(self, request):
     context:Context = request.context
     args: dict = context.args
@@ -328,7 +329,7 @@ class CommunityHandler(RouteHandler):
 
     return MassenergizeResponse(data=feature_flags)
   
-  
+  @admins_only
   def request_feature_for_community(self, request):
     context: Context = request.context
     args: dict = context.args
