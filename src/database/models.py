@@ -2148,6 +2148,14 @@ class Event(models.Model):
     def info(self):
         data = model_to_dict(self, ["id", "name"])
         return data
+    def communities_shared_to(self):
+        communities = self.communities_under_publicity.all()
+        if self.publicity == EventConstants.open_to():
+            return communities
+        elif self.publicity == EventConstants.closed_to():
+            communities_ids = communities.values_list('id', flat=True)
+            return Community.objects.exclude(id__in=communities_ids)
+        return []
 
     def is_on_homepage(self) -> bool:
         is_used = False
@@ -3801,6 +3809,7 @@ class FeatureFlag(models.Model):
     notes = models.CharField(max_length=LONG_STR_LEN, default="", blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     expires_on = models.DateTimeField(null=True, blank=True)
+    allow_opt_in = models.BooleanField(default=False, blank=True) #This field will be used to determine if a community admins can opt in to a feature flag
 
     def __str__(self):
         return f"{self.name}"
@@ -3817,6 +3826,7 @@ class FeatureFlag(models.Model):
                 "key",
                 "scope",
                 "notes",
+                "allow_opt_in"
             ],
         )
         res["communities"] = [
