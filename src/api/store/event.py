@@ -218,25 +218,18 @@ class EventStore:
         shared = []
         if community_id:
             # TODO: also account for communities who are added as invited_communities
-            query = Q(community__id=community_id)
-            events = Event.objects.select_related('image', 'community').prefetch_related('tags',
-                                                                                         'invited_communities').filter(
-                query)
+            events = Event.objects.select_related('image', 'community').prefetch_related('tags','invited_communities').filter(community__id=community_id)
 
             # Find events that have been shared to this community
             community = Community.objects.get(pk=community_id)
-            shared = []
+
             if community:
                 shared = community.events_from_others.filter(is_published=True)
 
-
         elif subdomain:
-            query = Q(community__subdomain=subdomain)
-            events = Event.objects.select_related('image', 'community').prefetch_related('tags',
-                                                                                         'invited_communities').filter(
-                query)
+            events = Event.objects.select_related('image', 'community').prefetch_related('tags','invited_communities').filter(community__id=community_id)
             community = Community.objects.get(subdomain=subdomain)
-            shared = []
+
             if community: shared = community.events_from_others.filter(is_published=True)
 
 
@@ -253,7 +246,6 @@ class EventStore:
                 events = events.filter(is_published=True)
         all_events = [*events, *shared]
 
-        all_events = Event.objects.filter(pk__in=[item.id for item in all_events])
         return all_events, None
 
     def create_event(self, context: Context, args, user_submitted) -> Tuple[dict, MassEnergizeAPIError]:
