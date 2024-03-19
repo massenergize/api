@@ -1161,7 +1161,7 @@ class CommunityStore:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
 
-    def list_community_feature(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
+    def list_community_feature(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
         try:
             community_id = args.get("community_id")
             if not community_id:
