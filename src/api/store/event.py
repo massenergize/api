@@ -994,6 +994,8 @@ class EventStore:
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
+
+            
     def create_event_reminder_settings(self, context: Context, args) -> Tuple[EventNudgeSetting, MassEnergizeAPIError]:
         try:
             event_id = args.pop("event_id", None)
