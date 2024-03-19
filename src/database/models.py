@@ -3807,6 +3807,7 @@ class FeatureFlag(models.Model):
     notes = models.CharField(max_length=LONG_STR_LEN, default="", blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     expires_on = models.DateTimeField(null=True, blank=True)
+    allow_opt_in = models.BooleanField(default=False, blank=True) #This field will be used to determine if a community admins can opt in to a feature flag
 
     def __str__(self):
         return f"{self.name}"
@@ -3823,6 +3824,7 @@ class FeatureFlag(models.Model):
                 "key",
                 "scope",
                 "notes",
+                "allow_opt_in"
             ],
         )
         res["communities"] = [

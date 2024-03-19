@@ -1168,7 +1168,7 @@ class CommunityStore:
             community = Community.objects.get(id=community_id)
             
             current_date_and_time = datetime.now(timezone.utc)
-            feature_flags = FeatureFlag.objects.filter(Q(expires_on__gt=current_date_and_time) | Q(expires_on=None))
+            feature_flags = FeatureFlag.objects.filter(Q(expires_on__gt=current_date_and_time) | Q(expires_on=None), allow_opt_in=True)
             
             arr = []
             for feature_flag in feature_flags:
