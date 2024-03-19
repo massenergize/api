@@ -132,5 +132,21 @@ class CommunityService:
     if err:
       return None, err
     return serialize_all(completed_actions_list), None
+  
+  def list_community_feature(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    feature_flags, err = self.store.list_community_feature(context, args)
+    if err:
+      return None, err
+    return feature_flags, None
+  
+  def request_feature_for_community(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    feature_flag, err = self.store.request_feature_for_community(context, args)
+    if err:
+      return None, err
+    # send slack message to notify of this change
+    return feature_flag, None
+  
+  
+  
 
 

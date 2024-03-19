@@ -1,74 +1,31 @@
+import math
+from datetime import datetime, timezone
+from typing import Tuple
+
+import zipcodes
+from django.db.models import Q
+from sentry_sdk import capture_exception, capture_message
+
+from _main_.utils.constants import PUBLIC_EMAIL_DOMAINS, RESERVED_SUBDOMAIN_LIST
+from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import add_sender_signature, update_sender_signature
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
+from _main_.utils.massenergize_errors import (CustomMassenergizeError, InvalidResourceError, MassEnergizeAPIError,
+                                              NotAuthorizedError)
 from _main_.utils.utils import strip_website
 from api.store.common import count_action_completed_and_todos
+from api.store.graph import GraphStore
 from api.tests.common import RESET
 from api.utils.api_utils import get_distance_between_coords, is_admin_of_community
 from api.utils.filter_functions import get_communities_filter_params
-from database.models import (
-    Community,
-    CommunityMember,
-    CustomCommunityWebsiteDomain,
-    UserProfile,
-    Action,
-    Graph,
-    Media,
-    AboutUsPageSettings,
-    ActionsPageSettings,
-    ContactUsPageSettings,
-    DonatePageSettings,
-    HomePageSettings,
-    ImpactPageSettings,
-    TeamsPageSettings,
-    EventsPageSettings,
-    TestimonialsPageSettings,
-    VendorsPageSettings,
-    RegisterPageSettings,
-    SigninPageSettings,
-    Goal,
-    CommunityAdminGroup,
-    Subdomain,
-)
-from database.models import (
-    Community,
-    CommunityMember,
-    UserProfile,
-    Action,
-    Graph,
-    Media,
-    AboutUsPageSettings,
-    ActionsPageSettings,
-    ContactUsPageSettings,
-    DonatePageSettings,
-    HomePageSettings,
-    ImpactPageSettings,
-    TeamsPageSettings,
-    Goal,
-    CommunityAdminGroup,
-    Location,
-    RealEstateUnit,
-)
-from _main_.utils.massenergize_errors import (
-    MassEnergizeAPIError,
-    InvalidResourceError,
-    CustomMassenergizeError,
-    NotAuthorizedError,
-)
-from _main_.utils.context import Context
-from api.store.graph import GraphStore
-from .utils import (
-    get_community_or_die,
-    get_user_from_context,
-    get_new_title,
-    is_reu_in_community,
-)
+from database.models import AboutUsPageSettings, Action, ActionsPageSettings, Community, CommunityAdminGroup, \
+    CommunityMember, ContactUsPageSettings, CustomCommunityWebsiteDomain, DonatePageSettings, EventsPageSettings, \
+    FeatureFlag, Goal, Graph, HomePageSettings, ImpactPageSettings, Location, Media, RealEstateUnit, \
+    RegisterPageSettings, \
+    SigninPageSettings, Subdomain, TeamsPageSettings, TestimonialsPageSettings, UserProfile, VendorsPageSettings
 from database.utils.common import json_loader
-from _main_.utils.constants import PUBLIC_EMAIL_DOMAINS, RESERVED_SUBDOMAIN_LIST
-import math
-from typing import Tuple
-import zipcodes
-from sentry_sdk import capture_message, capture_exception
+from .utils import (get_community_or_die, get_new_title, get_user_from_context, is_reu_in_community)
 
 ALL = "all"
 
@@ -1198,6 +1155,64 @@ class CommunityStore:
                 )
 
             return actions_completed, None
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
+
+    def list_community_feature(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
+        try:
+            community_id = args.get("community_id")
+            if not community_id:
+                return None, CustomMassenergizeError("community_id is required")
+            
+            community = Community.objects.get(id=community_id)
+            
+            current_date_and_time = datetime.now(timezone.utc)
+            feature_flags = FeatureFlag.objects.filter(Q(expires_on__gt=current_date_and_time) | Q(expires_on=None))
+            
+            arr = []
+            for feature_flag in feature_flags:
+                enabled_communities = feature_flag.enabled_communities()
+                arr.append({
+                    "key": feature_flag.key,
+                    "notes": feature_flag.notes,
+                    "is_enabled": community in enabled_communities,
+                })
+            
+            return arr, None
+        
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
+
+    def request_feature_for_community(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        try:
+            community_id = args.get("community_id")
+            feature_flag_key = args.get("feature_flag_key")
+            should_enable = args.get("enable")
+            
+            if not community_id:
+                return None, CustomMassenergizeError("community_id is required")
+            
+            if not feature_flag_key:
+                return None, CustomMassenergizeError("feature_flag_key is required")
+            
+            try:
+                community = Community.objects.get(id=community_id)
+            except Community.DoesNotExist:
+                return None, CustomMassenergizeError(f"Community with id {community_id} not found")
+            
+            feature_flag = FeatureFlag.objects.get(key=feature_flag_key)
+            if not feature_flag:
+                return None, CustomMassenergizeError(f"FeatureFlag with key {feature_flag_key} not found")
+            
+            if should_enable:
+                feature_flag.communities.add(community)
+            else:
+                feature_flag.communities.remove(community)
+            
+            return {"key": feature_flag.key, "notes": feature_flag.notes, "is_enabled": should_enable}, None
+        
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
