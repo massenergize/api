@@ -26,6 +26,9 @@ deploy-prod:
 	docker tag massenergize/api:latest 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api:$(VERSION)
 	docker push 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api:$(VERSION)
 	eb deploy --label $(VERSION)
+
+	git tag prod@$(VERSION)
+	git push origin prod@$(VERSION)
 .PHONY: deploy-prod
 
 prepare-canary:
@@ -40,6 +43,9 @@ deploy-canary:
 	docker tag massenergize/api-canary:latest 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-canary:$(CANARY_VERSION)
 	docker push 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-canary:$(CANARY_VERSION)
 	eb deploy --label $(CANARY_VERSION)
+
+	git tag prod@$(CANARY_VERSION)
+	git push origin prod@$(CANARY_VERSION)
 .PHONY: deploy-canary
 
 prepare-dev:
@@ -54,6 +60,9 @@ deploy-dev:
 	docker tag massenergize/api-dev:latest 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-dev:$(DEV_VERSION)
 	docker push 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-dev:$(DEV_VERSION)
 	eb deploy --label $(DEV_VERSION)
+
+	git tag prod@$(DEV_VERSION)
+	git push origin prod@$(DEV_VERSION)
 .PHONY: deploy-dev
 
 deploy:
@@ -61,11 +70,6 @@ deploy:
 	docker-compose build
 	docker-compose push
 .PHONY: deploy
-
-.PHONY: migrations
-migrations: 
-	python3 manage.py makemigrations
-	python3 manage.py migrate
 
 # Default: test api routes
 package=api
@@ -106,10 +110,35 @@ beat-remote:
 	celery -A _main_.celery.app beat -l info
 
 
-migrate:
-	python manage.py makemigrations
-	python manage.py migrate
+#-------------- NEW DEPLOYMENT STRATEGY ----------------
+serve-dev:
+	DJANGO_ENV=dev make prepare-dev
+    DJANGO_ENV=dev make deploy-dev
+.PHONY: serve-dev
+
+serve-canary:
+	DJANGO_ENV=canary make prepare-canary
+	DJANGO_ENV=canary make deploy-canary
+.PHONY: serve-canary
+
+serve-prod:
+	DJANGO_ENV=prod make prepare-canary
+	DJANGO_ENV=prod make deploy-canary
+.PHONY: serve-prod
+
+#-------------- NEW  MIGRATE ----------------
+migrate-dev:
+	DJANGO_ENV=dev python manage.py migrate
+.PHONY: migrate-dev
+
+migrate-prod:
+	DJANGO_ENV=prod python manage.py migrate
+.PHONY: migrate-prod
+
+migrate-canary:
+	DJANGO_ENV=canary python manage.py migrate
+.PHONY: migrate-canary
 
 migrate-local:
-	DJANGO_ENV=local python manage.py makemigrations
 	DJANGO_ENV=local python manage.py migrate
+.PHONY: migrate-local
