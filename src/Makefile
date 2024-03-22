@@ -13,13 +13,12 @@ start:
 	DJANGO_ENV=local python3 manage.py runserver
 .PHONY: start
 
-
-prepare-prod:
-	python3 deployment/prepare_to_deploy.py --prod 0 1
-.PHONY: prepare-prod
+#prepare-prod:
+#	python3 deployment/prepare_to_deploy.py --prod 0 1
+#.PHONY: prepare-prod
 
 VERSION=latest
-deploy-prod:
+build-and-push-prod:
 	$(eval VERSION := $(shell cat api_version_prod.txt))	
 	aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 202758212688.dkr.ecr.us-east-2.amazonaws.com
 	docker build -t massenergize/api .
@@ -29,14 +28,14 @@ deploy-prod:
 
 	git tag prod@$(VERSION)
 	git push origin prod@$(VERSION)
-.PHONY: deploy-prod
+.PHONY: build-and-push-prod
 
-prepare-canary:
-	python3 deployment/prepare_to_deploy.py --canary 0 1
-.PHONY: prepare-canary
+#prepare-canary:
+#	python3 deployment/prepare_to_deploy.py --canary 0 1
+#.PHONY: prepare-canary
 
 CANARY_VERSION=latest
-deploy-canary:
+build-and-push-canary:
 	$(eval CANARY_VERSION := $(shell cat api_version_canary.txt))	
 	aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 202758212688.dkr.ecr.us-east-2.amazonaws.com
 	docker build -t massenergize/api-canary .
@@ -46,14 +45,14 @@ deploy-canary:
 
 	git tag prod@$(CANARY_VERSION)
 	git push origin prod@$(CANARY_VERSION)
-.PHONY: deploy-canary
+.PHONY: build-and-deploy-canary
 
-prepare-dev:
-	python3 deployment/prepare_to_deploy.py --dev 0 1
-.PHONY: deploy-dev
+#prepare-dev:
+#	python3 deployment/prepare_to_deploy.py --dev 0 1
+#.PHONY: deploy-dev
 
 DEV_VERSION=latest
-deploy-dev:
+build-and-push-dev:
 	$(eval DEV_VERSION := $(shell cat api_version_dev.txt))	
 	aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 202758212688.dkr.ecr.us-east-2.amazonaws.com
 	docker build -t massenergize/api-dev .
@@ -63,7 +62,7 @@ deploy-dev:
 
 	git tag prod@$(DEV_VERSION)
 	git push origin prod@$(DEV_VERSION)
-.PHONY: deploy-dev
+.PHONY: build-and-push-dev
 
 deploy:
 	python3 deployment/prepare_to_deploy.py --dev
@@ -111,20 +110,20 @@ beat-remote:
 
 
 #-------------- NEW DEPLOYMENT STRATEGY ----------------
-serve-dev:
-	DJANGO_ENV=dev make prepare-dev
-    DJANGO_ENV=dev make deploy-dev
-.PHONY: serve-dev
+deploy-dev:
+	DJANGO_ENV=dev python3 deployment/prepare_to_deploy.py --dev 0 1
+    DJANGO_ENV=dev make build-and-push-dev
+.PHONY: deploy-dev
 
-serve-canary:
-	DJANGO_ENV=canary make prepare-canary
-	DJANGO_ENV=canary make deploy-canary
-.PHONY: serve-canary
+deploy-canary:
+	DJANGO_ENV=canary python3 deployment/prepare_to_deploy.py --canary 0 1
+	DJANGO_ENV=canary make build-and-push-canary
+.PHONY: deploy-canary
 
-serve-prod:
-	DJANGO_ENV=prod make prepare-canary
-	DJANGO_ENV=prod make deploy-canary
-.PHONY: serve-prod
+deploy-prod:
+	DJANGO_ENV=prod python3 deployment/prepare_to_deploy.py --prod 0 1
+	DJANGO_ENV=prod make build-and-push-canary
+.PHONY: deploy-prod
 
 #-------------- NEW  MIGRATE ----------------
 migrate-dev:
