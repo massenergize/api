@@ -3853,21 +3853,20 @@ class FeatureFlag(models.Model):
 
     def enabled_communities(self, communities_in: QuerySet = None):
         """
-            Returns : List of communities as a QuerySet
-        """
+              Returns : List of communities as a QuerySet
+          """
         if not communities_in:
             communities_in = Community.objects.filter(is_deleted=False)
-
+        
+        community_ids = self.communities.values_list('id', flat=True)
+        
         if self.audience == "EVERYONE":
             return communities_in
         elif self.audience == "SPECIFIC":
-            return communities_in.filter(
-                id__in=[str(u.id) for u in self.communities.all()]
-            )
+            return communities_in.filter(id__in=community_ids)
         elif self.audience == "ALL_EXCEPT":
-            return communities_in.exclude(
-                id__in=[str(u.id) for u in self.communities.all()]
-            )
+            return communities_in.exclude(id__in=community_ids)
+        
         return None
 
     def enabled_users(self, users_in: QuerySet):
@@ -3960,7 +3959,7 @@ class CommunityNotificationSetting(models.Model):
     COMMUNITY_NOTIFICATION_TYPES_CHOICES = [(item, item) for item in COMMUNITY_NOTIFICATION_TYPES]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True, related_name="notification_settings",related_query_name="notification_setting")
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name="notification_settings",related_query_name="notification_setting")
     updated_by = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True, blank=True)
     notification_type = models.CharField(max_length=SHORT_STR_LEN, null=False, blank=False,choices=COMMUNITY_NOTIFICATION_TYPES_CHOICES)
     is_active = models.BooleanField(default=True, blank=True)
@@ -3971,9 +3970,9 @@ class CommunityNotificationSetting(models.Model):
 
     def __str__(self):
         return f"{self.community.name} - {self.notification_type}"
-
+    
     def info(self):
-        return {"id": self.id, "is_active": self.is_active, "activate_on": str(self.activate_on), "notification_type": self.notification_type,}
+        return {"id": self.id, "is_active": self.is_active, "activate_on": str(self.activate_on) if self.activate_on else self.activate_on, "notification_type": self.notification_type,}
 
     def simple_json(self):
         return {"id": self.id, "notification_type": self.notification_type, "is_active": self.is_active,
@@ -3984,3 +3983,6 @@ class CommunityNotificationSetting(models.Model):
         data["community"] = self.community.info()
         data["updated_by"] = self.updated_by.info() if self.updated_by else None
         return data
+    
+    class Meta:
+        indexes = [ models.Index(fields=["community", "notification_type"]),]

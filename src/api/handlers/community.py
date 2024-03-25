@@ -31,7 +31,7 @@ class CommunityHandler(RouteHandler):
     self.add("/communities.custom.website.add", self.add_custom_website)
     self.add("/communities.actions.completed", self.actions_completed)
 
-    self.add("/communities.notifications.settings.set", self.set_community_notification_settings)
+    self.add("/communities.notifications.settings.set", self.update_community_notification_settings)
     self.add("/communities.notifications.settings.list", self.list_community_notification_settings)
 
     #admin routes
@@ -354,7 +354,7 @@ class CommunityHandler(RouteHandler):
     return MassenergizeResponse(data=feature_flags)
 
   @admins_only
-  def set_community_notification_settings(self, request):
+  def update_community_notification_settings(self, request):
       context: Context  = request.context
       args: dict = context.args
       # verify the body of the incoming request
@@ -366,7 +366,7 @@ class CommunityHandler(RouteHandler):
       if err:
         return err
 
-      data, err = self.service.set_community_notification_settings(context, args)
+      data, err = self.service.update_community_notification_settings(context, args)
       if err:
         return err
       return MassenergizeResponse(data=data)

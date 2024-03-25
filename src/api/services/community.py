@@ -145,8 +145,8 @@ class CommunityService:
       return None, err
     return feature_flag, None
   
-  def set_community_notification_settings(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
-    nudge_settings, err = self.store.set_community_notification_settings(context, args)
+  def update_community_notification_settings(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    nudge_settings, err = self.store.update_community_notification_settings(context, args)
     if err:
       return None, err
     return nudge_settings, None

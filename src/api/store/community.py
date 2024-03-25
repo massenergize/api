@@ -28,7 +28,7 @@ from database.models import AboutUsPageSettings, Action, ActionsPageSettings, Co
     RegisterPageSettings, \
     SigninPageSettings, Subdomain, TeamsPageSettings, TestimonialsPageSettings, UserProfile, VendorsPageSettings,CommunityNotificationSetting
 from database.utils.common import json_loader
-from .utils import (get_community_or_die, get_new_title, get_user_from_context, is_reu_in_community)
+from .utils import (get_community, get_community_or_die, get_new_title, get_user_from_context, is_reu_in_community)
 from ..constants import COMMUNITY_NOTIFICATION_TYPES
 
 ALL = "all"
@@ -1227,7 +1227,7 @@ class CommunityStore:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
 
-    def set_community_notification_settings(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    def update_community_notification_settings(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
         try:
             notification_setting_id = args.get("id")
             is_active = args.get("is_active", False)
@@ -1243,7 +1243,7 @@ class CommunityStore:
             
             if not context.user_is_super_admin:
                 if not is_admin_of_community(context, notification_setting.community.id):
-                    return NotAuthorizedError()
+                    return None, NotAuthorizedError()
 
             notification_setting.is_active = is_active
             notification_setting.activate_on = to_django_date(activate_on)
@@ -1269,25 +1269,32 @@ class CommunityStore:
             if not community_id:
                 return None, CustomMassenergizeError("community_id is required")
 
-            community = Community.objects.filter(id=community_id).first()
+            community, _ = get_community(community_id)
             if not community:
                 return None, CustomMassenergizeError("Community not found")
             
-            if not context.user_is_super_admin:
-                if not is_admin_of_community(context, community.id):
-                    return NotAuthorizedError()
-
+            if not is_admin_of_community(context, community.id):
+                return None,  NotAuthorizedError()
+            
+            community_notification_settings = community.notification_settings.all()
+            feature_flags = community.community_feature_flags.filter(key__in=COMMUNITY_NOTIFICATION_TYPES)
+            
             settings = {}
-
-            feature_flags = FeatureFlag.objects.filter(key__in=COMMUNITY_NOTIFICATION_TYPES)
-
+            
             for feature_flag in feature_flags:
                 feature_is_enabled = community in feature_flag.enabled_communities()
-                notification_setting = CommunityNotificationSetting.objects.filter(community=community, notification_type=feature_flag.key).first()
+                notification_setting = community_notification_settings.filter(notification_type=feature_flag.key).first()
+                
                 if not notification_setting:
-                    notification_setting = CommunityNotificationSetting.objects.create(community=community, notification_type=feature_flag.key,is_active=True, updated_by=user)
+                    notification_setting = CommunityNotificationSetting.objects.create(
+                        community=community,
+                        notification_type=feature_flag.key,
+                        is_active=True,
+                        updated_by=user
+                    )
+                
                 settings[feature_flag.key] = {"feature_is_enabled": feature_is_enabled, **notification_setting.simple_json()}
-
+            # ----------------------------------------------------------------
             return settings, None
 
         except Exception as e:
