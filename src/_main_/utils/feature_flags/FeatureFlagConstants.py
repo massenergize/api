@@ -18,6 +18,7 @@ class FeatureFlagConstants:
     @staticmethod
     def for_everyone():
         return FeatureFlagConstants.AUDIENCE["EVERYONE"]["key"]
+        
     @staticmethod
     def for_all_except():
         return FeatureFlagConstants.AUDIENCE["ALL_EXCEPT"]["key"]
