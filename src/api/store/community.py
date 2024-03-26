@@ -10,6 +10,7 @@ from _main_.settings import IS_PROD, SLACK_SUPER_ADMINS_WEBHOOK_URL
 from _main_.utils.constants import PUBLIC_EMAIL_DOMAINS, RESERVED_SUBDOMAIN_LIST
 from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import add_sender_signature, update_sender_signature
+from _main_.utils.feature_flags.FeatureFlagConstants import FeatureFlagConstants
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from _main_.utils.massenergize_errors import (CustomMassenergizeError, InvalidResourceError, MassEnergizeAPIError,
@@ -60,6 +61,44 @@ def _clone_page_settings(pageSettings, title, community):
     return page
 
 
+def check_community_membership(feature_flag, should_enable, community):
+    """
+			This function checks and modifies the community membership of a feature flag
+			based on the current audience setting and the should_enable parameter.
+			
+			:param feature_flag: FeatureFlag object to be modified.
+			:param should_enable: Boolean indicating whether the feature flag should be enabled or disabled for the community.
+			:param community: Community object that represents the community to be added or removed.
+	
+			:return: None. The function works by modifying the feature_flag object in-place.
+			:rtype: None.
+			"""
+    
+    # If the audience setting is "everyone" and the flag should not be enabled,
+    # set the audience to "all_except" and add the community to the exception list.
+    if feature_flag.audience == FeatureFlagConstants.for_everyone():
+        if not should_enable:
+            feature_flag.audience = FeatureFlagConstants.for_all_except()
+            feature_flag.communities.add(community)
+            feature_flag.save()
+    
+    # If the audience setting is "specific", and the flag should be enabled,
+    # add the community to the list. If not, remove it from the list.
+    elif feature_flag.audience == FeatureFlagConstants.for_specific_audience():
+        if should_enable:
+            feature_flag.communities.add(community)
+        else:
+            feature_flag.communities.remove(community)
+        feature_flag.save()
+    
+    # If the audience setting is "all_except", and the flag should be enabled,
+    # remove the community from the exception list. If not, add it to the list.
+    elif feature_flag.audience == FeatureFlagConstants.for_all_except():
+        if should_enable:
+            feature_flag.communities.remove(community)
+        else:
+            feature_flag.communities.add(community)
+        feature_flag.save()
 
 
 class CommunityStore:
@@ -1210,12 +1249,12 @@ class CommunityStore:
             if not feature_flag:
                 return None, CustomMassenergizeError(f"FeatureFlag with key {feature_flag_key} not found")
             
+            check_community_membership(feature_flag, should_enable, community)
+            
             if should_enable:
-                feature_flag.communities.add(community)
                 if IS_PROD:
                     send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL,{"text":f"{user.full_name if user else context.user_email} requested '{feature_flag.name}' to be enabled for {community.name} "})
             else:
-                feature_flag.communities.remove(community)
                 if IS_PROD:
                     send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL, {"text":f"{user.full_name if user else context.user_email} requested {feature_flag.name} to be disabled for {community.name} "})
             
