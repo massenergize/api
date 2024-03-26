@@ -44,7 +44,7 @@ build-and-push-canary:
 	eb deploy --label $(CANARY_VERSION)
 
 	git tag prod@$(CANARY_VERSION)
-	git push origin prod@$(CANARY_VERSION)
+	git push origin canary@$(CANARY_VERSION)
 .PHONY: build-and-deploy-canary
 
 #prepare-dev:
@@ -61,7 +61,7 @@ build-and-push-dev:
 	eb deploy --label $(DEV_VERSION)
 
 	git tag prod@$(DEV_VERSION)
-	git push origin prod@$(DEV_VERSION)
+	git push origin dev@$(DEV_VERSION)
 .PHONY: build-and-push-dev
 
 deploy:
@@ -111,18 +111,17 @@ beat-remote:
 
 #-------------- NEW DEPLOYMENT STRATEGY ----------------
 deploy-dev:
-	DJANGO_ENV=dev python3 deployment/prepare_to_deploy.py --dev 0 1
-    DJANGO_ENV=dev make build-and-push-dev
+	#git tag dev@5.2.1
+	git push origin dev@5.2.1
+	#DJANGO_ENV=dev python3 deployment/prepare_to_deploy.py --dev 0 1 && DJANGO_ENV=dev make build-and-push-dev
 .PHONY: deploy-dev
 
 deploy-canary:
-	DJANGO_ENV=canary python3 deployment/prepare_to_deploy.py --canary 0 1
-	DJANGO_ENV=canary make build-and-push-canary
+	DJANGO_ENV=canary python3 deployment/prepare_to_deploy.py --canary 0 1 && DJANGO_ENV=canary make build-and-push-canary
 .PHONY: deploy-canary
 
 deploy-prod:
-	DJANGO_ENV=prod python3 deployment/prepare_to_deploy.py --prod 0 1
-	DJANGO_ENV=prod make build-and-push-canary
+	DJANGO_ENV=prod python3 deployment/prepare_to_deploy.py --prod 0 1 && DJANGO_ENV=prod make build-and-push-canary
 .PHONY: deploy-prod
 
 #-------------- NEW  MIGRATE ----------------
