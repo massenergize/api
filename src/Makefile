@@ -111,9 +111,7 @@ beat-remote:
 
 #-------------- NEW DEPLOYMENT STRATEGY ----------------
 deploy-dev:
-	#git tag dev@5.2.1
-	git push origin dev@5.2.1
-	#DJANGO_ENV=dev python3 deployment/prepare_to_deploy.py --dev 0 1 && DJANGO_ENV=dev make build-and-push-dev
+	DJANGO_ENV=dev python3 deployment/prepare_to_deploy.py --dev 0 1 && DJANGO_ENV=dev make build-and-push-dev
 .PHONY: deploy-dev
 
 deploy-canary:
