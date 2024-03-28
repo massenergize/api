@@ -3852,7 +3852,7 @@ class FeatureFlag(models.Model):
         """
         if self.audience == FeatureFlagConstants.for_everyone():
             return True
-        elif self.audience == FeatureFlagConstants.for_specific():
+        elif self.audience == FeatureFlagConstants.for_specific_audience():
             return self.communities.filter(id=community.id).exists()
         elif self.audience == FeatureFlagConstants.for_all_except():
             return not self.communities.filter(id=community.id).exists()
