@@ -59,7 +59,7 @@ def get_enabled_flags(
         )
         if enabled:
             feature_flags_json.append(
-                f.simple_json()
+                f.info()
             )  # Then if the flag hasnt expired, note down the flag
     return feature_flags_json
 
