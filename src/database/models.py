@@ -3813,6 +3813,9 @@ class FeatureFlag(models.Model):
 
     def __str__(self):
         return f"{self.name}"
+    
+    def info(self):
+        return {"id": self.id, "name": self.name, "key": self.key,}
 
     def simple_json(self):
         res = model_to_dict(
