@@ -1,3 +1,5 @@
+from _main_.utils.feature_flag_keys import USER_EVENTS_NUDGES_FF
+
 USERS = "users"
 COMMUNITIES = 'communities'
 TEAMS = 'teams'
@@ -33,4 +35,5 @@ CSV_FIELD_NAMES = [
     "duplicates",
 ]
 
+COMMUNITY_NOTIFICATION_TYPES = [USER_EVENTS_NUDGES_FF]
 

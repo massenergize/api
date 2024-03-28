@@ -3,6 +3,7 @@ import datetime
 from django.apps import apps
 from sentry_sdk import capture_message
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
+from _main_.utils.feature_flag_keys import UPDATE_ACTIONS_CONTENT_FF
 from api.utils.constants import DATA_DOWNLOAD_TEMPLATE
 from database.models import Community, Action, FeatureFlag
 from carbon_calculator.models import Action as CCAction
@@ -10,7 +11,6 @@ from django.http import HttpResponse
 from _main_.settings import BASE_DIR
 
 
-FEATURE_FLAG_KEY = "update-actions-content-feature-flag"
 ACTIONS_UPDATE_FILE = BASE_DIR + "/carbon_calculator/content/all-actions-update.csv"
 
 """
@@ -40,7 +40,7 @@ def update_actions_content(task=None):
         communities = Community.objects.filter(is_deleted=False)
 
         # check if update feature enabled, otherwise will just report
-        flag = FeatureFlag.objects.filter(key=FEATURE_FLAG_KEY).first()
+        flag = FeatureFlag.objects.filter(key=UPDATE_ACTIONS_CONTENT_FF).first()
         if not flag or not flag.enabled():
             update_enabled = False
         else:

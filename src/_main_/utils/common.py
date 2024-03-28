@@ -328,3 +328,9 @@ def contains_profane_words(text):
     profanity.load_censor_words()
     return profanity.contains_profanity(text)
 
+
+def to_django_date(date):
+    if not date:
+        return None
+    parsed_date = datetime.strptime(date, "%a %b %d %Y %H:%M:%S GMT%z")
+    return parsed_date.date()

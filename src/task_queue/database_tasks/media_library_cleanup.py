@@ -1,6 +1,7 @@
 import datetime
 from django.http import HttpResponse
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
+from _main_.utils.feature_flag_keys import REMOVE_DUPLICATE_IMAGE_FF
 from api.store.common import (
     find_duplicate_items,
     generate_hashes,
@@ -15,8 +16,6 @@ from database.models import FeatureFlag
 from task_queue.models import Task
 
 
-REMOVE_DUPLICATE_IMAGE_FLAG_KEY = "remove-duplicate-images-feature-flag"
-
 
 def remove_duplicate_images(task):
     """
@@ -26,7 +25,7 @@ def remove_duplicate_images(task):
     """
     try: 
         generate_hashes() 
-        flag = FeatureFlag.objects.filter(key=REMOVE_DUPLICATE_IMAGE_FLAG_KEY).first()
+        flag = FeatureFlag.objects.filter(key=REMOVE_DUPLICATE_IMAGE_FF).first()
         do_updates = flag and flag.enabled()
             
         if do_updates:
