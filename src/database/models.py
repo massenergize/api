@@ -3844,6 +3844,19 @@ class FeatureFlag(models.Model):
             for u in self.users.all()
         ]
         return res
+    
+    
+    def is_enabled_for_community(self, community: Community):
+        """
+        Returns : True if the feature flag is enabled for the community
+        """
+        if self.audience == FeatureFlagConstants.for_everyone():
+            return True
+        elif self.audience == FeatureFlagConstants.for_specific():
+            return self.communities.filter(id=community.id).exists()
+        elif self.audience == FeatureFlagConstants.for_all_except():
+            return not self.communities.filter(id=community.id).exists()
+        return False
 
     def enabled(self):
         current_date_and_time = datetime.datetime.now(timezone.utc)

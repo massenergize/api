@@ -1300,46 +1300,46 @@ class CommunityStore:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
 
-    def list_community_notification_settings(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
-        try:
-            community_id = args.get("community_id")
-            user = get_user_from_context(context)
-
-            if not community_id:
-                return None, CustomMassenergizeError("community_id is required")
-
-            community, _ = get_community(community_id)
-            if not community:
-                return None, CustomMassenergizeError("Community not found")
+def list_community_notification_settings(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+        community_id = args.get("community_id")
+        
+        if not community_id:
+            return None, CustomMassenergizeError("community_id is required")
+        
+        community = Community.objects.get(id=community_id).prefetch_related("notification_settings", "community_feature_flags")
+        
+        if not community:
+            return None, CustomMassenergizeError("Community not found")
+        
+        if not is_admin_of_community(context, community.id):
+            return None, NotAuthorizedError()
+        
+        feature_flags = [flag for flag in community.community_feature_flags.all() if flag.key in COMMUNITY_NOTIFICATION_TYPES]
+        settings_dict = {setting.notification_type: setting for setting in community.notification_settings.all()}
+        
+        new_settings = []
+        resulting_settings = {}
+        
+        for flag in feature_flags:
+            setting = settings_dict.get(flag.key)
+            feature_is_enabled = flag.is_enabled_for_community(community)
             
-            if not is_admin_of_community(context, community.id):
-                return None,  NotAuthorizedError()
-            
-            community_notification_settings = community.notification_settings.all()
-            feature_flags = community.community_feature_flags.filter(key__in=COMMUNITY_NOTIFICATION_TYPES)
-            
-            settings = {}
-            
-            for feature_flag in feature_flags:
-                feature_is_enabled = community in feature_flag.enabled_communities()
-                notification_setting = community_notification_settings.filter(notification_type=feature_flag.key).first()
+            if setting is None:
+                new_setting = CommunityNotificationSetting(community=community, notification_type=flag.key, is_active=True)
                 
-                if not notification_setting:
-                    notification_setting = CommunityNotificationSetting.objects.create(
-                        community=community,
-                        notification_type=feature_flag.key,
-                        is_active=True,
-                        updated_by=user
-                    )
-                
-                settings[feature_flag.key] = {"feature_is_enabled": feature_is_enabled, **notification_setting.simple_json()}
-            # ----------------------------------------------------------------
-            return settings, None
-
-        except Exception as e:
-            capture_exception(e)
-            return None, CustomMassenergizeError(e)
-
+                new_settings.append(new_setting)
+                setting = new_setting
+            
+            resulting_settings[flag.key] = {"feature_is_enabled": feature_is_enabled, **setting.simple_json()}
+        
+        CommunityNotificationSetting.objects.bulk_create(new_settings)
+        
+        return resulting_settings, None
+    except Exception as e:
+        return None, CustomMassenergizeError(str(e))
+    
+    
 ########### Helper functions  ###########
 
 
