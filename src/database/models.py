@@ -59,7 +59,7 @@ def get_enabled_flags(
         )
         if enabled:
             feature_flags_json.append(
-                f.simple_json()
+                f.info()
             )  # Then if the flag hasnt expired, note down the flag
     return feature_flags_json
 
@@ -3813,6 +3813,9 @@ class FeatureFlag(models.Model):
 
     def __str__(self):
         return f"{self.name}"
+    
+    def info(self):
+        return {"id": self.id, "name": self.name, "key": self.key,}
 
     def simple_json(self):
         res = model_to_dict(
