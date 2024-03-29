@@ -9,8 +9,8 @@ init:
 env=remote
 export DJANGO_ENV=$(env)
 start:
-	DJANGO_ENV=local python3 deployment/prepare_to_deploy.py local 1
-	DJANGO_ENV=local python3 manage.py runserver
+	DJANGO_ENV=dev python3 deployment/prepare_to_deploy.py local 1
+	DJANGO_ENV=dev python3 manage.py runserver
 .PHONY: start
 
 #prepare-prod:
@@ -115,7 +115,7 @@ deploy-dev:
 .PHONY: deploy-dev
 
 deploy-canary:
-	DJANGO_ENV=canary python3 deployment/prepare_to_deploy.py --canary 0 1 && DJANGO_ENV=canary make build-and-push-canary
+	DJANGO_ENV=canary python3 deployment/prepare_to_deploy.py --canary 0 1 
 .PHONY: deploy-canary
 
 deploy-prod:

@@ -33,7 +33,6 @@ class PageSettingsHandler(RouteHandler):
     self.add("/"+pageName+"_page_settings.listForCommunityAdmin", self.community_admin_list)
     self.add("/"+pageName+"_page_settings.listForSuperAdmin", self.super_admin_list)
 
-
   def info(self, request):
     context: Context = request.context
     args: dict = context.args

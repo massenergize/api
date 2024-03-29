@@ -2,7 +2,7 @@ from datetime import datetime,timezone
 from turtle import update
 from _main_.utils.context import Context
 from _main_.utils.footage.FootageConstants import FootageConstants
-from _main_.utils.utils import Console
+from _main_.utils.utils import Console, run_in_background
 from api.store.utils import get_user_from_context
 from database.models import CommunityAdminGroup, Footage, UserProfile
 from django.db.models import Q
@@ -20,6 +20,7 @@ class Spy:
 
 
     @staticmethod
+    @run_in_background
     def create_footage(**kwargs):
         try:
             footage = Footage.objects.create(**kwargs)
@@ -31,6 +32,7 @@ class Spy:
         # more important processes
 
     @staticmethod
+    @run_in_background
     def create_mou_footage(**kwargs):
         try:
             ctx = kwargs.get("context")
@@ -57,6 +59,7 @@ class Spy:
             Console.log("Could not create action footage...", str(e))
 
     @staticmethod
+    @run_in_background
     def create_action_footage(**kwargs):
         try:
             actions = kwargs.get("actions")
@@ -88,6 +91,7 @@ class Spy:
             Console.log("Could not create action footage...", str(e))
 
     @staticmethod
+    @run_in_background
     def create_event_footage(**kwargs):
         try:
             events = kwargs.get("events")
@@ -120,6 +124,7 @@ class Spy:
             Console.log("Could not create event footage...", str(e))
 
     @staticmethod
+    @run_in_background
     def create_vendor_footage(**kwargs):
         try:
             items = kwargs.get("vendors")
@@ -153,6 +158,7 @@ class Spy:
             Console.log("Could not create vendor footage...", str(e))
 
     @staticmethod
+    @run_in_background
     def create_testimonial_footage(**kwargs):
         try:
             items = kwargs.get("testimonials")
@@ -219,6 +225,7 @@ class Spy:
             Console.log("Could not create team footage...", str(e))
 
     @staticmethod
+    @run_in_background
     def create_messaging_footage(**kwargs):
         try:
             items = kwargs.get("messages")
@@ -255,6 +262,7 @@ class Spy:
             Console.log("Could not create messaging footage...", str(e))
 
     @staticmethod
+    @run_in_background
     def create_media_footage(**kwargs):
         try:
             items = kwargs.get("media")
@@ -283,6 +291,7 @@ class Spy:
             Console.log("Could not create media footage...", str(e))
 
     @staticmethod
+    @run_in_background
     def create_community_footage(**kwargs):
         try:
             items = kwargs.get("communities")
@@ -309,6 +318,7 @@ class Spy:
             Console.log("Could not create community footage...", str(e))
 
     @staticmethod
+    @run_in_background
     def create_sign_in_footage(**kwargs):
         try:
             ctx = kwargs.get("context")
