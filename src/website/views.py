@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect
 from _main_.utils.common import serialize_all
 from _main_.utils.massenergize_response import MassenergizeResponse
 from django.http import Http404, JsonResponse
-from _main_.settings import IS_PROD, IS_CANARY, RUN_SERVER_LOCALLY
+from _main_.settings import IS_PROD, IS_CANARY, RUN_SERVER_LOCALLY, STAGE
 from sentry_sdk import capture_message
 from api.store.misc import MiscellaneousStore
 from _main_.utils.constants import RESERVED_SUBDOMAIN_LIST, STATES
@@ -26,10 +26,12 @@ from database.models import (
 from apps__campaigns.models import Campaign, CampaignTechnology
 from django.db.models import Q
 from django.template.loader import render_to_string
-
+from _main_.utils.metrics import capture_execution_time_to_cloudwatch
 
 import zipcodes
 
+import logging
+logger = logging.getLogger(STAGE.get_logger_identifier())
 
 extract_text_from_html = html2text.HTML2Text()
 extract_text_from_html.ignore_links = True
@@ -328,9 +330,13 @@ def _separate_communities(communities, lat, long):
                 if community not in other:
                     other.append(community)
                 continue
-            community_zipcode_info = zipcodes.matching(location.zipcode)
-            community_zipcode_lat = community_zipcode_info[0]["lat"]
-            community_zipcode_long = community_zipcode_info[0]["long"]
+            
+            try:
+                community_zipcode_info = zipcodes.matching(location.zipcode)
+                community_zipcode_lat = community_zipcode_info[0]["lat"]
+                community_zipcode_long = community_zipcode_info[0]["long"]
+            except ValueError as e:
+                continue
 
             distance = get_distance_between_coords(
                 float(lat),
@@ -348,7 +354,7 @@ def _separate_communities(communities, lat, long):
                     other.append(community)
     return close, other
 
-
+@capture_execution_time_to_cloudwatch()
 def home(request):
     subdomain = _get_subdomain(request, False)
     if not subdomain or subdomain in HOME_SUBDOMAIN_SET:
@@ -932,19 +938,23 @@ def generate_sitemap_main(request):
 
 
 def handler400(request, exception):
+    logger.error(exception, exc_info=1)
     return MassenergizeResponse(error="bad_request")
 
 
 def handler403(request, exception):
+    logger.error(exception, exc_info=1)
     return MassenergizeResponse(error="permission_denied")
 
 
 def handler404(request, exception):
+    logger.error(f"resource_not_found: path={request.path}")
     if request.path.startswith("/v2"):
         return MassenergizeResponse(error="method_deprecated")
     return MassenergizeResponse(error="resource_not_found")
 
 
 def handler500(request):
+    logger.error("ServerError", exc_info=1)
     capture_message(str(traceback.print_exc()))
     return MassenergizeResponse(error="server_error")

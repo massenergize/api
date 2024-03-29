@@ -20,7 +20,7 @@ from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.celery import CeleryIntegration
 
 from _main_.utils.utils import is_test_mode
-
+from .utils.stage import Stage
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -29,29 +29,19 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # DJANGO_ENV can be passed in through the makefile, with "make start env=local"
 DJANGO_ENV = os.environ.get("DJANGO_ENV","remote")
 
+STAGE = Stage(DJANGO_ENV)
+os.environ.update(STAGE.get_secrets())
+
 # Database selection, development DB unless one of these chosen
-IS_PROD = DJANGO_ENV == "prod"
-IS_CANARY = DJANGO_ENV == "canary"
-IS_LOCAL = DJANGO_ENV == "local"
+IS_PROD = STAGE.is_prod()
+IS_CANARY = STAGE.is_canary()
+IS_LOCAL = STAGE.is_local()
 
 RUN_SERVER_LOCALLY = IS_LOCAL
 RUN_CELERY_LOCALLY = IS_LOCAL
 
 if is_test_mode():
     RUN_CELERY_LOCALLY = True
-
-try:
-    if IS_PROD:
-        env_path = Path('.') / 'prod.env'
-    elif IS_CANARY:
-        env_path = Path('.') / 'canary.env'
-    elif IS_LOCAL:
-        env_path = Path('.') / 'local.env'
-    else:
-        env_path = Path('.') / 'dev.env'
-    load_dotenv(dotenv_path=env_path, verbose=True)
-except Exception:
-    load_dotenv()
 
 # ********  END LOAD CONFIG DATA ***********#
 
@@ -82,7 +72,6 @@ if RUN_SERVER_LOCALLY:
     
 
 INSTALLED_APPS = [
-    # 'channels',
     'django_hosts',
     'authentication',
     'carbon_calculator',
@@ -99,10 +88,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     "apps__campaigns"
-    # 'socket_notifications'
 ]
 
 MIDDLEWARE = [
+    'cid.middleware.CidMiddleware',
     'django_hosts.middleware.HostsRequestMiddleware',
     'authentication.middleware.RemoveHeaders',
     'django.middleware.security.SecurityMiddleware',
@@ -117,7 +106,8 @@ MIDDLEWARE = [
     #custom middlewares
     'authentication.middleware.MassenergizeJWTAuthMiddleware',
 
-    'django_hosts.middleware.HostsResponseMiddleware'
+    'django_hosts.middleware.HostsResponseMiddleware',
+    '_main_.utils.metrics.middleware.MetricsMiddleware'
 ]
 
 
@@ -244,6 +234,14 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+
+### Begin Logger setttings ####
+CID_GENERATE = True
+CID_CONCATENATE = True
+LOGGING = STAGE.get_logging_settings()
+
+
+### End Logger settings ###
 
 # Sentry Logging Initialization
 sentry_dsn = os.environ.get('SENTRY_DSN')
