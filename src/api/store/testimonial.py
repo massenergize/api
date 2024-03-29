@@ -38,8 +38,6 @@ class TestimonialStore:
       user_email = args.pop('user_email', None)
       user, _ = get_user(user_id, user_email)
 
-      testimonials = []
-
       if community:
         testimonials = Testimonial.objects.filter(
             community=community, is_deleted=False).prefetch_related('tags__tag_collection', 'action__tags', 'vendor', 'community')

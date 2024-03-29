@@ -52,7 +52,7 @@ STATES = load_json(BASE_DIR + "/database/raw_data/other/states.json")
 
 ME_LOGO_PNG = "https://www.massenergize.org/wp-content/uploads/2021/07/cropped-me-logo-transp.png"
 
-DEFAULT_PAGINATION_LIMIT = 50
+DEFAULT_PAGINATION_LIMIT = 25
 
 
 ME_INBOUND_EMAIL_ADDRESS = (
