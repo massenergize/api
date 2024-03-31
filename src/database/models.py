@@ -1516,7 +1516,7 @@ class Team(models.Model):
         Community, related_name="primary_community_teams", on_delete=models.CASCADE
     )
     images = models.ManyToManyField(
-        Media, related_name="teams", blank=True
+        Media, related_name="teams"
     )  # 0 or more photos - could be a slide show
     video_link = models.CharField(
         max_length=LONG_STR_LEN, blank=True
@@ -1528,7 +1528,7 @@ class Team(models.Model):
         blank=True, null=True
     )  # settable team page options
     parent = models.ForeignKey(
-        "self", null=True, blank=True, on_delete=models.SET_NULL
+        "self", null=True, on_delete=models.SET_NULL
     )  # for the case of sub-teams
 
     goal = models.ForeignKey(Goal, blank=True, null=True, on_delete=models.SET_NULL)
