@@ -1515,7 +1515,7 @@ class Team(models.Model):
         Community, related_name="primary_community_teams", on_delete=models.CASCADE
     )
     images = models.ManyToManyField(
-        Media, related_name="teams"
+        Media, related_name="teams", blank=True
     )  # 0 or more photos - could be a slide show
     video_link = models.CharField(
         max_length=LONG_STR_LEN, blank=True
@@ -1527,7 +1527,7 @@ class Team(models.Model):
         blank=True, null=True
     )  # settable team page options
     parent = models.ForeignKey(
-        "self", null=True, on_delete=models.SET_NULL
+        "self", null=True, blank=True, on_delete=models.SET_NULL
     )  # for the case of sub-teams
 
     goal = models.ForeignKey(Goal, blank=True, null=True, on_delete=models.SET_NULL)
@@ -2193,7 +2193,6 @@ class Event(models.Model):
         data["is_on_home_page"] = self.is_on_homepage()
 
         data["event_type"] = self.event_type if self.event_type else "Online" if not self.location else "In person"
-        data["settings"] = dict(notifications=[x.simple_json() for x in self.nudge_settings.all().order_by("-created_at") if x.communities.exists()])
 
         return data
 
