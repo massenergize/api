@@ -1551,7 +1551,7 @@ class Team(models.Model):
     is_published = models.BooleanField(default=False, blank=True)
     # which user created this Teamt - may be the responsible party
     user = models.ForeignKey(
-        UserProfile, related_name="team_user", on_delete=models.SET_NULL, null=True
+        UserProfile, related_name="team_user", on_delete=models.SET_NULL, null=True, blank=True
     )
 
     def is_admin(self, UserProfile):
@@ -1838,7 +1838,7 @@ class Vendor(models.Model):
     )
     tags = models.ManyToManyField(Tag, related_name="vendor_tags", blank=True)
     # which user posted this vendor
-    user = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True, blank=True)
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=False, blank=True)
     is_approved = models.BooleanField(default=False, blank=True)
@@ -1969,7 +1969,7 @@ class Action(models.Model):
     )
     rank = models.PositiveSmallIntegerField(default=0, blank=True)
     # which user posted this action originally
-    user = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_deleted = models.BooleanField(default=False, blank=True)
@@ -2119,7 +2119,7 @@ class Event(models.Model):
     rank = models.PositiveIntegerField(default=0, blank=True, null=True)
     # which user posted this event - may be the responsible party
     user = models.ForeignKey(
-        UserProfile, related_name="event_user", on_delete=models.SET_NULL, null=True
+        UserProfile, related_name="event_user", on_delete=models.SET_NULL, null=True, blank=True
     )
     is_recurring = models.BooleanField(default=False, blank=True, null=True)
     recurring_details = models.JSONField(blank=True, null=True)
