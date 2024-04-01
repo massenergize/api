@@ -43,7 +43,7 @@ build-and-push-canary:
 	docker push 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-canary:$(CANARY_VERSION)
 	eb deploy --label $(CANARY_VERSION)
 
-	git tag prod@$(CANARY_VERSION)
+	git tag canary@$(CANARY_VERSION)
 	git push origin canary@$(CANARY_VERSION)
 .PHONY: build-and-deploy-canary
 
