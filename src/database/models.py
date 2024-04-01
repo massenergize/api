@@ -18,7 +18,6 @@ from database.utils.settings.user_settings import UserPortalSettings
 from django.utils import timezone
 from django.core.files.storage import default_storage
 from django.db.models.query import QuerySet
-import time
 
 from .utils.common import (
     get_images_in_sequence,
@@ -2178,44 +2177,22 @@ class Event(models.Model):
                 "shared_to",
             ],
         )
-        time1 = time.time()
         data["tags"] = [t.info() for t in self.tags.all()]
-        time2 = time.time()
         data["community"] = None if not self.community else self.community.info()
-        time3 = time.time()
         data["image"] = None if not self.image else self.image.info()
-        time4 = time.time()
-        data["invited_communities"] = [ c.info() for c in self.invited_communities.all()]
-        time5 = time.time()
+        #data["invited_communities"] = [ c.info() for c in self.invited_communities.all()]
         data["is_open"] =  False if not self.publicity else EventConstants.is_open(self.publicity)
-        time6 = time.time()
         data["is_open_to"] = False if not self.publicity else EventConstants.is_open_to(self.publicity)
-        time7 = time.time()
         data["is_closed_to"] = False if not self.publicity else EventConstants.is_closed_to(self.publicity)
-        time8 = time.time()
         data["communities_under_publicity"] = [c.info() for c in self.communities_under_publicity.all()]
-        time9 = time.time()
 
         if self.user:
             data["user_email"] = self.user.email
-        time10 = time.time()
 
         data["shared_to"] = [c.info() for c in self.shared_to.all()]
         data["is_on_home_page"] = self.is_on_homepage()
-        time11 = time.time()
 
         data["event_type"] = self.event_type if self.event_type else "Online" if not self.location else "In person"
-#        data["settings"] = dict(notifications=[x.simple_json() for x in self.nudge_settings.all().order_by("-created_at") if x.communities.exists()])
-        print("2-1", time2 - time1)
-        print("3-1", time3 - time2)
-        print("4-1", time4 - time3)
-        print("5-1", time5 - time4)
-        print("6-1", time6 - time5)
-        print("7-1", time7 - time6)
-        print("8-1", time8 - time7)
-        print("9-1", time9 - time8)
-        print("10-1", time10 - time9)
-        print("11-1", time11 - time10)
 
         return data
 
@@ -3338,11 +3315,7 @@ class HomePageSettings(models.Model):
         return res
 
     def full_json(self):
-        time1 = time.time()
-        # <1ms
         res = self.simple_json()
-        time2 = time.time()
-        # 10 ms
         images = self.images.all()
         sequence = self.image_sequence.sequence if self.image_sequence else None
         res["images"] = (
@@ -3350,19 +3323,9 @@ class HomePageSettings(models.Model):
             if sequence
             else [i.simple_json() for i in images]
         )
-        # 50 ms
         # res["community"] = get_json_if_not_none(self.community)
-        time3 = time.time()
-        # 68 ms
         res["featured_events"] = [i.simple_json() for i in self.featured_events.all()]
-        time4 = time.time()
-        # 2 ms
         res["featured_stats"] = [i.simple_json() for i in self.featured_stats.all()]
-        time5 = time.time()
-        print(time2-time1)
-        print(time3-time2)
-        print(time4-time3)
-        print(time5-time4)
         return res
 
     class Meta:
