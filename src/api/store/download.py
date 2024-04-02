@@ -1799,15 +1799,17 @@ class DownloadStore:
 
 
     def _campaign_interaction_performance_download(self, campaign):
-        columns = ["Date", "Campaign", "Email",  "Action", "Target"]
+        columns = ["Date", "Email",  "Source", "Element", "Target"]
         data = [columns]
         interactions = CampaignActivityTracking.objects.filter(campaign__id=campaign.id, is_deleted=False)
         for interaction in interactions:
             cell  = self._get_cells_from_dict(columns,{
                 "Date": get_human_readable_date(interaction.created_at),
-                "Action": interaction.source,
+                "Source": interaction.source,
                 "Email": interaction.email,
                 "Target": interaction.target,
+                "Element": interaction.button_type
+                
             })
             data.append(cell)
         return data
