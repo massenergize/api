@@ -26,7 +26,7 @@ from .utils.common import (
     get_summary_info,
     make_hash_from_file,
 )
-from api.constants import STANDARD_USER, GUEST_USER
+from api.constants import COMMUNITY_NOTIFICATION_TYPES, STANDARD_USER, GUEST_USER
 from django.forms.models import model_to_dict
 from carbon_calculator.models import Action as CCAction
 from carbon_calculator.carbonCalculator import AverageImpact
@@ -3847,6 +3847,19 @@ class FeatureFlag(models.Model):
             for u in self.users.all()
         ]
         return res
+    
+    
+    def is_enabled_for_community(self, community: Community):
+        """
+        Returns : True if the feature flag is enabled for the community
+        """
+        if self.audience == FeatureFlagConstants.for_everyone():
+            return True
+        elif self.audience == FeatureFlagConstants.for_specific_audience():
+            return self.communities.filter(id=community.id).exists()
+        elif self.audience == FeatureFlagConstants.for_all_except():
+            return not self.communities.filter(id=community.id).exists()
+        return False
 
     def enabled(self):
         current_date_and_time = datetime.datetime.now(timezone.utc)
@@ -3856,21 +3869,20 @@ class FeatureFlag(models.Model):
 
     def enabled_communities(self, communities_in: QuerySet = None):
         """
-            Returns : List of communities as a QuerySet
-        """
+              Returns : List of communities as a QuerySet
+          """
         if not communities_in:
             communities_in = Community.objects.filter(is_deleted=False)
-
+        
+        community_ids = self.communities.values_list('id', flat=True)
+        
         if self.audience == "EVERYONE":
             return communities_in
         elif self.audience == "SPECIFIC":
-            return communities_in.filter(
-                id__in=[str(u.id) for u in self.communities.all()]
-            )
+            return communities_in.filter(id__in=community_ids)
         elif self.audience == "ALL_EXCEPT":
-            return communities_in.exclude(
-                id__in=[str(u.id) for u in self.communities.all()]
-            )
+            return communities_in.exclude(id__in=community_ids)
+        
         return None
 
     def enabled_users(self, users_in: QuerySet):
@@ -3956,3 +3968,37 @@ class Footage(models.Model):
     class Meta:
         db_table = "footages"
         ordering = ("-id",)
+
+
+class CommunityNotificationSetting(models.Model):
+    
+    COMMUNITY_NOTIFICATION_TYPES_CHOICES = [(item, item) for item in COMMUNITY_NOTIFICATION_TYPES]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name="notification_settings",related_query_name="notification_setting")
+    updated_by = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True, blank=True)
+    notification_type = models.CharField(max_length=SHORT_STR_LEN, null=False, blank=False,choices=COMMUNITY_NOTIFICATION_TYPES_CHOICES)
+    is_active = models.BooleanField(default=True, blank=True)
+    activate_on = models.DateField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    more_info = models.JSONField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.community.name} - {self.notification_type}"
+    
+    def info(self):
+        return {"id": self.id, "is_active": self.is_active, "activate_on": str(self.activate_on) if self.activate_on else self.activate_on, "notification_type": self.notification_type,}
+
+    def simple_json(self):
+        return {"id": self.id, "notification_type": self.notification_type, "is_active": self.is_active,
+                "activate_on": str(self.activate_on) if self.activate_on else self.activate_on}
+
+    def full_json(self):
+        data = self.simple_json()
+        data["community"] = self.community.info()
+        data["updated_by"] = self.updated_by.info() if self.updated_by else None
+        return data
+    
+    class Meta:
+        indexes = [ models.Index(fields=["community", "notification_type"]),]

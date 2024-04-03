@@ -3,9 +3,12 @@ import pytz
 from _main_.utils.common import encode_data_for_URL, serialize_all
 from _main_.utils.constants import COMMUNITY_URL_ROOT
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
+from _main_.utils.feature_flag_keys import USER_EVENTS_NUDGES_FF
+from _main_.utils.footage.FootageConstants import FootageConstants
+from _main_.utils.footage.spy import Spy
 from api.utils.api_utils import get_sender_email
 from api.utils.constants import USER_EVENTS_NUDGE_TEMPLATE
-from database.models import Community, CommunityMember, Event, UserProfile, FeatureFlag
+from database.models import Community, CommunityMember, CommunityNotificationSetting, Event, UserProfile, FeatureFlag
 from django.db.models import Q
 from dateutil.relativedelta import relativedelta
 from database.utils.common import get_json_if_not_none
@@ -36,8 +39,6 @@ USER_PREFERENCE_DEFAULTS = {
         "your_activity_updates": {"never": {"value": True}},
     },
 }
-
-USER_EVENT_NUDGE_KEY = "user-event-nudge-feature-flag"
 
 DEFAULT_EVENT_SETTINGS = {
     "when_first_posted": False,
@@ -201,6 +202,33 @@ def prepare_events_email_data(events):
     return data
 
 
+def community_has_altered_flow(community, feature_flag_key) -> bool:
+    today = timezone.now().today()
+    community_nudge_settings = CommunityNotificationSetting.objects.filter(community=community, notification_type=feature_flag_key).first()
+    if not community_nudge_settings:
+        return False
+    if community_nudge_settings.is_active:
+        return True
+    
+    activate_on = community_nudge_settings.activate_on
+
+    if activate_on and activate_on >= today:
+        community_nudge_settings.is_active = True
+        community_nudge_settings.activate_on = None
+        community_nudge_settings.save()
+        
+        # ----------------------------------------------------------------
+        notification_type = feature_flag_key.split('-feature-flag')[0]
+        Spy.create_community_notification_settings_footage(communities=[community], actor="Automatic", type=FootageConstants.update(),notes=f"{notification_type} automatically updated as the resuming date {activate_on} elapsed")
+        # ----------------------------------------------------------------
+        return True
+    return False
+
+
+
+
+
+
 def send_events_report_email(name, email, event_list, comm, login_method=""):
     try:
         events = prepare_events_email_data(event_list[:LIMIT])
@@ -294,13 +322,17 @@ def prepare_user_events_nudge(task=None, email=None, community_id=None):
 
             return True
 
-        flag = FeatureFlag.objects.get(key=USER_EVENT_NUDGE_KEY)
+        flag = FeatureFlag.objects.get(key=USER_EVENTS_NUDGES_FF)
         if not flag or not flag.enabled():
             return False
 
         communities = Community.objects.filter(is_published=True, is_deleted=False)
         communities = flag.enabled_communities(communities)
         for community in communities:
+
+            if not community_has_altered_flow(community, flag.key):
+                continue
+
             events = get_community_events(community.id, task)
             users = get_community_users(community.id)
             users = flag.enabled_users(users)
