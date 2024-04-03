@@ -2180,7 +2180,7 @@ class Event(models.Model):
         data["tags"] = [t.info() for t in self.tags.all()]
         data["community"] = None if not self.community else self.community.info()
         data["image"] = None if not self.image else self.image.info()
-        data["invited_communities"] = [ c.info() for c in self.invited_communities.all()]
+        #data["invited_communities"] = [ c.info() for c in self.invited_communities.all()]
         data["is_open"] =  False if not self.publicity else EventConstants.is_open(self.publicity)
         data["is_open_to"] = False if not self.publicity else EventConstants.is_open_to(self.publicity)
         data["is_closed_to"] = False if not self.publicity else EventConstants.is_closed_to(self.publicity)
@@ -3197,7 +3197,7 @@ class PageSettings(models.Model):
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["images"])
-        res["community"] = get_json_if_not_none(self.community)
+        # res["community"] = get_json_if_not_none(self.community)
         return res
 
     def full_json(self):
@@ -3323,7 +3323,7 @@ class HomePageSettings(models.Model):
             if sequence
             else [i.simple_json() for i in images]
         )
-        res["community"] = get_json_if_not_none(self.community)
+        # res["community"] = get_json_if_not_none(self.community)
         res["featured_events"] = [i.simple_json() for i in self.featured_events.all()]
         res["featured_stats"] = [i.simple_json() for i in self.featured_stats.all()]
         return res
@@ -3357,7 +3357,8 @@ class ActionsPageSettings(models.Model):
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["images"])
-        res["community"] = get_json_if_not_none(self.community)
+        # next line is most of the time (54ms on local)
+        #res["community"] = get_json_if_not_none(self.community)
         return res
 
     def full_json(self):
@@ -3397,7 +3398,7 @@ class ContactUsPageSettings(models.Model):
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["images"])
-        res["community"] = get_json_if_not_none(self.community)
+        # res["community"] = get_json_if_not_none(self.community)
         return res
 
     def full_json(self):
@@ -3441,7 +3442,7 @@ class DonatePageSettings(models.Model):
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["images"])
-        res["community"] = get_json_if_not_none(self.community)
+        # res["community"] = get_json_if_not_none(self.community)
         return res
 
     def full_json(self):
@@ -3482,7 +3483,7 @@ class AboutUsPageSettings(models.Model):
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["images"])
-        res["community"] = get_json_if_not_none(self.community)
+        # res["community"] = get_json_if_not_none(self.community)
         return res
 
     def full_json(self):
@@ -3523,7 +3524,7 @@ class ImpactPageSettings(models.Model):
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["images"])
-        res["community"] = get_json_if_not_none(self.community)
+        # res["community"] = get_json_if_not_none(self.community)
         return res
 
     def full_json(self):
