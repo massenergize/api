@@ -7,7 +7,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('database', '0147_featureflag_allow_opt_in'),
+        ('database', '0147_auto_20240319_1429'),
     ]
 
     operations = [
