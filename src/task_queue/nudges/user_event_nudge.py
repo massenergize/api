@@ -205,8 +205,8 @@ def prepare_events_email_data(events):
 def community_has_altered_flow(community, feature_flag_key) -> bool:
     today = timezone.now().today()
     community_nudge_settings = CommunityNotificationSetting.objects.filter(community=community, notification_type=feature_flag_key).first()
-    if not community_nudge_settings:
-        return False
+    if not community_nudge_settings: # meaning the community has not changed the default settings
+        return True
     if community_nudge_settings.is_active:
         return True
     
@@ -223,10 +223,6 @@ def community_has_altered_flow(community, feature_flag_key) -> bool:
         # ----------------------------------------------------------------
         return True
     return False
-
-
-
-
 
 
 def send_events_report_email(name, email, event_list, comm, login_method=""):
