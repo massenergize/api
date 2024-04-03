@@ -76,7 +76,6 @@ class AuthService:
             where_user_signed_in_from = Community.objects.filter(subdomain = context.community)
             Spy.create_sign_in_footage( communities = where_user_signed_in_from, actor = user, context = context, portal=FootageConstants.on_user_portal(), type = FootageConstants.sign_in())
         #---------------------------------------------------------
-        print(user)
         return serialize(user, full=True), str(massenergize_jwt_token), None
 
       else:

@@ -20,7 +20,6 @@ class Spy:
 
 
     @staticmethod
-    @run_in_background
     def create_footage(**kwargs):
         try:
             footage = Footage.objects.create(**kwargs)
