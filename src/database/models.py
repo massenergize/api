@@ -2193,6 +2193,7 @@ class Event(models.Model):
         data["is_on_home_page"] = self.is_on_homepage()
 
         data["event_type"] = self.event_type if self.event_type else "Online" if not self.location else "In person"
+        data["settings"] = dict(notifications=[x.simple_json() for x in self.nudge_settings.all().order_by("-created_at") if x.communities.exists()])
 
         return data
 
