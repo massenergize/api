@@ -1307,7 +1307,7 @@ class CommunityStore:
             if not community_id:
                 return None, CustomMassenergizeError("community_id is required")
             
-            community = Community.objects.filter(id=community_id).prefetch_related("notification_settings", "community_feature_flags").first()
+            community = Community.objects.filter(id=community_id).prefetch_related("notification_settings").first()
             
             if not community:
                 return None, CustomMassenergizeError("Community not found")
@@ -1315,8 +1315,8 @@ class CommunityStore:
             if not is_admin_of_community(context, community.id):
                 return None, NotAuthorizedError()
             
-            feature_flags = community.community_feature_flags.filter(key__in=COMMUNITY_NOTIFICATION_TYPES)
             settings_dict = {setting.notification_type: setting for setting in community.notification_settings.all()}
+            feature_flags = FeatureFlag.objects.filter(key__in=COMMUNITY_NOTIFICATION_TYPES)
             
             new_settings = []
             resulting_settings = {}
@@ -1333,7 +1333,8 @@ class CommunityStore:
                 
                 resulting_settings[flag.key] = {"feature_is_enabled": feature_is_enabled, **setting.simple_json()}
             
-            CommunityNotificationSetting.objects.bulk_create(new_settings)
+            if new_settings:
+                CommunityNotificationSetting.objects.bulk_create(new_settings)
             
             return resulting_settings, None
         except Exception as e:
