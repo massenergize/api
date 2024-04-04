@@ -7,6 +7,7 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from sentry_sdk import capture_message
 from typing import Tuple
+import time
 
 class HomePageSettingsStore:
   def __init__(self):
@@ -14,8 +15,14 @@ class HomePageSettingsStore:
 
   def get_home_page_setting_info(self,context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
+      time1 = time.time()
       args['community'] = get_community_or_die(context, args)
-      home_page_setting = HomePageSettings.objects.filter(**args).first()
+      time2 = time.time()
+      print(time2-time1)
+      home_page_setting = HomePageSettings.objects.filter(**args).prefetch_related('images').first()
+      #home_page_setting = HomePageSettings.objects.get(id=community.id).prefetch_related('images').first()
+      time3 = time.time()
+      print(time3-time2)
       if not home_page_setting:
         return None, InvalidResourceError()
       return home_page_setting, None
