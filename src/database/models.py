@@ -590,7 +590,7 @@ class Community(models.Model):
         res["logo"] = get_json_if_not_none(self.logo)
         res["favicon"] = get_json_if_not_none(self.favicon)
         # this will not slow it down measurably
-        res["feature_flags"] = get_enabled_flags(self)
+        # res["feature_flags"] = get_enabled_flags(self)
         return res
 
     # def medium_json(self):
@@ -744,7 +744,7 @@ class Community(models.Model):
             "admins": admins,
             "geography_type": self.geography_type,
             "locations": locations,
-            "feature_flags": get_enabled_flags(self),
+            # "feature_flags": get_enabled_flags(self),
             "is_demo": self.is_demo,
             "contact_sender_alias": self.contact_sender_alias,
         }
