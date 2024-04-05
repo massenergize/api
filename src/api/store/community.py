@@ -1338,39 +1338,33 @@ class CommunityStore:
             return resulting_settings, None
         except Exception as e:
             return None, CustomMassenergizeError(str(e))
-      
+    
     def list_communities_feature_flags(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
         try:
             community_id = args.get("community_id")
-            subdoamin = args.get("subdomain")
+            subdomain = args.get("subdomain")
             
-            feature_flags = []
-            
-            if community_id or subdoamin:
-                community, _ = get_community(community_id, subdoamin)
+            if community_id or subdomain:
+                community, _ = get_community(community_id, subdomain)
                 
                 if not community:
                     return None, CustomMassenergizeError("Community not found")
                 
-                feature_flags = FeatureFlag.objects.filter(
-                    Q(audience=FeatureFlagConstants().for_everyone()) |
-                    Q(audience=FeatureFlagConstants().for_specific_audience(), communities=community.id) |
-                    (Q(audience=FeatureFlagConstants().for_all_except()) & ~Q(communities=community.id))
-                ).exclude(expires_on__lt=datetime.now())
+                communities = [community.id]
             else:
                 # check if user is a community admin, get all communities they are admin of
                 user = get_user_from_context(context)
                 if not user:
                     return None, CustomMassenergizeError("User not found")
+                
+                communities = user.communityadmingroup_set.all().values_list("community__id", flat=True)
             
-                communities_admin_of = user.communityadmingroup_set.all().values_list("community__id", flat=True)
-                
-                feature_flags = FeatureFlag.objects.filter(
-                    Q(audience=FeatureFlagConstants().for_everyone()) |
-                    Q(audience=FeatureFlagConstants().for_specific_audience(), communities__in=communities_admin_of) |
-                    (Q(audience=FeatureFlagConstants().for_all_except()) & ~Q(communities__in=communities_admin_of))
-                ).exclude(expires_on__lt=datetime.now())
-                
+            feature_flags = FeatureFlag.objects.filter(
+                Q(audience=FeatureFlagConstants().for_everyone()) |
+                Q(audience=FeatureFlagConstants().for_specific_audience(), communities__in=communities) |
+                (Q(audience=FeatureFlagConstants().for_all_except()) & ~Q(communities__in=communities))
+            ).exclude(expires_on__lt=datetime.now()).prefetch_related('communities')
+            
             return feature_flags, None
         
         except Exception as e:
