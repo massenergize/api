@@ -199,25 +199,6 @@ class CarbonCalculator:
             print(str(e))
             print("Calculator initialization skipped")
 
-    #this will run every time unless this perfectly makes the ccaction objects and csv fie match
-    #def check_ccaction_nums(self):
-    #    ccActions = Action.objects.filter()
-    #
-    #    actions_string = "carbon_calculator/content/Actions.csv"
-    #    try:
-    #        with open(actions_string, newline='') as csvfile:
-    #            inputlist = csv.reader(csvfile)
-    #            csv_length = sum(1 for row in csvfile)
-    #
-    #            if csv_length != ccActions.count():
-    #
-    #                #also re-import Questions csv given dependencies?
-    #                status = self.import_helper({'Subcategories': 'carbon_calculator/content/Subcategories.csv'}, "Subcategories", True, self.subcategories_import_helper)
-    #                status = self.import_helper({'Actions': 'carbon_calculator/content/Actions.csv'}, "Actions", True, self.actions_import_helper)
-    #    except Exception as e:
-    #        print("Error encountered: "+str(e))
-
-
     # query actions
     def Query(self,action=None):
         if action in self.allActions:
