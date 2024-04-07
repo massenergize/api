@@ -1,7 +1,7 @@
 from django.test import TestCase, Client
 from urllib.parse import urlencode
 from database.models import Event, EventAttendee, Community, CommunityAdminGroup, UserProfile
-from api.tests.common import signinAs, setupCC, createUsers
+from api.tests.common import signinAs, createUsers
 from datetime import datetime
 
 class EventsTestCase(TestCase):
@@ -17,8 +17,6 @@ class EventsTestCase(TestCase):
 
         signinAs(self.client, self.SADMIN)
 
-        setupCC(self.client)
-    
         COMMUNITY_NAME = "test_events"
         self.COMMUNITY = Community.objects.create(**{
           'subdomain': COMMUNITY_NAME,

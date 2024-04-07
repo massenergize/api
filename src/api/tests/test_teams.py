@@ -7,7 +7,7 @@ from database.models import Team, Community, UserProfile, Action, UserActionRel,
 from carbon_calculator.models import Action as CCAction
 from carbon_calculator.models import CalcDefault as CCDefault
 from _main_.utils.utils import load_json
-from api.tests.common import signinAs, setupCC, createUsers
+from api.tests.common import signinAs, createUsers
 
 class TeamsTestCase(TestCase):
 
@@ -22,8 +22,6 @@ class TeamsTestCase(TestCase):
     
     signinAs(self.client, self.SADMIN)
 
-    setupCC(self.client)
-  
     COMMUNITY_NAME = "test_teams"
     self.COMMUNITY = Community.objects.create(**{
       'subdomain': COMMUNITY_NAME,

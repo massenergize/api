@@ -4,7 +4,7 @@ This is the test file for actions
 from django.test import  TestCase, Client
 from database.models import Action, Community, CommunityAdminGroup, UserProfile
 from urllib.parse import urlencode
-from api.tests.common import signinAs, setupCC, createUsers
+from api.tests.common import signinAs, createUsers
 
 class ActionHandlerTest(TestCase):
 
@@ -18,8 +18,6 @@ class ActionHandlerTest(TestCase):
       self.USER, self.CADMIN, self.SADMIN = createUsers()
     
       signinAs(self.client, self.SADMIN)
-
-      setupCC(self.client)
 
       COMMUNITY_NAME = "test_actions"
       self.COMMUNITY = Community.objects.create(**{

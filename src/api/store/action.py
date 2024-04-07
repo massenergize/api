@@ -146,12 +146,9 @@ class ActionStore:
         if ccAction:
           new_action.calculator_action = ccAction
 
-          #new_action.category = ccAction.category
-          #new_action.subcategory = ccAction.sub_category
-
+          # new: assign the category based on the Carbon Calculator action category
           if ccAction.category:
-            self.add_tags(new_action, ccAction, tags)
-             
+            self.add_tags(new_action, ccAction, tags)       
 
       new_action.save()
       # ----------------------------------------------------------------
@@ -190,9 +187,6 @@ class ActionStore:
         new_action.icon = action_to_copy.icon
         new_action.image = action_to_copy.image
         new_action.calculator_action = action_to_copy.calculator_action
-
-        #new_action.category = action_to_copy.category
-        #new_action.subcategory = action_to_copy.subcategory
         new_action.average_carbon_score = action_to_copy.average_carbon_score
       else:
         new_action = action_to_copy        
@@ -316,9 +310,7 @@ class ActionStore:
         if ccAction:
           action.calculator_action = ccAction
 
-          #action.category = ccAction.category
-          #action.subcategory = ccAction.sub_category
-
+          # Assign the category based on the Carbon Calculator action category
           if ccAction.category:
             self.add_tags( action, ccAction, tags)
 

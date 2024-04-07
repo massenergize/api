@@ -6,7 +6,7 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from database.models import Team, Community, UserProfile, Action, UserActionRel, TeamMember, RealEstateUnit, CommunityAdminGroup
 from carbon_calculator.models import Action as CCAction
 from _main_.utils.utils import load_json
-from api.tests.common import signinAs, setupCC, createUsers, createImage
+from api.tests.common import signinAs, createUsers, createImage
 
 class UserProfileTestCase(TestCase):
 
@@ -17,7 +17,7 @@ class UserProfileTestCase(TestCase):
         self.client = Client()
         self.USER, self.CADMIN, self.SADMIN = createUsers()
         signinAs(self.client, self.SADMIN)
-        setupCC(self.client)
+        
         COMMUNITY_NAME = "test_users"
         self.COMMUNITY = Community.objects.create(**{
           'subdomain': COMMUNITY_NAME,
