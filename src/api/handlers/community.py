@@ -39,7 +39,8 @@ class CommunityHandler(RouteHandler):
     self.add("/communities.others.listForCommunityAdmin", self.list_other_communities_for_cadmin)
     self.add("/communities.listForSuperAdmin", self.super_admin_list)
     self.add("/communities.adminsOf", self.fetch_admins_of)
-    self.add("/communities.features.list", self.list_community_features)
+    self.add("/communities.features.list", self.list_community_features) # list features community admins can opt into
+    self.add("/communities.features.flags.list", self.list_communities_feature_flags) # list all feature flags open to a community
     self.add("/communities.features.request", self.request_feature_for_community)
 
   def info(self, request):
@@ -388,3 +389,20 @@ class CommunityHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=data)
 
+  def list_communities_feature_flags(self, request):
+    context:Context = request.context
+    args: dict = context.args
+    
+    self.validator.expect("community_id", int, is_required=False)
+    self.validator.expect("subdomain", str, is_required=False)
+    
+    args, err = self.validator.verify(args, strict=True)
+    if err:
+      return err
+    
+    feature_flags, err = self.service.list_communities_feature_flags(context, args)
+    
+    if err:
+      return err
+
+    return MassenergizeResponse(data=feature_flags)

@@ -156,5 +156,11 @@ class CommunityService:
         if err:
             return None, err
         return nudge_settings, None
+  
+  def list_communities_feature_flags(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    feature_flags, err = self.store.list_communities_feature_flags(context, args)
+    if err:
+      return None, err
+    return serialize_all(feature_flags, info=True), None
 
 
