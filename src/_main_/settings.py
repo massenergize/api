@@ -103,6 +103,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'authentication.latency_middleware.LatencyMiddleware',
     'django_hosts.middleware.HostsRequestMiddleware',
     'authentication.middleware.RemoveHeaders',
     'django.middleware.security.SecurityMiddleware',
