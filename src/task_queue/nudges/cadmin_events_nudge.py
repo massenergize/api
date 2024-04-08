@@ -1,6 +1,7 @@
 from _main_.utils.common import encode_data_for_URL, serialize_all
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
 from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
+from _main_.utils.feature_flag_keys import COMMUNITY_ADMIN_WEEKLY_EVENTS_NUDGE_FF
 from api.utils.api_utils import get_sender_email
 from api.utils.constants import WEEKLY_EVENTS_NUDGE_TEMPLATE
 from database.utils.settings.model_constants.events import EventConstants
@@ -25,8 +26,6 @@ default_pref = {
     "user_portal_settings": UserPortalSettings.Defaults,
     "admin_portal_settings": AdminPortalSettings.Defaults,
 }
-
-WEEKLY_EVENT_NUDGE = "weekly_event_nudge-feature-flag"
 
 
 def is_viable(item):
@@ -61,7 +60,7 @@ def get_comm_admins(com):
     only get admins whose communities have been allowed in the feature flag to receive events
     nudge
     """
-    flag = FeatureFlag.objects.filter(key=WEEKLY_EVENT_NUDGE).first()    
+    flag = FeatureFlag.objects.filter(key=COMMUNITY_ADMIN_WEEKLY_EVENTS_NUDGE_FF).first()
 
     all_community_admins = CommunityAdminGroup.objects.filter(community=com).values_list('members__preferences', "members__email", "members__full_name", "members__notification_dates", "members__user_info")
 

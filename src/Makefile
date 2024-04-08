@@ -6,11 +6,11 @@ init:
 .PHONY: init
 
 # run this with 'make start env=local'
-env=remote
+env=local
 export DJANGO_ENV=$(env)
 start:
-	DJANGO_ENV=local python3 deployment/prepare_to_deploy.py local 1
-	DJANGO_ENV=local python3 manage.py runserver
+	python3 deployment/prepare_to_deploy.py local 1
+	python3 manage.py runserver
 .PHONY: start
 
 #prepare-prod:
@@ -60,7 +60,7 @@ build-and-push-dev:
 	docker push 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-dev:$(DEV_VERSION)
 	eb deploy --label $(DEV_VERSION)
 
-	git tag prod@$(DEV_VERSION)
+	git tag dev@$(DEV_VERSION)
 	git push origin dev@$(DEV_VERSION)
 .PHONY: build-and-push-dev
 
