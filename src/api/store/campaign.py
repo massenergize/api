@@ -1395,7 +1395,7 @@ class CampaignStore:
                     "community":{
                         "id": event.community.id,
                         "name": event.community.name,
-                        "alias": communities.get(campaign__id=campaign_id, community__id=event.community.id).alias
+                        "alias": communities.filter(campaign__id=campaign_id, community__id=event.community.id).first().alias
                     }
                 }
                 to_return.append(obj)
@@ -1433,7 +1433,7 @@ class CampaignStore:
                     "community":{
                         "id": testimonial.community.id,
                         "name": testimonial.community.name,
-                        "alias": CampaignCommunity.objects.get(campaign__id=campaign_id, community__id=testimonial.community.id).alias
+                        "alias": campaign_communities.filter(campaign__id=campaign_id, community__id=testimonial.community.id).first().alias
                     }
                 }
                 to_return.append(obj)
