@@ -4,13 +4,14 @@ from _main_.utils.emailer.send_email import (
     get_sender_signature_info,
     resend_signature_confirmation,
 )
+from _main_.utils.feature_flag_keys import POSTMARK_COMMUNITY_EMAIL_SENDER_SIGNATURE_FF
 from database.models import Community, FeatureFlag
 
-COMMUNITY_EMAIL_SENDER_SIGNATURE_FF = "community-email-sender-signature-feature-flag"
+
 
 
 def collect_and_create_signatures(task=None):
-    flag = FeatureFlag.objects.filter(key=COMMUNITY_EMAIL_SENDER_SIGNATURE_FF).first()
+    flag = FeatureFlag.objects.filter(key=POSTMARK_COMMUNITY_EMAIL_SENDER_SIGNATURE_FF).first()
     if not flag or not flag.enabled():
         return False
     communities = Community.objects.filter(is_published=True, is_deleted=False).exclude(

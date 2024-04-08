@@ -10,6 +10,8 @@ services:
       - "8000:8000" # for localhost testing
     image: 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api
     restart: on-failure
+    env_file:
+      - canary.env
 
   celery_worker:
     command: sh -c "celery -A _main_.celery.app worker -l info"
@@ -18,6 +20,9 @@ services:
     hostname: celery_worker
     image: 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api
     restart: on-failure
+    env_file:
+      - canary.env
+
 
   celery_beat:
     command: sh -c "celery -A _main_.celery.app beat -l info"
@@ -26,3 +31,5 @@ services:
     hostname: celery_beat
     image: 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api
     restart: on-failure
+    env_file:
+      - canary.env

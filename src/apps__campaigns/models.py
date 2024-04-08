@@ -138,6 +138,7 @@ class Campaign(BaseModel):
     technologies_section = models.JSONField(blank=True, null=True)
     newsletter_section = models.JSONField(blank=True, null=True)
     coaches_section = models.JSONField(blank=True, null=True)
+    about_us_title = models.CharField(max_length=255, blank=True, null=True)
 
 
 
@@ -661,7 +662,7 @@ class CampaignTechnologyEvent(BaseModel):
                 "end_date": self.event.end_date_and_time,
                 "description": self.event.description,
                 "image": get_json_if_not_none(self.event.image),
-                "event_type": "Online" if not self.event.location else "In person",
+                "event_type": self.event.event_type if self.event.event_type else "Online" if not self.event.location else "In person",
         }
         }
         return res

@@ -40,6 +40,8 @@ class FeatureFlagHandler(RouteHandler):
             "user_audience", str, is_required=True
         ).expect(
             "key", str, is_required=True
+        ).expect(
+            "allow_opt_in", bool, is_required=False
         )
         args, err = self.validator.verify(args, strict=True)
         if err:
@@ -56,7 +58,7 @@ class FeatureFlagHandler(RouteHandler):
         args: dict = context.args
         self.validator.expect("id", int, is_required=True).expect(
             "community_ids", "str_list"
-        ).expect("notes", str).expect("user_ids", "str_list").expect("expires_on", 'date')
+        ).expect("notes", str).expect("user_ids", "str_list").expect("expires_on", 'date').expect("allow_opt_in", bool)
         args, err = self.validator.verify(args)
         if err:
             return err
