@@ -3198,7 +3198,7 @@ class PageSettings(models.Model):
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["images"])
-        # res["community"] = get_json_if_not_none(self.community)
+        res["community"] = get_summary_info(self.community)
         return res
 
     def full_json(self):
@@ -3311,8 +3311,9 @@ class HomePageSettings(models.Model):
 
     def simple_json(self):
         res = model_to_dict(
-            self, exclude=["images", "featured_events", "featured_stats"]
+            self, exclude=["images", "featured_events", "featured_stats", "community"]
         )
+        res["community"] = get_summary_info(self.community)
         return res
 
     def full_json(self):
@@ -3358,8 +3359,7 @@ class ActionsPageSettings(models.Model):
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["images"])
-        # next line is most of the time (54ms on local)
-        #res["community"] = get_json_if_not_none(self.community)
+        res["community"] = get_summary_info(self.community)
         return res
 
     def full_json(self):
@@ -3399,7 +3399,7 @@ class ContactUsPageSettings(models.Model):
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["images"])
-        # res["community"] = get_json_if_not_none(self.community)
+        res["community"] = get_summary_info(self.community)
         return res
 
     def full_json(self):
@@ -3443,7 +3443,7 @@ class DonatePageSettings(models.Model):
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["images"])
-        # res["community"] = get_json_if_not_none(self.community)
+        res["community"] = get_summary_info(self.community)
         return res
 
     def full_json(self):
@@ -3484,7 +3484,7 @@ class AboutUsPageSettings(models.Model):
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["images"])
-        # res["community"] = get_json_if_not_none(self.community)
+        res["community"] = get_summary_info(self.community)
         return res
 
     def full_json(self):
@@ -3525,7 +3525,7 @@ class ImpactPageSettings(models.Model):
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["images"])
-        # res["community"] = get_json_if_not_none(self.community)
+        res["community"] = get_summary_info(self.community)
         return res
 
     def full_json(self):
