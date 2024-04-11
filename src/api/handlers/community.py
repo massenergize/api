@@ -40,8 +40,9 @@ class CommunityHandler(RouteHandler):
     self.add("/communities.listForSuperAdmin", self.super_admin_list)
     self.add("/communities.adminsOf", self.fetch_admins_of)
     self.add("/communities.features.list", self.list_community_features) # list features community admins can opt into
-    self.add("/communities.features.flags.list", self.list_communities_feature_flags) # list all feature flags open to a community
+
     self.add("/communities.features.request", self.request_feature_for_community)
+    # self.add("/communities.features.flags.list", self.list_communities_feature_flags) # list all feature flags open to a community
 
   def info(self, request):
     context: Context = request.context
