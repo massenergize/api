@@ -13,9 +13,9 @@ start:
 	python3 manage.py runserver
 .PHONY: start
 
-#prepare-prod:
-#	python3 deployment/prepare_to_deploy.py --prod 0 1
-#.PHONY: prepare-prod
+prepare-prod:
+	python3 deployment/prepare_to_deploy.py --prod 0 1
+.PHONY: prepare-prod
 
 VERSION=latest
 build-and-push-prod:
