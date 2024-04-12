@@ -1,6 +1,6 @@
 {
-  "IS_PROD": false,
-  "IS_CANARY": true,
-  "BUILD_VERSION": "5.2.8",
+  "IS_PROD": true,
+  "IS_CANARY": false,
+  "BUILD_VERSION": "5.2.15",
   "BUILD_VERSION_NOTES": "logos fix and more"
 }
