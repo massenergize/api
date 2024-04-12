@@ -31,7 +31,7 @@ DJANGO_ENV = os.environ.get("DJANGO_ENV","remote")
 
 # Database selection, development DB unless one of these chosen
 IS_PROD = False
-IS_CANARY = True
+IS_CANARY = False
 IS_LOCAL = False
 
 RUN_SERVER_LOCALLY = IS_LOCAL
