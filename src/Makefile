@@ -24,6 +24,8 @@ build-and-push-prod:
 	docker build -t massenergize/api .
 	docker tag massenergize/api:latest 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api:$(VERSION)
 	docker push 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api:$(VERSION)
+
+	eb setenv DJANGO_ENV=prod
 	eb deploy --label $(VERSION)
 
 	git tag prod@$(VERSION)
@@ -41,6 +43,8 @@ build-and-push-canary:
 	docker build -t massenergize/api-canary .
 	docker tag massenergize/api-canary:latest 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-canary:$(CANARY_VERSION)
 	docker push 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-canary:$(CANARY_VERSION)
+
+	eb setenv DJANGO_ENV=canary
 	eb deploy --label $(CANARY_VERSION)
 
 	git tag canary@$(CANARY_VERSION)
@@ -58,6 +62,8 @@ build-and-push-dev:
 	docker build -t massenergize/api-dev .
 	docker tag massenergize/api-dev:latest 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-dev:$(DEV_VERSION)
 	docker push 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-dev:$(DEV_VERSION)
+
+	eb setenv DJANGO_ENV=dev
 	eb deploy --label $(DEV_VERSION)
 
 	git tag dev@$(DEV_VERSION)
