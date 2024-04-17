@@ -1,3 +1,4 @@
+from _main_.utils.common import serialize_all
 from _main_.utils.footage.spy import Spy
 from api.tests.common import createUsers
 from database.models import (
@@ -28,9 +29,11 @@ from _main_.utils.massenergize_errors import (
 from _main_.utils.context import Context
 from database.utils.common import json_loader
 from database.models import CarbonEquivalency
-from .utils import find_reu_community, split_location_string, check_location
+from .utils import find_reu_community, get_community, split_location_string, check_location
 from sentry_sdk import capture_message
 from typing import Tuple
+
+from ..utils.api_utils import get_enabled_feature_flags_for_community, get_viable_menu_items
 
 
 class MiscellaneousStore:
@@ -492,3 +495,94 @@ class MiscellaneousStore:
         sorted_keys = sorted(common_icons, key=common_icons.get, reverse=True)
         for key in sorted_keys:
             print(str(key) + ": " + str(common_icons[key]))
+            
+    
+    def load_essential_initial_site_data(self, context, args):
+        try:
+            page = args.get("page", None)
+            subdonain = args.get("subdomain", None)
+            community_id = args.get("community_id", None)
+            user_id = args.get("user_id", None)
+            
+            if not subdonain and not community_id:
+                return None, CustomMassenergizeError("No community or subdomain provided")
+            
+            if not page:
+                return None, CustomMassenergizeError("No page provided")
+            
+            community, _ = get_community(community_id=community_id, subdomain=subdonain)
+            if not community:
+                return None, CustomMassenergizeError("Community not found")
+            
+            menu = get_viable_menu_items(community)
+            
+            
+            data = {}
+            
+            if page == "homepage":
+                pass
+                data["page_settings"] = HomePageSettings.objects.filter(community=community).first().simple_json()
+                data["menu"] = menu
+                # get feature flags
+                data["feature_flags"] = serialize_all(get_enabled_feature_flags_for_community(community))
+                # get impact page settings
+            elif page == "actions":
+                pass
+                # get action page settings
+                # get all tag collections
+                # get all actions
+            elif page == "events":
+                pass
+                # get event page settings
+                # get all events
+                # get all tag collections
+                # get event exceptions for the community
+            elif page == "vendors":
+                pass
+                # get vendor page settings
+                # get all vendors
+                # get all tag collections
+            elif page == "about":
+                pass
+                # get about us page settings
+                # get donate page settings
+            elif page == "testimonials":
+                pass
+                # get testimonials page settings
+                # get all testimonials
+                # get all tag collections
+            
+            elif page == "one_vendor":
+                pass
+                # get vendor info
+            #     get all testimonials for the vendor
+            
+            elif page == "one_action":
+                pass
+                # get action info
+            
+            return data, None
+        except Exception as e:
+            return None, CustomMassenergizeError(e)
+        
+        
+        
+    def load_menu_items(self, context, args):
+        try:
+            page = args.get("page", None)
+            subdonain = args.get("subdomain", None)
+            community_id = args.get("community_id", None)
+            user_id = args.get("user_id", None)
+            
+            if not subdonain and not community_id:
+                return None, CustomMassenergizeError("No community or subdomain provided")
+            
+            community, _ = get_community(community_id=community_id, subdomain=subdonain)
+            if not community:
+                return None, CustomMassenergizeError("Community not found")
+            
+            menu = get_viable_menu_items(community)
+            
+            return menu, None
+        except Exception as e:
+            return None, CustomMassenergizeError(e)

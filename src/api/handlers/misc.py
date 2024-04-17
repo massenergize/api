@@ -32,6 +32,8 @@ class MiscellaneousHandler(RouteHandler):
         self.add("/settings.list", self.fetch_available_preferences)
         self.add("/what.happened", self.fetch_footages)
         self.add("/actions.report", self.actions_report)
+        self.add("/site.load", self.load_essential_initial_site_data)
+        self.add("/menu.load", self.load_menu_items)
 
     @admins_only
     def fetch_footages(self, request):
@@ -157,3 +159,39 @@ class MiscellaneousHandler(RouteHandler):
             "token", value=token, max_age=24 * 60 * 60, samesite="Strict"
         )
         return response
+    
+    
+    def load_essential_initial_site_data(self, request):
+        context: Context = request.context
+        args: dict = context.args
+        
+        self.validator.expect("community_id", is_required=False)
+        self.validator.expect("subdomain", is_required=False)
+        self.validator.expect("user_id", is_required=False)
+        self.validator.expect("page", str, is_required=True)
+        
+        args, err = self.validator.verify(args, strict=True)
+        if err:
+            return MassenergizeResponse(error=err)
+        
+        data, err = self.service.load_essential_initial_site_data(context, args)
+        if err:
+            return MassenergizeResponse(error=err)
+        return MassenergizeResponse(data=data)
+    
+    
+    def load_menu_items(self, request):
+        context: Context = request.context
+        args: dict = context.args
+        
+        self.validator.expect("community_id", is_required=False)
+        self.validator.expect("subdomain", is_required=False)
+        
+        args, err = self.validator.verify(args, strict=True)
+        if err:
+            return MassenergizeResponse(error=err)
+        
+        data, err = self.service.load_menu_items(context, args)
+        if err:
+            return err
+        return MassenergizeResponse(data=data)
