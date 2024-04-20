@@ -262,41 +262,41 @@ def get_tags_collections():
 # .......................... site setup utils ..........................
 def load_homepage_data(context, args, community, id, page_settings):
     data = {}
-    data["home_page_settings"] = page_settings["home_page_settings"].simple_json() if page_settings["home_page_settings"] else None
+    data["page_data"] = page_settings["home_page_settings"].simple_json() if page_settings["home_page_settings"] else None
     data["feature_flags"] = serialize_all(get_enabled_feature_flags_for_community(community))
     data["impact_page_settings"] = page_settings["impact_page_settings"].simple_json() if page_settings["impact_page_settings"] else None
     return data
 
 def load_actions_data(context, args, community, id, page_settings):
     data = {}
-    data["actions_page_settings"] = page_settings["actions_page_settings"].simple_json() if page_settings["actions_page_settings"] else None
+    data["page_data"] = page_settings["actions_page_settings"].simple_json() if page_settings["actions_page_settings"] else None
     data["actions"] = serialize_all(get_actions_for_community(community, context))
     data["tag_collections"] = serialize_all(get_tags_collections())
     return data
 
 def load_events_data(context, args, community, id, page_settings):
     data = {}
-    data["events_page_settings"] = page_settings["events_page_settings"].simple_json() if page_settings["events_page_settings"] else None
+    data["page_data"] = page_settings["events_page_settings"].simple_json() if page_settings["events_page_settings"] else None
     data["events"] = serialize_all(get_events_for_community(community, context))
     data["tag_collections"] = serialize_all(get_tags_collections())
     return data
 
 def load_vendors_data(context, args, community, id, page_settings):
     data = {}
-    data["vendors_page_settings"] = page_settings["vendors_page_settings"].simple_json() if page_settings["vendors_page_settings"] else None
+    data["page_data"] = page_settings["vendors_page_settings"].simple_json() if page_settings["vendors_page_settings"] else None
     data["vendors"] = serialize_all(get_vendors_for_community(community, context))
     data["tag_collections"] = serialize_all(get_tags_collections())
     return data
 
 def load_about_data(context, args, community, id, page_settings):
     data = {}
-    data["about_us_page_settings"] = page_settings["about_us_page_settings"].simple_json() if page_settings["about_us_page_settings"] else None
+    data["page_data"] = page_settings["about_us_page_settings"].simple_json() if page_settings["about_us_page_settings"] else None
     data["donate_page_settings"] = {}
     return data
 
 def load_testimonials_data(context, args, community, id, page_settings):
     data = {}
-    data["testimonials_page_settings"] = page_settings["testimonials_page_settings"].simple_json() if page_settings["testimonials_page_settings"] else None
+    data["page_data"] = page_settings["testimonials_page_settings"].simple_json() if page_settings["testimonials_page_settings"] else None
     data["testimonials"] = serialize_all(get_testimonials_for_community(community, context))
     data["tag_collections"] = serialize_all(get_tags_collections())
     return data
@@ -320,12 +320,12 @@ def load_impact_data(context, args, community, id, page_settings):
 
 def load_aboutus_data(context, args, community, id, page_settings):
     data = {}
-    data["about_us_page_settings"] = page_settings["about_us_page_settings"].simple_json() if page_settings["about_us_page_settings"] else None
+    data["page_data"] = page_settings["about_us_page_settings"].simple_json() if page_settings["about_us_page_settings"] else None
     return data
 
 def load_contactus_data(context, args, community, id, page_settings):
     data = {}
-    data["contact_us_page_settings"] = page_settings["contact_us_page_settings"].simple_json() if page_settings["contact_us_page_settings"] else None
+    data["page_data"] = page_settings["contact_us_page_settings"].simple_json() if page_settings["contact_us_page_settings"] else None
     return data
 
 def load_teams_data(context, args, community, id, page_settings):
@@ -334,7 +334,7 @@ def load_teams_data(context, args, community, id, page_settings):
     data = {}
     completed_action_graph_data, err = GraphStore().graph_actions_completed(context, args)
     teams_stats, _ = TeamStore().team_stats(context, args)
-    data["teams_page_settings"] = page_settings["teams_page_settings"].simple_json() if page_settings["teams_page_settings"] else None
+    data["page_data"] = page_settings["teams_page_settings"].simple_json() if page_settings["teams_page_settings"] else None
     data["graph_actions_completed"] = completed_action_graph_data
     data["teams_stats"] = teams_stats
     return data
@@ -357,7 +357,7 @@ def load_one_action_data(context, args, community, id, page_settings):
 
 def load_one_event_data(context, args, community, id, page_settings):
     data = {}
-    data["events_page_settings"] = page_settings["events_page_settings"].simple_json() if page_settings["events_page_settings"] else None
+    data["page_data"] = page_settings["events_page_settings"].simple_json() if page_settings["events_page_settings"] else None
     data["event"] = Event.objects.filter(id=id).first().simple_json()
     return data
 
