@@ -1,9 +1,8 @@
-from _main_.utils.common import serialize_all
 from _main_.utils.footage.spy import Spy
 from api.tests.common import createUsers
 from database.models import (
-    Action,
-    Vendor,
+    AboutUsPageSettings, Action,
+    ActionsPageSettings, ContactUsPageSettings, EventsPageSettings, ImpactPageSettings, TeamsPageSettings, TestimonialsPageSettings, Vendor,
     Subdomain,
     Event,
     Community,
@@ -19,7 +18,7 @@ from database.models import (
     UserActionRel,
     Data,
     Location,
-    HomePageSettings,
+    HomePageSettings, VendorsPageSettings,
 )
 from _main_.utils.massenergize_errors import (
     CustomMassenergizeError,
@@ -33,7 +32,7 @@ from .utils import find_reu_community, get_community, split_location_string, che
 from sentry_sdk import capture_message
 from typing import Tuple
 
-from ..utils.api_utils import get_enabled_feature_flags_for_community, get_viable_menu_items
+from api.utils.api_utils import get_viable_menu_items, load_about_data, load_aboutus_data, load_actions_data, load_contactus_data, load_events_data, load_homepage_data, load_impact_data, load_one_action_data, load_one_event_data, load_one_team_data, load_one_testimonial_data, load_one_vendor_data, load_policies_data, load_profile_data, load_settings_data, load_teams_data, load_testimonials_data, load_vendors_data
 
 
 class MiscellaneousStore:
@@ -502,7 +501,7 @@ class MiscellaneousStore:
             page = args.get("page", None)
             subdonain = args.get("subdomain", None)
             community_id = args.get("community_id", None)
-            user_id = args.get("user_id", None)
+            id = args.get("id", None)
             
             if not subdonain and not community_id:
                 return None, CustomMassenergizeError("No community or subdomain provided")
@@ -514,58 +513,47 @@ class MiscellaneousStore:
             if not community:
                 return None, CustomMassenergizeError("Community not found")
             
-            menu = get_viable_menu_items(community)
-            
+            page_settings = {
+                "home_page_settings": HomePageSettings.objects.filter(community=community).first(),
+                "actions_page_settings": ActionsPageSettings.objects.filter(community=community).first(),
+                "events_page_settings": EventsPageSettings.objects.filter(community=community).first(),
+                "vendors_page_settings": VendorsPageSettings.objects.filter(community=community).first(),
+                "about_us_page_settings": AboutUsPageSettings.objects.filter(community=community).first(),
+                "testimonials_page_settings": TestimonialsPageSettings.objects.filter(community=community).first(),
+                "teams_page_settings": TeamsPageSettings.objects.filter(community=community).first(),
+                "contact_us_page_settings": ContactUsPageSettings.objects.filter(community=community).first(),
+                "impact_page_settings": ImpactPageSettings.objects.filter(community=community).first(),
+            }
             
             data = {}
             
-            if page == "homepage":
-                pass
-                data["page_settings"] = HomePageSettings.objects.filter(community=community).first().simple_json()
-                data["menu"] = menu
-                # get feature flags
-                data["feature_flags"] = serialize_all(get_enabled_feature_flags_for_community(community))
-                # get impact page settings
-            elif page == "actions":
-                pass
-                # get action page settings
-                # get all tag collections
-                # get all actions
-            elif page == "events":
-                pass
-                # get event page settings
-                # get all events
-                # get all tag collections
-                # get event exceptions for the community
-            elif page == "vendors":
-                pass
-                # get vendor page settings
-                # get all vendors
-                # get all tag collections
-            elif page == "about":
-                pass
-                # get about us page settings
-                # get donate page settings
-            elif page == "testimonials":
-                pass
-                # get testimonials page settings
-                # get all testimonials
-                # get all tag collections
-            
-            elif page == "one_vendor":
-                pass
-                # get vendor info
-            #     get all testimonials for the vendor
-            
-            elif page == "one_action":
-                pass
-                # get action info
+            page_func_map = {
+            "homepage": load_homepage_data,
+            "actions": load_actions_data,
+            "events": load_events_data,
+            "vendors": load_vendors_data,
+            "about": load_about_data,
+            "testimonials": load_testimonials_data,
+            "one_vendor": load_one_vendor_data,
+            "impact": load_impact_data,
+            "aboutus": load_aboutus_data,
+            "contactus": load_contactus_data,
+            "teams": load_teams_data,
+            "one_team": load_one_team_data,
+            "one_action": load_one_action_data,
+            "one_event": load_one_event_data,
+            "one_testimonial": load_one_testimonial_data,
+            "profile": load_profile_data,
+            "settings": load_settings_data,
+            "policies": load_policies_data,
+        }
+            func = page_func_map.get(page)
+            if func:
+                data = func(context, args, community, id, page_settings)
             
             return data, None
         except Exception as e:
             return None, CustomMassenergizeError(e)
-        
-        
         
     def load_menu_items(self, context, args):
         try:

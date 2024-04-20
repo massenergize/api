@@ -17,7 +17,7 @@ class MiscellaneousHandler(RouteHandler):
 
     def registerRoutes(self) -> None:
         self.add("/menus.remake", self.remake_navigation_menu)
-        self.add("/menus.list", self.navigation_menu_list)
+        self.add("/menus.list", self.load_menu_items)
         self.add("/data.backfill", self.backfill)
         self.add("/data.carbonEquivalency.create", self.create_carbon_equivalency)
         self.add("/data.carbonEquivalency.update", self.update_carbon_equivalency)
@@ -33,7 +33,6 @@ class MiscellaneousHandler(RouteHandler):
         self.add("/what.happened", self.fetch_footages)
         self.add("/actions.report", self.actions_report)
         self.add("/site.load", self.load_essential_initial_site_data)
-        self.add("/menu.load", self.load_menu_items)
 
     @admins_only
     def fetch_footages(self, request):
@@ -167,7 +166,7 @@ class MiscellaneousHandler(RouteHandler):
         
         self.validator.expect("community_id", is_required=False)
         self.validator.expect("subdomain", is_required=False)
-        self.validator.expect("user_id", is_required=False)
+        self.validator.expect("id", is_required=False) #when viewing item details
         self.validator.expect("page", str, is_required=True)
         
         args, err = self.validator.verify(args, strict=True)
@@ -176,7 +175,7 @@ class MiscellaneousHandler(RouteHandler):
         
         data, err = self.service.load_essential_initial_site_data(context, args)
         if err:
-            return MassenergizeResponse(error=err)
+            return err
         return MassenergizeResponse(data=data)
     
     
