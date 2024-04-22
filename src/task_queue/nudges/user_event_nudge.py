@@ -113,6 +113,7 @@ def is_event_eligible(event, community_id, task=None):
     # it it doesn't exist, then create, don't save an instance of NudgeSettings
     if not settings:
         settings = EventNudgeSetting.objects.create(event=event, **DEFAULT_EVENT_SETTINGS)
+        settings.communities.add(community_id)
 
     if settings.never:
         return False
