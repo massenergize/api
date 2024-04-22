@@ -8,7 +8,7 @@ from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from api.utils.api_utils import get_sender_email
 from api.utils.constants import USER_EVENTS_NUDGE_TEMPLATE
-from database.models import Community, CommunityMember, CommunityNotificationSetting, Event, UserProfile, FeatureFlag
+from database.models import Community, CommunityMember, CommunityNotificationSetting, Event, UserProfile, FeatureFlag, EventNudgeSetting
 from django.db.models import Q
 from dateutil.relativedelta import relativedelta
 from database.utils.common import get_json_if_not_none
@@ -109,6 +109,10 @@ def update_last_notification_dates(email):
 def is_event_eligible(event, community_id, task=None):
     now = timezone.now()
     settings = event.nudge_settings.filter(communities__id=community_id).first()
+
+    # it it doesn't exist, then create, don't save an instance of NudgeSettings
+    if not settings:
+        settings = EventNudgeSetting.objects.create(event=event, **DEFAULT_EVENT_SETTINGS)
 
     if settings.never:
         return False
