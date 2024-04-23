@@ -107,7 +107,7 @@ def update_last_notification_dates(email):
 
 
 def is_event_eligible(event, community_id, task=None):
-    now = timezone.now()
+    now = timezone.now().date()
     settings = event.nudge_settings.filter(communities__id=community_id).first()
 
     if settings.never:
@@ -126,7 +126,7 @@ def is_event_eligible(event, community_id, task=None):
     if freq:
         last_last_run = now - freq_to_delta.get(freq, relativedelta(days=0))
 
-    if settings.when_first_posted and event.published_at and last_last_run < event.published_at <= now:
+    if settings.when_first_posted and event.published_at and last_last_run < event.published_at.date() <= now:
         return True
     elif settings.within_30_days and event.start_date_and_time - now <= timezone.timedelta(days=30):
         return True
