@@ -43,7 +43,7 @@ USER_PREFERENCE_DEFAULTS = {
 DEFAULT_EVENT_SETTINGS = {
     "when_first_posted": False,
     "within_30_days": True,
-    "within_7_days": True,
+    "within_1_week": True,
     "never": False,
 }
 
@@ -114,6 +114,7 @@ def is_event_eligible(event, community_id, task=None):
         # it it doesn't exist, then create, don't save an instance of NudgeSettings
         if not settings:
             settings = EventNudgeSetting.objects.create(event=event, **DEFAULT_EVENT_SETTINGS)
+            settings.communities.add(community_id)
         
         if settings.never:
             return False
@@ -133,13 +134,13 @@ def is_event_eligible(event, community_id, task=None):
         
         if settings.when_first_posted and event.published_at and last_last_run < event.published_at.date() <= now:
             return True
-        elif settings.within_30_days and event.start_date_and_time - now <= timezone.timedelta(days=30):
+        elif settings.within_30_days and event.start_date_and_time.date() - now <= timezone.timedelta(days=30):
             return True
-        elif settings.within_7_days and event.start_date_and_time - now <= timezone.timedelta(days=7):
+        elif settings.within_1_week and event.start_date_and_time.date() - now <= timezone.timedelta(days=7):
             return True
         return False
     except Exception as e:
-        print("is_event_eligible exception: " + str(e))
+        print(f"is_event_eligible exception - (event:{event.name}|| community:{community_id}): " + str(e))
         return False
 
 
@@ -257,7 +258,7 @@ def send_events_report_email(name, email, event_list, comm, login_method=""):
         data["cadmin_email"] = comm.owner_email if comm.owner_email else ""
         data["community"] = comm.name
         from_email = get_sender_email(comm.id)
-        send_massenergize_email_with_attachments(USER_EVENTS_NUDGE_TEMPLATE, data, ["abdullai.tahiru@massenergize.org"], None, None, from_email)
+        send_massenergize_email_with_attachments(USER_EVENTS_NUDGE_TEMPLATE, data, [email], None, None, from_email)
         print("Email sent to " + email)
         return True
     except Exception as e:
