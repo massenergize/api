@@ -64,7 +64,8 @@ class EventHandler(RouteHandler):
     def copy(self, request):
         context: Context = request.context
         args: dict = context.args
-
+        
+        self.validator.rename("id", "event_id")
         self.validator.expect("event_id", int, is_required=True)
         args, err = self.validator.verify(args, strict=True)
 

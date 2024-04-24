@@ -113,6 +113,7 @@ def create_media_file(file, name):
 class DonationPageSettings:
     pass
 
+# -------------------------- Menu Utils --------------------------
 def prependPrefixToLinks(menu_item, prefix):
     if not menu_item:
         return None

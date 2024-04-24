@@ -41,6 +41,10 @@ class VendorHandler(RouteHandler):
   def info(self, request):
     context: Context  = request.context
     args = context.get_request_body()
+    
+    self.validator.rename("id", "vendor_id")
+    self.validator.expect("vendor_id", int, is_required=False)
+    
     args = rename_field(args, 'vendor_id', 'id')
     vendor_info, err = self.service.get_vendor_info(context, args)
     if err:

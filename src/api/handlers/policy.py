@@ -32,7 +32,7 @@ class PolicyHandler(RouteHandler):
   def info(self, request):
     context: Context = request.context
     args: dict = context.args
-    policy_id = args.pop('policy_id', None)
+    policy_id = args.pop('policy_id', args.pop('id', None))
     policy_info, err = self.service.get_policy_info(policy_id)
     if err:
       return err

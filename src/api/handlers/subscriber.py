@@ -35,7 +35,7 @@ class SubscriberHandler(RouteHandler):
   def info(self, request):
     context: Context = request.context
     args: dict = context.args
-    subscriber_id = args.pop('subscriber_id', None)
+    subscriber_id = args.pop('subscriber_id', args.pop('id', None))
     if subscriber_id and not isinstance(subscriber_id, int):
         subscriber_id = parse_int(subscriber_id)
     subscriber_info, err = self.service.get_subscriber_info(subscriber_id)

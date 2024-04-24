@@ -7,6 +7,9 @@ from _main_.utils.context import Context
 from api.decorators import admins_only, super_admins_only
 from database.utils.settings.admin_settings import AdminPortalSettings
 from database.utils.settings.user_settings import UserPortalSettings
+from concurrent.futures import ThreadPoolExecutor
+import requests
+from django.urls import reverse
 
 
 class MiscellaneousHandler(RouteHandler):
@@ -166,16 +169,27 @@ class MiscellaneousHandler(RouteHandler):
         
         self.validator.expect("community_id", is_required=False)
         self.validator.expect("subdomain", is_required=False)
-        self.validator.expect("id", is_required=False) #when viewing item details
-        self.validator.expect("page", str, is_required=True)
+        self.validator.expect("data", 'str_list', is_required=True)
+        self.validator.expect("id", is_required=False)
         
         args, err = self.validator.verify(args, strict=True)
         if err:
-            return MassenergizeResponse(error=err)
-        
-        data, err = self.service.load_essential_initial_site_data(context, args)
-        if err:
             return err
+        
+        endpoints = args.pop("data", [])
+    
+        def fetch_data(endpoint):
+            endpoint = request.build_absolute_uri(endpoint)
+            response = requests.post(endpoint,data=args)
+            return response.json()
+        
+        # Use a ThreadPoolExecutor to make requests to all endpoints concurrently
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            results = executor.map(fetch_data, endpoints)
+        
+        # Convert the results to a dictionary in the format {endpoint: data}
+        data = {endpoint: result for endpoint, result in zip(endpoints, results)}
+        
         return MassenergizeResponse(data=data)
     
     

@@ -37,7 +37,7 @@ class GoalHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     
-    goal_id = args.get('goal_id')
+    goal_id = args.get('goal_id', args.get('id', None))
     goal_info, err = self.service.get_goal_info(goal_id)
     if err:
       return err
