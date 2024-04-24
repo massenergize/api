@@ -111,11 +111,9 @@ def is_event_eligible(event, community_id, task=None):
         now = timezone.now().date()
         settings = event.nudge_settings.filter(communities__id=community_id).first()
         
-        # it it doesn't exist, then create, don't save an instance of NudgeSettings
         if not settings:
-            settings = EventNudgeSetting.objects.create(event=event, **DEFAULT_EVENT_SETTINGS)
-            settings.communities.add(community_id)
-        
+            settings = EventNudgeSetting(event=event, **DEFAULT_EVENT_SETTINGS)
+            
         if settings.never:
             return False
         
