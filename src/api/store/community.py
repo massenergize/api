@@ -1366,7 +1366,7 @@ class CommunityStore:
                 (Q(audience=FeatureFlagConstants().for_all_except()) & ~Q(communities__in=communities))
             ).exclude(expires_on__lt=datetime.now()).prefetch_related('communities')
             
-            return feature_flags, None
+            return feature_flags.distinct(), None
         
         except Exception as e:
             return None, CustomMassenergizeError(str(e))
