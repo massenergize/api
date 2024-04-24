@@ -32,7 +32,7 @@ DJANGO_ENV = os.environ.get("DJANGO_ENV", "dev").lower()
 # Database selection, development DB unless one of these chosen
 IS_PROD = DJANGO_ENV == 'prod'
 IS_CANARY = DJANGO_ENV == 'canary'
-IS_LOCAL = True
+IS_LOCAL = DJANGO_ENV == 'local'
 
 RUN_SERVER_LOCALLY = IS_LOCAL
 RUN_CELERY_LOCALLY = IS_LOCAL
