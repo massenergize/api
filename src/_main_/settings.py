@@ -32,7 +32,7 @@ DJANGO_ENV = os.environ.get("DJANGO_ENV", "dev").lower()
 # Database selection, development DB unless one of these chosen
 IS_PROD = DJANGO_ENV == 'prod'
 IS_CANARY = DJANGO_ENV == 'canary'
-IS_LOCAL = DJANGO_ENV == 'local'
+IS_LOCAL = True
 
 RUN_SERVER_LOCALLY = IS_LOCAL
 RUN_CELERY_LOCALLY = IS_LOCAL
@@ -40,15 +40,17 @@ RUN_CELERY_LOCALLY = IS_LOCAL
 if is_test_mode():
     RUN_CELERY_LOCALLY = True
 
-valid_envs = {"prod", "canary", "local", "dev"}
+
 
 try:
-    
-    if DJANGO_ENV not in valid_envs:
-        print("Raising ValueError")
-        raise ValueError(f"Invalid DJANGO_ENV: {DJANGO_ENV}.")
-    
-    env_path = Path('.') / f'{DJANGO_ENV}.env'
+    if IS_PROD:
+        env_path = Path('.') / 'prod.env'
+    elif IS_CANARY:
+        env_path = Path('.') / 'canary.env'
+    elif IS_LOCAL:
+        env_path = Path('.') / 'local.env'
+    else:
+        env_path = Path('.') / 'dev.env'
     load_dotenv(dotenv_path=env_path, verbose=True)
 except Exception:
     load_dotenv()
