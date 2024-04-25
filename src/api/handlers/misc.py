@@ -180,7 +180,7 @@ class MiscellaneousHandler(RouteHandler):
     
         def fetch_data(endpoint):
             endpoint = request.build_absolute_uri(endpoint)
-            response = requests.post(endpoint,data=args)
+            response = requests.post(endpoint,data=args, cookies=request.COOKIES)
             return response.json()
         
         # Use a ThreadPoolExecutor to make requests to all endpoints concurrently
