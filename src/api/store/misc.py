@@ -1,38 +1,21 @@
+from typing import Tuple
+
+from sentry_sdk import capture_message
+
+from _main_.utils.context import Context
 from _main_.utils.footage.spy import Spy
-from api.tests.common import createUsers
-from database.models import (
-    AboutUsPageSettings, Action,
-    ActionsPageSettings, ContactUsPageSettings, EventsPageSettings, ImpactPageSettings, TeamsPageSettings, TestimonialsPageSettings, Vendor,
-    Subdomain,
-    Event,
-    Community,
-    Menu,
-    Team,
-    TeamMember,
-    CommunityMember,
-    RealEstateUnit,
-    CommunityAdminGroup,
-    UserProfile,
-    Data,
-    TagCollection,
-    UserActionRel,
-    Data,
-    Location,
-    HomePageSettings, VendorsPageSettings,
-)
 from _main_.utils.massenergize_errors import (
     CustomMassenergizeError,
     InvalidResourceError,
     MassEnergizeAPIError,
 )
-from _main_.utils.context import Context
+from api.tests.common import createUsers
+from api.utils.api_utils import get_viable_menu_items
+from database.models import Action, CarbonEquivalency, Community, CommunityAdminGroup, CommunityMember, Data, Event, \
+    HomePageSettings, Location, Menu, RealEstateUnit, Subdomain, TagCollection, Team, TeamMember, UserActionRel, \
+    UserProfile, Vendor
 from database.utils.common import json_loader
-from database.models import CarbonEquivalency
-from .utils import find_reu_community, get_community, split_location_string, check_location
-from sentry_sdk import capture_message
-from typing import Tuple
-
-from api.utils.api_utils import get_viable_menu_items, load_about_data, load_aboutus_data, load_actions_data, load_contactus_data, load_events_data, load_homepage_data, load_impact_data, load_one_action_data, load_one_event_data, load_one_team_data, load_one_testimonial_data, load_one_vendor_data, load_policies_data, load_profile_data, load_settings_data, load_teams_data, load_testimonials_data, load_vendors_data
+from .utils import check_location, find_reu_community, get_community, split_location_string
 
 
 class MiscellaneousStore:
@@ -496,65 +479,65 @@ class MiscellaneousStore:
             print(str(key) + ": " + str(common_icons[key]))
             
     
-    def load_essential_initial_site_data(self, context, args):
-        try:
-            page = args.get("page", None)
-            subdonain = args.get("subdomain", None)
-            community_id = args.get("community_id", None)
-            id = args.get("id", None)
-            
-            if not subdonain and not community_id:
-                return None, CustomMassenergizeError("No community or subdomain provided")
-            
-            if not page:
-                return None, CustomMassenergizeError("No page provided")
-            
-            community, _ = get_community(community_id=community_id, subdomain=subdonain)
-            if not community:
-                return None, CustomMassenergizeError("Community not found")
-            
-            page_settings = {
-                "home_page_settings": HomePageSettings.objects.filter(community=community).first(),
-                "actions_page_settings": ActionsPageSettings.objects.filter(community=community).first(),
-                "events_page_settings": EventsPageSettings.objects.filter(community=community).first(),
-                "vendors_page_settings": VendorsPageSettings.objects.filter(community=community).first(),
-                "about_us_page_settings": AboutUsPageSettings.objects.filter(community=community).first(),
-                "testimonials_page_settings": TestimonialsPageSettings.objects.filter(community=community).first(),
-                "teams_page_settings": TeamsPageSettings.objects.filter(community=community).first(),
-                "contact_us_page_settings": ContactUsPageSettings.objects.filter(community=community).first(),
-                "impact_page_settings": ImpactPageSettings.objects.filter(community=community).first(),
-            }
-            
-            data = {}
-            
-            page_func_map = {
-            "homepage": load_homepage_data,
-            "actions": load_actions_data,
-            "events": load_events_data,
-            "vendors": load_vendors_data,
-            "about": load_about_data,
-            "testimonials": load_testimonials_data,
-            "one_vendor": load_one_vendor_data,
-            "impact": load_impact_data,
-            "aboutus": load_aboutus_data,
-            "contactus": load_contactus_data,
-            "teams": load_teams_data,
-            "one_team": load_one_team_data,
-            "one_action": load_one_action_data,
-            "one_event": load_one_event_data,
-            "one_testimonial": load_one_testimonial_data,
-            "profile": load_profile_data,
-            "settings": load_settings_data,
-            "policies": load_policies_data,
-        }
-            func = page_func_map.get(page)
-            if func:
-                data = func(context, args, community, id, page_settings)
-            
-            return data, None
-        except Exception as e:
-            return None, CustomMassenergizeError(e)
-        
+    # def load_essential_initial_site_data(self, context, args):
+    #     try:
+    #         page = args.get("page", None)
+    #         subdonain = args.get("subdomain", None)
+    #         community_id = args.get("community_id", None)
+    #         id = args.get("id", None)
+    #
+    #         if not subdonain and not community_id:
+    #             return None, CustomMassenergizeError("No community or subdomain provided")
+    #
+    #         if not page:
+    #             return None, CustomMassenergizeError("No page provided")
+    #
+    #         community, _ = get_community(community_id=community_id, subdomain=subdonain)
+    #         if not community:
+    #             return None, CustomMassenergizeError("Community not found")
+    #
+    #         page_settings = {
+    #             "home_page_settings": HomePageSettings.objects.filter(community=community).first(),
+    #             "actions_page_settings": ActionsPageSettings.objects.filter(community=community).first(),
+    #             "events_page_settings": EventsPageSettings.objects.filter(community=community).first(),
+    #             "vendors_page_settings": VendorsPageSettings.objects.filter(community=community).first(),
+    #             "about_us_page_settings": AboutUsPageSettings.objects.filter(community=community).first(),
+    #             "testimonials_page_settings": TestimonialsPageSettings.objects.filter(community=community).first(),
+    #             "teams_page_settings": TeamsPageSettings.objects.filter(community=community).first(),
+    #             "contact_us_page_settings": ContactUsPageSettings.objects.filter(community=community).first(),
+    #             "impact_page_settings": ImpactPageSettings.objects.filter(community=community).first(),
+    #         }
+    #
+    #         data = {}
+    #
+    #         page_func_map = {
+    #         "homepage": load_homepage_data,
+    #         "actions": load_actions_data,
+    #         "events": load_events_data,
+    #         "vendors": load_vendors_data,
+    #         "about": load_about_data,
+    #         "testimonials": load_testimonials_data,
+    #         "one_vendor": load_one_vendor_data,
+    #         "impact": load_impact_data,
+    #         "aboutus": load_aboutus_data,
+    #         "contactus": load_contactus_data,
+    #         "teams": load_teams_data,
+    #         "one_team": load_one_team_data,
+    #         "one_action": load_one_action_data,
+    #         "one_event": load_one_event_data,
+    #         "one_testimonial": load_one_testimonial_data,
+    #         "profile": load_profile_data,
+    #         "settings": load_settings_data,
+    #         "policies": load_policies_data,
+    #     }
+    #         func = page_func_map.get(page)
+    #         if func:
+    #             data = func(context, args, community, id, page_settings)
+    #
+    #         return data, None
+    #     except Exception as e:
+    #         return None, CustomMassenergizeError(e)
+    
     def load_menu_items(self, context, args):
         try:
             page = args.get("page", None)

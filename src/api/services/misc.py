@@ -143,12 +143,12 @@ class MiscellaneousService:
         return signinAs(client, user), None
     
     
-    def load_essential_initial_site_data(self,context, args):
-        res, err = self.store.load_essential_initial_site_data(context,args)
-        if err:
-            return None, err
-        
-        return res, None
+    # def load_essential_initial_site_data(self,context, args):
+    #     res, err = self.store.load_essential_initial_site_data(context,args)
+    #     if err:
+    #         return None, err
+    #
+    #     return res, None
     
     def load_menu_items(self,context, args):
         res, err = self.store.load_menu_items(context,args)
