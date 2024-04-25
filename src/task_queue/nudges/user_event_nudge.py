@@ -132,7 +132,7 @@ def is_event_eligible(event, community_id, task=None):
         
         if settings.when_first_posted and event.published_at and last_last_run < event.published_at.date() <= now:
             return True
-        elif settings.within_30_days and event.start_date_and_time.date() - now <= timezone.timedelta(days=30):
+        elif settings.within_30_days and timezone.timedelta(days=30) - last_last_run < event.start_date_and_time.date() - now <= timezone.timedelta(days=30):
             return True
         elif settings.within_1_week and event.start_date_and_time.date() - now <= timezone.timedelta(days=7):
             return True
