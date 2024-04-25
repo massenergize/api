@@ -157,6 +157,8 @@ def get_viable_menu_items(community):
     teams_page_settings = TeamsPageSettings.objects.filter(community=community).first()
     testimonial_page_settings = TestimonialsPageSettings.objects.filter(community=community).first()
     vendors_page_settings = VendorsPageSettings.objects.filter(community=community).first()
+    donation_page_settings = DonationPageSettings.objects.filter(community=community).first()
+    
 
     menu_items = {}
     all_menu = Menu.objects.all()
@@ -171,7 +173,8 @@ def get_viable_menu_items(community):
         "services": vendors_page_settings.is_published,
         "testimonials": testimonial_page_settings.is_published,
         "teams": teams_page_settings.is_published,
-        "events": events_page_settings.is_published
+        "events": events_page_settings.is_published,
+        "donate": donation_page_settings.is_published
     }, community.subdomain)
     
     footer_menu_content = all_menu.get(name='PortalFooterQuickLinks')
