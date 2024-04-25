@@ -169,14 +169,14 @@ class MiscellaneousHandler(RouteHandler):
         
         self.validator.expect("community_id", is_required=False)
         self.validator.expect("subdomain", is_required=False)
-        self.validator.expect("data", 'str_list', is_required=True)
+        self.validator.expect("endpoints", 'str_list', is_required=True)
         self.validator.expect("id", is_required=False)
         
         args, err = self.validator.verify(args, strict=True)
         if err:
             return err
         
-        endpoints = args.pop("data", [])
+        endpoints = args.pop("endpoints", [])
     
         def fetch_data(endpoint):
             endpoint = request.build_absolute_uri(endpoint)
