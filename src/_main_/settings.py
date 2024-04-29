@@ -27,7 +27,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ********  LOAD CONFIG DATA ***********#
 # DJANGO_ENV can be passed in through the makefile, with "make start env=local"
-DJANGO_ENV = os.environ.get("DJANGO_ENV","local")
+DJANGO_ENV = os.environ.get("DJANGO_ENV", "dev")
 
 STAGE = Stage(DJANGO_ENV)
 os.environ.update(STAGE.get_secrets())

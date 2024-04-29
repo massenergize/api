@@ -9,7 +9,7 @@ init:
 env=local
 export DJANGO_ENV=$(env)
 start:
-	DJANGO_ENV=dev python3 deployment/prepare_to_deploy.py local 1
+	DJANGO_ENV=dev python3 deployment/prepare_to_deploy.py dev 1
 	DJANGO_ENV=dev python3 manage.py runserver
 .PHONY: start
 
@@ -138,3 +138,9 @@ migrate-canary:
 migrate-local:
 	DJANGO_ENV=local python manage.py migrate
 .PHONY: migrate-local
+
+
+startd:
+	sudo docker-compose build
+	sudo docker-compose up
+.PHONY: startd
