@@ -43,7 +43,7 @@ USER_PREFERENCE_DEFAULTS = {
 DEFAULT_EVENT_SETTINGS = {
     "when_first_posted": False,
     "within_30_days": True,
-    "within_7_days": True,
+    "within_1_week": True,
     "never": False,
 }
 
@@ -107,37 +107,39 @@ def update_last_notification_dates(email):
 
 
 def is_event_eligible(event, community_id, task=None):
-    now = timezone.now()
-    settings = event.nudge_settings.filter(communities__id=community_id).first()
-
-    # it it doesn't exist, then create, don't save an instance of NudgeSettings
-    if not settings:
-        settings = EventNudgeSetting.objects.create(event=event, **DEFAULT_EVENT_SETTINGS)
-        settings.communities.add(community_id)
-
-    if settings.never:
+    try:
+        now = timezone.now().date()
+        settings = event.nudge_settings.filter(communities__id=community_id).first()
+        
+        if not settings:
+            settings = EventNudgeSetting(event=event, **DEFAULT_EVENT_SETTINGS)
+            
+        if settings.never:
+            return False
+        
+        freq = task.frequency if task else None
+        last_last_run = None
+        
+        freq_to_delta = {
+            "EVERY_WEEK": relativedelta(weeks=1),
+            "bi-weekly": relativedelta(weeks=2),
+            "EVERY_MONTH": relativedelta(months=1),
+            "EVERY_DAY": relativedelta(days=1)
+        }
+        
+        if freq:
+            last_last_run = now - freq_to_delta.get(freq, relativedelta(days=0))
+        
+        if settings.when_first_posted and event.published_at and last_last_run < event.published_at.date() <= now:
+            return True
+        elif settings.within_30_days and timezone.timedelta(days=30) - last_last_run < event.start_date_and_time.date() - now <= timezone.timedelta(days=30):
+            return True
+        elif settings.within_1_week and event.start_date_and_time.date() - now <= timezone.timedelta(days=7):
+            return True
         return False
-
-    freq = task.frequency if task else None
-    last_last_run = None
-
-    freq_to_delta = {
-        "EVERY_WEEK": relativedelta(weeks=1),
-        "bi-weekly": relativedelta(weeks=2),
-        "EVERY_MONTH": relativedelta(months=1),
-        "EVERY_DAY": relativedelta(days=1)
-    }
-
-    if freq:
-        last_last_run = now - freq_to_delta.get(freq, relativedelta(days=0))
-
-    if settings.when_first_posted and event.published_at and last_last_run < event.published_at <= now:
-        return True
-    elif settings.within_30_days and event.start_date_and_time - now <= timezone.timedelta(days=30):
-        return True
-    elif settings.within_7_days and event.start_date_and_time - now <= timezone.timedelta(days=7):
-        return True
-    return False
+    except Exception as e:
+        print(f"is_event_eligible exception - (event:{event.name}|| community:{community_id}): " + str(e))
+        return False
 
 
 def get_community_events(community_id, task=None):
@@ -208,26 +210,33 @@ def prepare_events_email_data(events):
 
 
 def community_has_altered_flow(community, feature_flag_key) -> bool:
-    today = timezone.now().today()
-    community_nudge_settings = CommunityNotificationSetting.objects.filter(community=community, notification_type=feature_flag_key).first()
-    if not community_nudge_settings: # meaning the community has not changed the default settings
-        return True
-    if community_nudge_settings.is_active:
-        return True
-    
-    activate_on = community_nudge_settings.activate_on
-
-    if activate_on and activate_on >= today:
-        community_nudge_settings.is_active = True
-        community_nudge_settings.activate_on = None
-        community_nudge_settings.save()
+    try:
+        today = timezone.now().today().date()
+        community_nudge_settings = CommunityNotificationSetting.objects.filter(community=community,
+                                                                               notification_type=feature_flag_key).first()
+        if not community_nudge_settings:  # meaning the community has not changed the default settings
+            return True
+        if community_nudge_settings.is_active:
+            return True
         
-        # ----------------------------------------------------------------
-        notification_type = feature_flag_key.split('-feature-flag')[0]
-        Spy.create_community_notification_settings_footage(communities=[community], actor="Automatic", type=FootageConstants.update(),notes=f"{notification_type} automatically updated as the resuming date {activate_on} elapsed")
-        # ----------------------------------------------------------------
-        return True
-    return False
+        activate_on = community_nudge_settings.activate_on
+        
+        if activate_on and activate_on >= today:
+            community_nudge_settings.is_active = True
+            community_nudge_settings.activate_on = None
+            community_nudge_settings.save()
+            
+            # ----------------------------------------------------------------
+            notification_type = feature_flag_key.split('-feature-flag')[0]
+            Spy.create_community_notification_settings_footage(communities=[community], actor="Automatic",
+                                                               type=FootageConstants.update(),
+                                                               notes=f"{notification_type} automatically updated as the resuming date {activate_on} elapsed")
+            # ----------------------------------------------------------------
+            return True
+        return False
+    except Exception as e:
+        print(f"community_has_altered_flow exception - ({community.name}): " + str(e))
+        return False
 
 
 def send_events_report_email(name, email, event_list, comm, login_method=""):
