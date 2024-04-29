@@ -27,7 +27,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ********  LOAD CONFIG DATA ***********#
 # DJANGO_ENV can be passed in through the makefile, with "make start env=local"
-DJANGO_ENV = os.environ.get("DJANGO_ENV","remote")
+DJANGO_ENV = os.environ.get("DJANGO_ENV","local")
 
 STAGE = Stage(DJANGO_ENV)
 os.environ.update(STAGE.get_secrets())
@@ -188,9 +188,9 @@ if is_test_mode():
     DATABASES['default'] = DATABASES['test_db']
 
 # CACHES = {
-#     'default': {
-#         'BACKEND': os.getenv('CACHE_BACKEND'),
-#         'LOCATION': os.getenv('CACHE_LOCATION'),
+#     "default": {
+#         "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+#         "LOCATION": "main_cache_table",
 #     }
 # }
 

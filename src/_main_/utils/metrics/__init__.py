@@ -51,12 +51,13 @@ def send_metric(func, execution_time, name_space=FUNCTION_LATENCY_NAMESPACE, ext
 
 
 def put_metric_data(name_space, metric_data):
+    #TODO: when local don't send to cloud watch
     client = boto3.client('cloudwatch')
     client.put_metric_data(
         Namespace=name_space,
         MetricData=metric_data
     )
-    print(f"Metric {metric_data[0]['MetricName']} sent to CloudWatch: {metric_data[0]['Value']} ms")
+    print(f"Metric {metric_data[0]['MetricName']} sent to CloudWatch: {metric_data[0]['Value']} ms\n")
 
 
 def timed_with_dimensions(dimensions=None, capture_rate=DEFAULT_CAPTURE_RATE):

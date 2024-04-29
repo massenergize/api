@@ -15,6 +15,7 @@ from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from _main_.utils.massenergize_errors import (CustomMassenergizeError, InvalidResourceError, MassEnergizeAPIError,
                                               NotAuthorizedError)
+from _main_.utils.metrics import timed
 from _main_.utils.utils import strip_website
 from api.services.utils import send_slack_message
 from api.store.common import count_action_completed_and_todos
@@ -507,6 +508,7 @@ class CommunityStore:
 
         return distance
 
+    @timed
     def get_community_info(
         self, context: Context, args
     ) -> Tuple[dict, MassEnergizeAPIError]:

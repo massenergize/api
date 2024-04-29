@@ -1,6 +1,8 @@
 
 import boto3, os, json
 from botocore.exceptions import ClientError
+from pathlib import Path
+from dotenv import load_dotenv
 
 # constants
 TARGET_REGION = "us-east-2"
@@ -24,12 +26,22 @@ def get_secret(stage):
             SecretId=secret_name
         )
     except ClientError as e:
-        # For a list of exceptions thrown, see
-        # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
-        raise e
+        print("Could not fetch credentials")
+        return load_env(stage)
 
     secret = get_secret_value_response['SecretString']
     if secret:
         return json.loads(secret)
     
+    return {}
+
+
+
+def load_env(stage):
+    try:
+        env_path = Path('.') / f'{stage.lower()}.env'
+        load_dotenv(dotenv_path=env_path)
+    except Exception:
+        load_dotenv()
+
     return {}

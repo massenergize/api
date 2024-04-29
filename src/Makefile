@@ -6,7 +6,7 @@ init:
 .PHONY: init
 
 # run this with 'make start env=local'
-env=remote
+env=local
 export DJANGO_ENV=$(env)
 start:
 	DJANGO_ENV=dev python3 deployment/prepare_to_deploy.py local 1

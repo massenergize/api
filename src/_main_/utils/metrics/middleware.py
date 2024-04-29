@@ -25,6 +25,8 @@ class MetricsMiddleware(MiddlewareMixin):
     def send_cw_metrics(self, request):
         if hasattr(request, 'start_time'):
             latency = (time.time() - request.start_time) * 1000 # convert to milliseconds
+            print(request.path, latency)
+            return #TODO; remove
 
         try:
             self.cloudwatch.put_metric_data(

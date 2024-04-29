@@ -1,6 +1,5 @@
 from types import FunctionType as function
-from django.urls import path, re_path
-from django.conf.urls import url
+from django.urls import path
 from _main_.utils.validator import Validator
 from _main_.utils.metrics import timed
 
