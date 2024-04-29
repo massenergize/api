@@ -89,6 +89,7 @@ test:
 	touch test.sqlite3
 	DJANGO_ENV=test python3 manage.py migrate
 	DJANGO_ENV=test python3 -W ignore manage.py test $(package)
+	coverage report
 .PHONY: test
 
 celery:
