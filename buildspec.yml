@@ -1,0 +1,36 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.9  # Specify the Python version
+    commands:
+      - echo "Installing dependencies"
+      - cd src  # Change directory to src where the Django project is located
+      - pip3 install -r requirements.txt  # Install dependencies
+
+  pre_build:
+    commands:
+      - echo "Running migrations and collecting static files"
+      - python3 manage.py migrate  # Run database migrations
+      - python3 manage.py collectstatic --noinput  # Collect static files
+
+  build:
+    commands:
+      - echo "Running tests"
+      - python3 manage.py test  # Run Django tests
+
+  post_build:
+    commands:
+      - echo "Build completed on `date`"
+
+# If you have artifacts to output (e.g., deployment packages)
+artifacts:
+  files: '**/*'
+
+  
+
+# If there are any environment variables needed
+environment:
+  variables:
+    ENV: "BUILD"
