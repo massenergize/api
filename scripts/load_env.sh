@@ -3,7 +3,7 @@
 cd /webapps/massenergize_api
 
 # Create the .env file if it doesn't exist
-touch .env
+sudo touch .env
 
 # Loop through all environment variables
 for var in $(env); do
@@ -21,7 +21,6 @@ for var in $(env); do
     continue
   fi
 
-  echo $name
   # Append the variable to the .env file in the format "NAME=VALUE"
-  echo "$name=$value" >> .env
+  sudo echo "$name=$value" >> .env
 done
