@@ -22,13 +22,12 @@ def get_secret(stage):
     )
 
     try:
-        print(secret_name, region_name)
         get_secret_value_response = client.get_secret_value(
             SecretId=secret_name
         )
         load_dotenv()
-    except ClientError as e:
-        print("Could not fetch credentials")
+    except Exception as e:
+        print("Could not fetch credentials", e)
         return load_env(stage)
 
     secret = get_secret_value_response['SecretString']

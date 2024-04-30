@@ -21,6 +21,9 @@ from sentry_sdk.integrations.celery import CeleryIntegration
 
 from _main_.utils.utils import is_test_mode
 from .utils.stage import Stage
+import boto3
+
+load_dotenv()
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
