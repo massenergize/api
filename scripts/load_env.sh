@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# cd /webapps/massenergize_api
+cd /webapps/massenergize_api
 
 # Create the .env file if it doesn't exist
-touch t.env
+touch .env
 
 # Loop through all environment variables
 for var in $(env); do
@@ -15,11 +15,13 @@ for var in $(env); do
   if [[ $name == '_' ]]; then
     continue
   fi
-  
+
   # Skip variables starting with %
   if [[ $name == ^% ]]; then
     continue
   fi
+
+  echo $name
   # Append the variable to the .env file in the format "NAME=VALUE"
-  echo "$name=$value" >> t.env
+  echo "$name=$value" >> .env
 done
