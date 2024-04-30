@@ -25,7 +25,6 @@ def get_secret(stage):
         get_secret_value_response = client.get_secret_value(
             SecretId=secret_name
         )
-        load_dotenv()
     except Exception as e:
         print("Could not fetch credentials", e)
         return load_env(stage)
