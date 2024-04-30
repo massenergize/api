@@ -20,7 +20,7 @@ def get_default_logging_settings(stage):
             },
         },
         'handlers': {
-            'watchtower': {
+            'external': {
                 'level': 'DEBUG',  
                 'class': 'watchtower.CloudWatchLogHandler',
                 'log_group': f"/api/{stage}",
@@ -38,7 +38,7 @@ def get_default_logging_settings(stage):
         },
         'loggers': {
             get_logger_name(): {
-                'handlers': ['console', 'watchtower'],
+                'handlers': ['console', 'external'],
                 'level': 'DEBUG',
                 'propagate': True,
             },
