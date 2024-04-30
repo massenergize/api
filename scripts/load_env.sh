@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd /webapps/massenergize_api
+
 # Create the .env file if it doesn't exist
 touch .env
 
