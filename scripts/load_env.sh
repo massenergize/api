@@ -43,7 +43,7 @@ secret_json=$(aws secretsmanager get-secret-value --secret-id "api/dev" --query 
 if [ $? -eq 0 ]; then
     # Parse JSON and extract key-value pairs
     IFS=$'\n'       # Set Internal Field Separator to newline
-    env_lines=($(echo "$secret_json" | jq -r 'to_entries | .[] | "\(.key)=\(.value)"'))
+    env_lines=($(echo "$secret_json" | jq -r 'to_entries | .[] | "\(.key)=\"\(.value | (if length > 20 then "\"\(. | gsub("\"";"\"\""))\"" else . end))"'))
 
     # Write to .env file
     for line in "${env_lines[@]}"; do
