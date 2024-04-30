@@ -22,6 +22,7 @@ def get_secret(stage):
     )
 
     try:
+        print(secret_name, region_name)
         get_secret_value_response = client.get_secret_value(
             SecretId=secret_name
         )
