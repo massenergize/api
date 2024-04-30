@@ -23,8 +23,15 @@ if [ -f "/etc/profile" ]; then
             # Extract the variable name and value
             var_name=$(echo "$line" | cut -d' ' -f2 | cut -d'=' -f1)
             var_value=$(echo "$line" | cut -d'=' -f2-)
+            
+            # Check if the variable value spans multiple lines
+            while [[ "$var_value" != *\"* ]]; do
+                read -r next_line
+                var_value="$var_value $next_line"
+            done
+            
             # Append the variable and value to .env file
-            sudo echo "$var_name=$var_value" >> "$ENV_FILE"
+            echo "$var_name=$var_value" >> "$ENV_FILE"
         fi
     done < "/etc/profile"
 fi
