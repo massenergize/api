@@ -19,7 +19,7 @@ if [ -f "/etc/profile" ]; then
     while IFS= read -r line
     do
         # Check if the line starts with "export"
-        if [[ "$line" == export\ AWS_ACCESS_KEY_ID=* || "$line" == export\ AWS_SECRET_ACCESS_KEY=* || "$line" == export\ AWS_S3_SIGNATURE_VERSION=* || "$line" == export\ AWS_S3_REGION_NAME=* ]]; then
+        if [[ "$line" == export\ AWS_ACCESS_KEY_ID=* || "$line" == export\ AWS_SECRET_ACCESS_KEY=* || "$line" == export\ AWS_S3_SIGNATURE_VERSION=* || "$line" == export\ AWS_S3_REGION_NAME=* || "$line" == export\ AWS_DEFAULT_REGION=* ]]; then
             # Extract the variable name and value
             var_name=$(echo "$line" | cut -d' ' -f2 | cut -d'=' -f1)
             var_value=$(echo "$line" | cut -d'=' -f2-)
