@@ -36,10 +36,8 @@ sudo touch $ENV_FILE
 #     done < "/etc/profile"
 # fi
 
-#!/bin/bash
-
 # Run AWS Secrets Manager command to get secret value and store it in a variable
-secret_json=$(aws secretsmanager get-secret-value --secret-id $SECRETS_ID --query SecretString --output text --region $SECRETS_TARGET_REGION)
+secret_json=$(aws secretsmanager get-secret-value --secret-id "$SECRETS_ID" --query SecretString --output text --region "us-east-2")
 
 # Check if the response is valid JSON
 if [ $? -eq 0 ]; then
