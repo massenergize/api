@@ -20,7 +20,7 @@ class MiscellaneousHandler(RouteHandler):
 
     def registerRoutes(self) -> None:
         self.add("/menus.remake", self.remake_navigation_menu)
-        self.add("/menus.list", self.load_menu_items)
+        self.add("/menus.list", self.load_menu_items) #TODO: revert and create new enpoint eg user.portal.menu.load
         self.add("/data.backfill", self.backfill)
         self.add("/data.carbonEquivalency.create", self.create_carbon_equivalency)
         self.add("/data.carbonEquivalency.update", self.update_carbon_equivalency)
