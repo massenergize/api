@@ -16,3 +16,6 @@ The following individuals have made signifigant contributions to this repository
 * [Frimpong Opoku-Agyemang](https://github.com/frimpongopoku)
 * [Josh Katofsky](https://www.linkedin.com/in/josh-katofsky/)
 * [Derek Zheng](https://dereknzheng.com/)
+
+
+[![codecov](https://codecov.io/gh/massenergize/api/graph/badge.svg?token=KYFAUXOAP4)](https://codecov.io/gh/massenergize/api)
