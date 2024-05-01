@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd /webapps/massenergize_api
+# cd /webapps/massenergize_api
 
 
 # File to store environment variables
@@ -32,5 +32,3 @@ else
     echo "Error: Failed to retrieve secrets from AWS Secrets Manager."
 fi
 
-
-echo "Environment variables from /etc/profile copied to $ENV_FILE"
