@@ -357,7 +357,7 @@ class Spy:
             footage = Spy.create_footage(
                 actor=actor,
                 activity_type=act_type,
-                by_super_admin=ctx.user_is_super_admin,
+                by_super_admin=ctx.user_is_super_admin if ctx else False,
                 item_type=FootageConstants.ITEM_TYPES["COMMUNITY_NOTIFICATION"]["key"],
                 portal=portal
             )
