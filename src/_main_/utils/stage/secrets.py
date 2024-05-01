@@ -31,6 +31,8 @@ def get_secret(stage):
 
     secret = get_secret_value_response['SecretString']
     if secret:
+        res = json.loads(secret)
+        print(res)
         return json.loads(secret)
     
     return {}

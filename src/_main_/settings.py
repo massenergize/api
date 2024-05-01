@@ -187,6 +187,7 @@ DATABASES = {
     }
 }
 
+print(DATABASES)
 if is_test_mode():
     DATABASES['default'] = DATABASES['test_db']
 
