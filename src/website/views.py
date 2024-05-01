@@ -927,7 +927,7 @@ def contact_us(request, subdomain=None):
     return render(request, "page__contact_us.html", args)
 
 def health_check(request):
-    return JsonResponse(data={"ok": True}, safe=False)
+    return JsonResponse(data={"ok": True, "msg": "Thanks for coming.  I am doing really well."}, safe=False)
 
 
 def generate_sitemap(request):
