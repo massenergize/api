@@ -13,9 +13,9 @@ start:
 	python3 manage.py runserver
 .PHONY: start
 
-#prepare-prod:
-#	python3 deployment/prepare_to_deploy.py --prod 0 1
-#.PHONY: prepare-prod
+prepare-prod:
+	python3 deployment/prepare_to_deploy.py --prod 0 1
+.PHONY: prepare-prod
 
 VERSION=latest
 build-and-push-prod:
@@ -119,7 +119,7 @@ deploy-canary:
 .PHONY: deploy-canary
 
 deploy-prod:
-	DJANGO_ENV=prod python3 deployment/prepare_to_deploy.py --prod 0 1 && DJANGO_ENV=prod make build-and-push-canary
+	DJANGO_ENV=prod python3 deployment/prepare_to_deploy.py --prod 0 1 && DJANGO_ENV=prod make build-and-push-prod
 .PHONY: deploy-prod
 
 #-------------- NEW  MIGRATE ----------------
