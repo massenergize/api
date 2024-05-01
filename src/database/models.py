@@ -590,7 +590,7 @@ class Community(models.Model):
         res["logo"] = get_json_if_not_none(self.logo)
         res["favicon"] = get_json_if_not_none(self.favicon)
         # this will not slow it down measurably
-        # res["feature_flags"] = get_enabled_flags(self)
+        res["feature_flags"] = get_enabled_flags(self)
         return res
 
     # def medium_json(self):
@@ -744,7 +744,7 @@ class Community(models.Model):
             "admins": admins,
             "geography_type": self.geography_type,
             "locations": locations,
-            # "feature_flags": get_enabled_flags(self),
+            "feature_flags": get_enabled_flags(self),
             "is_demo": self.is_demo,
             "contact_sender_alias": self.contact_sender_alias,
         }
@@ -3311,8 +3311,9 @@ class HomePageSettings(models.Model):
 
     def simple_json(self):
         res = model_to_dict(
-            self, exclude=["images", "featured_events", "featured_stats"]
+            self, exclude=["images", "featured_events", "featured_stats", "community"]
         )
+        res["community"] = get_summary_info(self.community)
         return res
 
     def full_json(self):
@@ -3358,7 +3359,6 @@ class ActionsPageSettings(models.Model):
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["images"])
-        # next line is most of the time (54ms on local)
         res["community"] = get_summary_info(self.community)
         return res
 
