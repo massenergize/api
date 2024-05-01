@@ -25,7 +25,7 @@ class MiscellaneousHandler(RouteHandler):
         self.add("/data.carbonEquivalency.info", self.get_carbon_equivalencies)
         self.add("/data.carbonEquivalency.delete", self.delete_carbon_equivalency)
         self.add("/home", self.home)
-        self.add("/health_check", self.home)
+        self.add("/health_check", self.health_check)
         self.add("/auth.login.testmode", self.authenticateFrontendInTestMode)
         self.add("", self.home)
         # settings should be called preferences

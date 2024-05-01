@@ -926,6 +926,9 @@ def contact_us(request, subdomain=None):
 
     return render(request, "page__contact_us.html", args)
 
+def health_check(request):
+    return JsonResponse(data={"ok": True}, safe=False)
+
 
 def generate_sitemap(request):
     d = MiscellaneousStore().generate_sitemap_for_portal()
