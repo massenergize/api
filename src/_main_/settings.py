@@ -54,6 +54,7 @@ SECRET_KEY =  os.environ.get("SECRET_KEY")
 DEBUG = RUN_SERVER_LOCALLY
 
 ALLOWED_HOSTS = [
+    '*',
     '0.0.0.0',
     '127.0.0.1',
     'localhost:3000',
@@ -187,7 +188,6 @@ DATABASES = {
     }
 }
 
-print(DATABASES)
 if is_test_mode():
     DATABASES['default'] = DATABASES['test_db']
 
