@@ -7,9 +7,6 @@ from _main_.utils.context import Context
 from api.decorators import admins_only, super_admins_only
 from database.utils.settings.admin_settings import AdminPortalSettings
 from database.utils.settings.user_settings import UserPortalSettings
-from concurrent.futures import ThreadPoolExecutor
-import requests
-from django.urls import reverse
 
 
 class MiscellaneousHandler(RouteHandler):
@@ -20,7 +17,8 @@ class MiscellaneousHandler(RouteHandler):
 
     def registerRoutes(self) -> None:
         self.add("/menus.remake", self.remake_navigation_menu)
-        self.add("/menus.list", self.load_menu_items) #TODO: revert and create new enpoint eg user.portal.menu.load
+        self.add("/menus.list", self.navigation_menu_list)
+        self.add("/user.portal.menu.list", self.load_menu_items)
         self.add("/data.backfill", self.backfill)
         self.add("/data.carbonEquivalency.create", self.create_carbon_equivalency)
         self.add("/data.carbonEquivalency.update", self.update_carbon_equivalency)
@@ -35,7 +33,6 @@ class MiscellaneousHandler(RouteHandler):
         self.add("/settings.list", self.fetch_available_preferences)
         self.add("/what.happened", self.fetch_footages)
         self.add("/actions.report", self.actions_report)
-        self.add("/site.load", self.load_essential_initial_site_data)
 
     @admins_only
     def fetch_footages(self, request):
@@ -161,37 +158,6 @@ class MiscellaneousHandler(RouteHandler):
             "token", value=token, max_age=24 * 60 * 60, samesite="Strict"
         )
         return response
-    
-    
-    def load_essential_initial_site_data(self, request):
-        context: Context = request.context
-        args: dict = context.args
-        
-        self.validator.expect("community_id", is_required=False)
-        self.validator.expect("subdomain", is_required=False)
-        self.validator.expect("endpoints", 'str_list', is_required=True)
-        self.validator.expect("id", is_required=False)
-        
-        args, err = self.validator.verify(args, strict=True)
-        if err:
-            return err
-        
-        endpoints = args.pop("endpoints", [])
-    
-        def fetch_data(endpoint):
-            endpoint = request.build_absolute_uri(endpoint)
-            response = requests.post(endpoint,data=args, cookies=request.COOKIES)
-            return response.json()
-        
-        # Use a ThreadPoolExecutor to make requests to all endpoints concurrently
-        with ThreadPoolExecutor(max_workers=5) as executor:
-            results = executor.map(fetch_data, endpoints)
-        
-        # Convert the results to a dictionary in the format {endpoint: data}
-        data = {endpoint: result for endpoint, result in zip(endpoints, results)}
-        
-        return MassenergizeResponse(data=data)
-    
     
     def load_menu_items(self, request):
         context: Context = request.context

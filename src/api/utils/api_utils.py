@@ -1,16 +1,9 @@
-from datetime import datetime,timedelta
 from math import atan2, cos, radians, sin, sqrt
 
-from django.db.models import Q
-
-from _main_.utils.common import serialize_all
-from _main_.utils.feature_flags.FeatureFlagConstants import FeatureFlagConstants
-from database.models import AboutUsPageSettings, Action, ActionsPageSettings, Community, CommunityAdminGroup, \
-    ContactUsPageSettings, Event, EventsPageSettings, FeatureFlag, ImpactPageSettings, Media, Menu, \
-    Policy, TagCollection, Team, TeamsPageSettings, Testimonial, TestimonialsPageSettings, UserProfile, \
-    Vendor, VendorsPageSettings
-from database.utils.settings.admin_settings import AdminPortalSettings
-from database.utils.settings.user_settings import UserPortalSettings
+from database.models import AboutUsPageSettings, ActionsPageSettings, Community, CommunityAdminGroup, \
+    ContactUsPageSettings, EventsPageSettings, ImpactPageSettings, Media, Menu, \
+    TeamsPageSettings, TestimonialsPageSettings, UserProfile, \
+    VendorsPageSettings
 
 
 def is_admin_of_community(context, community_id):

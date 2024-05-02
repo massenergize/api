@@ -480,10 +480,8 @@ class MiscellaneousStore:
     
     def load_menu_items(self, context, args):
         try:
-            page = args.get("page", None)
             subdonain = args.get("subdomain", None)
             community_id = args.get("community_id", None)
-            user_id = args.get("user_id", None)
             
             if not subdonain and not community_id:
                 return None, CustomMassenergizeError("No community or subdomain provided")
