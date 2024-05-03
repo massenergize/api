@@ -7,7 +7,6 @@ from django.db.models import Q
 from sentry_sdk import capture_exception, capture_message
 
 from _main_.settings import IS_PROD, SLACK_SUPER_ADMINS_WEBHOOK_URL
-from _main_.utils.common import to_django_date
 from _main_.utils.constants import PUBLIC_EMAIL_DOMAINS, RESERVED_SUBDOMAIN_LIST
 from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import add_sender_signature, update_sender_signature
@@ -24,10 +23,10 @@ from api.tests.common import RESET
 from api.utils.api_utils import get_distance_between_coords, is_admin_of_community
 from api.utils.filter_functions import get_communities_filter_params
 from database.models import AboutUsPageSettings, Action, ActionsPageSettings, Community, CommunityAdminGroup, \
-    CommunityMember, ContactUsPageSettings, CustomCommunityWebsiteDomain, DonatePageSettings, EventsPageSettings, \
-    FeatureFlag, Goal, Graph, HomePageSettings, ImpactPageSettings, Location, Media, RealEstateUnit, \
-    RegisterPageSettings, \
-    SigninPageSettings, Subdomain, TeamsPageSettings, TestimonialsPageSettings, UserProfile, VendorsPageSettings,CommunityNotificationSetting
+	CommunityMember, CommunityNotificationSetting, ContactUsPageSettings, CustomCommunityWebsiteDomain, \
+	DonatePageSettings, EventsPageSettings, FeatureFlag, Goal, Graph, HomePageSettings, ImpactPageSettings, Location, \
+	Media, RealEstateUnit, RegisterPageSettings, SigninPageSettings, Subdomain, TeamsPageSettings, \
+	TestimonialsPageSettings, UserProfile, VendorsPageSettings
 from database.utils.common import json_loader
 from .utils import (get_community, get_community_or_die, get_new_title, get_user_from_context, is_reu_in_community)
 from ..constants import COMMUNITY_NOTIFICATION_TYPES
@@ -1164,7 +1163,7 @@ class CommunityStore:
 
             actions_completed = []
             if not context.is_admin_site:
-                community = get_community_or_die(context, args)            
+                community = get_community_or_die(context, args)
                 actions_completed = count_action_completed_and_todos(
                     communities=[community],
                     time_range=time_range,
@@ -1285,7 +1284,7 @@ class CommunityStore:
                     return None, NotAuthorizedError()
 
             notification_setting.is_active = is_active
-            notification_setting.activate_on = to_django_date(activate_on)
+            notification_setting.activate_on = activate_on
             notification_setting.updated_by = user
             notification_setting.save()
             
