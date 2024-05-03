@@ -18,6 +18,7 @@ class MiscellaneousHandler(RouteHandler):
     def registerRoutes(self) -> None:
         self.add("/menus.remake", self.remake_navigation_menu)
         self.add("/menus.list", self.navigation_menu_list)
+        self.add("/user.portal.menu.list", self.load_menu_items)
         self.add("/data.backfill", self.backfill)
         self.add("/data.carbonEquivalency.create", self.create_carbon_equivalency)
         self.add("/data.carbonEquivalency.update", self.update_carbon_equivalency)
@@ -157,3 +158,19 @@ class MiscellaneousHandler(RouteHandler):
             "token", value=token, max_age=24 * 60 * 60, samesite="Strict"
         )
         return response
+    
+    def load_menu_items(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("community_id", is_required=False)
+        self.validator.expect("subdomain", is_required=False)
+
+        args, err = self.validator.verify(args, strict=True)
+        if err:
+            return MassenergizeResponse(error=err)
+
+        data, err = self.service.load_menu_items(context, args)
+        if err:
+            return err
+        return MassenergizeResponse(data=data)

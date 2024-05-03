@@ -28,9 +28,10 @@ from _main_.utils.massenergize_errors import (
 from _main_.utils.context import Context
 from database.utils.common import json_loader
 from database.models import CarbonEquivalency
-from .utils import find_reu_community, split_location_string, check_location
+from .utils import find_reu_community, split_location_string, check_location,get_community
 from sentry_sdk import capture_message
 from typing import Tuple
+from api.utils.api_utils import get_viable_menu_items
 
 
 class MiscellaneousStore:
@@ -492,3 +493,21 @@ class MiscellaneousStore:
         sorted_keys = sorted(common_icons, key=common_icons.get, reverse=True)
         for key in sorted_keys:
             print(str(key) + ": " + str(common_icons[key]))
+
+    def load_menu_items(self, context, args):
+        try:
+            subdomain = args.get("subdomain", None)
+            community_id = args.get("community_id", None)
+
+            if not subdomain and not community_id:
+                return None, CustomMassenergizeError("No community or subdomain provided")
+
+            community, _ = get_community(community_id=community_id, subdomain=subdomain)
+            if not community:
+                return None, CustomMassenergizeError("Community not found")
+
+            menu = get_viable_menu_items(community)
+
+            return menu, None
+        except Exception as e:
+            return None, CustomMassenergizeError(e)

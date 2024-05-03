@@ -1,5 +1,8 @@
 from math import atan2, cos, radians, sin, sqrt
-from database.models import Community, CommunityAdminGroup, Media, UserProfile
+from database.models import AboutUsPageSettings, ActionsPageSettings, Community, CommunityAdminGroup, \
+    ContactUsPageSettings, EventsPageSettings, ImpactPageSettings, Media, Menu, \
+    TeamsPageSettings, TestimonialsPageSettings, UserProfile, \
+    VendorsPageSettings
 import pyshorteners
 
 
@@ -98,3 +101,85 @@ def create_media_file(file, name):
     media = Media.objects.create(name=name, file=file)
     media.save()
     return media
+
+# -------------------------- Menu Utils --------------------------
+
+
+def prepend_prefix_to_links(menu_item: object, prefix: object) -> object:
+    if not menu_item:
+        return None
+    if "link" in menu_item:
+        menu_item["link"] = "/" + prefix + menu_item["link"]
+    if "children" in menu_item:
+        for child in menu_item["children"]:
+            prepend_prefix_to_links(child, prefix)
+    return menu_item
+
+
+def modify_menu_items_if_published(menu_items, page_settings, prefix):
+    if not menu_items or not page_settings or not prefix:
+        return []
+
+    main_menu = []
+
+    for item in menu_items:
+        if not item.get("children"):
+            name = item.get("link", "").strip("/")
+            if name in page_settings and not page_settings[name]:
+                main_menu.remove(item)
+        else:
+            for child in item["children"]:
+                name = child.get("link", "").strip("/")
+                if name in page_settings and not page_settings[name]:
+                    item["children"].remove(child)
+
+    for item in menu_items:
+        f = prepend_prefix_to_links(item, prefix)
+        main_menu.append(f)
+
+    return main_menu
+
+
+def get_viable_menu_items(community):
+    about_us_page_settings = AboutUsPageSettings.objects.filter(community=community).first()
+    events_page_settings = EventsPageSettings.objects.filter(community=community).first()
+    impact_page_settings = ImpactPageSettings.objects.filter(community=community).first()
+    actions_page_settings = ActionsPageSettings.objects.filter(community=community).first()
+    contact_us_page_settings = ContactUsPageSettings.objects.filter(community=community).first()
+    teams_page_settings = TeamsPageSettings.objects.filter(community=community).first()
+    testimonial_page_settings = TestimonialsPageSettings.objects.filter(community=community).first()
+    vendors_page_settings = VendorsPageSettings.objects.filter(community=community).first()
+
+
+    menu_items = {}
+    all_menu = Menu.objects.all()
+
+    nav_menu = all_menu.get(name="PortalMainNavLinks")
+
+    portal_main_nav_links = modify_menu_items_if_published(nav_menu.content, {
+        "impact": impact_page_settings.is_published,
+        "aboutus": about_us_page_settings.is_published,
+        "contactus": contact_us_page_settings.is_published,
+        "actions": actions_page_settings.is_published,
+        "services": vendors_page_settings.is_published,
+        "testimonials": testimonial_page_settings.is_published,
+        "teams": teams_page_settings.is_published,
+        "events": events_page_settings.is_published,
+    }, community.subdomain)
+
+    footer_menu_content = all_menu.get(name='PortalFooterQuickLinks')
+
+    portal_footer_quick_links = [
+        {**item, "link": "/"+community.subdomain + "/" + item["link"]}
+        if not item.get("children") and item.get("navItemId", None) != "footer-report-a-bug-id"
+        else item
+        for item in footer_menu_content.content["links"]
+    ]
+    portal_footer_contact_info = all_menu.get(name='PortalFooterContactInfo')
+    return [
+        {**nav_menu.simple_json(), "content": portal_main_nav_links},
+        {**footer_menu_content.simple_json(), "content": {"links": portal_footer_quick_links}},
+        portal_footer_contact_info.simple_json()
+
+    ]
+# -------------------------- Menu Utils --------------------------
