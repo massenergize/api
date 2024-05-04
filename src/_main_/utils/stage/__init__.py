@@ -21,7 +21,7 @@ class Stage:
 
     def get_firebase_auth(self):
         secrets = self.get_secrets()
-        firebase_path: str =  secrets and secrets.get()
+        firebase_path: str =  secrets and secrets.get('FIREBASE_AUTH_KEY_PATH')
         return get_s3_file(firebase_path)
 
 
