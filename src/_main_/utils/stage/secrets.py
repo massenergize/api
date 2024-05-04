@@ -55,7 +55,7 @@ def get_s3_file(file_path):
         path = file_path[first_slash+1:]
         session: boto3.Session = boto3.session.Session()
         s3 = session.client('s3')
-        response = s3.get_object(bucket, path)
+        response = s3.get_object(Bucket=bucket, Key=path)
         file_content = response['Body'].read().decode('utf-8')
 
         # Parse the JSON content
