@@ -49,7 +49,6 @@ def load_env(stage):
 
 def get_s3_file(file_path):
     try:
-        print(file_path)
         first_slash = file_path.index("/")
         bucket= file_path[:first_slash]
         path = file_path[first_slash+1:]
@@ -60,8 +59,6 @@ def get_s3_file(file_path):
 
         # Parse the JSON content
         json_content = json.loads(file_content)
-        print(json_content)
-
         return json_content
     except Exception as e:
         print("Could not load firebase file", e)
