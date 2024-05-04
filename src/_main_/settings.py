@@ -204,6 +204,8 @@ ROOT_HOSTCONF = '_main_.hosts'
 DEFAULT_HOST = 'main'
 
 
+print("FIREBASE_AUTH", STAGE.get_firebase_auth())
+
 # firebase setup
 FIREBASE_CREDENTIALS = credentials.Certificate({
   "type": "service_account",

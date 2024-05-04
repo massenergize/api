@@ -46,3 +46,22 @@ def load_env(stage):
         load_dotenv()
 
     return {}
+
+def get_s3_file(file_path):
+    try:
+        first_slash = file_path.index("/")
+        bucket= file_path[:first_slash]
+        path = file_path[file_path+1:]
+        session = boto3.session.Session()
+        s3 = session.client('s3')
+        response = s3.get_object(bucket, path)
+        file_content = response['Body'].read().decode('utf-8')
+
+        # Parse the JSON content
+        json_content = json.loads(file_content)
+        print(json_content)
+
+        return json_content
+    except Exception as e:
+        print("Could not load firebase file", e)
+        return {}

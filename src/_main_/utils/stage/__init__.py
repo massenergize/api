@@ -1,4 +1,4 @@
-from _main_.utils.stage.secrets import get_secret
+from _main_.utils.stage.secrets import get_s3_file, get_secret
 from _main_.utils.stage.logging import *
 from dotenv import load_dotenv
 from pathlib import Path  # python3 only
@@ -6,12 +6,24 @@ from pathlib import Path  # python3 only
 class Stage:
     def __init__(self, name):
         self.name = name.lower()
+        self.secrets = None
     
     def get_secrets(self):
+        if self.secrets:
+            return self.secrets
+        
         if self.is_local():
-            return self.load_local_env()
+            self.secrets =  self.load_local_env()
+        else:
+            self.secrets = get_secret(self.name)
+        
+        return self.secrets
 
-        return get_secret(self.name)
+    def get_firebase_auth(self):
+        secrets = self.get_secrets()
+        firebase_path: str =  secrets and secrets.get()
+        return get_s3_file(firebase_path)
+
 
     def is_prod(self):
         return self.name == "prod"

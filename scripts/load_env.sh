@@ -14,7 +14,9 @@ fi
 sudo touch $ENV_FILE
 
 # Run AWS Secrets Manager command to get secret value and store it in a variable
-secret_json=$(aws secretsmanager get-secret-value --secret-id "api/dev" --query SecretString --output text --region "us-east-2")
+source /etc/profile
+
+secret_json=$(aws secretsmanager get-secret-value --secret-id "$SECRETS_ID" --query SecretString --output text --region "$SECRETS_TARGET_REGION")
 
 # Check if the response is valid JSON
 if [ $? -eq 0 ]; then
@@ -25,6 +27,7 @@ if [ $? -eq 0 ]; then
         echo "$line" >> .env
     done
 
+    echo "DJANGO_ENV=$BUILD_ENV" >> .env
     echo "Secrets successfully written to .env file."
 else
     echo "Error: Failed to retrieve secrets from AWS Secrets Manager."
