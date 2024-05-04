@@ -49,6 +49,7 @@ def load_env(stage):
 
 def get_s3_file(file_path):
     try:
+        print(file_path)
         first_slash = file_path.index("/")
         bucket= file_path[:first_slash]
         path = file_path[file_path+1:]
