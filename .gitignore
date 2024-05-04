@@ -22,3 +22,5 @@ src/_main_/utils/GeoLite2-City/*
 src/celerybeat-schedule.db
 
 src/~Downloads
+*.coverage
+src/.coverage

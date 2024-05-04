@@ -179,7 +179,7 @@ def prepare_events_email_data(events):
 def send_events_nudge(task=None):
     try:
         admins_emailed=[]
-        flag = FeatureFlag.objects.get(key=WEEKLY_EVENT_NUDGE)
+        flag = FeatureFlag.objects.get(key=COMMUNITY_ADMIN_WEEKLY_EVENTS_NUDGE_FF)
         if not flag or not flag.enabled():
             return False
 

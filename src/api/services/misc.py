@@ -141,3 +141,10 @@ class MiscellaneousService:
             return None, CustomMassenergizeError(str(err))
         client = Client()
         return signinAs(client, user), None
+    
+    def load_menu_items(self,context, args):
+        res, err = self.store.load_menu_items(context,args)
+        if err:
+            return None, err
+
+        return res, None
