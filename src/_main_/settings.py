@@ -54,7 +54,6 @@ SECRET_KEY =  os.environ.get("SECRET_KEY")
 DEBUG = RUN_SERVER_LOCALLY
 
 ALLOWED_HOSTS = [
-    '*',
     '0.0.0.0',
     '127.0.0.1',
     'localhost:3000',
@@ -64,6 +63,8 @@ ALLOWED_HOSTS = [
 
 # get the domains we set in our vault and add them.
 ALLOWED_HOSTS.extend(STAGE.get_allowlist_domains())
+
+print(ALLOWED_HOSTS)
 
 if RUN_SERVER_LOCALLY:
     ALLOWED_HOSTS = ['*']
