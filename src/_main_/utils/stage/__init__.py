@@ -2,6 +2,7 @@ from _main_.utils.stage.secrets import get_s3_file, get_secret
 from _main_.utils.stage.logging import *
 from dotenv import load_dotenv
 from pathlib import Path  # python3 only
+import os
 
 class Stage:
     def __init__(self, name):
@@ -20,8 +21,20 @@ class Stage:
         return self.secrets
 
     def get_firebase_auth(self):
+        if self.is_local():
+            return {
+              "type": "service_account",
+              "project_id": os.environ.get('FIREBASE_SERVICE_ACCOUNT_PROJECT_ID'),
+              "private_key_id": os.environ.get('FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY_ID'),
+              "private_key": os.environ.get('FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY'),
+              "client_email": os.environ.get('FIREBASE_SERVICE_ACCOUNT_CLIENT_EMAIL'),
+              "client_id": os.environ.get('FIREBASE_SERVICE_ACCOUNT_CLIENT_ID'),
+              "client_x509_cert_url": os.environ.get('FIREBASE_SERVICE_ACCOUNT_CLIENT_URL'),
+              "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+              "token_uri": "https://oauth2.googleapis.com/token",
+              "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+            }
         secrets = self.get_secrets()
-        print(secrets)
         firebase_path: str =  secrets and secrets.get('FIREBASE_AUTH_KEY_PATH')
         return get_s3_file(firebase_path)
 

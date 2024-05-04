@@ -203,23 +203,9 @@ ROOT_URLCONF = '_main_.urls'
 ROOT_HOSTCONF = '_main_.hosts'
 DEFAULT_HOST = 'main'
 
-
-print("FIREBASE_AUTH", )
-
 # firebase setup
 FIREBASE_CREDENTIALS = credentials.Certificate(STAGE.get_firebase_auth())
-# FIREBASE_CREDENTIALS = credentials.Certificate({
-#   "type": "service_account",
-#   "project_id": os.environ.get('FIREBASE_SERVICE_ACCOUNT_PROJECT_ID'),
-#   "private_key_id": os.environ.get('FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY_ID'),
-#   "private_key": os.environ.get('FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY'),
-#   "client_email": os.environ.get('FIREBASE_SERVICE_ACCOUNT_CLIENT_EMAIL'),
-#   "client_id": os.environ.get('FIREBASE_SERVICE_ACCOUNT_CLIENT_ID'),
-#   "client_x509_cert_url": os.environ.get('FIREBASE_SERVICE_ACCOUNT_CLIENT_URL'),
-#   "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-#   "token_uri": "https://oauth2.googleapis.com/token",
-#   "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-# })
+
 firebase_admin.initialize_app(FIREBASE_CREDENTIALS)
 
 
