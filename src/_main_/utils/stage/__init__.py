@@ -20,6 +20,14 @@ class Stage:
         
         return self.secrets
 
+    def get_allowlist_domains(self):
+        domains =  self.get_secrets().get('DOMAIN_ALLOW_LIST', '')
+        if not domains:
+            return []
+        
+        return domains.split(",")
+
+
     def get_firebase_auth(self):
         if self.is_local():
             return {

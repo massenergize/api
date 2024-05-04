@@ -59,17 +59,11 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost:3000',
     'localhost',
-    '.massenergize.org',
-    '.massenergize.com',
-    '.massenergize.dev',
-    '.massenergize.test',
-    'MassenergizeApi-env.eba-zfppgz2y.us-east-2.elasticbeanstalk.com',
-    'ApiDev-env.eba-5fq2r9ph.us-east-2.elasticbeanstalk.com',
-    'dev-api-env.eba-nfqpwkju.us-east-2.elasticbeanstalk.com',
-    'massenergize-canary-api.us-east-2.elasticbeanstalk.com',
-    'massenergize.test',
-    'massenergize.test:3000',
+    # feel free to add more for your local testing
 ]
+
+# get the domains we set in our vault and add them.
+ALLOWED_HOSTS.extend(STAGE.get_allowlist_domains())
 
 if RUN_SERVER_LOCALLY:
     ALLOWED_HOSTS = ['*']
