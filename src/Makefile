@@ -139,3 +139,6 @@ migrate-canary:
 migrate-local:
 	DJANGO_ENV=local python manage.py migrate
 .PHONY: migrate-local
+
+# docker tag 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api:$(VERSION)  202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api:latest
+# docker push 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api:latest
