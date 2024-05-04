@@ -52,8 +52,8 @@ def get_s3_file(file_path):
         print(file_path)
         first_slash = file_path.index("/")
         bucket= file_path[:first_slash]
-        path = file_path[file_path+1:]
-        session = boto3.session.Session()
+        path = file_path[first_slash+1:]
+        session: boto3.Session = boto3.session.Session()
         s3 = session.client('s3')
         response = s3.get_object(bucket, path)
         file_content = response['Body'].read().decode('utf-8')
