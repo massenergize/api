@@ -130,13 +130,13 @@ def is_event_eligible(event, community_id, task=None):
         if freq:
             last_last_run = now - freq_to_delta.get(freq, relativedelta(days=0))
         
-        if settings.when_first_posted and event.published_at and last_last_run < event.published_at.date() <= now:
+        if settings.when_first_posted and event.published_at and (now - last_last_run).days < (
+          event.published_at.date() - now).days:
             return True
-        elif settings.within_30_days and timezone.timedelta(days=30) - last_last_run < event.start_date_and_time.date() - now <= timezone.timedelta(days=30):
+        elif settings.within_30_days and (timezone.timedelta(days=30) - (now - last_last_run)).days < (event.start_date_and_time.date() - now).days <= timezone.timedelta(days=30).days:
             return True
-        elif settings.within_1_week and event.start_date_and_time.date() - now <= timezone.timedelta(days=7):
-            return True
-        return False
+        elif settings.within_1_week and (event.start_date_and_time.date() - now).days <= timezone.timedelta(days=7).days:
+            return False
     except Exception as e:
         print(f"is_event_eligible exception - (event:{event.name}|| community:{community_id}): " + str(e))
         return False
