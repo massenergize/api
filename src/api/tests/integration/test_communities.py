@@ -367,4 +367,32 @@ class CommunitiesTestCase(TestCase):
     signinAs(self.client, self.SADMIN)
     list_response = self.client.post('/api/communities.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(list_response["success"])
+  
+  def test_list_community_notification_settings(self):
+    # test list community notification settings not logged in
+    signinAs(self.client, None)
+    list_response = self.client.post('/api/communities.notifications.settings.list', urlencode({"community_id":self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertFalse(list_response["success"])
+
+    # test list community notification settings logged as user
+    signinAs(self.client, self.USER)
+    list_response = self.client.post('/api/communities.notifications.settings.list', urlencode({"community_id":self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertFalse(list_response["success"])
+
+    # test list community notification settings logged as cadmin
+    signinAs(self.client, self.CADMIN)
+    list_response = self.client.post('/api/communities.notifications.settings.list', urlencode({"community_id":self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertTrue(list_response["success"])
+    self.assertIsInstance(list_response["data"], dict)
+    
+    # test list community notification settings logged as cadmin with no community_id
+    signinAs(self.client, self.CADMIN)
+    list_response = self.client.post('/api/communities.notifications.settings.list', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertFalse(list_response["success"])
+
+    # test list community notification settings logged as sadmin
+    signinAs(self.client, self.SADMIN)
+    list_response = self.client.post('/api/communities.notifications.settings.list', urlencode({"community_id":self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertTrue(list_response["success"])
+    self.assertIsInstance(list_response["data"], dict)
     
