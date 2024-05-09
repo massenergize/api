@@ -377,3 +377,13 @@ def make_vendor(**kwargs):
     })
 
     return vendor
+
+def make_feature_flag(**kwargs):
+    flag = FeatureFlag.objects.create(**{
+        **kwargs,
+        "name": kwargs.get("name") or f"New Flag-{datetime.now().timestamp()}",
+        "key": kwargs.get("key") or f"New Flag-{datetime.now().timestamp()}",
+        "notes": kwargs.get("description") or "New Flag Description",
+    })
+
+    return flag

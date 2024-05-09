@@ -1,11 +1,15 @@
+from datetime import datetime
+
 from django.test import TestCase, Client
 from django.conf import settings as django_settings
 from urllib.parse import urlencode
 from _main_.settings import BASE_DIR
+from _main_.utils.feature_flag_keys import USER_EVENTS_NUDGES_FF
 from _main_.utils.massenergize_response import MassenergizeResponse
-from database.models import Team, Community, UserProfile, Goal, TeamMember, CommunityMember, RealEstateUnit, CommunityAdminGroup, Subdomain
-from _main_.utils.utils import load_json
-from api.tests.common import signinAs, setupCC, createUsers
+from database.models import CommunityNotificationSetting, Team, Community, UserProfile, Goal, TeamMember, \
+  CommunityMember, RealEstateUnit, CommunityAdminGroup, Subdomain
+from _main_.utils.utils import Console, load_json
+from api.tests.common import make_feature_flag, signinAs, setupCC, createUsers
 
 class CommunitiesTestCase(TestCase):
 
@@ -94,6 +98,9 @@ class CommunitiesTestCase(TestCase):
     self.COMMUNITY.goal = goal
     self.COMMUNITY.save()
     self.COMMUNITY2.save()
+    self.community_notification_setting = CommunityNotificationSetting.objects.create(community=self.COMMUNITY, is_active=False,
+                                                               notification_type=USER_EVENTS_NUDGES_FF)
+    self.ff = make_feature_flag(key=f"test_{USER_EVENTS_NUDGES_FF}")
       
   @classmethod
   def tearDownClass(self):
@@ -389,10 +396,160 @@ class CommunitiesTestCase(TestCase):
     signinAs(self.client, self.CADMIN)
     list_response = self.client.post('/api/communities.notifications.settings.list', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(list_response["success"])
+    
+    # test list community notification settings logged as cadmin with incorrect community_id
+    signinAs(self.client, self.CADMIN)
+    list_response = self.client.post('/api/communities.notifications.settings.list', urlencode({"community_id":555555}), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertFalse(list_response["success"])
+
 
     # test list community notification settings logged as sadmin
     signinAs(self.client, self.SADMIN)
     list_response = self.client.post('/api/communities.notifications.settings.list', urlencode({"community_id":self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertTrue(list_response["success"])
+    self.assertIsInstance(list_response["data"], dict)
+    
+    
+  def test_update_community_notification_settings(self):
+    # test update community notification settings not logged in
+    Console.header("Integration: update_community_notification_settings")
+    args = {"id": self.community_notification_setting.id, "is_active": True}
+    signinAs(self.client, None)
+    update_response = self.client.post('/api/communities.notifications.settings.update', urlencode(args), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertFalse(update_response["success"])
+
+    # test update community notification settings logged as user
+    signinAs(self.client, self.USER)
+    update_response = self.client.post('/api/communities.notifications.settings.set', urlencode(args), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertFalse(update_response["success"])
+
+    # test update community notification settings logged as cadmin
+    signinAs(self.client, self.CADMIN)
+    update_response = self.client.post('/api/communities.notifications.settings.set', urlencode(args), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertTrue(update_response["success"])
+    self.assertTrue(update_response["data"])
+    self.assertTrue(update_response["data"]["is_active"])
+    self.assertEqual(str(self.community_notification_setting.id), update_response["data"]["id"])
+    self.assertEqual(self.community_notification_setting.notification_type, update_response["data"]["notification_type"])
+    
+    # test update community notification settings logged as cadmin with no id
+    signinAs(self.client, self.CADMIN)
+    update_response = self.client.post('/api/communities.notifications.settings.set', urlencode({"is_active":True}), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertFalse(update_response["success"])
+
+    # test update community notification settings logged as sadmin
+    signinAs(self.client, self.SADMIN)
+    update_response = self.client.post('/api/communities.notifications.settings.set', urlencode(args), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertTrue(update_response["success"])
+    self.assertTrue(update_response["data"])
+    self.assertTrue(update_response["data"]["is_active"])
+    self.assertEqual(str(self.community_notification_setting.id), update_response["data"]["id"])
+    self.assertEqual(self.community_notification_setting.notification_type, update_response["data"]["notification_type"])
+    
+    
+  def test_request_feature_for_community(self):
+    # test request feature for community not logged in
+    Console.header("Integration: request_feature_for_community")
+    url = "/api/communities.features.request"
+    args = {"community_id": self.COMMUNITY.id, "feature_flag_key": self.ff.key, "enable": True}
+    signinAs(self.client, None)
+    update_response = self.client.post(url, urlencode(args), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertFalse(update_response["success"])
+
+    # test request feature for community logged as user
+    signinAs(self.client, self.USER)
+    update_response = self.client.post(url, urlencode(args), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertFalse(update_response["success"])
+
+    # test request feature for community logged as cadmin
+    signinAs(self.client, self.CADMIN)
+    update_response = self.client.post(url, urlencode(args), content_type="application/x-www-form-urlencoded").toDict()
+
+    self.assertTrue(update_response["success"])
+    self.assertTrue(update_response["data"])
+    self.assertIsInstance(update_response["data"], dict)
+    self.assertTrue(update_response["data"]["is_enabled"])
+    self.assertEqual(self.ff.key, update_response["data"]["key"])
+    
+    # test request feature for community logged as cadmin with no id
+    signinAs(self.client, self.CADMIN)
+    update_response = self.client.post(url, urlencode({"feature_flag_key": USER_EVENTS_NUDGES_FF, "enable": True}), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertFalse(update_response["success"])
+
+    # test request feature for community logged as sadmin
+    signinAs(self.client, self.SADMIN)
+    update_response = self.client.post(url, urlencode(args), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertTrue(update_response["success"])
+    self.assertTrue(update_response["data"])
+    self.assertIsInstance(update_response["data"], dict)
+    self.assertTrue(update_response["data"]["is_enabled"])
+    self.assertEqual(self.ff.key, update_response["data"]["key"])
+    
+    
+  def test_list_communities_feature_flags(self):
+    # test list community feature flags not logged in
+    Console.header("Integration: list_communities_feature_flags")
+    url = "/api/communities.features.flags.list"
+    args = {"community_id": self.COMMUNITY.id}
+    
+    signinAs(self.client, None)
+    list_response = self.client.post(url, urlencode(args), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertTrue(list_response["success"])
+    
+    # test list community feature flags logged as user
+    signinAs(self.client, self.USER)
+    list_response = self.client.post(url, urlencode(args), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertTrue(list_response["success"])
+    
+    # test list community feature flags logged as user with invalid subdomain
+    signinAs(self.client, self.USER)
+    list_response = self.client.post(url, urlencode({"subdomain":1}), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertFalse(list_response["success"])
+    
+    # test list community feature flags logged as cadmin
+    signinAs(self.client, self.CADMIN)
+    list_response = self.client.post(url, urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertTrue(list_response["success"])
+    
+    # test list community feature flags logged as sadmin
+    signinAs(self.client, self.SADMIN)
+    list_response = self.client.post(url, urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertTrue(list_response["success"])
+    
+  def test_list_community_features(self):
+    # test list community features not logged in
+    Console.header("Integration: list_community_features")
+    url = "/api/communities.features.list"
+    args = {"community_id": self.COMMUNITY.id}
+    
+    signinAs(self.client, None)
+    list_response = self.client.post(url, urlencode(args), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertFalse(list_response["success"])
+    
+    # test list community features logged as user
+    signinAs(self.client, self.USER)
+    list_response = self.client.post(url, urlencode(args), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertFalse(list_response["success"])
+    
+    # test list community features logged as cadmin with no community_id
+    signinAs(self.client, self.CADMIN)
+    list_response = self.client.post(url, urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertFalse(list_response["success"])
+    
+    # test list community features logged as cadmin with invalid community_id
+    signinAs(self.client, self.CADMIN)
+    list_response = self.client.post(url, urlencode({"community_id":9999999}), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertFalse(list_response["success"])
+    
+    # test list community features logged as cadmin
+    signinAs(self.client, self.CADMIN)
+    list_response = self.client.post(url, urlencode(args), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertTrue(list_response["success"])
+    
+    # test list community features logged as sadmin
+    signinAs(self.client, self.SADMIN)
+    list_response = self.client.post(url, urlencode(args), content_type="application/x-www-form-urlencoded").toDict()
+    print("====> ", list_response)
     self.assertTrue(list_response["success"])
     self.assertIsInstance(list_response["data"], dict)
     

@@ -89,7 +89,7 @@ test:
 	 touch test.sqlite3
 	 DJANGO_ENV=test python3 manage.py migrate
 	 DJANGO_ENV=test coverage run --source='.' manage.py test $(package)
-	 coverage report
+	 coverage html --precision=2
 .PHONY: test
 
 celery:
