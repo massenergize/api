@@ -95,7 +95,7 @@ class TestimonialHandler(RouteHandler):
     self.validator.rename('preferredName', 'preferred_name')
     self.validator.expect('testimonial_id', str)
     self.validator.expect("image", "file", is_required=False)
-    self = expect_media_fields(self)
+    expect_media_fields(self)
     args, err = self.validator.verify(args)
 
     if err:
@@ -157,7 +157,7 @@ class TestimonialHandler(RouteHandler):
     self.validator.expect("image", "str_list")
     self.validator.expect("help_link", str, is_required=False)
 
-    self = expect_media_fields(self)
+    expect_media_fields(self)
     args, err = self.validator.verify(args)
 
     if err:
