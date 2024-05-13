@@ -31,6 +31,8 @@ def fetch_secret_id_and_region(django_env):
     """
 
     passport_key_path = os.getenv("MASSENERGIZE_PASSPORT_KEY", None)
+    if django_env not in ["dev", "canary", "prod"]:
+        return None, None
     assert passport_key_path is not None, "You need to set MASSENERGIZE_PASSPORT_KEY in your env to proceed"
     double_slash_index = passport_key_path.find("//")
     if  double_slash_index > -1:
@@ -95,6 +97,7 @@ def main():
     os.makedirs(env_file_dir, exist_ok=True)
 
     if django_env not in ["local", "test"]:
+        os.makedirs(env_file_dir / 'creds/', exist_ok=True)
 
         env_file_path =   env_file_dir / 'creds/' / f'{django_env}.env'
         delete_file(env_file_path)
