@@ -1,5 +1,5 @@
 import math
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Tuple
 
 import zipcodes
@@ -30,6 +30,8 @@ from database.models import AboutUsPageSettings, Action, ActionsPageSettings, Co
 from database.utils.common import json_loader
 from .utils import (get_community, get_community_or_die, get_new_title, get_user_from_context, is_reu_in_community)
 from ..constants import COMMUNITY_NOTIFICATION_TYPES
+from ..tasks import automatically_activate_nudge
+from celery.result import AsyncResult
 
 ALL = "all"
 
@@ -1300,6 +1302,26 @@ class CommunityStore:
             notification_setting.activate_on = activate_on
             notification_setting.updated_by = user
             notification_setting.save()
+            
+            if activate_on:
+                more_info = notification_setting.more_info or {}
+                task_id = more_info.get("task_id")
+                if task_id:
+                    AsyncResult(task_id).revoke()
+                
+                eta = datetime.strptime(activate_on, "%Y-%m-%d") + timedelta(minutes=0)
+                
+                task_id = automatically_activate_nudge.apply_async(args=[notification_setting.id], eta=eta).id
+                notification_setting.more_info = {**more_info, "task_id": task_id}
+                notification_setting.save()
+            
+            if not is_active and not activate_on:
+                more_info = notification_setting.more_info or {}
+                task_id = more_info.get("task_id")
+                if task_id:
+                    AsyncResult(task_id).revoke()
+                    notification_setting.more_info = {**more_info, "task_id": None}
+                    notification_setting.save()
             
             # ----------------------------------------------------------------
             notification_type = notification_setting.notification_type.split('-feature-flag')[0]
