@@ -97,6 +97,7 @@ ITEM_TYPES = {
     "MESSAGE": {"key": "MESSAGE", "json_field": "is_message"},
     "COMMUNITY": {"key": "COMMUNITY", "json_field": "is_community"},
     "MOU": {"key": "MOU", "json_field": "is_mou"},
+    "COMMUNITY_NOTIFICATION": {"key": "COMMUNITY_NOTIFICATION", "json_field": "community_notification"}
 }
 
 

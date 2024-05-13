@@ -3,13 +3,13 @@ import datetime
 from django.apps import apps
 from sentry_sdk import capture_message
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
+from _main_.utils.feature_flag_keys import UPDATE_HTML_CONTENT_FORMAT_FF
 from api.utils.constants import DATA_DOWNLOAD_TEMPLATE
 from database import models as db_models
 from django.http import HttpResponse
 import re
 
 
-FEATURE_FLAG_KEY = "update-html-format-feature-flag"
 PATTERNS = ["<p><br></p>", "<p>.</p>", "<p>&nbsp;</p>", "<br />."]
 PATTERN = "|".join(re.escape(p) for p in PATTERNS)
 
@@ -58,7 +58,7 @@ def auto_correct_spacing(instance, field_name, field_value):
 
 def is_feature_enabled(instance):
     communities = db_models.Community.objects.filter(is_deleted=False)
-    flag = db_models.FeatureFlag.objects.filter(key=FEATURE_FLAG_KEY).first()
+    flag = db_models.FeatureFlag.objects.filter(key=UPDATE_HTML_CONTENT_FORMAT_FF).first()
     if not flag or not flag.enabled():
         return False
     enabled_communities = flag.enabled_communities(communities)

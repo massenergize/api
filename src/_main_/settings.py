@@ -31,8 +31,8 @@ DJANGO_ENV = os.environ.get("DJANGO_ENV","remote")
 
 # Database selection, development DB unless one of these chosen
 IS_PROD = False
-IS_CANARY = False
-IS_LOCAL = True
+IS_CANARY = True
+IS_LOCAL = False
 
 RUN_SERVER_LOCALLY = IS_LOCAL
 RUN_CELERY_LOCALLY = IS_LOCAL
@@ -61,6 +61,7 @@ SECRET_KEY =  os.environ.get("SECRET_KEY")
 DEBUG = RUN_SERVER_LOCALLY
 
 ALLOWED_HOSTS = [
+    "me-prod-env.us-east-2.elasticbeanstalk.com",
     '0.0.0.0',
     '127.0.0.1',
     'localhost:3000',

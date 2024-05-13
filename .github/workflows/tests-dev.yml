@@ -56,3 +56,8 @@ jobs:
         FIREBASE_SERVICE_ACCOUNT_CLIENT_EMAIL: ${{ secrets.DEV_FIREBASE_SERVICE_ACCOUNT_CLIENT_EMAIL }}
         FIREBASE_SERVICE_ACCOUNT_CLIENT_ID: ${{ secrets.DEV_FIREBASE_SERVICE_ACCOUNT_CLIENT_ID }}
         FIREBASE_SERVICE_ACCOUNT_CLIENT_URL: ${{ secrets.DEV_FIREBASE_SERVICE_ACCOUNT_CLIENT_URL }}
+
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v4.0.1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
