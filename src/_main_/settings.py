@@ -18,22 +18,18 @@ from pathlib import Path  # python3 only
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.celery import CeleryIntegration
-
 from _main_.utils.utils import is_test_mode
-from .utils.stage import Stage
-import boto3
+from .utils.stage import MassEnergizeApiEnvConfig
 
-load_dotenv()
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ********  LOAD CONFIG DATA ***********#
-# DJANGO_ENV can be passed in through the makefile, with "make start env=local"
-DJANGO_ENV = os.environ.get("DJANGO_ENV", "dev")
 
-STAGE = Stage(DJANGO_ENV)
-os.environ.update(STAGE.get_secrets())
+
+STAGE = MassEnergizeApiEnvConfig()
+STAGE.load_env_variables()
 
 # Database selection, development DB unless one of these chosen
 IS_PROD = STAGE.is_prod()
@@ -63,8 +59,6 @@ ALLOWED_HOSTS = [
 
 # get the domains we set in our vault and add them.
 ALLOWED_HOSTS.extend(STAGE.get_allowlist_domains())
-
-print(ALLOWED_HOSTS)
 
 if RUN_SERVER_LOCALLY:
     ALLOWED_HOSTS = ['*']
@@ -199,10 +193,13 @@ ROOT_HOSTCONF = '_main_.hosts'
 DEFAULT_HOST = 'main'
 
 # firebase setup
-FIREBASE_CREDENTIALS = credentials.Certificate(STAGE.get_firebase_auth())
-
-firebase_admin.initialize_app(FIREBASE_CREDENTIALS)
-
+FIREBASE_CREDENTIALS = STAGE.get_firebase_auth()
+if FIREBASE_CREDENTIALS:
+    firebase_admin.initialize_app(
+        credentials.Certificate(FIREBASE_CREDENTIALS)
+    )
+else:
+    print("ERROR: You most likely cannot perform authentication.  It seems we could not initialize firebase.")
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -225,7 +222,6 @@ AUTH_PASSWORD_VALIDATORS = [
 CID_GENERATE = True
 CID_CONCATENATE = True
 LOGGING = STAGE.get_logging_settings()
-
 
 ### End Logger settings ###
 
