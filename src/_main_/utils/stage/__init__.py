@@ -130,10 +130,18 @@ class MassEnergizeApiEnvConfig:
 
 
     def _set_api_run_info(self):
+        name = os.getenv("DJANGO_ENV")
+        is_docker_mode = "DOCKER_CONTAINER" in os.environ
+
         current_run_file_path = Path('.') / '.massenergize'/ 'current_run_info.json'
-        _current_run_info = load_json(current_run_file_path)
-        name = os.getenv("DJANGO_ENV", _current_run_info.get('django_env', "local"))
+        if current_run_file_path.exists():
+            _current_run_info = load_json(current_run_file_path)
+            name = _current_run_info.get('django_env', name)
+            is_docker_mode = _current_run_info.get('is_docker_mode', is_docker_mode)
+        else:
+            name = os.getenv("DJANGO_ENV", "dev")
+            is_docker_mode = "DOCKER_CONTAINER" in os.environ
         assert name in [ "test", "local", "dev", "canary", "prod"]
         self.name = name
-        self.is_docker_mode = _current_run_info.get('is_docker_mode', False)
+        self.is_docker_mode = is_docker_mode
         print(f"Detected | DJANGO_ENV => {self.name} | Docker Mode => {self.is_docker_mode}")
