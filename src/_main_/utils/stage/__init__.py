@@ -9,17 +9,14 @@ from _main_.utils.utils import load_json
 
 class MassEnergizeApiEnvConfig:
     def __init__(self):
-        name = self.get_current_env()
-        print(f"Detected | DJANGO_ENV={name}")
-        assert name in [ "test", "local", "dev", "canary", "prod"]
-
-        self.name = name
+        self._set_api_run_info()
         self.secrets = None
         self.firebase_creds = None
+        
     
     def load_env_variables(self):
         # this is the expected place we would usually put our .env file
-        env_file_dir =  Path('.') / '.massenergize/' / 'creds/'
+        env_file_dir =  Path('.') / '.massenergize' / 'creds/'
         env_path = env_file_dir / f'{self.name}.env'
         self.load_env_vars_from_path(env_path)
         # in case there are actually some env files in the src/ folder itself, treat them as overriding anything prior
@@ -39,7 +36,7 @@ class MassEnergizeApiEnvConfig:
 
 
         if os.environ.get('FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY') is not None:
-            print(f"Detected FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY in .env file")
+            print(f"Detected FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY in env file")
             firebase_creds =  {
               "type": "service_account",
               "project_id": os.environ.get('FIREBASE_SERVICE_ACCOUNT_PROJECT_ID'),
@@ -81,6 +78,9 @@ class MassEnergizeApiEnvConfig:
     def is_test(self):
         return self.name == "test"
 
+    def can_send_logs_to_cloudwatch(self):
+        return not (self.is_local() or self.is_test())
+
 
     def get_logging_settings(self):
         if self.is_local() or not self.secrets:
@@ -92,14 +92,6 @@ class MassEnergizeApiEnvConfig:
         return get_logger_name()
 
 
-    def load_local_env(self):
-        try:
-            env_path = Path('.') / 'local.env'
-            load_dotenv(dotenv_path=env_path)
-        except Exception:
-            load_dotenv()
-
-        return {}
 
     def load_override_env_vars(self):
         env_path = Path('.') / '.env'
@@ -107,6 +99,24 @@ class MassEnergizeApiEnvConfig:
 
         env_path = Path('.') / f'{self.name}.env'
         self.load_env_vars_from_path(env_path)
+
+        if self.is_test():
+            env_path = Path('.') / 'local.env'
+            self.load_env_vars_from_path(env_path)
+
+        if self.is_docker_mode and self.is_local():
+            db_host =  os.getenv('DATABASE_HOST', "localhost")
+            redis_host = os.getenv('CELERY_LOCAL_REDIS_BROKER_URL', "redis://localhost:6379/0")            
+            _local_hosts =  ['localhost', '127.0.0.1', '0.0.0.0']
+            _docker_internal = "host.docker.internal"
+
+            for _local_host in _local_hosts:
+                if (_local_host in db_host):
+                    db_host = db_host.replace(_local_host, _docker_internal)
+                    os.environ.update({ 'DATABASE_HOST': db_host }) 
+                if (_local_host in redis_host):
+                    redis_host = redis_host.replace(_local_host, _docker_internal)
+                    os.environ.update({ 'CELERY_LOCAL_REDIS_BROKER_URL': redis_host }) 
 
 
     def load_env_vars_from_path(self, env_path: Path):
@@ -119,18 +129,11 @@ class MassEnergizeApiEnvConfig:
             print(f"Something happened.  Could not load env variables from: {env_path}")
 
 
-    def get_current_env(self):
-
-        django_env = os.environ.get("DJANGO_ENV", None)
-        if django_env:
-            return django_env
-
-        current_env_path = Path('.') / '.massenergize'/ 'current_django_env'
-        if current_env_path.exists():
-            with open(current_env_path, 'r') as file:
-                django_env = file.read().strip().lower()
-        else:
-            # default
-            django_env = "local"
-        
-        return django_env
+    def _set_api_run_info(self):
+        current_run_file_path = Path('.') / '.massenergize'/ 'current_run_info.json'
+        _current_run_info = load_json(current_run_file_path)
+        name = os.getenv("DJANGO_ENV", _current_run_info.get('django_env', "local"))
+        assert name in [ "test", "local", "dev", "canary", "prod"]
+        self.name = name
+        self.is_docker_mode = _current_run_info.get('is_docker_mode', False)
+        print(f"Detected | DJANGO_ENV => {self.name} | Docker Mode => {self.is_docker_mode}")

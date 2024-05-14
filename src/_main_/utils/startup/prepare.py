@@ -56,7 +56,7 @@ def fetch_secret_id_and_region(django_env):
 
         return secret_id, region
     except:
-        print("Could not connect to AWS.  You need fresh credentials.  Go to aws and get some fresh session keys here: https://d-9067fbc7f0.awsapps.com/")
+        print("Could not connect to AWS.  You need fresh credentials.  Go to aws and get some fresh session keys here: https://d-9067fbc7f0.awsapps.com/start/")
         sys.exit(1)
 
 
@@ -92,7 +92,7 @@ def main():
 
     django_env = django_env.lower()
     # Define the file path for the .env file
-    env_file_dir =  Path('.') / '.massenergize/'
+    env_file_dir =  Path('.') / '.massenergize'
 
     os.makedirs(env_file_dir, exist_ok=True)
 
@@ -108,9 +108,22 @@ def main():
         # Write secrets data to the .env file
         write_to_env_file(secrets, env_file_path)
 
-    djano_env_file_path = env_file_dir / 'current_django_env'
-    with open(djano_env_file_path, 'w') as file:
-        file.write(f"{django_env}\n")
+    docker_mode = os.getenv("DOCKER_MODE", "false")
+    current_run_info_file_path = env_file_dir / 'current_run_info.json'
+    current_run_info = {
+        'django_env': django_env,
+        "is_docker_mode": docker_mode.lower() in ["true", "1", "yes"] 
+    }
+    write_json(current_run_info_file_path, current_run_info)
+
+
+def write_json(file_path, data):
+    try:
+        with open(file_path, 'w') as file:
+            json.dump(data, file) 
+    except:
+        print(f"Could not write file {file_path}")
+
 
 def get_django_env():
     django_env = os.environ.get('DJANGO_ENV')

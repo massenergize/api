@@ -8,7 +8,7 @@ class CeleryConfig:
 
         if RUN_CELERY_LOCALLY:
             return {
-                "broker_url": os.environ.get("CELERY_LOCAL_REDIS_BROKER_URL", "redis://localhost:6379/0"),
+                "broker_url": os.environ.get("CELERY_LOCAL_REDIS_BROKER_URL"),
                 "task_serializer": "json",
                 "result_serializer": "json",
                 "accept_content": ["json"],

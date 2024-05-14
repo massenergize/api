@@ -3,6 +3,7 @@ import functools
 import boto3
 import threading
 import random 
+from _main_.settings import STAGE
 
 DEFAULT_CAPTURE_RATE = 1 # for now we want to capture 100% of the logs.
 FUNCTION_LATENCY_NAMESPACE = "ApiService/FunctionPerformance"
@@ -51,14 +52,19 @@ def send_metric(func, execution_time, name_space=FUNCTION_LATENCY_NAMESPACE, ext
 
 
 def put_metric_data(name_space, metric_data):
-    #TODO: when local don't send to cloud watch
-    client = boto3.client('cloudwatch')
-    client.put_metric_data(
-        Namespace=name_space,
-        MetricData=metric_data
-    )
-    print(f"Metric {metric_data[0]['MetricName']} sent to CloudWatch: {metric_data[0]['Value']} ms\n")
+    if not STAGE.can_send_logs_to_cloudwatch():
+        return 
 
+    try:
+        client = boto3.client('cloudwatch')
+        client.put_metric_data(
+            Namespace=name_space,
+            MetricData=metric_data
+        )
+        print(f"Metric {metric_data[0]['MetricName']} sent to CloudWatch: {metric_data[0]['Value']} ms\n")
+    except Exception as e:
+        print(e)
+        pass
 
 def timed_with_dimensions(dimensions=None, capture_rate=DEFAULT_CAPTURE_RATE):
     

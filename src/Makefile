@@ -12,7 +12,7 @@ start:
 
 startd:
 	@echo "Setting environment variables ..."
-	python3 _main_/utils/startup/prepare.py
+	DOCKER_MODE=true python3 _main_/utils/startup/prepare.py
 	sudo docker-compose down
 	sudo docker image prune -f
 	sudo docker builder prune -f
@@ -37,7 +37,7 @@ prod:
 	DJANGO_ENV="prod" make start
 .PHONY: prod
 
-local-docker: 
+local-docker: install_redis_and_run
 	DJANGO_ENV="local" make startd
 .PHONY: local-docker
 
@@ -52,6 +52,18 @@ canary-docker:
 prod-docker: 
 	DJANGO_ENV="prod" make startd
 .PHONY: prod-docker
+
+install_redis_and_restart:
+	@if ! command -v redis-server > /dev/null; then \
+	    echo "Redis is not installed. Installing..."; \
+	    sudo apt-get update && sudo apt-get install redis-server -y; \
+	fi
+	@echo "Stopping Redis if it's running..."
+	-redis-cli shutdown > /dev/null 2>&1 || true
+	@echo "Starting Redis..."
+	redis-server --daemonize yes --port 6379
+.PHONY: install_redis_and_run
+
 
 prepare-prod:
 	python3 deployment/prepare_to_deploy.py --prod 0 1

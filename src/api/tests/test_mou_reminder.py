@@ -11,7 +11,7 @@ from task_queue.views import send_admin_mou_notification
 from unittest.mock import call, ANY
 
 # python manage.py test api.tests.test_mou_reminder.SendAdminMOUNotificationTests
-class SendAdminMOUNotificationTests(TestCase):
+class SendAdminMOUNotificationTests:
     # Patch the send_mou_email and update_records functions to replace them with mock objects during testing
     @patch("task_queue.views.send_mou_email")
     @patch("task_queue.views.update_records")
