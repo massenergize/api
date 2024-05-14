@@ -15,7 +15,7 @@ def is_time_to_run(task):
     last_run = task.last_run
     freq = task.frequency
     
-    if last_run == None:
+    if last_run is None:
         return True
     
     if freq == ONE_OFF and not last_run:
