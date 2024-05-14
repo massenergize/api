@@ -6,19 +6,28 @@ from task_queue.helpers import is_time_to_run
 from .jobs import FUNCTIONS
 from api.services.utils import send_slack_message
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_LOCAL, IS_CANARY
+from django.core.cache import cache
 
 ENV = "API Local" if IS_LOCAL else "API CANARY" if IS_CANARY else "API PROD" if IS_PROD else "API DEV"
 
 
-@shared_task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 1, 'countdown': 5})
+@shared_task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 1, 'countdown': 5}, acks_late=True)
 def run_some_task(self, task_id):
+    
+    lock_id = f'task_lock_{task_id}'
+    cached_lock = cache.get(lock_id)
+    
+    if cached_lock:
+        return
+    
+    cache.set(lock_id, True)
+    
     try:
         today = datetime.date.today()
         should_run = False
         task = None
         with transaction.atomic():
-            task = Task.objects.select_for_update().get(
-                id=task_id)  # locks task instance until transaction is committed
+            task = Task.objects.select_for_update().get(id=task_id)  # locks task instance until transaction is committed
             if is_time_to_run(task):
                 task.last_run = today
                 task.save()
@@ -50,3 +59,5 @@ def run_some_task(self, task_id):
         if IS_PROD:
             send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL, {
                 "text": f"({ENV}): Task '{task.job_name}' was run on {today}. Status: FAILED. Reason: {str(e)} "})
+    finally:
+        cache.delete(lock_id)
