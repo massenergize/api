@@ -56,7 +56,6 @@ def run_some_task(self, task_id):
 				task.status = "FAILED"
 				log_status(task.status, task.job_name, "Task not found in FUNCTIONS")
 			task.save()
-			if task.frequency == "ONE_OFF":
-				task.archive()
+			
 	except Exception as e:
 		log_status("FAILED", f"task_id:{task_id}", str(e))
