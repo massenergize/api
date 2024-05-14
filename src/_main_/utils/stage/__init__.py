@@ -131,7 +131,7 @@ class MassEnergizeApiEnvConfig:
 
     def _set_api_run_info(self):
         name = os.getenv("DJANGO_ENV")
-        is_docker_mode = "DOCKER_CONTAINER" in os.environ
+        is_docker_mode = self.is_running_in_docker()
 
         current_run_file_path = Path('.') / '.massenergize'/ 'current_run_info.json'
         if current_run_file_path.exists():
@@ -141,7 +141,21 @@ class MassEnergizeApiEnvConfig:
         else:
             name = os.getenv("DJANGO_ENV", "dev")
             is_docker_mode = "DOCKER_CONTAINER" in os.environ
+        
+        print("name", name)
         assert name in [ "test", "local", "dev", "canary", "prod"]
         self.name = name
         self.is_docker_mode = is_docker_mode
         print(f"Detected | DJANGO_ENV => {self.name} | Docker Mode => {self.is_docker_mode}")
+
+    def is_running_in_docker(self):
+        """
+        Checks if the current script is running inside a Docker container.
+        """
+        cgroup_path = "/proc/self/cgroup"
+        if os.path.exists(cgroup_path):
+            with open(cgroup_path) as f:
+                cgroup_entries = f.read()
+            if "docker" in cgroup_entries:
+                return True
+        return False
