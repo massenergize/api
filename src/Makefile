@@ -123,19 +123,27 @@ beat-remote:
 
 
 #-------------- NEW  MIGRATE ----------------
+migrate:
+	@echo "Setting environment variables ..."
+	python3 _main_/utils/startup/prepare.py
+	python3 manage.py makemigrations
+	python3 _main_/utils/startup/migration_prompt.py
+	python3 manage.py migrate
+.PHONY: migrate
+
 migrate-dev:
-	DJANGO_ENV=dev python manage.py migrate
+	DJANGO_ENV=dev make migrate
 .PHONY: migrate-dev
 
 migrate-prod:
-	DJANGO_ENV=prod python manage.py migrate
+	DJANGO_ENV=prod make migrate
 .PHONY: migrate-prod
 
 migrate-canary:
-	DJANGO_ENV=canary python manage.py migrate
+	DJANGO_ENV=canary make migrate
 .PHONY: migrate-canary
 
 migrate-local:
-	DJANGO_ENV=local python manage.py migrate
+	DJANGO_ENV=local make migrate
 .PHONY: migrate-local
 

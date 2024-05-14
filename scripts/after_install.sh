@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd /webapps/massenergize_api
+cd /webapps/massenergize/api
 
 sudo docker-compose down
 sudo docker image prune -f

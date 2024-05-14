@@ -8,7 +8,7 @@ if [ "$STATUS_CODE" -eq 200 ]; then
     echo "Deployment successful"
     exit 0 # Deployment successful
 else
-    cd /webapps/massenergize_api
+    cd /webapps/massenergize/api
     echo "Deployment failed"
     exit 1 # Deployment failed
 fi

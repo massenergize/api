@@ -1,9 +1,8 @@
-import secrets
-from _main_.utils.stage.secrets import get_s3_file, get_secret, load_env
+from _main_.utils.stage.secrets import get_s3_file
 from _main_.utils.stage.logging import *
 from dotenv import load_dotenv
 from pathlib import Path  # python3 only
-import os, boto3
+import os, socket
 
 from _main_.utils.utils import load_json
 
@@ -24,7 +23,10 @@ class MassEnergizeApiEnvConfig:
 
 
     def get_allowlist_domains(self):
-        return os.getenv('DOMAIN_ALLOW_LIST', '').split(",")
+        domains =  os.getenv('DOMAIN_ALLOW_LIST', '').split(",")
+        domains.append(self.get_ip_address())
+        print(domains)
+        return domains
 
 
     def get_firebase_auth(self):
@@ -131,7 +133,7 @@ class MassEnergizeApiEnvConfig:
 
     def _set_api_run_info(self):
         name = os.getenv("DJANGO_ENV")
-        is_docker_mode = self.is_running_in_docker()
+        is_docker_mode = False
 
         current_run_file_path = Path('.') / '.massenergize'/ 'current_run_info.json'
         if current_run_file_path.exists():
@@ -148,14 +150,13 @@ class MassEnergizeApiEnvConfig:
         self.is_docker_mode = is_docker_mode
         print(f"Detected | DJANGO_ENV => {self.name} | Docker Mode => {self.is_docker_mode}")
 
-    def is_running_in_docker(self):
-        """
-        Checks if the current script is running inside a Docker container.
-        """
-        cgroup_path = "/proc/self/cgroup"
-        if os.path.exists(cgroup_path):
-            with open(cgroup_path) as f:
-                cgroup_entries = f.read()
-            if "docker" in cgroup_entries:
-                return True
-        return False
+    def get_ip_address(self):
+        try:
+            # Create a socket object to get the IP address
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))  # Connect to a well-known IP address (Google's public DNS server)
+            ip_address = s.getsockname()[0]  # Get the IP address of the socket
+            s.close()
+            return ip_address
+        except socket.error:
+            return "Unable to get IP address"

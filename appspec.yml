@@ -2,7 +2,7 @@ version: 0.0
 os: linux
 files:
   - source: src # copy all files in this folder
-    destination: /webapps/massenergize_api # and put them here in the server
+    destination: /webapps/massenergize/api # and put them here in the server
 hooks:
   BeforeInstall:
     - location: scripts/before_install.sh
