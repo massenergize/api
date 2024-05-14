@@ -11,6 +11,12 @@ from .utils import send_slack_message
 from api.store.utils import get_user_or_die
 from sentry_sdk import capture_message
 from typing import Tuple
+import os
+from django.core.cache import cache
+import time
+
+from ..decorators import cached_function
+
 
 class ActionService:
   """
@@ -18,20 +24,63 @@ class ActionService:
   """
 
   def __init__(self):
-    self.store =  ActionStore()
+    self.store = ActionStore()
+    self.module_name = __name__ or __file__
 
-  def get_action_info(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def get_module_name(self):
+    try:
+      module_name = os.path.splitext(os.path.basename(__file__))[0]
+    except NameError:
+      module_name = '__main__'
+    return module_name
+
+  def get_action_info(self, context: Context, args) -> Tuple[dict or None, MassEnergizeAPIError or None]:
+    time_start = time.perf_counter()
+    force_refresh = args.get("force_refresh", False)
+    cache_key = f"{self.get_module_name()}.get_action_info.{args['subdomain']}"
+
+    if not force_refresh:
+      cached_action = cache.get(cache_key)
+
+      if cached_action is not None:
+        print(f"Cache hit for {cache_key} in {time.perf_counter() - time_start} seconds")
+        return cached_action, None
+
     action, err = self.store.get_action_info(context, args)
     if err:
       return None, err
-    return serialize(action, full=True), None
 
-  def list_actions(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    serialized_action = serialize(action, full=True)
+    cache.set(cache_key, serialized_action)
+
+    print(f"Cache miss for {cache_key} in {time.perf_counter() - time_start} seconds")
+    return serialized_action, None
+
+  # @cached_function
+  def list_actions(self, context: Context, args) -> Tuple[list or None, MassEnergizeAPIError or None]:
     actions, err = self.store.list_actions(context, args)
+
     if err:
       return None, err
     return serialize_all(actions), None
 
+  def list_actions_cached(self, context: Context, args) -> Tuple[list or None, MassEnergizeAPIError or None]:
+    force_refresh = args.get("force_refresh", False)
+    cache_key = f"{self.get_module_name()}.list_actions.{args['subdomain']}"
+
+    if not force_refresh:
+      cached_actions = cache.get(cache_key)
+
+      if cached_actions is not None:
+        return cached_actions, None
+
+    actions, err = self.store.list_actions(context, args)
+
+    if err:
+      return None, err
+
+    cache.set(cache_key, actions)
+    return serialize_all(actions), None
 
   def create_action(self, context: Context, args, user_submitted=False) -> Tuple[dict, MassEnergizeAPIError]:
     try:
@@ -70,20 +119,20 @@ class ActionService:
         }
         # sent from MassEnergize to cadmins
         send_massenergize_rich_email(
-              subject, admin_email, 'action_submitted_email.html', content_variables, None)
+          subject, admin_email, 'action_submitted_email.html', content_variables, None)
 
         if IS_PROD or IS_CANARY:
           send_slack_message(
-            #SLACK_COMMUNITY_ADMINS_WEBHOOK_URL, {
+            # SLACK_COMMUNITY_ADMINS_WEBHOOK_URL, {
             SLACK_SUPER_ADMINS_WEBHOOK_URL, {
-            "content": "User submitted Action for "+community_name,
-            "from_name": name,
-            "email": email,
-            "subject": action.title,
-            "message": action.featured_summary,
-            "url": f"{ADMIN_URL_ROOT}/admin/edit/{action.id}/action",
-            "community": community_name
-        }) 
+              "content": "User submitted Action for " + community_name,
+              "from_name": name,
+              "email": email,
+              "subject": action.title,
+              "message": action.featured_summary,
+              "url": f"{ADMIN_URL_ROOT}/admin/edit/{action.id}/action",
+              "community": community_name
+            })
 
       return serialize(action), None
 
@@ -121,7 +170,6 @@ class ActionService:
       return None, err
     sorted = sort_items(actions, context.get_params())
     return paginate(sorted, context.get_pagination_data()), None
-
 
   def list_actions_for_super_admin(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
     actions, err = self.store.list_actions_for_super_admin(context)

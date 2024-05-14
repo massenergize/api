@@ -22,3 +22,8 @@ src/_main_/utils/GeoLite2-City/*
 src/celerybeat-schedule.db
 
 src/~Downloads
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
