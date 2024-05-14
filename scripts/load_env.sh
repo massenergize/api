@@ -28,6 +28,7 @@ if [ $? -eq 0 ]; then
     done
 
     echo "DJANGO_ENV=$BUILD_ENV" >> .env
+    echo "DOCKER_MODE=true" >> .env
     echo "Secrets successfully written to .env file."
 else
     echo "Error: Failed to retrieve secrets from AWS Secrets Manager."
