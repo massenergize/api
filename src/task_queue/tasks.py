@@ -15,9 +15,13 @@ ENV = "API Local" if IS_LOCAL else "API CANARY" if IS_CANARY else "API PROD" if 
 def run_some_task(self, task_id):
     
     lock_id = f'task_lock_{task_id}'
+    cached_lock = cache.get(lock_id)
     
-    if not cache.set(lock_id, 'true', 60):
+    if cached_lock:
         return
+    
+    cache.set(lock_id, True)
+    
     try:
         today = datetime.date.today()
         should_run = False
