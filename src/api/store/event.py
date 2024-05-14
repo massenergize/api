@@ -24,7 +24,6 @@ import calendar
 import pytz
 from typing import Tuple
 
-
 def _local_datetime(date_and_time):
     # the local date (in Massachusetts) is different than the UTC date
     # need to also save the location (as a Location) and get the time zone from that.
@@ -216,21 +215,29 @@ class EventStore:
         subdomain = args.pop("subdomain", None)
         user_id = args.pop("user_id", None)
         shared = []
+
+        today = datetime.datetime.now()
+        shared_months = 2
+        hosted_months = 6
+        earliest_shared = today - timedelta(weeks=4*shared_months)
+        earliest_hosted = today - timedelta(weeks=4*hosted_months)
+
         if community_id:
             # TODO: also account for communities who are added as invited_communities
-            events = Event.objects.select_related('image', 'community').prefetch_related('tags','invited_communities').filter(community__id=community_id)
+            events = Event.objects.select_related('image', 'community').prefetch_related('tags','invited_communities').filter(community__id=community_id, start_date_and_time__gte=earliest_hosted)
 
             # Find events that have been shared to this community
             community = Community.objects.get(pk=community_id)
 
             if community:
-                shared = community.events_from_others.filter(is_published=True)
+                shared = community.events_from_others.filter(is_published=True, start_date_and_time__gte=earliest_shared)
 
         elif subdomain:
-            events = Event.objects.select_related('image', 'community').prefetch_related('tags','invited_communities').filter(community__id=community_id)
             community = Community.objects.get(subdomain=subdomain)
+            events = Event.objects.select_related('image', 'community').prefetch_related('tags','invited_communities').filter(community__id=community.id, start_date_and_time__gte=earliest_hosted)
+            
 
-            if community: shared = community.events_from_others.filter(is_published=True)
+            if community: shared = community.events_from_others.filter(is_published=True, start_date_and_time__gte=earliest_shared)
 
 
         elif user_id:
@@ -646,15 +653,15 @@ class EventStore:
             # TODO: also account for communities who are added as invited_communities
             query = Q(community__id=community_id)
             events = Event.objects.select_related('image', 'community').prefetch_related('tags',
-                                                                                         'invited_communities').filter(
-                query, is_published=True, is_deleted=False)
+                                                                                         'shared_to').filter(
+                query, is_published=True, is_recurring=True, is_deleted=False)
 
         elif subdomain:
             # testing only
             query = Q(community__subdomain=subdomain)
             events = Event.objects.select_related('image', 'community').prefetch_related('tags',
-                                                                                         'invited_communities').filter(
-                query, is_published=True, is_deleted=False)
+                                                                                         'shared_to').filter(
+                query, is_published=True, is_recurring=True, is_deleted=False)
 
 
         elif user_id:
@@ -740,7 +747,7 @@ class EventStore:
             except Exception as e:
                 print(str(e))
                 return CustomMassenergizeError(e)
-        return events, None
+        return None, None
 
     def rank_event(self, args, context: Context) -> Tuple[dict, MassEnergizeAPIError]:
         try:

@@ -24,3 +24,5 @@ src/celerybeat-schedule.db
 src/~Downloads
 passport.key.json
 .massenergize
+*.coverage
+src/.coverage

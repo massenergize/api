@@ -50,6 +50,7 @@ SECRET_KEY =  os.environ.get("SECRET_KEY")
 DEBUG = RUN_SERVER_LOCALLY
 
 ALLOWED_HOSTS = [
+    "me-prod-env.us-east-2.elasticbeanstalk.com",
     '0.0.0.0',
     '127.0.0.1',
     'localhost:3000',

@@ -26,7 +26,7 @@ from .utils.common import (
     get_summary_info,
     make_hash_from_file,
 )
-from api.constants import STANDARD_USER, GUEST_USER
+from api.constants import COMMUNITY_NOTIFICATION_TYPES, STANDARD_USER, GUEST_USER
 from django.forms.models import model_to_dict
 from carbon_calculator.models import Action as CCAction
 from carbon_calculator.carbonCalculator import AverageImpact
@@ -59,7 +59,7 @@ def get_enabled_flags(
         )
         if enabled:
             feature_flags_json.append(
-                f.simple_json()
+                f.info()
             )  # Then if the flag hasnt expired, note down the flag
     return feature_flags_json
 
@@ -1515,7 +1515,7 @@ class Team(models.Model):
         Community, related_name="primary_community_teams", on_delete=models.CASCADE
     )
     images = models.ManyToManyField(
-        Media, related_name="teams"
+        Media, related_name="teams", blank=True
     )  # 0 or more photos - could be a slide show
     video_link = models.CharField(
         max_length=LONG_STR_LEN, blank=True
@@ -1527,7 +1527,7 @@ class Team(models.Model):
         blank=True, null=True
     )  # settable team page options
     parent = models.ForeignKey(
-        "self", null=True, on_delete=models.SET_NULL
+        "self", null=True, blank=True, on_delete=models.SET_NULL
     )  # for the case of sub-teams
 
     goal = models.ForeignKey(Goal, blank=True, null=True, on_delete=models.SET_NULL)
@@ -1551,7 +1551,7 @@ class Team(models.Model):
     is_published = models.BooleanField(default=False, blank=True)
     # which user created this Teamt - may be the responsible party
     user = models.ForeignKey(
-        UserProfile, related_name="team_user", on_delete=models.SET_NULL, null=True
+        UserProfile, related_name="team_user", on_delete=models.SET_NULL, null=True, blank=True
     )
 
     def is_admin(self, UserProfile):
@@ -1838,7 +1838,7 @@ class Vendor(models.Model):
     )
     tags = models.ManyToManyField(Tag, related_name="vendor_tags", blank=True)
     # which user posted this vendor
-    user = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True, blank=True)
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=False, blank=True)
     is_approved = models.BooleanField(default=False, blank=True)
@@ -1969,7 +1969,7 @@ class Action(models.Model):
     )
     rank = models.PositiveSmallIntegerField(default=0, blank=True)
     # which user posted this action originally
-    user = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_deleted = models.BooleanField(default=False, blank=True)
@@ -2119,7 +2119,7 @@ class Event(models.Model):
     rank = models.PositiveIntegerField(default=0, blank=True, null=True)
     # which user posted this event - may be the responsible party
     user = models.ForeignKey(
-        UserProfile, related_name="event_user", on_delete=models.SET_NULL, null=True
+        UserProfile, related_name="event_user", on_delete=models.SET_NULL, null=True, blank=True
     )
     is_recurring = models.BooleanField(default=False, blank=True, null=True)
     recurring_details = models.JSONField(blank=True, null=True)
@@ -2180,7 +2180,7 @@ class Event(models.Model):
         data["tags"] = [t.info() for t in self.tags.all()]
         data["community"] = None if not self.community else self.community.info()
         data["image"] = None if not self.image else self.image.info()
-        data["invited_communities"] = [ c.info() for c in self.invited_communities.all()]
+        #data["invited_communities"] = [ c.info() for c in self.invited_communities.all()]
         data["is_open"] =  False if not self.publicity else EventConstants.is_open(self.publicity)
         data["is_open_to"] = False if not self.publicity else EventConstants.is_open_to(self.publicity)
         data["is_closed_to"] = False if not self.publicity else EventConstants.is_closed_to(self.publicity)
@@ -3198,7 +3198,7 @@ class PageSettings(models.Model):
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["images"])
-        res["community"] = get_json_if_not_none(self.community)
+        res["community"] = get_summary_info(self.community)
         return res
 
     def full_json(self):
@@ -3311,8 +3311,9 @@ class HomePageSettings(models.Model):
 
     def simple_json(self):
         res = model_to_dict(
-            self, exclude=["images", "featured_events", "featured_stats"]
+            self, exclude=["images", "featured_events", "featured_stats", "community"]
         )
+        res["community"] = get_summary_info(self.community)
         return res
 
     def full_json(self):
@@ -3324,7 +3325,7 @@ class HomePageSettings(models.Model):
             if sequence
             else [i.simple_json() for i in images]
         )
-        res["community"] = get_json_if_not_none(self.community)
+        res["community"] = get_summary_info(self.community)
         res["featured_events"] = [i.simple_json() for i in self.featured_events.all()]
         res["featured_stats"] = [i.simple_json() for i in self.featured_stats.all()]
         return res
@@ -3358,7 +3359,7 @@ class ActionsPageSettings(models.Model):
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["images"])
-        res["community"] = get_json_if_not_none(self.community)
+        res["community"] = get_summary_info(self.community)
         return res
 
     def full_json(self):
@@ -3398,7 +3399,7 @@ class ContactUsPageSettings(models.Model):
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["images"])
-        res["community"] = get_json_if_not_none(self.community)
+        res["community"] = get_summary_info(self.community)
         return res
 
     def full_json(self):
@@ -3442,7 +3443,7 @@ class DonatePageSettings(models.Model):
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["images"])
-        res["community"] = get_json_if_not_none(self.community)
+        res["community"] = get_summary_info(self.community)
         return res
 
     def full_json(self):
@@ -3483,7 +3484,7 @@ class AboutUsPageSettings(models.Model):
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["images"])
-        res["community"] = get_json_if_not_none(self.community)
+        res["community"] = get_summary_info(self.community)
         return res
 
     def full_json(self):
@@ -3524,7 +3525,7 @@ class ImpactPageSettings(models.Model):
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["images"])
-        res["community"] = get_json_if_not_none(self.community)
+        res["community"] = get_summary_info(self.community)
         return res
 
     def full_json(self):
@@ -3813,6 +3814,9 @@ class FeatureFlag(models.Model):
 
     def __str__(self):
         return f"{self.name}"
+    
+    def info(self):
+        return {"id": self.id, "name": self.name, "key": self.key,}
 
     def simple_json(self):
         res = model_to_dict(
@@ -3844,6 +3848,19 @@ class FeatureFlag(models.Model):
             for u in self.users.all()
         ]
         return res
+    
+    
+    def is_enabled_for_community(self, community: Community):
+        """
+        Returns : True if the feature flag is enabled for the community
+        """
+        if self.audience == FeatureFlagConstants.for_everyone():
+            return True
+        elif self.audience == FeatureFlagConstants.for_specific_audience():
+            return self.communities.filter(id=community.id).exists()
+        elif self.audience == FeatureFlagConstants.for_all_except():
+            return not self.communities.filter(id=community.id).exists()
+        return False
 
     def enabled(self):
         current_date_and_time = datetime.datetime.now(timezone.utc)
@@ -3853,21 +3870,20 @@ class FeatureFlag(models.Model):
 
     def enabled_communities(self, communities_in: QuerySet = None):
         """
-            Returns : List of communities as a QuerySet
-        """
+              Returns : List of communities as a QuerySet
+          """
         if not communities_in:
             communities_in = Community.objects.filter(is_deleted=False)
-
+        
+        community_ids = self.communities.values_list('id', flat=True)
+        
         if self.audience == "EVERYONE":
             return communities_in
         elif self.audience == "SPECIFIC":
-            return communities_in.filter(
-                id__in=[str(u.id) for u in self.communities.all()]
-            )
+            return communities_in.filter(id__in=community_ids)
         elif self.audience == "ALL_EXCEPT":
-            return communities_in.exclude(
-                id__in=[str(u.id) for u in self.communities.all()]
-            )
+            return communities_in.exclude(id__in=community_ids)
+        
         return None
 
     def enabled_users(self, users_in: QuerySet):
@@ -3953,3 +3969,37 @@ class Footage(models.Model):
     class Meta:
         db_table = "footages"
         ordering = ("-id",)
+
+
+class CommunityNotificationSetting(models.Model):
+    
+    COMMUNITY_NOTIFICATION_TYPES_CHOICES = [(item, item) for item in COMMUNITY_NOTIFICATION_TYPES]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name="notification_settings",related_query_name="notification_setting")
+    updated_by = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True, blank=True)
+    notification_type = models.CharField(max_length=SHORT_STR_LEN, null=False, blank=False,choices=COMMUNITY_NOTIFICATION_TYPES_CHOICES)
+    is_active = models.BooleanField(default=True, blank=True)
+    activate_on = models.DateField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    more_info = models.JSONField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.community.name} - {self.notification_type}"
+    
+    def info(self):
+        return {"id": self.id, "is_active": self.is_active, "activate_on": str(self.activate_on) if self.activate_on else self.activate_on, "notification_type": self.notification_type,}
+
+    def simple_json(self):
+        return {"id": self.id, "notification_type": self.notification_type, "is_active": self.is_active,
+                "activate_on": str(self.activate_on) if self.activate_on else self.activate_on}
+
+    def full_json(self):
+        data = self.simple_json()
+        data["community"] = self.community.info()
+        data["updated_by"] = self.updated_by.info() if self.updated_by else None
+        return data
+    
+    class Meta:
+        indexes = [ models.Index(fields=["community", "notification_type"]),]

@@ -348,6 +348,35 @@ class Spy:
             return footage
         except Exception as e:
             Console.log("Could not create sign in footage...", str(e))
+        
+        
+    @staticmethod
+    def create_community_notification_settings_footage(**kwargs):
+        try:
+            ctx = kwargs.get ("context")
+            actor = kwargs.get("actor")
+            actor = (
+                actor
+                if actor
+                else UserProfile.objects.filter(email=ctx.user_email).first()
+            )
+            act_type = kwargs.get("type", None)
+            portal = kwargs.get("portal", None)
+            portal = portal if portal else FootageConstants.on_admin_portal()
+            footage = Spy.create_footage(
+                actor=actor,
+                activity_type=act_type,
+                by_super_admin=ctx.user_is_super_admin if ctx else False,
+                item_type=FootageConstants.ITEM_TYPES["COMMUNITY_NOTIFICATION"]["key"],
+                portal=portal
+            )
+            passed_communities = kwargs.get("communities")
+            
+            footage.communities.set(passed_communities)
+            return footage
+        except Exception as e:
+            Console.log ("Could not create sign in footage...", str (e))
+        
 
     @staticmethod
     def fetch_footages_for_community(**kwargs):

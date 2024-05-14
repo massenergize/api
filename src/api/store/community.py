@@ -1,5 +1,5 @@
 import math
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Tuple
 
 import zipcodes
@@ -24,12 +24,15 @@ from api.tests.common import RESET
 from api.utils.api_utils import get_distance_between_coords, is_admin_of_community
 from api.utils.filter_functions import get_communities_filter_params
 from database.models import AboutUsPageSettings, Action, ActionsPageSettings, Community, CommunityAdminGroup, \
-    CommunityMember, ContactUsPageSettings, CustomCommunityWebsiteDomain, DonatePageSettings, EventsPageSettings, \
-    FeatureFlag, Goal, Graph, HomePageSettings, ImpactPageSettings, Location, Media, RealEstateUnit, \
-    RegisterPageSettings, \
-    SigninPageSettings, Subdomain, TeamsPageSettings, TestimonialsPageSettings, UserProfile, VendorsPageSettings
+	CommunityMember, CommunityNotificationSetting, ContactUsPageSettings, CustomCommunityWebsiteDomain, \
+	DonatePageSettings, EventsPageSettings, FeatureFlag, Goal, Graph, HomePageSettings, ImpactPageSettings, Location, \
+	Media, RealEstateUnit, RegisterPageSettings, SigninPageSettings, Subdomain, TeamsPageSettings, \
+	TestimonialsPageSettings, UserProfile, VendorsPageSettings
 from database.utils.common import json_loader
-from .utils import (get_community_or_die, get_new_title, get_user_from_context, is_reu_in_community)
+from .utils import (get_community, get_community_or_die, get_new_title, get_user_from_context, is_reu_in_community)
+from ..constants import COMMUNITY_NOTIFICATION_TYPES
+from ..tasks import automatically_activate_nudge
+from celery.result import AsyncResult
 
 ALL = "all"
 
@@ -1164,7 +1167,7 @@ class CommunityStore:
 
             actions_completed = []
             if not context.is_admin_site:
-                community = get_community_or_die(context, args)            
+                community = get_community_or_die(context, args)
                 actions_completed = count_action_completed_and_todos(
                     communities=[community],
                     time_range=time_range,
@@ -1202,7 +1205,7 @@ class CommunityStore:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
 
-    def list_community_feature(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    def list_community_features(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
         try:
             community_id = args.get("community_id")
             if not community_id:
@@ -1266,7 +1269,132 @@ class CommunityStore:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
 
+    def update_community_notification_settings(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        try:
+            notification_setting_id = args.get("id")
+            is_active = args.get("is_active", False)
+            activate_on = args.get("activate_on")
+            user = get_user_from_context(context)
 
+            if not notification_setting_id:
+                return None, CustomMassenergizeError("id is required")
+
+            notification_setting = CommunityNotificationSetting.objects.filter(id=notification_setting_id).first()
+            if not notification_setting:
+                return None, CustomMassenergizeError("Community notification settings with ID not found")
+            
+            if not context.user_is_super_admin:
+                if not is_admin_of_community(context, notification_setting.community.id):
+                    return None, NotAuthorizedError()
+
+            notification_setting.is_active = is_active
+            notification_setting.activate_on = activate_on
+            notification_setting.updated_by = user
+            notification_setting.save()
+            
+            if activate_on:
+                more_info = notification_setting.more_info or {}
+                task_id = more_info.get("task_id")
+                if task_id:
+                    AsyncResult(task_id).revoke()
+                
+                eta = datetime.strptime(activate_on, "%Y-%m-%d") + timedelta(minutes=0)
+                
+                task_id = automatically_activate_nudge.apply_async(args=[notification_setting.id], eta=eta).id
+                notification_setting.more_info = {**more_info, "task_id": task_id}
+                notification_setting.save()
+            
+            if not is_active and not activate_on:
+                more_info = notification_setting.more_info or {}
+                task_id = more_info.get("task_id")
+                if task_id:
+                    AsyncResult(task_id).revoke()
+                    notification_setting.more_info = {**more_info, "task_id": None}
+                    notification_setting.save()
+            
+            # ----------------------------------------------------------------
+            notification_type = notification_setting.notification_type.split('-feature-flag')[0]
+            Spy.create_community_notification_settings_footage(communities=[notification_setting.community], context=context,type=FootageConstants.update(), notes=f"{notification_type} ID({notification_setting_id})")
+            # ----------------------------------------------------------------
+            
+            return {"feature_is_enabled": True, **notification_setting.simple_json()}, None
+
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
+
+    def list_community_notification_settings(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        try:
+            community_id = args.get("community_id")
+            
+            if not community_id:
+                return None, CustomMassenergizeError("community_id is required")
+            
+            community = Community.objects.filter(id=community_id).prefetch_related("notification_settings").first()
+            
+            if not community:
+                return None, CustomMassenergizeError("Community not found")
+            
+            if not is_admin_of_community(context, community.id):
+                return None, NotAuthorizedError()
+            
+            settings_dict = {setting.notification_type: setting for setting in community.notification_settings.all()}
+            feature_flags = FeatureFlag.objects.filter(key__in=COMMUNITY_NOTIFICATION_TYPES)
+            
+            new_settings = []
+            resulting_settings = {}
+            
+            for flag in feature_flags:
+                setting = settings_dict.get(flag.key)
+                feature_is_enabled = flag.is_enabled_for_community(community)
+                
+                if setting is None:
+                    new_setting = CommunityNotificationSetting(community=community, notification_type=flag.key, is_active=True)
+                    
+                    new_settings.append(new_setting)
+                    setting = new_setting
+                
+                resulting_settings[flag.key] = {"feature_is_enabled": feature_is_enabled, **setting.simple_json()}
+            
+            if new_settings:
+                CommunityNotificationSetting.objects.bulk_create(new_settings)
+            
+            return resulting_settings, None
+        except Exception as e:
+            return None, CustomMassenergizeError(str(e))
+    
+    def list_communities_feature_flags(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
+        try:
+            community_id = args.get("community_id")
+            subdomain = args.get("subdomain")
+            
+            if community_id or subdomain:
+                community, _ = get_community(community_id, subdomain)
+                
+                if not community:
+                    return None, CustomMassenergizeError("Community not found")
+                
+                communities = [community.id]
+            else:
+                # check if user is a community admin, get all communities they are admin of
+                user = get_user_from_context(context)
+                if not user:
+                    return None, CustomMassenergizeError("User not found")
+                
+                communities = user.communityadmingroup_set.all().values_list("community__id", flat=True)
+            
+            feature_flags = FeatureFlag.objects.filter(
+                Q(audience=FeatureFlagConstants().for_everyone()) |
+                Q(audience=FeatureFlagConstants().for_specific_audience(), communities__in=communities) |
+                (Q(audience=FeatureFlagConstants().for_all_except()) & ~Q(communities__in=communities))
+            ).exclude(expires_on__lt=datetime.now()).prefetch_related('communities')
+            
+            return feature_flags, None
+        
+        except Exception as e:
+            return None, CustomMassenergizeError(str(e))
+    
+    
 ########### Helper functions  ###########
 
 

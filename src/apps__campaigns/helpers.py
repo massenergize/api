@@ -53,7 +53,7 @@ def get_campaign_technology_details(args):
     for_admin = args.get("for_admin", False)
 
     campaign_tech = CampaignTechnology.objects.get(id=campaign_technology_id)
-    events = CampaignTechnologyEvent.objects.filter(campaign_technology=campaign_tech, is_deleted=False).select_related("campaign_technology")
+    events = CampaignTechnologyEvent.objects.filter(campaign_technology=campaign_tech, is_deleted=False).select_related("campaign_technology").order_by("event__start_date_and_time")
     coaches = TechnologyCoach.objects.filter(technology_id=campaign_tech.technology.id, is_deleted=False)
     comments = Comment.objects.filter(campaign_technology__id=campaign_technology_id, is_deleted=False).order_by("-created_at")[:20]
     if for_admin:
