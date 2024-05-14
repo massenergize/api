@@ -142,7 +142,7 @@ class MassEnergizeApiEnvConfig:
             name = os.getenv("DJANGO_ENV", "dev")
             is_docker_mode = "DOCKER_CONTAINER" in os.environ
         
-        print("name", name)
+        name = name.lower()
         assert name in [ "test", "local", "dev", "canary", "prod"]
         self.name = name
         self.is_docker_mode = is_docker_mode
