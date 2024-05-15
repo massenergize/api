@@ -18,7 +18,7 @@ def is_time_to_run(task):
     if last_run is None:
         return True
     
-    if freq == ONE_OFF and not last_run:
+    if freq == ONE_OFF and not last_run == today:
         return True
 
     if freq == DAILY:
