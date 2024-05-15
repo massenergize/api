@@ -4,7 +4,8 @@ import logging
 from celery import shared_task
 from django.db import transaction
 
-from _main_.settings import IS_PROD
+from _main_.settings import IS_PROD, SLACK_SUPER_ADMINS_WEBHOOK_URL
+from api.services.utils import send_slack_message
 from task_queue.helpers import is_time_to_run
 from .jobs import FUNCTIONS
 from .models import Task
@@ -20,9 +21,11 @@ def log_status(status, task_name, message):
 	if not IS_PROD:
 		return
 	if status == "SUCCEEDED":
-		logger.info(f"Task: {task_name}, Status: ✅, Info: {message}, key:{SUCCESS_LOG_KEY}")
+		send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL, {"text": f"Task: {task_name}, Status: ✅, Info: {message}, key:{SUCCESS_LOG_KEY}"})
+		# logger.info(f"Task: {task_name}, Status: ✅, Info: {message}, key:{SUCCESS_LOG_KEY}")
 	else:
-		logger.error(f"Task: {task_name}, Status: ❌, Info: {message}, key:{FAILURE_LOG_KEY}")
+		send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL, {"text": f"Task: {task_name}, Status: ❌, Info: {message}, key:{FAILURE_LOG_KEY}"})
+		# logger.error(f"Task: {task_name}, Status: ❌, Info: {message}, key:{FAILURE_LOG_KEY}")	# logger.error(f"Task: {task_name}, Status: ❌, Info: {message}, key:{FAILURE_LOG_KEY}")
 
 
 
