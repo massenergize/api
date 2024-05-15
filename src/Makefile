@@ -139,3 +139,7 @@ migrate-canary:
 migrate-local:
 	DJANGO_ENV=local python manage.py migrate
 .PHONY: migrate-local
+
+
+create-cache-table-local:
+	DJANGO_ENV=local python manage.py createcachetable

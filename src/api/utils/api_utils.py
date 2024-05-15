@@ -109,7 +109,10 @@ def prepend_prefix_to_links(menu_item: object, prefix: object) -> object:
     if not menu_item:
         return None
     if "link" in menu_item:
-        menu_item["link"] = "/" + prefix + menu_item["link"]
+        existing_link = menu_item["link"]
+        if existing_link.startswith("/"):
+            existing_link = existing_link[1:]
+        menu_item["link"] = f"/{prefix}/{existing_link}"
     if "children" in menu_item:
         for child in menu_item["children"]:
             prepend_prefix_to_links(child, prefix)
