@@ -13,20 +13,23 @@ from .models import Task
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-SUCCESS_LOG_KEY = "CELERY_TASK_SUCCESS"
-FAILURE_LOG_KEY = "CELERY_TASK_FAILURE"
+FAILED = "FAILED"
+SUCCEEDED = "SUCCEEDED"
+SKIPPED = "SKIPPED"
 
+def get_task_info(task):
+	if task:
+		return f"task: {task.name}, job: {task.job_name}, task_id: {task.id}"
+	
+def log_status(task, message):
+	task_name = get_task_info(task)
 
-def log_status(status, task_name, message):
-	if not IS_PROD:
-		return
-	if status == "SUCCEEDED":
-		send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL, {"text": f"Task: {task_name}, Status: ✅, Info: {message}, key:{SUCCESS_LOG_KEY}"})
-		# logger.info(f"Task: {task_name}, Status: ✅, Info: {message}, key:{SUCCESS_LOG_KEY}")
+	if task.status == FAILED:
+		logger.error(f"Task: {task_name}, Status: {task.status}, Info: {message}")
+		if IS_PROD:
+			send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL, {"text": f"Task: {task_name}, Status: {task.status}, Info: {message}"})
 	else:
-		send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL, {"text": f"Task: {task_name}, Status: ❌, Info: {message}, key:{FAILURE_LOG_KEY}"})
-		# logger.error(f"Task: {task_name}, Status: ❌, Info: {message}, key:{FAILURE_LOG_KEY}")	# logger.error(f"Task: {task_name}, Status: ❌, Info: {message}, key:{FAILURE_LOG_KEY}")
-
+		logger.info(f"Task: {task_name}, Status: {task.status}, Info: {message}")
 
 
 @shared_task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 1, 'countdown': 5})
@@ -43,22 +46,26 @@ def run_some_task(self, task_id):
 				task.last_run = today
 				task.save()
 				should_run = True
+			else:
+				task.status = SKIPPED
+				log_status(task, "Another instance of the task is already running")
+			
 		
 		if task and should_run:
 			func = FUNCTIONS.get(task.job_name)
 			if func:
 				try:
 					res = func(task)
-					task.status = "SUCCEEDED" if res else "FAILED"
-					log_status(task.status, task.job_name, "Task ran successfully" if res else "Task failed")
+					task.status = SUCCEEDED if res else FAILED
+					log_status(task, "Task ran successfully" if res else "Task failed")
 				
 				except Exception as e:
-					task.status = "FAILED"
-					log_status(task.status, task.job_name, today, str(e))
+					task.status = FAILED
+					log_status(task, str(e))
 			else:
-				task.status = "FAILED"
-				log_status(task.status, task.job_name, "Task not found in FUNCTIONS")
+				task.status = FAILED
+				log_status(task, "Task not found in FUNCTIONS")
 			task.save()
 			
 	except Exception as e:
-		log_status("FAILED", f"task_id:{task_id}", str(e))
+		logger.error(f"Task: {task_id}, Status: ❌, Info: {str(e)}, key:{FAILURE_LOG_KEY}")
