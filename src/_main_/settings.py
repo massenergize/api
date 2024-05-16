@@ -187,6 +187,13 @@ if is_test_mode():
 #     }
 # }
 
+CACHES = {
+    'default': {
+            'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+            'LOCATION': 'cache_table'
+        }
+}
+
 # url and hosts config
 ROOT_URLCONF = '_main_.urls'
 ROOT_HOSTCONF = '_main_.hosts'

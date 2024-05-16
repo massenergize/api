@@ -127,6 +127,7 @@ migrate:
 	@echo "Setting environment variables ..."
 	python3 _main_/utils/startup/prepare.py
 	python3 manage.py makemigrations
+	python3 manage.py showmigrations
 	python3 _main_/utils/startup/migration_prompt.py
 	python3 manage.py migrate
 .PHONY: migrate
@@ -147,3 +148,6 @@ migrate-local:
 	DJANGO_ENV=local make migrate
 .PHONY: migrate-local
 
+
+create-cache-table-local:
+	DJANGO_ENV=local python manage.py createcachetable

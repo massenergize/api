@@ -1,6 +1,5 @@
 """Handler file for all routes pertaining to events"""
 
-from _main_.utils.massenergize_errors import MassEnergizeAPIError
 from _main_.utils.route_handler import RouteHandler
 from api.services.event import EventService
 from _main_.utils.massenergize_response import MassenergizeResponse
@@ -144,16 +143,6 @@ class EventHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=event_info)
 
-    @admins_only
-    def update_recurring_date(self, request):
-        context: Context = request.context
-        args: dict = context.args
-
-        event_info, err = self.service.update_recurring_event_date(context, args)
-        if err:
-            return err
-        return MassenergizeResponse(data=event_info)
-
     @login_required
     def save_for_later(self, request):
         context: Context = request.context
@@ -217,7 +206,8 @@ class EventHandler(RouteHandler):
         self.validator.expect('rsvp_enabled', bool)
         self.validator.expect('rsvp_email', bool)
         self.validator.expect('event_id', str)
-        self = expect_media_fields(self)
+        expect_media_fields(self)
+
         args, err = self.validator.verify(args)
 
         if err:
@@ -307,7 +297,7 @@ class EventHandler(RouteHandler):
         self.validator.expect("shared_to", "str_list")
         self.validator.expect("settings", dict, is_required=False)
 
-        self = expect_media_fields(self)
+        expect_media_fields(self)
         args, err = self.validator.verify(args)
 
         if err:

@@ -215,9 +215,9 @@ def community_has_altered_flow(community, feature_flag_key) -> bool:
         community_nudge_settings = CommunityNotificationSetting.objects.filter(community=community,
                                                                                notification_type=feature_flag_key).first()
         if not community_nudge_settings:  # meaning the community has not changed the default settings
-            return True
+            return False
         if community_nudge_settings.is_active:
-            return True
+            return False
         
         activate_on = community_nudge_settings.activate_on
         
@@ -232,8 +232,8 @@ def community_has_altered_flow(community, feature_flag_key) -> bool:
                                                                type=FootageConstants.update(),
                                                                notes=f"{notification_type} automatically updated as the resuming date {activate_on} elapsed")
             # ----------------------------------------------------------------
-            return True
-        return False
+            return False
+        return True
     except Exception as e:
         print(f"community_has_altered_flow exception - ({community.name}): " + str(e))
         return False
@@ -340,7 +340,7 @@ def prepare_user_events_nudge(task=None, email=None, community_id=None):
         communities = flag.enabled_communities(communities)
         for community in communities:
 
-            if not community_has_altered_flow(community, flag.key):
+            if community_has_altered_flow(community, flag.key):
                 continue
 
             events = get_community_events(community.id, task)
