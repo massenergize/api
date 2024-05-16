@@ -96,7 +96,17 @@ class CCD():
             self.loadDefaults(self)
 
         if locality not in self.DefaultsByLocality:
+            # this locality isn't one that is tracked
             locality = "default"
+        elif variable not in self.DefaultsByLocality[locality]:
+            # common case: this variable doesn't have a value for that locality
+            # perhaps the state has a default value
+            state = locality[-2:]
+            if state in self.DefaultsByLocality and variable in self.DefaultsByLocality[sublocality]:
+                locality = state
+            else:
+                locality = "default"
+
         if variable in self.DefaultsByLocality[locality]:
             # variable found; get the value appropriate for the date
             var = self.DefaultsByLocality[locality][variable]    # not a copy

@@ -3,12 +3,11 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.context import Context
 from django.db.models import Q, prefetch_related_objects
 from api.store.team import get_team_users
-from .utils import get_community_or_die, unique_media_filename
+from .utils import get_community_or_die, unique_media_filename, getCarbonImpact
 from sentry_sdk import capture_message
 from typing import Tuple
 from api.services.utils import send_slack_message
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, RUN_SERVER_LOCALLY, IS_PROD, IS_CANARY
-from carbon_calculator.carbonCalculator import AverageImpact
 
 def get_households_engaged(community: Community):
 
@@ -23,7 +22,7 @@ def get_households_engaged(community: Community):
   # loop over actions completed
   for actionRel in done_actions:
     if actionRel.action and actionRel.action.calculator_action :
-      points = AverageImpact(actionRel.action.calculator_action, actionRel.date_completed)
+      points = getCarbonImpact(actionRel)
       carbon_footprint_reduction += points
 
   return {"community": {"id": community.id, "name": community.name}, 
@@ -37,9 +36,8 @@ def get_all_households_engaged():
   actions_completed = done_actions.count()
   carbon_footprint_reduction = 0
   for actionRel in done_actions:
-    if actionRel.action and actionRel.action.calculator_action :
-      carbon_footprint_reduction += AverageImpact(actionRel.action.calculator_action, actionRel.date_completed)
-
+    carbon_footprint_reduction += getCarbonImpact(actionRel)
+  
   return {"community": {"id": 0, "name": 'Other'}, 
           "actions_completed": actions_completed, "households_engaged": households_engaged,
           "carbon_footprint_reduction": carbon_footprint_reduction}

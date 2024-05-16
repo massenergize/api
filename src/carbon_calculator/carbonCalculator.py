@@ -114,6 +114,10 @@ def SavePic2Media(picURL):
         print("Error encountered: "+str(e))
         return None
 
+def locality_string(loc):
+    # unpack json location into standard string like "Acton-MA"
+    return str(loc)
+
 def AverageImpact(action, date=None, locality="default"):
     averageName = action.name + '_average_points'
     impact = getDefault(locality, averageName, date, default=TOKEN_POINTS)

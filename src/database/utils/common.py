@@ -11,7 +11,7 @@ from django.forms.models import model_to_dict
 from collections.abc import Iterable
 from _main_.settings import AWS_S3_REGION_NAME, AWS_STORAGE_BUCKET_NAME
 from sentry_sdk import capture_message
-
+from database.models import UserActionRel
 from _main_.utils.utils import Console
 import boto3
 
