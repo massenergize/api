@@ -1,11 +1,11 @@
 services:
   app:
     build: .
-    command: sh -c "python manage.py runserver 0.0.0.0:$RANDOM"
+    command: sh -c "python manage.py runserver 0.0.0.0:8000"
     container_name: app
     ports:
-      - "80:$RANDOM" # for deployed version
-      - "8000:$RANDOM" # for localhost testing
+      - "80:8000" # for deployed version
+      - "8000:8000" # for localhost testing
     image: massenergize/api
     restart: on-failure
 
