@@ -165,7 +165,7 @@ class MediaLibraryHandler(RouteHandler):
         ).expect(
             "tags", "str_list"
         )
-        self = expect_media_fields(self)
+        expect_media_fields(self)
         args, err = self.validator.verify(args, strict=True)
         if err:
             return err
@@ -218,7 +218,7 @@ class MediaLibraryHandler(RouteHandler):
         ).expect(
             "user_upload_id", int, is_required=True
         ).expect("publicity", str)
-        self = expect_media_fields(self)
+        expect_media_fields(self)
         args, err = self.validator.verify(args, strict=True)
         if err:
             return err
