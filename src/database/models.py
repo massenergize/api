@@ -1988,8 +1988,12 @@ class Organization(Affiliate):
       about this Organization
     is_approved: boolean
       after the community admin reviews this, can check the box
+    allowed_users:
+      Users allowed to create events under the Organization
     
     """
+
+    allowed_users = models.ManyToManyField(UserProfile, blank=True)
 
     class Meta:
         db_table = "organizations"

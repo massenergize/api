@@ -318,12 +318,9 @@ def get_organization_filter_params(params):
         query.append(search)
   
       communities = params.get("communities serviced", None)
-      service_area= params.get('service area',None)
 
       if communities:
         query.append(Q(communities__name__icontains=communities[0]))
-      if service_area:
-       query.append(Q(service_area__in=service_area))
 
       return query
     except Exception as e:
