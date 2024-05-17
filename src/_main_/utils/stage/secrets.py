@@ -50,8 +50,8 @@ def get_s3_file(file_path):
 
         # Parse the JSON content
         json_content = json.loads(file_content)
-        print("Successfully got firebase")
+        print("\033[90m Successfully loaded firebase credentials\033[0m")
         return json_content
     except Exception as e:
-        print("Could not load firebase file", e)
+        print("\033[91m Could not load firebase file\033[0m", e)
         return {}

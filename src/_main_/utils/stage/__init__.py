@@ -40,7 +40,6 @@ class MassEnergizeApiEnvConfig:
             domains.append(public_ip_v6)
 
         domains = [d.strip() for d in domains if d.strip()]
-        print(domains)
         return domains
 
 
@@ -53,7 +52,7 @@ class MassEnergizeApiEnvConfig:
 
 
         if os.environ.get('FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY') is not None:
-            print(f"Detected FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY in env file")
+            print(f"\033[90m Detected FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY in env file\033[0m")
             firebase_creds =  {
               "type": "service_account",
               "project_id": os.environ.get('FIREBASE_SERVICE_ACCOUNT_PROJECT_ID'),
@@ -68,10 +67,10 @@ class MassEnergizeApiEnvConfig:
             }
 
         elif firebase_local_path:
-            print(f"Detected FIREBASE_AUTH_LOCAL_KEY_PATH so will fetch the firebase credentials from {firebase_local_path}")
+            print(f"\033[90m Detected FIREBASE_AUTH_LOCAL_KEY_PATH so will fetch the firebase credentials from {firebase_local_path}\033[0m")
             firebase_creds = load_json(Path('.')/firebase_local_path)
         elif firebase_s3_path:
-            print(f"Detected FIREBASE_AUTH_KEY_PATH so will fetch the firebase credentials from s3://{firebase_s3_path}")
+            print(f"\033[90m Detected FIREBASE_AUTH_KEY_PATH so will fetch the firebase credentials from s3://{firebase_s3_path}\033[0m")
             firebase_creds =  get_s3_file(firebase_s3_path)
         else:
             firebase_creds = {}
@@ -140,10 +139,10 @@ class MassEnergizeApiEnvConfig:
         try:
             if not env_path.exists():
                 return
-            print(f"Detected {env_path} env file, Loading credentials from it")
+            print(f"\033[90m Detected {env_path} env file, Loading credentials from it\033[0m")
             load_dotenv(env_path)
         except:
-            print(f"Something happened.  Could not load env variables from: {env_path}")
+            print(f"\033[91m Something happened.  Could not load env variables from: {env_path}\033[0m")
 
 
     def _set_api_run_info(self):
@@ -163,7 +162,7 @@ class MassEnergizeApiEnvConfig:
         assert name in [ "test", "local", "dev", "canary", "prod"]
         self.name = name
         self.is_docker_mode = is_docker_mode
-        print(f"Detected | DJANGO_ENV => {self.name} | Docker Mode => {self.is_docker_mode}")
+        print(f"\033[90m Detected | DJANGO_ENV => {self.name} | Docker Mode => {self.is_docker_mode}\033[0m")
 
     def get_ip_address(self):
         try:
