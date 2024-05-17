@@ -13,7 +13,7 @@ start:
 startd:
 	@echo "Setting environment variables ..."
 	DOCKER_MODE=true python3 _main_/utils/startup/prepare.py
-	sudo docker-compose down
+	sudo docker-compose down --remove-orphans
 	sudo docker image prune -f
 	sudo docker builder prune -f
 	sudo docker-compose build
