@@ -4,7 +4,6 @@ services:
     command: sh -c "python manage.py runserver 0.0.0.0:8000"
     ports:
       - "80:8000" # for deployed version
-      - "8000:8000" # for localhost testing
     image: massenergize/api
     restart: on-failure
 
