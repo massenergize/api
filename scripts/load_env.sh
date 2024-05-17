@@ -60,4 +60,4 @@ get_and_write_public_ip() {
     fi
 }
 
-get_and_write_public
+get_and_write_public_ip
