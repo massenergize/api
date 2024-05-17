@@ -24,14 +24,19 @@ class MassEnergizeApiEnvConfig:
 
     def get_allowlist_domains(self):
         domains =  os.getenv('DOMAIN_ALLOW_LIST', '').split(",")
-        if "" in domains:
-            domains.remove("")
         domains.append(self.get_ip_address())
+
         host_ip_addresses = os.getenv("HOST_IP_ADDRESSES", None)
         if host_ip_addresses:
-            _addresses = [a for a in host_ip_addresses.split(" ") if a]
+            _addresses = host_ip_addresses.split(" ")
             domains.extend(_addresses)
 
+        public_ip  = os.getenv("PUBLIC_IP", None)
+        if public_ip:
+            domains.append(public_ip)
+
+        domains = [d.strip() for d in domains if d.strip()]
+        print(domains)
         return domains
 
 
