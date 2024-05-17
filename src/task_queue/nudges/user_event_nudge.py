@@ -12,6 +12,7 @@ from database.models import Community, CommunityMember, CommunityNotificationSet
 from django.db.models import Q
 from dateutil.relativedelta import relativedelta
 from database.utils.common import get_json_if_not_none
+from datetime import timedelta
 
 from database.utils.settings.model_constants.events import EventConstants
 from django.utils import timezone
@@ -113,7 +114,7 @@ def is_event_eligible(event, community_id, task=None):
         
         if not settings:
             settings = EventNudgeSetting(event=event, **DEFAULT_EVENT_SETTINGS)
-            
+        
         if settings.never:
             return False
         
@@ -128,14 +129,20 @@ def is_event_eligible(event, community_id, task=None):
         }
         
         if freq:
-            last_last_run = now - freq_to_delta.get(freq, relativedelta(days=0))
+            last_last_run = now - timedelta(days=freq_to_delta.get(freq, relativedelta(days=1)).days)
         
-        if settings.when_first_posted and event.published_at and last_last_run < event.published_at.date() <= now:
+        event_published_date = event.published_at.date() if event.published_at else None
+        event_start_date = event.start_date_and_time.date()
+        
+        if settings.when_first_posted and event_published_date and last_last_run < event_published_date <= now:
             return True
-        elif settings.within_30_days and timezone.timedelta(days=30) - last_last_run < event.start_date_and_time.date() - now <= timezone.timedelta(days=30):
+        
+        if settings.within_30_days and (now - last_last_run).days <= 30 and (event_start_date - now).days <= 30:
             return True
-        elif settings.within_1_week and event.start_date_and_time.date() - now <= timezone.timedelta(days=7):
+        
+        if settings.within_1_week and 0 < (event_start_date - now).days <= 7:
             return True
+        
         return False
     except Exception as e:
         print(f"is_event_eligible exception - (event:{event.name}|| community:{community_id}): " + str(e))
