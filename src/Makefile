@@ -1,6 +1,7 @@
 init:
 	pip3 install -r requirements.txt
 	mkdir .massenergize
+	mkdir .massenergize/creds
 .PHONY: init
 
 start:

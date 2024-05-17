@@ -161,15 +161,22 @@ def welcome_message():
 | |  | | (_| \__ \__ \  __/ | | |  __/ | | (_| | |/ /  __/  / ___ \|  __/| | 
 |_|  |_|\__,_|___/___/\___|_| |_|\___|_|  \__, |_/___\___| /_/   \_\_|  |___|
                                           |___/                              
-    
+
 Howdy, Namaste, Mabuhay, Welcome, Bienvenue, Akwaaba!
-Saddle up for the API rodeo—let's lasso some functionality, but remember, safety first!
+\033[0m"""
+
+    warning = """\033[96m
+---------------------------------------------------------------------
+Treat this API like your grandma's china :) Please, handle with care!
+---------------------------------------------------------------------
 1. Test your code like you're a mad scientist in a lab —- expect the unexpected, and then some!
 2. Write code like you're composing a love letter -— clear, heartfelt, and without any embarrassing bugs or typos!
 3. Target environments like a heat-seeking missile —- let's make sure we hit the bullseye, 
 not PROD mistakenly or Aunt Mildred's flower bed!
      \033[0m"""
+    
     print(ascii_art)
+    print(warning)
 
 if __name__ == "__main__":
     welcome_message()
