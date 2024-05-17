@@ -27,9 +27,10 @@ class MassEnergizeApiEnvConfig:
         if "" in domains:
             domains.remove("")
         domains.append(self.get_ip_address())
-        host_ip = os.getenv("HOST_IP", None)
-        if host_ip:
-            domains.append(host_ip)
+        host_ip_addresses = os.getenv("HOST_IP_ADDRESSES", None)
+        if host_ip_addresses:
+            _addresses = [a for a in host_ip_addresses.split(" ") if a]
+            domains.extend(_addresses)
 
         return domains
 
