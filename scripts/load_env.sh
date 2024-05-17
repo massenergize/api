@@ -35,29 +35,29 @@ else
     echo "Error: Failed to retrieve secrets from AWS Secrets Manager."
 fi
 
-get_and_write_public_ipv4() {
+get_and_write_public_ip() {
     token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 300" -s http://169.254.169.254/latest/api/token)
-    public_ip=$(curl -H "X-aws-ec2-metadata-token: $token" -s http://169.254.169.254/latest/meta-data/public-ipv4)
-    if [ -z "$public_ip" ]; then
+    public_ipv4=$(curl -H "X-aws-ec2-metadata-token: $token" -s http://169.254.169.254/latest/meta-data/public-ipv4)
+    public_ipv6=$(curl -H "X-aws-ec2-metadata-token: $token" -s http://169.254.169.254/latest/meta-data/public-ipv6)
+
+    if [ -z "$public_ipv4" ] && [ -z "$public_ipv6" ]; then
         echo "Error: No public IP address assigned to the instance."
-        exit 1
+        exit 0
     fi
-    
-    echo "PUBLIC_IPV4=\"$public_ip\"" >> .env
-    echo "Public IP Address written to .env file: $public_ip"
+
+    if [ ! -z "$public_ipv4" ] && [ ${#public_ipv4} -le 16 ]; then
+        echo "PUBLIC_IPV4=\"$public_ipv4\"" >> .env
+        echo "PUBLIC_IPV4 Address written to .env file: $public_ipv4"
+    fi
+
+    if [ ! -z "$public_ipv6" ] && [ ${#public_ipv6} -le 40 ]; then
+        echo "PUBLIC_IPV6=\"$public_ipv6\"" >> .env
+        echo "PUBLIC_IPV6 Address written to .env file: $public_ipv6"
+    fi
+
+    if [ -z "$public_ipv4" ] && [ -z "$public_ipv6" ]; then
+        echo "Error: No suitable public IP address(es) found."
+    fi
 }
 
-get_and_write_public_ipv6() {
-    token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 300" -s http://169.254.169.254/latest/api/token)
-    public_ip=$(curl -H "X-aws-ec2-metadata-token: $token" -s http://169.254.169.254/latest/meta-data/public-ipv6)
-    if [ -z "$public_ip" ]; then
-        echo "Error: No public IP address assigned to the instance."
-        exit 1
-    fi
-    
-    echo "PUBLIC_IPV6=\"$public_ip\"" >> .env
-    echo "Public IP Address written to .env file: $public_ip"
-}
-
-get_and_write_public_ipv4
-get_and_write_public_ipv6
+get_and_write_public
