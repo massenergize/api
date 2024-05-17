@@ -31,9 +31,13 @@ class MassEnergizeApiEnvConfig:
             _addresses = host_ip_addresses.split(" ")
             domains.extend(_addresses)
 
-        public_ip  = os.getenv("PUBLIC_IP", None)
-        if public_ip:
-            domains.append(public_ip)
+        public_ip_v4  = os.getenv("PUBLIC_IPV4", None)
+        if public_ip_v4:
+            domains.append(public_ip_v4)
+
+        public_ip_v6  = os.getenv("PUBLIC_IPV6", None)
+        if public_ip_v6:
+            domains.append(public_ip_v6)
 
         domains = [d.strip() for d in domains if d.strip()]
         print(domains)

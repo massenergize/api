@@ -35,12 +35,29 @@ else
     echo "Error: Failed to retrieve secrets from AWS Secrets Manager."
 fi
 
-get_and_write_public_ip() {
+get_and_write_public_ipv4() {
     token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 300" -s http://169.254.169.254/latest/api/token)
     public_ip=$(curl -H "X-aws-ec2-metadata-token: $token" -s http://169.254.169.254/latest/meta-data/public-ipv4)
+    if [ -z "$public_ip" ]; then
+        echo "Error: No public IP address assigned to the instance."
+        exit 1
+    fi
     
-    echo "PUBLIC_IP=\"$public_ip\"" >> .env
+    echo "PUBLIC_IPV4=\"$public_ip\"" >> .env
     echo "Public IP Address written to .env file: $public_ip"
 }
 
-get_and_write_public_ip
+get_and_write_public_ipv6() {
+    token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 300" -s http://169.254.169.254/latest/api/token)
+    public_ip=$(curl -H "X-aws-ec2-metadata-token: $token" -s http://169.254.169.254/latest/meta-data/public-ipv6)
+    if [ -z "$public_ip" ]; then
+        echo "Error: No public IP address assigned to the instance."
+        exit 1
+    fi
+    
+    echo "PUBLIC_IPV6=\"$public_ip\"" >> .env
+    echo "Public IP Address written to .env file: $public_ip"
+}
+
+get_and_write_public_ipv4
+get_and_write_public_ipv6
