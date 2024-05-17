@@ -30,7 +30,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DJANGO_ENV = os.environ.get("DJANGO_ENV","remote")
 
 # Database selection, development DB unless one of these chosen
-IS_PROD = False
+IS_PROD = True
 IS_CANARY = False
 IS_LOCAL = False
 

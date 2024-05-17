@@ -11,6 +11,7 @@ ONE_OFF = 'ONE_OFF'
 
 # it is time to run if the previous time is at least the time period before the current date
 def is_time_to_run(task):
+  
 	today = datetime.date.today()
 	last_run = task.last_run
 	freq = task.frequency

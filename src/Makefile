@@ -141,5 +141,6 @@ migrate-local:
 .PHONY: migrate-local
 
 
-create-cache-table-local:
-	DJANGO_ENV=local python manage.py createcachetable
+# docker tag 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api:$(VERSION)  202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api:latest
+# docker push 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api:latest
+
