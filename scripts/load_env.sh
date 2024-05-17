@@ -39,7 +39,7 @@ get_and_write_public_ip() {
     token=$(curl -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 300" -s http://169.254.169.254/latest/api/token)
     public_ip=$(curl -H "X-aws-ec2-metadata-token: $token" -s http://169.254.169.254/latest/meta-data/public-ipv4)
     
-    echo "PUBLIC_IP=\"$public_ip\"" > .env
+    echo "PUBLIC_IP=\"$public_ip\"" >> .env
     echo "Public IP Address written to .env file: $public_ip"
 }
 
