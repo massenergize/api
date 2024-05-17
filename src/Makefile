@@ -6,16 +6,16 @@ init:
 .PHONY: init
 
 # run this with 'make start env=local'
-env=remote
+env=local
 export DJANGO_ENV=$(env)
 start:
-	DJANGO_ENV=local python3 deployment/prepare_to_deploy.py local 1
-	DJANGO_ENV=local python3 manage.py runserver
+	python3 deployment/prepare_to_deploy.py local 1
+	python3 manage.py runserver
 .PHONY: start
 
-#prepare-prod:
-#	python3 deployment/prepare_to_deploy.py --prod 0 1
-#.PHONY: prepare-prod
+prepare-prod:
+	python3 deployment/prepare_to_deploy.py --prod 0 1
+.PHONY: prepare-prod
 
 VERSION=latest
 build-and-push-prod:
@@ -43,8 +43,8 @@ build-and-push-canary:
 	docker push 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-canary:$(CANARY_VERSION)
 	eb deploy --label $(CANARY_VERSION)
 
-	git tag prod@$(CANARY_VERSION)
-	git push origin prod@$(CANARY_VERSION)
+	git tag canary@$(CANARY_VERSION)
+	git push origin canary@$(CANARY_VERSION)
 .PHONY: build-and-deploy-canary
 
 #prepare-dev:
@@ -60,8 +60,8 @@ build-and-push-dev:
 	docker push 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-dev:$(DEV_VERSION)
 	eb deploy --label $(DEV_VERSION)
 
-	git tag prod@$(DEV_VERSION)
-	git push origin prod@$(DEV_VERSION)
+	git tag dev@$(DEV_VERSION)
+	git push origin dev@$(DEV_VERSION)
 .PHONY: build-and-push-dev
 
 deploy:
@@ -82,13 +82,14 @@ export TEST_OUTPUTS=$(outfile)
 export GENERATE_INPUTS=$(generate_inputs)
 
 test:
-	if [[ -f "test.sqlite3" ]]; \
-	then \
-		rm test.sqlite3; \
-	fi
-	touch test.sqlite3
-	DJANGO_ENV=test python3 manage.py migrate
-	DJANGO_ENV=test python3 -W ignore manage.py test $(package)
+	 if [[ -f "test.sqlite3" ]]; \
+	 then \
+	  rm test.sqlite3; \
+	 fi
+	 touch test.sqlite3
+	 DJANGO_ENV=test python3 manage.py migrate
+	 DJANGO_ENV=test coverage run --source='.' manage.py test $(package)
+	 coverage report
 .PHONY: test
 
 celery:
@@ -119,7 +120,7 @@ deploy-canary:
 .PHONY: deploy-canary
 
 deploy-prod:
-	DJANGO_ENV=prod python3 deployment/prepare_to_deploy.py --prod 0 1 && DJANGO_ENV=prod make build-and-push-canary
+	DJANGO_ENV=prod python3 deployment/prepare_to_deploy.py --prod 0 1 && DJANGO_ENV=prod make build-and-push-prod
 .PHONY: deploy-prod
 
 #-------------- NEW  MIGRATE ----------------
@@ -142,3 +143,7 @@ migrate-local:
 	DJANGO_ENV=local python manage.py makemigrations
 	DJANGO_ENV=local python manage.py migrate
 .PHONY: migrate-local
+
+
+create-cache-table-local:
+	DJANGO_ENV=local python manage.py createcachetable

@@ -3,9 +3,12 @@ import pytz
 from _main_.utils.common import encode_data_for_URL, serialize_all
 from _main_.utils.constants import COMMUNITY_URL_ROOT
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
+from _main_.utils.feature_flag_keys import USER_EVENTS_NUDGES_FF
+from _main_.utils.footage.FootageConstants import FootageConstants
+from _main_.utils.footage.spy import Spy
 from api.utils.api_utils import get_sender_email
 from api.utils.constants import USER_EVENTS_NUDGE_TEMPLATE
-from database.models import Community, CommunityMember, Event, UserProfile, FeatureFlag
+from database.models import Community, CommunityMember, CommunityNotificationSetting, Event, UserProfile, FeatureFlag, EventNudgeSetting
 from django.db.models import Q
 from dateutil.relativedelta import relativedelta
 from database.utils.common import get_json_if_not_none
@@ -37,12 +40,10 @@ USER_PREFERENCE_DEFAULTS = {
     },
 }
 
-USER_EVENT_NUDGE_KEY = "user-event-nudge-feature-flag"
-
 DEFAULT_EVENT_SETTINGS = {
     "when_first_posted": False,
     "within_30_days": True,
-    "within_7_days": True,
+    "within_1_week": True,
     "never": False,
 }
 
@@ -106,32 +107,39 @@ def update_last_notification_dates(email):
 
 
 def is_event_eligible(event, community_id, task=None):
-    now = timezone.now()
-    settings = event.nudge_settings.filter(communities__id=community_id).first()
-
-    if settings.never:
+    try:
+        now = timezone.now().date()
+        settings = event.nudge_settings.filter(communities__id=community_id).first()
+        
+        if not settings:
+            settings = EventNudgeSetting(event=event, **DEFAULT_EVENT_SETTINGS)
+            
+        if settings.never:
+            return False
+        
+        freq = task.frequency if task else None
+        last_last_run = None
+        
+        freq_to_delta = {
+            "EVERY_WEEK": relativedelta(weeks=1),
+            "bi-weekly": relativedelta(weeks=2),
+            "EVERY_MONTH": relativedelta(months=1),
+            "EVERY_DAY": relativedelta(days=1)
+        }
+        
+        if freq:
+            last_last_run = now - freq_to_delta.get(freq, relativedelta(days=0))
+        
+        if settings.when_first_posted and event.published_at and last_last_run < event.published_at.date() <= now:
+            return True
+        elif settings.within_30_days and timezone.timedelta(days=30) - last_last_run < event.start_date_and_time.date() - now <= timezone.timedelta(days=30):
+            return True
+        elif settings.within_1_week and event.start_date_and_time.date() - now <= timezone.timedelta(days=7):
+            return True
         return False
-
-    freq = task.frequency if task else None
-    last_last_run = None
-
-    freq_to_delta = {
-        "EVERY_WEEK": relativedelta(weeks=1),
-        "bi-weekly": relativedelta(weeks=2),
-        "EVERY_MONTH": relativedelta(months=1),
-        "EVERY_DAY": relativedelta(days=1)
-    }
-
-    if freq:
-        last_last_run = now - freq_to_delta.get(freq, relativedelta(days=0))
-
-    if settings.when_first_posted and event.published_at and last_last_run < event.published_at <= now:
-        return True
-    elif settings.within_30_days and event.start_date_and_time - now <= timezone.timedelta(days=30):
-        return True
-    elif settings.within_7_days and event.start_date_and_time - now <= timezone.timedelta(days=7):
-        return True
-    return False
+    except Exception as e:
+        print(f"is_event_eligible exception - (event:{event.name}|| community:{community_id}): " + str(e))
+        return False
 
 
 def get_community_events(community_id, task=None):
@@ -199,6 +207,36 @@ def prepare_events_email_data(events):
             "view_link": f'{COMMUNITY_URL_ROOT}/{event.get("community", {}).get("subdomain")}/events/{event.get("id")}',
             } for event in events]
     return data
+
+
+def community_has_altered_flow(community, feature_flag_key) -> bool:
+    try:
+        today = timezone.now().today().date()
+        community_nudge_settings = CommunityNotificationSetting.objects.filter(community=community,
+                                                                               notification_type=feature_flag_key).first()
+        if not community_nudge_settings:  # meaning the community has not changed the default settings
+            return False
+        if community_nudge_settings.is_active:
+            return False
+        
+        activate_on = community_nudge_settings.activate_on
+        
+        if activate_on and activate_on >= today:
+            community_nudge_settings.is_active = True
+            community_nudge_settings.activate_on = None
+            community_nudge_settings.save()
+            
+            # ----------------------------------------------------------------
+            notification_type = feature_flag_key.split('-feature-flag')[0]
+            Spy.create_community_notification_settings_footage(communities=[community], actor="Automatic",
+                                                               type=FootageConstants.update(),
+                                                               notes=f"{notification_type} automatically updated as the resuming date {activate_on} elapsed")
+            # ----------------------------------------------------------------
+            return False
+        return True
+    except Exception as e:
+        print(f"community_has_altered_flow exception - ({community.name}): " + str(e))
+        return False
 
 
 def send_events_report_email(name, email, event_list, comm, login_method=""):
@@ -294,13 +332,17 @@ def prepare_user_events_nudge(task=None, email=None, community_id=None):
 
             return True
 
-        flag = FeatureFlag.objects.get(key=USER_EVENT_NUDGE_KEY)
+        flag = FeatureFlag.objects.get(key=USER_EVENTS_NUDGES_FF)
         if not flag or not flag.enabled():
             return False
 
         communities = Community.objects.filter(is_published=True, is_deleted=False)
         communities = flag.enabled_communities(communities)
         for community in communities:
+
+            if community_has_altered_flow(community, flag.key):
+                continue
+
             events = get_community_events(community.id, task)
             users = get_community_users(community.id)
             users = flag.enabled_users(users)

@@ -8,7 +8,7 @@ from api.constants import DOWNLOAD_POLICY
 from api.store.common import create_pdf_from_rich_text, sign_mou
 from api.store.utils import get_user_from_context
 from api.utils.api_utils import get_sender_email
-from database.models import Policy
+from database.models import CommunityNotificationSetting, Policy
 from task_queue.nudges.cadmin_events_nudge import generate_event_list_for_community, send_events_report
 from api.store.utils import get_community, get_user
 from celery import shared_task
@@ -302,3 +302,17 @@ def send_scheduled_email(subject, message, recipients, image):
 
     except Exception as e:
         print(f"Error sending email: {str(e)}")
+        
+@app.task
+def automatically_activate_nudge(community_nudge_setting_id):
+    try:
+        community_nudge_setting = CommunityNotificationSetting.objects.filter(id=community_nudge_setting_id).first()
+        if not community_nudge_setting:
+            return
+        community_nudge_setting.activate_on = None
+        community_nudge_setting.is_active = True
+        community_nudge_setting.save()
+        print(f"Successfully activated nudge for community: {community_nudge_setting.community.name}")
+    except Exception as e:
+        print(f"Error automatically activating nudge: {str(e)}")
+    
