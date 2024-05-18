@@ -230,15 +230,14 @@ class EventStore:
             community = Community.objects.get(pk=community_id)
 
             if community:
-                shared = community.events_from_others.filter(is_published=True, start_date_and_time__gte=earliest_shared)
+                shared = community.events_from_others.filter(is_published=True, start_date_and_time__gte=earliest_shared).exclude(community_id=community_id)
 
         elif subdomain:
             community = Community.objects.get(subdomain=subdomain)
             events = Event.objects.select_related('image', 'community').prefetch_related('tags','invited_communities').filter(community__id=community.id, start_date_and_time__gte=earliest_hosted)
             
-
-            if community: shared = community.events_from_others.filter(is_published=True, start_date_and_time__gte=earliest_shared)
-
+            if community: 
+                shared = community.events_from_others.filter(is_published=True, start_date_and_time__gte=earliest_shared).exclude(community_id=community.id)
 
         elif user_id:
             events = EventAttendee.objects.filter(user_id=user_id)

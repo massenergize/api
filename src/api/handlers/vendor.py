@@ -109,15 +109,8 @@ class VendorHandler(RouteHandler):
       .expect("vendor_id", str)
     
     ) 
-    # self.validator.expect("size", str)
-    # self.validator.expect("size_text", str)
-    # self.validator.expect("description")
-    # self.validator.expect("underAge", bool)
-    # self.validator.expect("copyright", bool)
-    # self.validator.expect("copyright_att", str)
-    # self.validator.expect("guardian_info", str)
-
-    self = expect_media_fields(self)
+  
+    expect_media_fields(self)
 
     args, err = self.validator.verify(args)
     if err:
@@ -170,7 +163,7 @@ class VendorHandler(RouteHandler):
       .expect("location", "location", is_required=False)
     )
 
-    self = expect_media_fields(self)
+    expect_media_fields(self)
     args, err = self.validator.verify(args)
     if err:
       return err

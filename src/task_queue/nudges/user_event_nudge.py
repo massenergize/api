@@ -14,7 +14,6 @@ from dateutil.relativedelta import relativedelta
 from database.utils.common import get_json_if_not_none
 from datetime import timedelta
 
-
 from database.utils.settings.model_constants.events import EventConstants
 from django.utils import timezone
 
