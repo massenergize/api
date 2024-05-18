@@ -22,5 +22,7 @@ src/_main_/utils/GeoLite2-City/*
 src/celerybeat-schedule.db
 
 src/~Downloads
+passport.key.json
+.massenergize
 *.coverage
 src/.coverage

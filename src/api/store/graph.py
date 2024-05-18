@@ -1,3 +1,4 @@
+from _main_.utils.metrics import timed
 from database.models import Graph, UserProfile, Media, Vendor, Action, Community, Data, Tag, TagCollection, UserActionRel,RealEstateUnit, Team
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.context import Context
@@ -82,7 +83,7 @@ class GraphStore:
       return None, CustomMassenergizeError(e)
 
 
-
+  @timed
   def graph_actions_completed(self, context: Context, args) -> Tuple[Graph, MassEnergizeAPIError]:
     try:
       subdomain = args.get('subdomain', None)
