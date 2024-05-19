@@ -141,6 +141,6 @@ migrate-local:
 .PHONY: migrate-local
 
 
-# docker tag 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api:$(VERSION)  202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api:latest
+# docker tag 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api:5.2.19  202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api:latest
 # docker push 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api:latest
 
