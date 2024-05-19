@@ -1,6 +1,5 @@
 from types import FunctionType as function
 from django.urls import path, re_path
-from django.conf.urls import url
 from _main_.utils.validator import Validator
 
 class RouteHandler:

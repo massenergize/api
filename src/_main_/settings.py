@@ -30,8 +30,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DJANGO_ENV = os.environ.get("DJANGO_ENV","remote")
 
 # Database selection, development DB unless one of these chosen
-IS_PROD = True
-IS_CANARY = False
+IS_PROD = False
+IS_CANARY = True
 IS_LOCAL = False
 
 RUN_SERVER_LOCALLY = IS_LOCAL
@@ -206,6 +206,13 @@ if is_test_mode():
 #         'LOCATION': os.getenv('CACHE_LOCATION'),
 #     }
 # }
+
+CACHES = {
+    'default': {
+            'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+            'LOCATION': 'cache_table'
+        }
+}
 
 # url and hosts config
 ROOT_URLCONF = '_main_.urls'
