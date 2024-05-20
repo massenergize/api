@@ -436,8 +436,7 @@ class DownloadStore:
     #Gets row information for the All Actions CSV and the All Communities and Actions CSV
     def _get_action_info_cells(self, action):
 
-        locality = locality_string(action.community.locality.simple_json())
-        average_carbon_points = getCarbonImpact(action.calculator_action, None, locality)
+        average_carbon_points = getCarbonImpact(action)
             if action.calculator_action
             else int(action.average_carbon_score)
             if action.average_carbon_score.isdigit()

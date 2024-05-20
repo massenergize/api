@@ -116,7 +116,6 @@ class TeamStore:
             res["actions_todo"] += actions.filter(status="TODO").count()
             for done_action in done_actions:
               if done_action.action and done_action.action.calculator_action:
-                locality = locality_string(done_action.real_estate_unit.address)
                 res["carbon_footprint_reduction"] += getCarbonImpact(done_action)
 
         ans.append(res)
