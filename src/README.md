@@ -1,133 +1,126 @@
-# Massenergize API 
+# 🌍 MassEnergize API 🌍
 
-Welcome to the API
+Welcome to the MassEnergize API! We're thrilled to have you here. Our mission is to empower communities to take meaningful climate action, and this API is at the heart of that mission.
 
-### Technologies Used
-- Language: `Python`
-- Framework: `Django`
-- Database: `Postgres`
-- Auth: `Firebase`
-- Cloud provider: `AWS`
-- File Storage: `S3`
+### Technologies We Use 💻
+- **Language**: `Python`
+- **Framework**: `Django`
+- **Database**: `Postgres`
+- **Auth**: `Firebase`
+- **Cloud Provider**: `AWS`
+- **File Storage**: `S3`
 - We also use `Docker!`
-- `Celery` & `Celery Beat`s
+- `Celery` & `Celery Beat`
 
 ## General Prerequisites
-For local mode setup, follow these steps:
-1. Setup Postgres:
-Install PostgreSQL and create a database with it for massenergize.  
 
-2. Go to firebase.google.com and 
-- create a project,
-- turn on authentication 
-- and download a service credentials json.  
+Ready to get started? Awesome! Here’s what you need to do first:
+
+1. **Setup Postgres**:
+   - Install PostgreSQL and create a database for MassEnergize.
+
+2. **Firebase Setup**:
+   - Head over to [firebase.google.com](https://firebase.google.com), create a project, enable authentication, and download the service credentials JSON.
 
 # How to Run the API (Locally)
-There are two main ways to run the API and they both have their advantages
-1. Run the API without docker 
-2. Run the API with docker 
 
-### 1.0 Running with Docker [Recommended for full testing]
- Docker takes a while to build images and run them so it may be slower but it gives you the chance to not have to deal with any envuronment se
-### 1.1 Prequisites
-1. Install Docker and run the docker app.
-2. Create a `local.env` file in the `src/.massenergize/creds/` folder.  See Appendix for sample `local.env` file
-3. We use firebase for auth.  
-- Go to firebase.google.com and create a project,
--  turn on authentication 
-- and download a service credentials json.  
-- Store it in the `src/.massenergize/creds/` as a file called `firebase.local.json`
-- In your local.env set `FIREBASE_AUTH_LOCAL_KEY_PATH=".massenergize/creds/firebase.local.json"`
+You have two main options for running the API:
 
-### 1.2 Running the API
-There are two main ways:
-1. Run the following command in the `src/` folder
-```
-make local-docker
-```
-This will run the api in docker mode
+### 1. Run the API with Docker [Recommended for Full Testing] 🐳
 
-2. Another way is to run:
-```
-make startd
-```
-This will attempt to start the API in docker mode but it will ask you to specify your target environment.  In this case, you will put `local` when asked for the environment
+Docker takes a while to build images, but it saves you from environment headaches.
 
-### Running WITHOUT Docker [Recommended for quick testing]
-This is helpful for quick development and quick turn around.  
+#### 1.1 Prerequisites
+1. Install Docker and run the Docker app.
+2. Create a `local.env` file in the `src/.massenergize/creds/` folder. See the Appendix for a sample `local.env` file.
+3. Firebase for auth:
+   - Go to [firebase.google.com](https://firebase.google.com) and create a project.
+   - Enable authentication.
+   - Download the service credentials JSON.
+   - Store it in the `src/.massenergize/creds/` as `firebase.local.json`.
+   - In your `local.env`, set `FIREBASE_AUTH_LOCAL_KEY_PATH=".massenergize/creds/firebase.local.json"`.
 
+#### 1.2 Running the API
+Two ways to get the API running:
 
-### Prerequisites 
-Before you can run the API locally, you need to do the following setup:
+1. **Command in `src/` folder**:
+   ```sh
+   make local-docker
+   ```
+   This runs the API in Docker mode.
 
-### One time setup
-1. Create a new virtual environment
+2. **Another way**:
+   ```sh
+   make startd
+   ```
+   This will prompt you for your environment. Enter `local`.
 
-If you installed Python via anaconda you can create a new virtual environment like this
-```
-# if you use anaconda
-conda create -n massenergize python=3.9 
-```
-Note: if you want to remove an old conda environment with the same name and start afresh run the command below and start from Step 1 again: 	
-```
-conda env remove --name massenergize
-```
+### 2. Run the API Without Docker [Recommended for Quick Testing] 🚀
 
-2. Activate the virtual environment
-```
-conda activate massenergize 
-```
-This will switch to the python virtual environment 
+Great for quick development and fast turnaround.
 
-3. Navigate to the `src/` 
-```
-make init
-```
+#### Prerequisites
 
-This will install all the packages in the requirements.txt file in your virtual environment
+Before running the API locally, complete the setup below:
 
-> Note: This command will probably work seamlessly for linux based systems  but you can probably also get this to work on Powershell on windows with the right setup. 
+#### One-time Setup
+1. **Create a New Virtual Environment**:
+   ```sh
+   conda create -n massenergize python=3.9
+   ```
+   If you need to remove an old environment and start fresh:
+   ```sh
+   conda env remove --name massenergize
+   ```
 
-### Running the API
-To run the API in this mode, there are two ways of doing it
-1. Run the following:
-```
-make local
-```
-This will run the API in your virtual env in local mode.
+2. **Activate the Virtual Environment**:
+   ```sh
+   conda activate massenergize
+   ```
 
-2. Run the following :
-```
-make start
-```
+3. **Navigate to `src/`** and run:
+   ```sh
+   make init
+   ```
+   This installs all required packages.
 
-If you run this method, there will be a prompt asking you to enter your environment.  In this case, you enter `local`
+#### Running the API
+Two ways to run the API:
 
+1. **Run**:
+   ```sh
+   make local
+   ```
+   This runs the API in your virtual environment in local mode.
 
+2. **Run**:
+   ```sh
+   make start
+   ```
+   This will prompt you for your environment. Enter `local`.
 
 ## Appendix
-#### 1.0 Installing postgres:
-1. Download postgress app from [here](https://postgresapp.com/downloads.html)
-2. Install it and create a database specifically for massenergize.  
-```
-CREATE ROLE adminrole LOGIN SUPERUSER PASSWORD 'root';
-CREATE DATABASE massenergize-local WITH OWNER=adminrole;
-pg_restore -U master_chef -d massenergize-local dev.sql
-```
 
+### 1.0 Installing Postgres:
+1. Download the Postgres app from [here](https://postgresapp.com/downloads.html).
+2. Install it and create a database:
+   ```sql
+   CREATE ROLE adminrole LOGIN SUPERUSER PASSWORD 'root';
+   CREATE DATABASE massenergize-local WITH OWNER=adminrole;
+   pg_restore -U master_chef -d massenergize-local dev.sql
+   ```
 
-#### 1.1 Setting up your Firebase:
-You'd need the firebase setup to be able to successfully run the api and have authentication work.  In fact, some tests try to do login and so you'd need that to even make the tests work! 
+### 1.1 Setting up Firebase:
+Firebase setup is crucial for running the API and enabling authentication.
 
-To setup the firebase:
-1. Visit firebase.google.com and setup a new project
-2. Turn on authentication
-3. Allowlist the following domains `localhost` and `massenergize.test`
-4. Go to the project settings and download a new service key as a json.  You'd need to save the path to this file in your .env.  It is recommended to save it in your  `src/.massenergize.creds` folder 
-5. Setup a webapp in this same project.  You'd need this second set of credentials for your frontend when you run the frontend.
+1. Visit [firebase.google.com](https://firebase.google.com) and set up a new project.
+2. Enable authentication.
+3. Allowlist `localhost` and `massenergize.test`.
+4. Download a service key JSON from project settings and save it in `src/.massenergize/creds`.
+5. Set up a web app in the project for frontend credentials.
 
-#### 1.2  Sample `local.env` file
-```
+### 1.2 Sample `local.env` File
+```env
 SECRET_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 DATABASE_ENGINE=django.db.backends.postgresql
 DATABASE_NAME=
@@ -152,4 +145,4 @@ CELERY_LOCAL_REDIS_BROKER_URL=redis://localhost:6379/0
 FIREBASE_AUTH_LOCAL_KEY_PATH=".massenergize/creds/firebase.local.json"
 ```
 
-#### 
+---
