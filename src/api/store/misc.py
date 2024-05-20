@@ -32,6 +32,7 @@ from .utils import find_reu_community, split_location_string, check_location,get
 from sentry_sdk import capture_message
 from typing import Tuple
 from api.utils.api_utils import get_viable_menu_items
+import zipcodes
 
 
 class MiscellaneousStore:
@@ -95,7 +96,8 @@ class MiscellaneousStore:
         return None, None
 
     def backfill(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
-        return self.backfill_graph_default_data(context, args), None
+        #return self.backfill_graph_default_data(context, args), None
+        return self.backfill_real_estate_units(context, args), None
 
     def backfill_subdomans(self):
         for c in Community.objects.all():
@@ -293,25 +295,23 @@ class MiscellaneousStore:
                             print("Zipcode assigned " + zip)
 
                         # create the Location for the RealEstateUnit
-                        location_type, valid = check_location(
-                            street, unit_number, city, state, zip
-                        )
-                        if not valid:
-                            print("check_location returns: " + location_type)
-                            continue
+                        try:
+                            if zipcodes.is_real(zip):
+                                info = zipcodes.matching(zip)[0]
+                                city = info["city"]
+                                state = info["state"]
+                                county = info["county"]
+                                country = info["country"]
 
-                        # newloc, created = Location.objects.get_or_create(
-                        newloc = Location.objects.filter(
-                            location_type=location_type,
-                            street=street,
-                            unit_number=unit_number,
-                            zipcode=zip,
-                            city=city,
-                            county=county,
-                            state=state,
-                        )
-                        if not newloc:
-                            newloc = Location.objects.create(
+                            location_type, valid = check_location(
+                                street, unit_number, city, state, zip
+                            )
+                            if not valid:
+                                print("check_location returns: " + location_type)
+                                continue
+
+                            print("Updating location for REU ID ", str(reu.id))
+                            newloc,created = Location.objects.get_or_create(
                                 location_type=location_type,
                                 street=street,
                                 unit_number=unit_number,
@@ -320,74 +320,77 @@ class MiscellaneousStore:
                                 county=county,
                                 state=state,
                             )
-                            print("Zipcode " + zip + " created for town " + city)
-                        else:
-                            newloc = newloc.first()
-                            print("Zipcode " + zip + " found for town " + city)
+                            if created:
+                                print("Zipcode " + zip + " created for town " + city)
+                            else:
+                                #newloc = newloc.first()
+                                print("Zipcode " + zip + " found for town " + city)
+                            reu.address = newloc
+                            reu.save()
 
-                        reu.address = newloc
-                        reu.save()
+                        #else:
+    #
+                        #    # fixes for some missing addresses in summer Prod DB
+                        #    zip = "00000"
+                        #    cn = ""
+                        #    if userProfile.communities:
+                        #        cn = userProfile.communities.first().name
+                        #    elif reu.community:
+                        #        cn = reu.community.name
+    #
+                        #    if cn in ZIPCODE_FIXES:
+                        #        zip = ZIPCODE_FIXES[cn]["zipcode"]
+                        #        city = ZIPCODE_FIXES[cn]["city"]
+                        #    elif user in ZIPCODE_FIXES:
+                        #        zip = ZIPCODE_FIXES[user]["zipcode"]
+                        #        city = ZIPCODE_FIXES[user]["city"]
+    #
+                        #    # no location was stored?
+                        #    if zip == "00000":
+                        #        print("No location found for RealEstateUnit " + str(reu))
+    #
+                        #    location_type = "ZIP_CODE_ONLY"
+                        #    newloc, created = Location.objects.get_or_create(
+                        #        location_type=location_type,
+                        #        street=street,
+                        #        unit_number=unit_number,
+                        #        zipcode=zip,
+                        #        city=city,
+                        #        county=county,
+                        #        state=state,
+                        #    )
+                        #    if created:
+                        #        print("Location with zipcode " + zip + " created")
+                        #    else:
+                        #        print("Location with zipcode " + zip + " found")
+                        #    reu.address = newloc
+                        #    reu.save()
 
-                    else:
+                        # determine which, if any, community this household is actually in
+                            community = find_reu_community(reu)
+                            if community:
+                                print(
+                                    "Adding the REU with zipcode "
+                                    + zip
+                                    + " to the community "
+                                    + community.name
+                                )
+                                reu.community = community
 
-                        # fixes for some missing addresses in summer Prod DB
-                        zip = "00000"
-                        cn = ""
-                        if userProfile.communities:
-                            cn = userProfile.communities.first().name
-                        elif reu.community:
-                            cn = reu.community.name
-
-                        if cn in ZIPCODE_FIXES:
-                            zip = ZIPCODE_FIXES[cn]["zipcode"]
-                            city = ZIPCODE_FIXES[cn]["city"]
-                        elif user in ZIPCODE_FIXES:
-                            zip = ZIPCODE_FIXES[user]["zipcode"]
-                            city = ZIPCODE_FIXES[user]["city"]
-
-                        # no location was stored?
-                        if zip == "00000":
-                            print("No location found for RealEstateUnit " + str(reu))
-
-                        location_type = "ZIP_CODE_ONLY"
-                        newloc, created = Location.objects.get_or_create(
-                            location_type=location_type,
-                            street=street,
-                            unit_number=unit_number,
-                            zipcode=zip,
-                            city=city,
-                            county=county,
-                            state=state,
-                        )
-                        if created:
-                            print("Location with zipcode " + zip + " created")
-                        else:
-                            print("Location with zipcode " + zip + " found")
-                        reu.address = newloc
-                        reu.save()
-
-                    # determine which, if any, community this household is actually in
-                    community = find_reu_community(reu)
-                    if community:
-                        print(
-                            "Adding the REU with zipcode "
-                            + zip
-                            + " to the community "
-                            + community.name
-                        )
-                        reu.community = community
-
-                    elif reu.community:
-                        print(
-                            "REU not located in any community, but was labeled as belonging to the community "
-                            + reu.community.name
-                        )
-                        reu.community = None
-                    reu.save()
+                            elif reu.community:
+                                print(
+                                    "REU not located in any community, but was labeled as belonging to the community "
+                                    + reu.community.name
+                                )
+                                reu.community = None
+                            reu.save()
+                        except Exception as e:
+                            print(str(e))
 
             return {"backfill_real_estate_units": "done"}, None
 
         except Exception as e:
+            print(str(e))
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
 

@@ -15,7 +15,7 @@ from database.utils.settings.model_constants.user_media_uploads import (
     UserMediaConstants,
 )
 from database.utils.settings.user_settings import UserPortalSettings
-from api.store.utils import getCarbonImpact
+from carbon_calculator.carbonCalculator import getCarbonImpact
 from django.utils import timezone
 from django.core.files.storage import default_storage
 from django.db.models.query import QuerySet

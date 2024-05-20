@@ -33,7 +33,7 @@ def remove_locked_fields(args):
   return args
 
 
-def _get_or_create_reu_location(args, user=None):
+def _get_or_create_reu_location(args):
   unit_type = args.pop('unit_type', None)
   location = args.pop('location', None)
   
@@ -77,10 +77,6 @@ def _get_or_create_reu_location(args, user=None):
     country=country
   )
   
-  if created:
-    print("Location with zipcode " , zipcode , " created for user " , user.preferred_name)
-  else:
-    print("Location with zipcode " , zipcode , " found for user " , user.preferred_name)
   return reuloc
 
 def _update_action_data_totals(action, household, delta): 
@@ -430,7 +426,7 @@ class UserStore:
       name = args.pop('name', None)
       unit_type = args.pop('unit_type', None)
       
-      reuloc = _get_or_create_reu_location(args, user)
+      reuloc = _get_or_create_reu_location(args)
       reu = RealEstateUnit.objects.create(name=name, unit_type=unit_type)
       reu.address = reuloc
       
@@ -453,14 +449,13 @@ class UserStore:
       if not user:
         return None, CustomMassenergizeError("sign_in_required / provide user_id or user_email")
       name = args.pop('name', None)
-      unit_type = args.pop('unit_type', None)
+
       household_id = args.get('household_id', None)
       if not household_id:
         return None, CustomMassenergizeError("Please provide household_id")
       
-      reuloc = _get_or_create_reu_location(args, user)
-     
-      
+      reuloc = _get_or_create_reu_location(args) 
+    
       reu = RealEstateUnit.objects.get(pk=household_id)
       reu.name = name
       reu.unit_type = args.get("unit_type", "RESIDENTIAL")
@@ -586,8 +581,6 @@ class UserStore:
       else:
         user_info['user_type'] = new_user_type
 
-      # allow home address to be passed in
-      location = args.pop('location', '')
       profile_picture = args.pop("profile_picture", None)
       color = args.pop('color', '')
       
@@ -675,8 +668,14 @@ class UserStore:
       # create their first household, if a location was specified, and if they don't have a household
       reu = user.real_estate_units.all()
       if reu.count() == 0:
-        household = RealEstateUnit.objects.create(name="Home", unit_type="residential", community=community,
-                                                  location=location)
+
+        # RealEstateUnit should have address, not location
+        reuloc = _get_or_create_reu_location(args)
+        print(reuloc.simple_json())
+        household = RealEstateUnit.objects.create(name="Home", unit_type="residential", community=community)
+        household.address = reuloc
+        household.save()
+
         user.real_estate_units.add(household)
 
       user.save()

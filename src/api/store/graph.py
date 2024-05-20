@@ -3,11 +3,12 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.context import Context
 from django.db.models import Q, prefetch_related_objects
 from api.store.team import get_team_users
-from .utils import get_community_or_die, unique_media_filename, getCarbonImpact
+from .utils import get_community_or_die, unique_media_filename
 from sentry_sdk import capture_message
 from typing import Tuple
 from api.services.utils import send_slack_message
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, RUN_SERVER_LOCALLY, IS_PROD, IS_CANARY
+from carbon_calculator.carbonCalculator import getCarbonImpact
 
 def get_households_engaged(community: Community):
 

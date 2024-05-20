@@ -7,7 +7,7 @@ from _main_.utils.massenergize_errors import (
 )
 from _main_.utils.context import Context
 from collections import Counter
-from api.store.utils import get_human_readable_date, getCarbonImpact
+from api.store.utils import get_human_readable_date
 from api.utils.api_utils import get_user_community_ids, is_admin_of_community
 from apps__campaigns.models import Campaign, CampaignActivityTracking, CampaignFollow, CampaignLink, CampaignTechnology, CampaignTechnologyFollow, CampaignTechnologyLike, CampaignTechnologyTestimonial, CampaignTechnologyView, CampaignView, Comment
 from database.models import (
@@ -51,7 +51,7 @@ from django.utils import timezone
 import datetime
 from django.db.models import Count, Sum
 from uuid import UUID
-
+from carbon_calculator.carbonCalculator import getCarbonImpact
 
 EMPTY_DOWNLOAD = (None, None)
 
@@ -437,11 +437,6 @@ class DownloadStore:
     def _get_action_info_cells(self, action):
 
         average_carbon_points = getCarbonImpact(action)
-            if action.calculator_action
-            else int(action.average_carbon_score)
-            if action.average_carbon_score.isdigit()
-            else 0
-        )
 
         is_published = "Yes" if action.is_published else "No"
 

@@ -1,35 +1,14 @@
 from _main_.settings import IS_LOCAL, IS_PROD, IS_CANARY
 from _main_.utils.utils import strip_website
-from database.models import Community, UserProfile, UserActionRel, Action, CustomCommunityWebsiteDomain
-from _main_.utils.massenergize_errors import CustomMassenergizeError, InvalidResourceError
+from database.models import Community, UserProfile, CustomCommunityWebsiteDomain
+from _main_.utils.massenergize_errors import CustomMassenergizeError
 from _main_.utils.context import Context
 from django.db.models import Q
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from database.utils.constants import SHORT_STR_LEN
 import zipcodes
 import datetime
-from carbon_calculator.carbonCalculator import AverageImpact, locality_string
 from sentry_sdk import capture_message
-
-
-def getCarbonImpact(actionRel: UserActionRel, done_only=True): 
-  if not actionRel: return 0
-  if done_only and actionRel.status !="DONE":  return 0
-  
-  locality = locality_string(actionRel.real_estate_unit.address)
-  if actionRel.action and actionRel.action.calculator_action:
-    return AverageImpact(actionRel.action.calculator_action, actionRel.date_completed, locality)
-  else:
-    return actionRel.carbon_impact
-
-def getCarbonImpact(action: Action): 
-  if not action: return 0
-  
-  locality = locality_string(action.community.location.simple_json())
-  if action.calculator_action:
-    return AverageImpact(action.calculator_action, None, locality)
-  else:
-    return 0
 
 def get_community(community_id=None, subdomain=None):
   try:

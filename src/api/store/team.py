@@ -9,7 +9,8 @@ from database.models import Team, UserProfile, Media, Community, TeamMember, Com
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.context import Context
 from _main_.utils.constants import COMMUNITY_URL_ROOT, ADMIN_URL_ROOT
-from .utils import get_community_or_die, get_user_or_die, get_admin_communities, getCarbonImpact, unique_media_filename
+from .utils import get_community_or_die, get_user_or_die, get_admin_communities, unique_media_filename
+from carbon_calculator.carbonCalculator import getCarbonImpact
 from sentry_sdk import capture_message
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
 from typing import Tuple

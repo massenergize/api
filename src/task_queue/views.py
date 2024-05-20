@@ -9,8 +9,8 @@ from api.utils.constants import (
     YEARLY_MOU_TEMPLATE,
 )
 from api.constants import STANDARD_USER, GUEST_USER
-from database.models import FeatureFlag, UserProfile, UserActionRel, Community, CommunityAdminGroup, CommunityMember, Event, RealEstateUnit, Team, Testimonial, Vendor, PolicyConstants, PolicyAcceptanceRecords, CommunitySnapshot, Goal, Action
-from api.store.utils import getCarbonImpact
+from database.models import UserProfile, UserActionRel, Community, CommunityAdminGroup, CommunityMember, Event, RealEstateUnit, Team, Testimonial, Vendor, PolicyConstants, PolicyAcceptanceRecords, CommunitySnapshot, Goal, Action
+from carbon_calculator.carbonCalculator import getCarbonImpact
 from django.utils import timezone
 import datetime
 from django.utils.timezone import utc

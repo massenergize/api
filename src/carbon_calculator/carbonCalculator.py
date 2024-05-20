@@ -114,16 +114,58 @@ def SavePic2Media(picURL):
         print("Error encountered: "+str(e))
         return None
 
-def locality_string(loc):
-    # unpack json location into standard string like "Acton-MA"
-    return str(loc)
+
+def getCarbonImpact(action, done_only=True): 
+  
+    if not action: return 0
+
+    if hasattr(action, "status"):
+        # this is a UserActionRel for a completed or todo action
+        if done_only and action.status !="DONE":  return 0
+
+        locality = locality_string(actionRel.real_estate_unit.location)
+        if action.action and action.action.calculator_action:
+            return AverageImpact(actionRel.action.calculator_action, actionRel.date_completed, locality)
+        else:
+            return action.carbon_impact
+
+    elif hasattr(action, "calculator_action"):
+        # In this case we use the community location (community.locations)
+        location = action.community.locations.first().simple_json()
+        locality = locality_string(location)
+        if action.calculator_action:
+            return AverageImpact(action.calculator_action, None, locality)
+        else:
+            return 0
+    else:
+        return 0
 
 def AverageImpact(action, date=None, locality="default"):
     averageName = action.name + '_average_points'
     impact = getDefault(locality, averageName, date, default=TOKEN_POINTS)
     return impact
 
+def locality_string(loc):
+    # for actions which have been completed, we just know the zipcode
+    # from RealEstateUnit location: " , undefined, undefined, 01720"
+    if type(loc) == str:
+      fields = loc.split(",")
+
+      # unpack json location into standard string like "Acton-MA"
+      return str(loc)
+
+
+    # for actions posted by communities, but not done we use the community location
+    # in a dict
+    elif type(loc) == dict:
+      return str(loc)
+
+    # no location information, use default
+    return "default"
+
+
 class CarbonCalculator:
+    
     def __init__(self, reset=False) :
 
         start = time.time()
@@ -200,6 +242,7 @@ class CarbonCalculator:
         except Exception as e:
             print(str(e))
             print("Calculator initialization skipped")
+
 
     # query actions
     def Query(self,action=None):

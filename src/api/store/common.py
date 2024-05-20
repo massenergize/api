@@ -12,8 +12,8 @@ from database.utils.common import calculate_hash_for_bucket_item
 from xhtml2pdf import pisa
 import pytz
 from _main_.utils.utils import Console
-from api.store.utils import getCarbonScoreFromActionRel
 from database.models import Community, CommunityAdminGroup, Event, Media, Team, UserActionRel
+from carbon_calculator.carbonCalculator import getCarbonImpact
 from django.db.models import Q, Model
 from django.utils import timezone
 import boto3
@@ -107,7 +107,7 @@ def count_action_completed_and_todos(**kwargs):
     for completed_action in completed_actions:
         action_id = completed_action.action.id
         action_name = completed_action.action.title
-        action_carbon = getCarbonScoreFromActionRel(completed_action)
+        action_carbon = getCarbonImpact(completed_action)
         done = 1 if completed_action.status == "DONE" else 0
         todo = 1 if completed_action.status == "TODO" else 0
 
