@@ -1,4 +1,6 @@
 import csv
+import logging
+
 from django.http import HttpResponse
 from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
@@ -23,6 +25,7 @@ from django.db.models import Count
 from task_queue.nudges.user_event_nudge import prepare_user_events_nudge
 
 from _main_.celery.app import app
+from django.core.cache import cache
 
 
 def generate_csv_and_email(data, download_type, community_name=None, email=None,filename=None):
@@ -284,27 +287,37 @@ def deactivate_user(self,email):
     if user:
         user.delete()
 
-
-
-
-
-
-
 @app.task
 def send_scheduled_email(subject, message, recipients, image):
+    cache_key = f"BULK_MESSAGING_CACHE_KEY_{subject}"
+    
+    if cache.get(cache_key):
+        return
+    
+    cache.set(cache_key, True)
+    
     try:
         data = {
            "body": message,
            "subject": subject,
            "image":image
         }
-        send_massenergize_email_with_attachments(BROADCAST_EMAIL_TEMPLATE, data, recipients, None, None)
+        is_sent = send_massenergize_email_with_attachments(BROADCAST_EMAIL_TEMPLATE, data, recipients, None, None)
+        if is_sent:
+            logging.info(f"Successfully sent email to {str(recipients)}")
 
     except Exception as e:
-        print(f"Error sending email: {str(e)}")
+        logging.error(f"Error sending email: {str(e)}")
+        
+    finally:
+        cache.delete(cache_key)
         
 @app.task
 def automatically_activate_nudge(community_nudge_setting_id):
+    cache_key= f"AUTO_ACTIVATE_NUDGE_CACHE_KEY_{community_nudge_setting_id}"
+    if cache.get(cache_key):
+        return
+    cache.set(cache_key, True)
     try:
         community_nudge_setting = CommunityNotificationSetting.objects.filter(id=community_nudge_setting_id).first()
         if not community_nudge_setting:
@@ -312,7 +325,12 @@ def automatically_activate_nudge(community_nudge_setting_id):
         community_nudge_setting.activate_on = None
         community_nudge_setting.is_active = True
         community_nudge_setting.save()
-        print(f"Successfully activated nudge for community: {community_nudge_setting.community.name}")
+        
+        logging.info(f"Successfully activated nudge for community: {community_nudge_setting.community.name}")
+        
     except Exception as e:
-        print(f"Error automatically activating nudge: {str(e)}")
+        logging.error(f"Error automatically activating nudge: {str(e)}")
+    
+    finally:
+        cache.delete(cache_key)
     
