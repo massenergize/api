@@ -100,7 +100,7 @@ class WebhookService:
 
         if not db_msg_id and not email:
             return {"success":False}, None
-        
+      
         res, err = self.message_service.reply_from_community_admin(context, {
             "title": f"Re: {subject}",
             "body": reply,
@@ -112,6 +112,7 @@ class WebhookService:
             })
 
         if err:
+          print("== webhook service error ==", err)
           return None, str(err)
     
         return {"success":True}, None

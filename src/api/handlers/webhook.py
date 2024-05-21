@@ -30,8 +30,9 @@ class WebhookHandler(RouteHandler):
   def process_inbound_webhook(self, request):
       context: Context = request.context
       args: dict = json.loads(request.body)
+      
       res, err = self.service.process_inbound_webhook(context, args)
 
       if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
+        return err
       return MassenergizeResponse(data=res)

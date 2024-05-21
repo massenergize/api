@@ -55,7 +55,7 @@ class MessageStore:
     def get_message_info(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
         try:
             message_id = args.pop("message_id", None) or args.pop("id", None)
-            is_inbound = args.pop("is_inbound", False)
+            is_inbound = args.get("is_inbound", False)
             if not message_id:
                 return None, InvalidResourceError()
             message = Message.objects.filter(pk=message_id).first()
