@@ -8,7 +8,7 @@ from _main_.settings import AWS_S3_REGION_NAME, AWS_STORAGE_BUCKET_NAME, IS_LOCA
 from _main_.utils.common import serialize, serialize_all
 from api.constants import CSV_FIELD_NAMES
 from carbon_calculator.models import Action
-from database.utils.common import calculate_hash_for_bucket_item
+from database.utils.common import calculate_hash_for_bucket_item, get_image_size_from_bucket
 from xhtml2pdf import pisa
 import pytz
 from _main_.utils.utils import Console
@@ -225,12 +225,12 @@ def find_duplicate_items(_serialize=False, **kwargs):
         .annotate(hash_count=Count("hash"))
         .filter(hash_count__gt=1)
     )
-    print(duplicate_hashes)
+    # print(duplicate_hashes)
 
-    if IS_LOCAL:
-        #check_hashes = Media.objects.exclude(hash__exact="").exclude(hash=None).values("hash").annotate(hash_count=Count("hash"))
-        check_hashes = Media.objects.exclude(hash__exact="").exclude(hash=None).values("hash","id").annotate(Count('hash'))
-        print(check_hashes, check_hashes.count())
+    # if IS_LOCAL:
+    #     #check_hashes = Media.objects.exclude(hash__exact="").exclude(hash=None).values("hash").annotate(hash_count=Count("hash"))
+    #     check_hashes = Media.objects.exclude(hash__exact="").exclude(hash=None).values("hash","id").annotate(Count('hash'))
+    #     # print(check_hashes, check_hashes.count())
 
      # Now, retrieve the media items associated with the duplicate hashes
     if community_ids: 
@@ -260,6 +260,7 @@ def group_duplicates(duplicates, _serialize=False):
             old.append(json)
         else:
             response[item.hash] = [json]
+
 
     return response
 
@@ -483,6 +484,23 @@ def arrange_for_csv(usage_object: dict):
         return count, text
 
 
+def compile_duplicate_size(image): 
+    if not image: return 0 
+    tracker = {}
+    _sum = 0 
+
+    for img in image:
+        url = img.file.url
+        same_url =  tracker.get(url, None)
+        if not same_url: 
+            size = get_image_size_from_bucket(img.get_s3_key())
+            _sum += size 
+        tracker[url] = size 
+    print("Lets see tracker", tracker)
+    return _sum 
+
+
+
 def summarize_duplicates_into_csv(grouped_dupes, filename = None, field_names = CSV_FIELD_NAMES):
         """
         Returns: 
@@ -493,13 +511,20 @@ def summarize_duplicates_into_csv(grouped_dupes, filename = None, field_names = 
             combined = resolve_relations(array)
             usage_count, usage_summary = arrange_for_csv(combined.get("usage", {}))
             media = array[0]
+            rest = array[1:]
+            # total = sum([ get_image_size_from_bucket(m.get_s3_key()) for m in rest])
+            total = compile_duplicate_size(rest)
+            print("SIZES ", total)
+            print("-----------")
             obj = {
                 "media_url": media.file.url,
                 "primary_media_id": media.id,  # No other criteria is used to determine which media is going to be the primary media. The first 1 is simply chosen...
                 "usage_stats": usage_count,
                 "usage_summary": usage_summary,
-                "duplicates": ", ".join([m.file.url for m in array[1:]]),
-                "ids_of_duplicates": ", ".join([str(m.id) for m in array[1:]]),
+                "duplicates": ", ".join([m.file.url for m in rest]),
+                "ids_of_duplicates": ", ".join([str(m.id) for m in rest]),
+                "readable_compiled_size_of_duplicates": convert_bytes_to_human_readable(total),
+                "compiled_size_of_duplicates" : total
             }
             csv_data.append(obj)
 
@@ -508,7 +533,37 @@ def summarize_duplicates_into_csv(grouped_dupes, filename = None, field_names = 
 
         return csv_file
 
+def convert_bytes_to_human_readable(size):
+    """
+    Converts bytes into human readable image sizes.
 
+    Parameters:
+    - size (int): The size in bytes.
+
+    Returns:
+    - str: The human readable size.
+    """
+    # Define the units and their corresponding values
+    units = {
+        "B": {"value":1, "prev": "B"},
+        "KB": {"value":1024, "prev": "B"},
+        "MB": {"value":1024 ** 2, "prev": "KB"},
+        "GB": {"value":1024 ** 3, "prev": "MB"},
+        "TB": {"value":1024 ** 4, "prev": "GB"},
+    }
+    # Find the appropriate unit to use
+    for unit in units:
+        if size < units[unit].get("value"):
+            if size != 0:
+                unit = units[unit].get("prev")
+            break
+    # Calculate the size in the appropriate unit
+    size /= units[unit].get("value")
+    # Format the size with two decimal places
+    size = "{:.2f}".format(size)
+
+    # Return the formatted size with the unit
+    return f"{size}{unit}"
 
 def get_admins_of_communities(community_ids): 
      groups = CommunityAdminGroup.objects.filter(community__id__in = community_ids)

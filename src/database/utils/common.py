@@ -204,3 +204,13 @@ def calculate_hash_for_bucket_item(key, bucket=AWS_STORAGE_BUCKET_NAME):
         print(f"Error calculating hash for {key}: {e}")
         print("........................................")
         return None
+    
+def get_image_size_from_bucket(key,bucket=AWS_STORAGE_BUCKET_NAME): 
+  try:
+      response = s3.get_object(Bucket=bucket, Key=key)
+      size = response["ContentLength"]
+      return size
+  except Exception as e:
+      print("Error retrieving image size...")
+      
+  return None

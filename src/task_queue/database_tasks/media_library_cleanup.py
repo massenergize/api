@@ -44,7 +44,6 @@ def remove_duplicate_images(task):
         return "Failure"
 
 def clean_and_notify(ids,community,notification_receiver, do_updates): 
-        print(ids)
         grouped_dupes = find_duplicate_items(False, community_ids=ids)
         num_of_dupes_in_all = get_duplicate_count(grouped_dupes)
         csv_file = summarize_duplicates_into_csv(grouped_dupes)
