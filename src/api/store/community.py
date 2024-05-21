@@ -15,6 +15,7 @@ from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from _main_.utils.massenergize_errors import (CustomMassenergizeError, InvalidResourceError, MassEnergizeAPIError,
                                               NotAuthorizedError)
+from _main_.utils.metrics import timed
 from _main_.utils.utils import strip_website
 from api.services.utils import send_slack_message
 from api.store.common import count_action_completed_and_todos
@@ -510,6 +511,7 @@ class CommunityStore:
 
         return distance
 
+    @timed
     def get_community_info(
         self, context: Context, args
     ) -> Tuple[dict, MassEnergizeAPIError]:
@@ -572,9 +574,16 @@ class CommunityStore:
     ) -> Tuple[dict, MassEnergizeAPIError]:
         try:
             community = get_community_or_die(context, args)
-            user = get_user_from_context(context)
+
+            # FIX: this routine also used for Admin portal when adnin added to community
+            user_id = args.get("user_id", None)
+            if (user_id):
+                user = UserProfile.objects.filter(pk=user_id).first()
+            else:
+                user = get_user_from_context(context)
             if not user:
                 return None, CustomMassenergizeError("User not found")
+            
             user.communities.add(community)
             user.save()
 
@@ -597,6 +606,12 @@ class CommunityStore:
             user = get_user_from_context(context)
             if not user:
                 return None, CustomMassenergizeError("User not found")
+
+            # Don't allow leaving a community that you are an admin of
+            admin_group: CommunityAdminGroup = CommunityAdminGroup.objects.filter(community=community).first()
+            is_admin = admin_group.members.filter(id=user.id).exists()
+            if is_admin:
+                return None, CustomMassenergizeError("You can't leave a community you are an admin of.  Please have yourself removed as an admin, or contact support@massenergize.org")
 
             user.communities.remove(community)
             user.save()

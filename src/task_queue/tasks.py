@@ -50,7 +50,6 @@ def run_some_task(self, task_id):
 				task.status = SKIPPED
 				log_status(task, "Another instance of the task is already running")
 			
-		
 		if task and should_run:
 			func = FUNCTIONS.get(task.job_name)
 			if func:
@@ -68,4 +67,4 @@ def run_some_task(self, task_id):
 			task.save()
 			
 	except Exception as e:
-		logger.error(f"Task: {task_id}, Status: ❌, Info: {str(e)}, key:{FAILURE_LOG_KEY}")
+		logger.error(f"Task: {task_id}, Status: ❌, Info: {str(e)}")

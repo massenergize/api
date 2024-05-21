@@ -69,7 +69,7 @@ class TeamService:
     team, err = self.store.delete_team(args,context)
     if err:
       return None, err
-    return serialize(team), None
+    return team.info(), None
 
   def join_team(self,context, args) -> Tuple[dict, MassEnergizeAPIError]:
     team, err = self.store.join_team(context,args)

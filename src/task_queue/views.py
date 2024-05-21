@@ -424,7 +424,6 @@ def send_admin_mou_notification(task=None):
     admins = UserProfile.objects.filter(is_deleted=False, is_community_admin=True)
     for admin in admins:
         admin_name = admin.full_name
-        print(admin_name)
         try:
             # Get last MOU record signed by the admin
             last_record = admin.accepted_policies.filter(

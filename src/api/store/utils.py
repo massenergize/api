@@ -1,4 +1,5 @@
 from _main_.settings import IS_LOCAL, IS_PROD, IS_CANARY
+from _main_.utils.metrics import timed
 from _main_.utils.utils import strip_website
 from database.models import Community, UserProfile, CustomCommunityWebsiteDomain
 from _main_.utils.massenergize_errors import CustomMassenergizeError
@@ -33,7 +34,7 @@ def get_user(user_id, email=None):
     capture_message(str(e), level="error")
     return None, CustomMassenergizeError(e)
 
-
+@timed
 def get_community_or_die(context: Context, args) -> Community:
   subdomain = args.pop('subdomain', None)
   community_id = args.pop('community_id', None)
