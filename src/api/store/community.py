@@ -516,7 +516,6 @@ class CommunityStore:
                 return None, InvalidResourceError()
 
             if community.goal:
-                print("graph_actions_completed")
                 category_graph, err = self.graph_store.graph_actions_completed(
                     context, {"community_id": community.id}
                 )
@@ -551,7 +550,6 @@ class CommunityStore:
                     if newtotal != total:
                         goal.save()
 
-            print("returning community")
             return community, None
         except Exception as e:
             capture_exception(e)

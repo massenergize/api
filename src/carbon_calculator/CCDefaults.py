@@ -101,7 +101,7 @@ class CCD():
             if locality in self.DefaultsByLocality:
                 options.append(locality)
         # default is the standard option
-        options.append["default"]
+        options.append("default")
 
         for locality in options:
             if variable in self.DefaultsByLocality[locality]:
