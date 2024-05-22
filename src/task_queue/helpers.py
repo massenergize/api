@@ -19,7 +19,10 @@ def is_time_to_run(task):
 	if last_run is None:
 		return True
 	
-	if freq == ONE_OFF and not last_run == today:
+	
+	# One-offs can be run multiple times in a day
+	five_minutes_ago = today - relativedelta(minutes=5)
+	if freq == ONE_OFF and not last_run == five_minutes_ago:
 		return True
 	
 	if freq == DAILY:
