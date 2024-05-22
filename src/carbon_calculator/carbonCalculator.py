@@ -123,45 +123,56 @@ def getCarbonImpact(action, done_only=True):
         # this is a UserActionRel for a completed or todo action
         if done_only and action.status !="DONE":  return 0
 
-        locality = locality_string(actionRel.real_estate_unit.location)
+        household = action.real_estate_unit
+        if household.address:
+            loc_options = locality_options(action.real_estate_unit.address.simple_json())
+        else:
+            if household.community:
+                location = household.community.locations.first().simple_json()
+                loc_options = locality_options(location)
+            else:    
+                loc_options = []   
         if action.action and action.action.calculator_action:
-            return AverageImpact(actionRel.action.calculator_action, actionRel.date_completed, locality)
+            return AverageImpact(action.action.calculator_action, action.date_completed, loc_options)
         else:
             return action.carbon_impact
 
     elif hasattr(action, "calculator_action"):
-        # In this case we use the community location (community.locations)
+        # This is an Action posted by the community.  In this case we use the community location (community.locations)
         location = action.community.locations.first().simple_json()
-        locality = locality_string(location)
+        loc_options = locality_options(location)
         if action.calculator_action:
-            return AverageImpact(action.calculator_action, None, locality)
+            return AverageImpact(action.calculator_action, None, loc_options)
         else:
             return 0
     else:
         return 0
 
-def AverageImpact(action, date=None, locality="default"):
+def AverageImpact(action, date=None, loc_options=[]):
     averageName = action.name + '_average_points'
-    impact = getDefault(locality, averageName, date, default=TOKEN_POINTS)
+    impact = getDefault(loc_options, averageName, date, default=TOKEN_POINTS)
     return impact
 
-def locality_string(loc):
-    # for actions which have been completed, we just know the zipcode
-    # from RealEstateUnit location: " , undefined, undefined, 01720"
-    if type(loc) == str:
-      fields = loc.split(",")
 
-      # unpack json location into standard string like "Acton-MA"
-      return str(loc)
-
-
-    # for actions posted by communities, but not done we use the community location
-    # in a dict
-    elif type(loc) == dict:
-      return str(loc)
-
-    # no location information, use default
-    return "default"
+def locality_options(loc):
+    # for actions which have been completed, use RealEstateUnit location
+    # for actions posted by communities, but not done we use the Community location
+    # return options in precedence order: city, county, state, i.e. ["Concord-MA", "Middlesex County-MA", "MA"]
+    options = []
+    if type(loc) == dict:
+        city = loc.get("city")
+        county = loc.get("county")
+        state = loc.get("state")
+        if city and state:
+            options.append(city + "-" + state)
+            if county:
+                options.append(county + "-" + state)
+            options.append(state)
+        return options
+    # not usual:
+    # invalid location information, use default
+    print("carbon calculator: Locality type = "+str(type(loc))+ " loc = "+str(loc))
+    return []
 
 
 class CarbonCalculator:
