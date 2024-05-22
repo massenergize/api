@@ -218,15 +218,15 @@ class CommunityStore:
                         raise Exception("No zip code entry found for zip=" + location)
 
                     # get_or_create gives an error if multiple such locations exist (which can happen)
-                    # loc, created = Location.objects.get_or_create(location_type='ZIP_CODE_ONLY', zipcode=location, city=city)
-                    loc, created = Location.objects.get_or_create(
+                    loc = Location.objects.filter(
                         location_type="FULL_ADDRESS", zipcode=location, city=city, county=county, state=state
                     )
-                    if created:
-                        print("Zipcode " + location + " created for town " + city)
+                    if not loc:
+                        loc = Location.objects.create(
+                            location_type="FULL_ADDRESS", zipcode=location, city=city, county=county, state=state
+                        )
                     else:
-                        print("Zipcode " + location + " found for town " + city)
-
+                        loc = loc.first()
                     self._check_geography_unique(community, geography_type, location)
 
                 else:
@@ -241,38 +241,28 @@ class CommunityStore:
                     zips = zipcodes.filter_by(
                         city=town, state=state, zip_code_type="STANDARD"
                     )
-                    print("Number of zipcodes = " + str(len(zips)))
                     if len(zips) > 0:
                         for zip in zips:
-                            zipcode = zip["zip_code"]
+                            zipcode = zip.get("zip_code")
+                            county = zip.get("county")
 
                             # get_or_create gives an error if multiple such locations exist (which can happen)
                             # loc, created = Location.objects.get_or_create(location_type='ZIP_CODE_ONLY', zipcode=location, city=city)
-                            loc, created = Location.objects.get_or_create(
-                                location_type="FULL_ADDRESS", zipcode=location, city=town, state=state
+                            loc = Location.objects.filter(
+                                location_type="FULL_ADDRESS", zipcode=zipcode, city=town, county=county, state=state
                             )
-                            if created:
-                                print("Location " + zipcode + " created for town " + town)
+                            if not loc:
+                                loc = Location.objects.create(
+                                    location_type="FULL_ADDRESS", zipcode=location, city=city, county=county, state=state
+                                )
                             else:
-                                print("Location " + zipcode + " found for town " + town)
-
-                            self._check_geography_unique(
-                                community, geography_type, zipcode
-                            )
+                                loc = loc.first()
+                            self._check_geography_unique(community, geography_type, zipcode)
 
                     else:
-                        print(
-                            "No zipcodes found corresponding to town "
-                            + town
-                            + ", "
-                            + state
-                        )
-                        raise Exception(
-                            "No zipcodes found corresponding to city "
-                            + town
-                            + ", "
-                            + state
-                        )
+                        msg = "No zipcodes found corresponding to town " + town + ", " + state    
+                        raise Exception(msg)
+                    
             elif geography_type == "CITY":
                 # check that this city is found in the zipcodes list
                 ss = location.split("-")
@@ -285,26 +275,21 @@ class CommunityStore:
                 zips = zipcodes.filter_by(
                     city=city, state=state, zip_code_type="STANDARD"
                 )
-                print("Number of zipcodes = " + str(len(zips)))
                 if len(zips) > 0:
                     # get_or_create gives an error if multiple such locations exist (which can happen)
-                    # loc, created = Location.objects.get_or_create(location_type='ZIP_CODE_ONLY', zipcode=location, city=city)
                     county = zips[0].get("county")
-                    loc, created = Location.objects.get_or_create(
+                    loc = Location.objects.filter(
                         location_type="FULL_ADDRESS", zipcode=location, city=city, county=county, state=state
                     )
-                    if created:
-                        print("City " + city + " created")
+                    if not loc:
+                        loc = Location.objects.create(
+                            location_type="FULL_ADDRESS", zipcode=location, city=city, county=county, state=state
+                        )
                     else:
-                        print("City " + city + " found")
-
+                        loc = loc.first()
                 else:
-                    print(
-                        "No zipcodes found corresponding to city " + city + ", " + state
-                    )
-                    raise Exception(
-                        "No zipcodes found corresponding to city " + city + ", " + state
-                    )
+                    msg = "No zipcodes found corresponding to city " + city + ", " + state
+                    raise Exception(msg)
 
                 self._check_geography_unique(community, geography_type, city)
             elif geography_type == "COUNTY":
@@ -319,10 +304,8 @@ class CommunityStore:
                 zips = zipcodes.filter_by(
                     county=county, state=state, zip_code_type="STANDARD"
                 )
-                print("Number of zipcodes = " + str(len(zips)))
                 if len(zips) > 0:
                     # get_or_create gives an error if multiple such locations exist (which can happen)
-                    # loc, created = Location.objects.get_or_create(location_type='ZIP_CODE_ONLY', zipcode=location, city=city)
                     loc = Location.objects.filter(
                         location_type="COUNTY_ONLY", county=county, state=state
                     )
@@ -330,24 +313,12 @@ class CommunityStore:
                         loc = Location.objects.create(
                             location_type="COUNTY_ONLY", county=county, state=state
                         )
-                        print("County " + county + " created")
                     else:
                         loc = loc.first()
-                        print("County " + county + " found")
 
                 else:
-                    print(
-                        "No zipcodes found corresponding to county "
-                        + county
-                        + ", "
-                        + state
-                    )
-                    raise Exception(
-                        "No zipcodes found corresponding to county "
-                        + county
-                        + ", "
-                        + state
-                    )
+                    msg = "No zipcodes found corresponding to county " + county + ", " + state
+                    raise Exception(msg)
 
                 self._check_geography_unique(community, geography_type, county)
 
@@ -366,15 +337,11 @@ class CommunityStore:
                         loc = Location.objects.create(
                             location_type="STATE_ONLY", state=state
                         )
-                        print("State " + state + " created")
                     else:
                         loc = loc.first()
-                        print("State " + state + " found")
                 else:
-                    print("No zipcodes found corresponding to state " + location)
-                    raise Exception(
-                        "No zipcodes found corresponding to state " + location
-                    )
+                    msg = "No zipcodes found corresponding to state " + location
+                    raise Exception(msg)
 
                 self._check_geography_unique(community, geography_type, location)
 
@@ -382,7 +349,6 @@ class CommunityStore:
                 # check that this state is found in the zipcodes list
                 country = location
                 zips = zipcodes.filter_by(country=country, zip_code_type="STANDARD")
-                print("Number of zipcodes = " + str(len(zips)))
                 if len(zips) > 0:
                     # get_or_create gives an error if multiple such locations exist (which can happen)
                     # loc, created = Location.objects.get_or_create(location_type='ZIP_CODE_ONLY', zipcode=location, city=city)
@@ -393,15 +359,11 @@ class CommunityStore:
                         loc = Location.objects.create(
                             location_type="COUNTRY_ONLY", country=country
                         )
-                        print("Country " + country + " created")
                     else:
                         loc = loc.first()
-                        print("Country " + country + " found")
                 else:
-                    print("No zipcodes found corresponding to country " + location)
-                    raise Exception(
-                        "No zipcodes found corresponding to country " + location
-                    )
+                    msg = "No zipcodes found corresponding to country " + location
+                    raise Exception(msg)
 
                 self._check_geography_unique(community, geography_type, location)
 

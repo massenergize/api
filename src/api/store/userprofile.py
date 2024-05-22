@@ -671,7 +671,6 @@ class UserStore:
 
         # RealEstateUnit should have address, not location
         reuloc = _get_or_create_reu_location(args)
-        print(reuloc.simple_json())
         household = RealEstateUnit.objects.create(name="Home", unit_type="residential", community=community)
         household.address = reuloc
         household.save()
