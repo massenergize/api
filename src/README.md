@@ -17,16 +17,17 @@ Welcome to the MassEnergize API! We're thrilled to have you here. Our mission is
 
 Ready to get started? Awesome! Here’s what you need to do first:
 
-1. **[Setup Postgres](#setup_postgres)**:
+1. **[Setting up your domain hosts](#domain_hosts)** `check appendix 1.0`
+
+   - Set up a new domain pointing from your localhost
+
+2. **[Setup Postgres](#setup_postgres)**: `check appendix 1.1`
 
    - Install PostgreSQL and create a database for MassEnergize.
 
-2. **[Firebase Setup](#setup_firebase)**:
+3. **[Firebase Setup](#setup_firebase)**: `check appendix 1.2`
 
    - Head over to [firebase.google.com](https://firebase.google.com), create a project, enable authentication, and download the service credentials JSON.
-
-3. **[Setting up your domain hosts](#domain_hosts)**
-   - Set up a new domain pointing from your localhost
 
 # How to Run the API (Locally)
 
@@ -187,7 +188,7 @@ Press `control(^) + x` to exit the file
   ```sql
 
   CREATE USER username WITH PASSWORD 'your password';  <!-- to create a new user -->
-  SELECT username FROM pg_user;  <!-- lists all users - to check if createed user exist -->
+  SELECT username FROM pg_user;  <!-- lists all users - to check if createed user exists -->
   ```
 
   _creating the database_
@@ -233,7 +234,6 @@ DATABASE_PORT=5432
 EMAIL=
 EMAIL_PASSWORD=
 EMAIL_PORT=
-FIREBASE_STORAGE_URL=""
 RECAPTCHA_SECRET_KEY=
 RECAPTCHA_SITE_KEY=
 CACHE_BACKEND=django.core.cache.backends.db.DatabaseCache

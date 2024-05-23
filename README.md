@@ -4,13 +4,14 @@
  <i align="center">This repo contains the code for the massenergize API that powers all the massenergize websites and mobile apps.</p>
 </i>
   <p align="center">
-    <a href="https://github.com/anuraghazra/github-readme-stats/issues/new?assignees=&labels=bug&projects=&template=bug_report.yml">Report Bug</a>
+    <a href="https://github.com/massenergize/api/issues/new?assignees=&labels=API%2C+bug%2C+enhancement&projects=&template=bug_report.md&title=">Report Bug</a>
     ·
-    <a href="https://github.com/anuraghazra/github-readme-stats/issues/new?assignees=&labels=enhancement&projects=&template=feature_request.yml">Request Feature</a>
+    <a href="https://github.com/massenergize/api/issues/new?assignees=&labels=API%2C+enhancement&projects=&template=feature.md&title=%5BFeature%5D">Request Feature</a>
     ·
-    <a href="https://github.com/anuraghazra/github-readme-stats/discussions/1770">FAQ</a>
+    <!-- [FAQ](src/README.md) -->
+    <a href="src/FAQs.md">FAQ</a>
     ·
-    <a href="https://github.com/anuraghazra/github-readme-stats/discussions/new?category=q-a">Ask Question</a>
+    <a href="https://github.com/massenergize/api/discussions/new?category=q-a">Ask Question</a>
   </p>
 </p>
 
@@ -75,7 +76,7 @@ To keep our mission on track, please follow these guidelines:
 
 Need help or just want to chat with fellow eco-warriors? Here’s how you can reach us:
 
-- **GitHub Issues**: [Open an issue](https://github.com/anuraghazra/github-readme-stats/issues/new?assignees=&labels=bug&projects=&template=bug_report.yml) for questions, bugs, or suggestions.
+- **GitHub Issues**: [Open an issue](https://github.com/massenergize/api/issues/new?assignees=&labels=API%2C+bug%2C+enhancement&projects=&template=bug_report.md&title=) for questions, bugs, or suggestions.
 <!-- - **Discord**: Join our [Discord community](link-to-discord) for real-time support, discussion, and climate memes. -->
 - **Email**: Drop us a line at [massenergize mail](mailto:info@massenergize.org) if you prefer traditional communication.
 
