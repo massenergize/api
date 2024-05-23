@@ -8,7 +8,6 @@
     ·
     <a href="https://github.com/massenergize/api/issues/new?assignees=&labels=API%2C+enhancement&projects=&template=feature.md&title=%5BFeature%5D">Request Feature</a>
     ·
-    <!-- [FAQ](src/README.md) -->
     <a href="src/FAQs.md">FAQ</a>
     ·
     <a href="https://github.com/massenergize/api/discussions/new?category=q-a">Ask Question</a>
