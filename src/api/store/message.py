@@ -55,12 +55,13 @@ class MessageStore:
     def get_message_info(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
         try:
             message_id = args.pop("message_id", None) or args.pop("id", None)
+            is_inbound = args.get("is_inbound", False)
             if not message_id:
                 return None, InvalidResourceError()
             message = Message.objects.filter(pk=message_id).first()
             community_id = message.community.id if message.community else None
-
-            if not is_admin_of_community(context,community_id):
+         
+            if not is_admin_of_community(context,community_id) and not is_inbound:
                 return None, NotAuthorizedError()
 
             if not message:
