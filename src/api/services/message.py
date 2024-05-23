@@ -56,7 +56,7 @@ class MessageService:
       old_body = "\r\n\r\n============================================\r\nIn reply to the following message received "+orig_date + ":\r\n\r\n" + message.body
       
       if is_inbound:
-        reply_body = f'Hello {message.user_name},\r\n\r\nThanks for reaching out!\r\n {body} \r\n\r\nPlease let me know if you have any questions.\r\n\r\nSincerely,\r\n{message.community.name} Team' + old_body
+        reply_body = f'Hello {message.user_name},\r\n\r\nThanks for reaching out!\r\n {body} \r\n\r\nPlease let me know if you have any questions.\r\n\r\nSincerely,\r\n{reply.user.full_name}' + old_body
       else:
         reply_body = body + old_body
 
