@@ -1,6 +1,6 @@
 <p align="center">
  <img width="100px" src="https://www.massenergize.org/wp-content/uploads/2023/03/MassEnergize-logo.png" align="center" alt="MassEnergize Logo" />
- <h2 align="center">Masenergize API</h2>
+ <h2 align="center">MassEnergize API</h2>
  <i align="center">This repo contains the code for the massenergize API that powers all the massenergize websites and mobile apps.</p>
 </i>
   <p align="center">
