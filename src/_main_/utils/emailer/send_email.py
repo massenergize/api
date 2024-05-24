@@ -40,7 +40,6 @@ def send_massenergize_email(subject, msg, to, sender=None):
 
 def send_massenergize_email_with_attachments(temp, t_model, to, file, file_name, sender=None):
   if is_test_mode():
-    print("It did come here, test mode")
     return True
   t_model = {**t_model, "is_dev":is_dev_env()}
 
