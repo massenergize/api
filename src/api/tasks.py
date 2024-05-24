@@ -1,31 +1,28 @@
 import csv
+import datetime
 import logging
 
+from celery import shared_task
+from django.db.models import Count
 from django.http import HttpResponse
+from django.utils import timezone
+from django.utils.timezone import utc
+
 from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
-from api.constants import ACTIONS, CAMPAIGN_INTERACTION_PERFORMANCE_REPORT, CAMPAIGN_PERFORMANCE_REPORT, CAMPAIGN_VIEWS_PERFORMANCE_REPORT, COMMUNITIES, FOLLOWED_REPORT, LIKE_REPORT, LINK_PERFORMANCE_REPORT, METRICS, SAMPLE_USER_REPORT, TEAMS, USERS, CADMIN_REPORT, SADMIN_REPORT, COMMUNITY_PAGEMAP
-from api.store.download import DownloadStore
-from api.constants import DOWNLOAD_POLICY
+from api.constants import ACTIONS, CADMIN_REPORT, CAMPAIGN_INTERACTION_PERFORMANCE_REPORT, CAMPAIGN_PERFORMANCE_REPORT, \
+    CAMPAIGN_VIEWS_PERFORMANCE_REPORT, COMMUNITIES, COMMUNITY_PAGEMAP, DOWNLOAD_POLICY, FOLLOWED_REPORT, LIKE_REPORT, \
+    LINK_PERFORMANCE_REPORT, METRICS, SAMPLE_USER_REPORT, TEAMS, USERS
 from api.store.common import create_pdf_from_rich_text, sign_mou
-from api.store.utils import get_user_from_context
-from api.utils.api_utils import get_sender_email
-from database.models import CommunityNotificationSetting, Policy
-from task_queue.nudges.cadmin_events_nudge import generate_event_list_for_community, send_events_report
-from api.store.utils import get_community, get_user
-from celery import shared_task
 from api.store.download import DownloadStore
-from api.utils.constants import BROADCAST_EMAIL_TEMPLATE, CADMIN_EMAIL_TEMPLATE, DATA_DOWNLOAD_TEMPLATE, SADMIN_EMAIL_TEMPLATE
-from database.models import Community, CommunityAdminGroup, CommunityMember, UserActionRel, UserProfile
-from django.utils import timezone
-import datetime
-from django.utils.timezone import utc
-from django.db.models import Count
-
+from api.store.utils import get_community, get_user, get_user_from_context
+from api.utils.api_utils import get_sender_email
+from api.utils.constants import BROADCAST_EMAIL_TEMPLATE, CADMIN_EMAIL_TEMPLATE, DATA_DOWNLOAD_TEMPLATE, \
+    SADMIN_EMAIL_TEMPLATE
+from database.models import Community, CommunityAdminGroup, CommunityMember, CommunityNotificationSetting, Policy, \
+    UserActionRel, UserProfile
+from task_queue.nudges.cadmin_events_nudge import generate_event_list_for_community, send_events_report
 from task_queue.nudges.user_event_nudge import prepare_user_events_nudge
-
-from _main_.celery.app import app
-from django.core.cache import cache
 
 
 def generate_csv_and_email(data, download_type, community_name=None, email=None,filename=None):
@@ -287,15 +284,8 @@ def deactivate_user(self,email):
     if user:
         user.delete()
 
-@app.task
-def send_scheduled_email(subject, message, recipients, image):
-    cache_key = f"BULK_MESSAGING_CACHE_KEY_{subject}"
-    
-    if cache.get(cache_key):
-        return
-    
-    cache.set(cache_key, True)
-    
+@shared_task(bind=True)
+def send_scheduled_email(self,subject, message, recipients, image):
     try:
         data = {
            "body": message,
@@ -309,15 +299,8 @@ def send_scheduled_email(subject, message, recipients, image):
     except Exception as e:
         logging.error(f"Error sending email: {str(e)}")
         
-    finally:
-        cache.delete(cache_key)
-        
-@app.task
-def automatically_activate_nudge(community_nudge_setting_id):
-    cache_key= f"AUTO_ACTIVATE_NUDGE_CACHE_KEY_{community_nudge_setting_id}"
-    if cache.get(cache_key):
-        return
-    cache.set(cache_key, True)
+@shared_task(bind=True)
+def automatically_activate_nudge(self,community_nudge_setting_id):
     try:
         community_nudge_setting = CommunityNotificationSetting.objects.filter(id=community_nudge_setting_id).first()
         if not community_nudge_setting:
@@ -330,7 +313,4 @@ def automatically_activate_nudge(community_nudge_setting_id):
         
     except Exception as e:
         logging.error(f"Error automatically activating nudge: {str(e)}")
-    
-    finally:
-        cache.delete(cache_key)
     
