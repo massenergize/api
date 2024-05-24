@@ -50,7 +50,7 @@ class MediaLibraryStore:
 
     def print_duplicates(self, args, context: Context):
         grouped_dupes = find_duplicate_items(False,**args)
-        filename = "summary-of-duplicates" 
+        filename = "Summary-of-duplicates" 
         csv_file = summarize_duplicates_into_csv(grouped_dupes,filename)
 
         response = HttpResponse(content_type="text/csv")

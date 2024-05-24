@@ -20,7 +20,9 @@ from database.models import FeatureFlag
 from task_queue.models import Task
 
 
-DEFAULT_SUPER_ADMIN_EMAIL = "mrfimpong@gmail.com"
+
+
+DEFAULT_SUPER_ADMIN_EMAIL = "brad@massenergize.org"
 def remove_duplicate_images(task : Task = None):
     """
     This checks all media on the platform and removes all duplicates.
