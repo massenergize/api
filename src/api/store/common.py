@@ -498,15 +498,13 @@ def compile_duplicate_size(image):
     if not image: return 0 
     tracker = {}
     _sum = 0 
-
     for img in image:
         url = img.file.url
         same_url =  tracker.get(url, None)
-        size = 0
         if not same_url: 
-            size = get_image_size_from_bucket(img.get_s3_key())
-            _sum += size or 0
-        tracker[url] = size 
+            size = get_image_size_from_bucket(img.get_s3_key()) or 0
+            _sum += size
+            tracker[url] = size 
 
     return _sum 
 
