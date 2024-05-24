@@ -27,6 +27,8 @@ Ready to get started? Awesome! Here’s what you need to do first:
 
 3. **[Firebase Setup](#setup_firebase)**: `check appendix 1.2`
 
+   - Install PostgreSQL and create a database for MassEnergize.
+
    - Head over to [firebase.google.com](https://firebase.google.com), create a project, enable authentication, and download the service credentials JSON.
 
 # How to Run the API (Locally)
@@ -186,9 +188,8 @@ Press `control(^) + x` to exit the file
   _creating a new user_
 
   ```sql
-
   CREATE USER username WITH PASSWORD 'your password';  <!-- to create a new user -->
-  SELECT username FROM pg_user;  <!-- lists all users - to check if createed user exists -->
+  SELECT username FROM pg_user;  <!-- lists all users - to check if created user exists -->
   ```
 
   _creating the database_
