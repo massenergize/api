@@ -509,6 +509,15 @@ def compile_duplicate_size(image):
     return _sum 
 
 
+def calculate_space_saved(grouped_dupes): 
+    space_saved = 0
+    if not grouped_dupes: 
+        return space_saved
+    for _, array in grouped_dupes.items():
+            rest =  rest = array[1:]
+            total = compile_duplicate_size(rest)
+            space_saved +=total
+    return space_saved
 
 def summarize_duplicates_into_csv(grouped_dupes, filename = None, field_names = CSV_FIELD_NAMES):
         """

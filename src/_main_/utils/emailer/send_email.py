@@ -1,3 +1,4 @@
+import logging
 from django.core.mail import send_mail, EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
@@ -39,6 +40,7 @@ def send_massenergize_email(subject, msg, to, sender=None):
 
 def send_massenergize_email_with_attachments(temp, t_model, to, file, file_name, sender=None):
   if is_test_mode():
+    print("It did come here, test mode")
     return True
   t_model = {**t_model, "is_dev":is_dev_env()}
 
@@ -53,6 +55,7 @@ def send_massenergize_email_with_attachments(temp, t_model, to, file, file_name,
       postmark_server = POSTMARK_DOWNLOAD_SERVER_TOKEN
   response = pystmark.send_with_template(message, api_key=postmark_server)
   if not response.ok:
+    logging.error("EMAILING_ERROR: "+str(response.json()))
     #if IS_PROD:
     #  capture_message(f"Error Occurred in Sending Email to {to}", level="error")
     return False
