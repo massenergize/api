@@ -2,6 +2,7 @@ import datetime
 from django.http import HttpResponse
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
 from _main_.utils.feature_flag_keys import REMOVE_DUPLICATE_IMAGE_FF
+from _main_.utils.feature_flags.FeatureFlagConstants import FeatureFlagConstants
 from api.store.common import (
     find_duplicate_items,
     generate_hashes,
@@ -26,16 +27,16 @@ def remove_duplicate_images(task):
     try: 
         generate_hashes() 
         flag = FeatureFlag.objects.filter(key=REMOVE_DUPLICATE_IMAGE_FF).first()
-        do_updates = flag and flag.enabled()
-            
-        if do_updates:
-             print("Generating hashes")
-             result = media_store.generate_hashes(None, None, None)
-
-        communities = flag.enabled_communities()
-        # task = Task.objects.filter(name="Media Library Cleanup Routine").first()
+        is_for_specific_audience = FeatureFlagConstants.is_for_specific_audience(flag and flag.audience)
+        do_deletion = flag and flag.enabled()
+        communities = flag.enabled_communities() if flag else []
         ids = [c.id for c in communities]
-        clean_and_notify(ids,None,task.creator, do_updates)
+
+        search_context = None
+        if is_for_specific_audience and ids: 
+             search_context = ids 
+         
+        clean_and_notify(search_context,None,task.creator, do_deletion)
         
         return "success"
     
@@ -43,15 +44,15 @@ def remove_duplicate_images(task):
         print("Duplicate Removal Error (Media Library Cleanup): " + str(e))
         return "Failure"
 
-def clean_and_notify(ids,community,notification_receiver, do_updates): 
+def clean_and_notify(ids,community,notification_receiver, do_deletion): 
         grouped_dupes = find_duplicate_items(False, community_ids=ids)
         num_of_dupes_in_all = get_duplicate_count(grouped_dupes)
         csv_file = summarize_duplicates_into_csv(grouped_dupes)
-
-        if do_updates:
-            for hash_value in grouped_dupes.keys(): 
-                remove_duplicates_and_attach_relations(hash_value)
-
+        # --- The actual removal step is deactivated for now. For now we will stick to generating a report
+        # if do_deletion:
+        #     for hash_value in grouped_dupes.keys(): 
+        #         remove_duplicates_and_attach_relations(hash_value)
+        # ------------------------------------------------------------------------------------
         if notification_receiver: 
             send_summary_email_to_admin(notification_receiver, community, num_of_dupes_in_all, csv_file)
 

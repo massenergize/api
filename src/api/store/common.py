@@ -216,21 +216,28 @@ def get_media_info(media):
 
 def find_duplicate_items(_serialize=False, **kwargs):
     community_ids = kwargs.get("community_ids", None)
-
-    # Retrieve all media items with multiple occurences of the same hash (excluding empty or None hashes)
-    duplicate_hashes = (
-        Media.objects.exclude(hash__exact="")
-        .exclude(hash=None)
-        .values("hash")
-        .annotate(hash_count=Count("hash"))
-        .filter(hash_count__gt=1)
-    )
-    # print(duplicate_hashes)
-
-    # if IS_LOCAL:
-    #     #check_hashes = Media.objects.exclude(hash__exact="").exclude(hash=None).values("hash").annotate(hash_count=Count("hash"))
-    #     check_hashes = Media.objects.exclude(hash__exact="").exclude(hash=None).values("hash","id").annotate(Count('hash'))
-    #     # print(check_hashes, check_hashes.count())
+    if community_ids:
+        # First, filter the Media objects that belong to the given communities
+        print("Communities specified, duplicate context will be against only images in communities with ids : ",community_ids)
+        media_in_communities = Media.objects.filter(user_upload__communities__id__in=community_ids)
+        # Then, find the duplicate hashes in these media items
+        duplicate_hashes = (
+            media_in_communities.exclude(hash__exact="")
+            .exclude(hash=None)
+            .values("hash")
+            .annotate(hash_count=Count("hash"))
+            .filter(hash_count__gt=1)
+        )
+    else:
+        # If no community_ids are provided, check duplicates against all the media records
+        print("No communities specified, duplicate context will be against all images in the bucket....")
+        duplicate_hashes = (
+            Media.objects.exclude(hash__exact="")
+            .exclude(hash=None)
+            .values("hash")
+            .annotate(hash_count=Count("hash"))
+            .filter(hash_count__gt=1)
+        )
 
      # Now, retrieve the media items associated with the duplicate hashes
     if community_ids: 
@@ -496,7 +503,6 @@ def compile_duplicate_size(image):
             size = get_image_size_from_bucket(img.get_s3_key())
             _sum += size 
         tracker[url] = size 
-    print("Lets see tracker", tracker)
     return _sum 
 
 
@@ -514,8 +520,6 @@ def summarize_duplicates_into_csv(grouped_dupes, filename = None, field_names = 
             rest = array[1:]
             # total = sum([ get_image_size_from_bucket(m.get_s3_key()) for m in rest])
             total = compile_duplicate_size(rest)
-            print("SIZES ", total)
-            print("-----------")
             obj = {
                 "media_url": media.file.url,
                 "primary_media_id": media.id,  # No other criteria is used to determine which media is going to be the primary media. The first 1 is simply chosen...
