@@ -30,6 +30,7 @@ LAST_WEEK = "last-week"
 LAST_MONTH = "last-month"
 LAST_YEAR = "last-year"
 
+NON_EXISTENT_IMAGE = "NON_EXISTENT_IMAGE"
 
 def js_datetime_to_python(datetext):
     _format = "%Y-%m-%dT%H:%M:%SZ"
@@ -224,6 +225,7 @@ def find_duplicate_items(_serialize=False, **kwargs):
         duplicate_hashes = (
             media_in_communities.exclude(hash__exact="")
             .exclude(hash=None)
+            .exclude(hash=NON_EXISTENT_IMAGE)
             .values("hash")
             .annotate(hash_count=Count("hash"))
             .filter(hash_count__gt=1)
@@ -234,6 +236,7 @@ def find_duplicate_items(_serialize=False, **kwargs):
         duplicate_hashes = (
             Media.objects.exclude(hash__exact="")
             .exclude(hash=None)
+            .exclude(hash=NON_EXISTENT_IMAGE)
             .values("hash")
             .annotate(hash_count=Count("hash"))
             .filter(hash_count__gt=1)
@@ -330,7 +333,7 @@ def merge_and_get_distinct(array1, array2, property_name, _serialize=False):
     # Create a list to store the distinct objects
     distinct_objects = []
     # Combine the two arrays
-    combined_array = array1 + array2
+    combined_array = array1 or [] + array2 or []
 
     for obj in combined_array:
         property_value = obj.get(property_name, None)
@@ -499,10 +502,12 @@ def compile_duplicate_size(image):
     for img in image:
         url = img.file.url
         same_url =  tracker.get(url, None)
+        size = 0
         if not same_url: 
             size = get_image_size_from_bucket(img.get_s3_key())
-            _sum += size 
+            _sum += size or 0
         tracker[url] = size 
+
     return _sum 
 
 
@@ -639,10 +644,14 @@ def generate_hashes():
     """
     images = Media.objects.filter(Q(hash__exact="") | Q(hash=None)).distinct()
     count = 0
+    print("Generating Hashes...")
     for image in images:
         hash = calculate_hash_for_bucket_item(image.file.name)
         if hash:
             image.hash = hash
             image.save()
             count = count + 1
+        else: 
+            image.hash = NON_EXISTENT_IMAGE 
+            image.save() 
     return count

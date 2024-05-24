@@ -209,8 +209,6 @@ def get_image_size_from_bucket(key,bucket=AWS_STORAGE_BUCKET_NAME):
   try:
       response = s3.get_object(Bucket=bucket, Key=key)
       size = response["ContentLength"]
-      return size
+      return size or 0
   except Exception as e:
       print("Error retrieving image size...")
-      
-  return None
