@@ -2,18 +2,25 @@
 
 cd /webapps/massenergize/api
 
-# Find the process ID (PID) using lsof to check for any process listening on port 8000
-PID=$(lsof -t -i:8000)
+# Function to check and kill process on a given port
+check_and_kill_process() {
+    local port="$1"
+    local pid=$(lsof -t -i:"$port")
 
-# Check if a PID was found
-if [ -z "$PID" ]; then
-    echo "No process is running on port 8000."
-else
-    # Kill the process
-    kill -9 $PID
-    echo "Killed process $PID running on port 8000."
-fi
+    if [ -z "$pid" ]; then
+        echo "No process is running on port $port."
+    else
+        # Kill the process
+        kill -9 "$pid"
+        echo "Killed process $pid running on port $port."
+    fi
+}
 
+# Check and kill process on port 8000
+check_and_kill_process 8000
+
+# Check and kill process on port 80
+check_and_kill_process 80
 
 # Start the new Docker containers
 sudo docker-compose up -d
