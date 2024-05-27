@@ -7,7 +7,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.8]
+        python-version: [3.9]
 
     steps:
     - uses: actions/checkout@v2
@@ -31,6 +31,7 @@ jobs:
         AWS_STORAGE_BUCKET_NAME: ${{ secrets.DEV_AWS_STORAGE_BUCKET_NAME }}
         AWS_S3_SIGNATURE_VERSION: ${{ secrets.AWS_S3_SIGNATURE_VERSION }}
         AWS_S3_REGION_NAME: ${{ secrets.DEV_AWS_S3_REGION_NAME }}
+        AWS_DEFAULT_REGION: ${{ secrets.DEV_AWS_S3_REGION_NAME }}
         DATABASE_ENGINE: django.db.backends.postgresql_psycopg2
         DATABASE_NAME: ${{ secrets.DEV_DATABASE_NAME }}
         DATABASE_USER: ${{ secrets.DEV_DATABASE_USER }}
