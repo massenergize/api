@@ -226,6 +226,7 @@ Firebase setup is crucial for running the API and enabling authentication.
 
 ```env
 SECRET_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+AWS_DEFAULT_REGION=us-west-1
 DATABASE_ENGINE=django.db.backends.postgresql
 DATABASE_NAME=
 DATABASE_USER=
