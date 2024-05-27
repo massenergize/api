@@ -1,11 +1,13 @@
 #!/bin/bash
 
-cd /webapps/massenergize/api
+# cd /webapps/massenergize/api
 
 # Function to check and kill process on a given port
 check_and_kill_process() {
     local port="$1"
     local pid=$(lsof -t -i:"$port")
+
+    echo "PID: $pid, PORT: $port."
 
     if [ -z "$pid" ]; then
         echo "No process is running on port $port."
