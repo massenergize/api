@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# cd /webapps/massenergize/api
+cd /webapps/massenergize/api
 
 # Function to check and kill process on a given port
 check_and_kill_process() {
