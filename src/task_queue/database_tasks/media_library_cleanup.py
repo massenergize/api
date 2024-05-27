@@ -12,12 +12,12 @@ from api.store.common import (
 )
 from api.store.media_library import MediaLibraryStore as media_store
 from api.utils.constants import MEDIA_LIBRARY_CLEANUP_TEMPLATE
-from database.models import FeatureFlag
+from database.models import Community, FeatureFlag
 from task_queue.models import Task
 
 
 
-def remove_duplicate_images(task):
+def remove_duplicate_images(task=None):
     """
     This checks all media on the platform and removes all duplicates.
     Its based on the "Remove Duplicate Images" feature flag. For communities that are subscribed
@@ -32,7 +32,10 @@ def remove_duplicate_images(task):
              print("Generating hashes")
              result = media_store.generate_hashes(None, None, None)
 
-        communities = flag.enabled_communities()
+        if flag and do_updates: 
+            communities = flag.enabled_communities()
+        else: 
+             communities = Community.objects.all()
         # task = Task.objects.filter(name="Media Library Cleanup Routine").first()
         ids = [c.id for c in communities]
         clean_and_notify(ids,None,task.creator, do_updates)
