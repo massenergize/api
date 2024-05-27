@@ -27,6 +27,9 @@ check_and_kill_process 8000
 # Check and kill process on port 80
 check_and_kill_process 80
 
+sudo service docker stop
+sudo service docker start
+
 # Start the new Docker containers
 sudo docker-compose up -d
 
