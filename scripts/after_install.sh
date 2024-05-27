@@ -6,7 +6,8 @@ sudo docker-compose down
 sudo docker-compose down --remove-orphans
 sudo docker image prune -f
 sudo docker builder prune -f
-sudo service docker restart
+
+# sudo service docker restart
 
 # Build the new Docker images
 sudo docker-compose build
