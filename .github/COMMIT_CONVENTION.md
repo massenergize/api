@@ -1,6 +1,6 @@
 ## Git Commit Message Convention
 
-> This is adapted from vuejs' adaptation of [Angular's commit convention](https://github.com/conventional-changelog/conventional-changelog/blob/master/packages/conventional-changelog-angular/convention.md).
+> This is adapted from of [Angular's commit convention](https://github.com/conventional-changelog/conventional-changelog/blob/master/packages/conventional-changelog-angular/convention.md).
 
 #### TL;DR:
 
