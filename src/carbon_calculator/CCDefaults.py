@@ -36,8 +36,8 @@ def date_import(date_string):
         date = datetime.strptime(date_string, '%Y-%m-%d')
     return date.date()
 
-def getDefault(locality, variable, date=None, default=None):
-    return CCD.getDefault(CCD,locality, variable, date, default=default)
+def getDefault(loc_options, variable, date=None, default=None):
+    return CCD.getDefault(CCD, loc_options, variable, date, default=default)
 
 def removeDuplicates():
     # assuming which duplicate is removed doesn't matter...
@@ -90,29 +90,37 @@ class CCD():
             print(str(e))
             print("CalcDefault initialization skipped")
 
-    def getDefault(self, locality, variable, date, default=None):
+    def getDefault(self, loc_options, variable, date, default=None):
         # load default values if they haven't yet been loaded
         if self.DefaultsByLocality["default"]=={}:
             self.loadDefaults(self)
 
-        if locality not in self.DefaultsByLocality:
-            locality = "default"
-        if variable in self.DefaultsByLocality[locality]:
-            # variable found; get the value appropriate for the date
-            var = self.DefaultsByLocality[locality][variable]    # not a copy
-            if date==None:
-                # if date not specified, use the most recent value
-                value = var["values"][-1]
-            else:
-                for i in range(len(var["valid_dates"])):
-                    valid_date = var["valid_dates"][i]
-                    if valid_date < date:
-                        value = var["values"][i]
-            return value
-        
-        # no defaults found.  Signal this as an error.
+        # eliminate any location options which aren't tracked
+        options = []
+        for locality in loc_options:
+            if locality in self.DefaultsByLocality:
+                options.append(locality)
+        # default is the standard option
+        options.append("default")
+
+        for locality in options:
+            if variable in self.DefaultsByLocality[locality]:
+                # variable found; get the value appropriate for the date
+                var = self.DefaultsByLocality[locality][variable]    # not a copy
+                if date==None:
+                    # if date not specified, use the most recent value
+                    value = var["values"][-1]
+                else:
+                    for i in range(len(var["valid_dates"])):
+                        valid_date = var["valid_dates"][i]
+                        if valid_date < date:
+                            value = var["values"][i]
+                return value
+            
+        # if a default value was specified, return it
         if default:
             return default
+        # no defaults specified.  Signal this as an error.
         raise Exception('Carbon Calculator error: value for "'+variable+'" not found in CalcDefaults')        
 
     def exportDefaults(self,fileName):
