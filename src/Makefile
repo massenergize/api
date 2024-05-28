@@ -19,7 +19,7 @@ start:
 
 VERSION=latest
 build-and-push-prod:
-	$(eval VERSION := $(shell cat api_version_prod.txt))	
+	$(eval VERSION := $(shell cat api_version_prod.txt))
 	aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 202758212688.dkr.ecr.us-east-2.amazonaws.com
 	docker build -t massenergize/api .
 	docker tag massenergize/api:latest 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api:$(VERSION)
@@ -36,7 +36,7 @@ build-and-push-prod:
 
 CANARY_VERSION=latest
 build-and-push-canary:
-	$(eval CANARY_VERSION := $(shell cat api_version_canary.txt))	
+	$(eval CANARY_VERSION := $(shell cat api_version_canary.txt))
 	aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 202758212688.dkr.ecr.us-east-2.amazonaws.com
 	docker build -t massenergize/api-canary .
 	docker tag massenergize/api-canary:latest 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-canary:$(CANARY_VERSION)
@@ -53,7 +53,7 @@ build-and-push-canary:
 
 DEV_VERSION=latest
 build-and-push-dev:
-	$(eval DEV_VERSION := $(shell cat api_version_dev.txt))	
+	$(eval DEV_VERSION := $(shell cat api_version_dev.txt))
 	aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 202758212688.dkr.ecr.us-east-2.amazonaws.com
 	docker build -t massenergize/api-dev .
 	docker tag massenergize/api-dev:latest 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-dev:$(DEV_VERSION)
@@ -93,7 +93,7 @@ test:
 
 celery:
 	DJANGO_ENV=local celery -A _main_.celery.app worker --loglevel=info --pool=solo -B
-.PHONY: celery 
+.PHONY: celery
 
 beat:
 	celery -A _main_.celery.app beat -l info
@@ -101,7 +101,7 @@ beat:
 celery-remote:
 	celery -A _main_.celery.app worker -l info
 
-full-celery-local: 
+full-celery-local:
 	make -j 2 start celery
 .PHONY: full-celery-local
 
@@ -141,3 +141,7 @@ migrate-canary:
 migrate-local:
 	DJANGO_ENV=local python manage.py migrate
 .PHONY: migrate-local
+
+
+create-cache-table-local:
+	DJANGO_ENV=local python manage.py createcachetable

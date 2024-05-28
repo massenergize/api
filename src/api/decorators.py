@@ -80,7 +80,7 @@ def super_admins_only(function):
 def cached_request(func):
   @wraps(func)
   def wrapper(handler, request, *args, **kwargs):
-    subdomain = request.context.args.get('subdomain', None)
+    subdomain = request.context.args.get('subdomain', "*")
     locale = request.context.args.get('locale', "en")
 
     if not subdomain:

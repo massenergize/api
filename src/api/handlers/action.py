@@ -5,7 +5,7 @@ from api.services.action import ActionService
 from _main_.utils.massenergize_response import MassenergizeResponse
 #from types import FunctionType as function
 from _main_.utils.context import Context
-from api.decorators import admins_only, super_admins_only, login_required
+from api.decorators import admins_only, super_admins_only, login_required, cached_request
 from api.store.common import expect_media_fields
 
 
@@ -17,7 +17,7 @@ class ActionHandler(RouteHandler):
     self.registerRoutes()
 
   def registerRoutes(self):
-    self.add("/actions.info", self.info) 
+    self.add("/actions.info", self.info)
     self.add("/actions.create", self.create)
     self.add("/actions.add", self.submit)
     self.add("/actions.submit", self.submit)
@@ -33,17 +33,17 @@ class ActionHandler(RouteHandler):
     self.add("/actions.listForSuperAdmin", self.super_admin_list)
 
 
-  def info(self, request): 
+  def info(self, request):
     context: Context = request.context
     args: dict = context.args
-    
+
     # verify the body of the incoming request
     self.validator.expect("id", str, is_required=True)
     self.validator.rename("action_id", "id")
     args, err = self.validator.verify(args, strict=True)
     if err:
       return err
-    
+
     action_info, err = self.service.get_action_info(context, args)
     if err:
       return err
@@ -51,9 +51,9 @@ class ActionHandler(RouteHandler):
 
 
   @admins_only
-  def create(self, request): 
+  def create(self, request):
     context: Context = request.context
-    args = context.get_request_body() 
+    args = context.get_request_body()
     (self.validator
       .expect("community_id", int, is_required=False)
       .expect("calculator_action", int, is_required=False)
@@ -80,11 +80,11 @@ class ActionHandler(RouteHandler):
     return MassenergizeResponse(data=action_info)
 
 
-# same as create, except this is for user submitted actions
+# same as 'create', except this is for user submitted actions
   @login_required
-  def submit(self, request): 
+  def submit(self, request):
     context: Context = request.context
-    args = context.get_request_body() 
+    args = context.get_request_body()
     (self.validator
       .expect("title", str, is_required=True, options={"min_length": 4, "max_length": 40})
       .expect("community_id", int, is_required=True) #fromContext
@@ -100,7 +100,7 @@ class ActionHandler(RouteHandler):
 
     # user submitted action, so notify the community admins
     user_submitted = True
-  
+
     is_edit = args.get("action_id", None)
 
     if is_edit:
@@ -112,8 +112,8 @@ class ActionHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=action_info)
 
-
-  def list(self, request): 
+  @cached_request
+  def list(self, request):
     context: Context = request.context
     args: dict = context.args
 
@@ -137,9 +137,9 @@ class ActionHandler(RouteHandler):
   # @admins_only
   # changed to @Login_Required so I can edit the action as the creator and admin
   @login_required
-  def update(self, request): 
+  def update(self, request):
     context: Context = request.context
-    args = context.get_request_body() 
+    args = context.get_request_body()
     (self.validator
       .expect("action_id", int, is_required=True)
       .expect("title", str, is_required=False, options={"min_length": 4, "max_length": 40})
@@ -158,18 +158,18 @@ class ActionHandler(RouteHandler):
     args, err = self.validator.verify(args)
     if err:
       return err
-    
+
     action_info, err = self.service.update_action(context, args)
     if err:
-      return err      
-      
+      return err
+
     return MassenergizeResponse(data=action_info)
 
 
   @admins_only
-  def rank(self, request): 
+  def rank(self, request):
     context: Context = request.context
-    args = context.get_request_body() 
+    args = context.get_request_body()
     (self.validator
       .expect("id", int, is_required=True)
       .expect("rank", int, is_required=True)
@@ -179,23 +179,23 @@ class ActionHandler(RouteHandler):
     args, err = self.validator.verify(args)
     if err:
       return err
-    
+
     action_info, err = self.service.rank_action(args,context)
     if err:
-      return err      
-      
+      return err
+
     return MassenergizeResponse(data=action_info)
 
 
   @admins_only
-  def copy(self, request): 
+  def copy(self, request):
     context: Context = request.context
     args: dict = context.args
 
     self.validator.expect("action_id", int, None)
     args, err = self.validator.verify(args)
     if err:
-      return err   
+      return err
 
     action_info, err = self.service.copy_action(context, args)
     if err:
@@ -204,14 +204,14 @@ class ActionHandler(RouteHandler):
 
 
   @admins_only
-  def delete(self, request): 
+  def delete(self, request):
     context: Context = request.context
     args: dict = context.args
 
     self.validator.expect("action_id", int, is_required=True)
     args, err = self.validator.verify(args)
     if err:
-      return err   
+      return err
 
     action_info, err = self.service.delete_action(context, args)
     if err:
@@ -220,7 +220,7 @@ class ActionHandler(RouteHandler):
 
 
   @admins_only
-  def community_admin_list(self, request): 
+  def community_admin_list(self, request):
     context: Context = request.context
     args: dict = context.args
 
@@ -237,7 +237,7 @@ class ActionHandler(RouteHandler):
 
 
   @super_admins_only
-  def super_admin_list(self, request): 
+  def super_admin_list(self, request):
     context: Context = request.context
     args: dict = context.args
     self.validator.expect("community_id", int, is_required=False)
