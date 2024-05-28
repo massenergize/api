@@ -814,7 +814,9 @@ class CampaignStore:
 
             if not campaign_technology_id:
                 return None, CustomMassenergizeError("campaign_technology_id is required!")
+            
             campaign_tech = CampaignTechnology.objects.filter(id=campaign_technology_id).first()
+            
             if not campaign_tech:
                 return None, CustomMassenergizeError("campaignTechnology with id not found!")
 
@@ -826,12 +828,12 @@ class CampaignStore:
                     campaign_manager = CampaignManager.objects.filter(user__id=context.user_id,campaign__id=campaign_tech.campaign.id, is_deleted=False)
                     if not campaign_manager:
                         return None, CustomMassenergizeError("Not authorized to add event")
-
-            for event_id in event_ids:
-                event = Event.objects.filter(id=event_id).first()
-                if event:
-                    campaign_event, _ = CampaignTechnologyEvent.objects.get_or_create(campaign_technology=campaign_tech, event=event, is_deleted=False)
-                    created_list.append(campaign_event.simple_json())
+                    
+            all_events = Event.objects.filter(id__in=event_ids)
+            
+            for event in all_events:
+                campaign_event, _ = CampaignTechnologyEvent.objects.get_or_create(campaign_technology=campaign_tech, event=event, is_deleted=False)
+                created_list.append(campaign_event.simple_json())
 
             return created_list, None
         except Exception as e:
@@ -1385,17 +1387,20 @@ class CampaignStore:
                 return None, CustomMassenergizeError("campaign_id is required!")
             communities = CampaignCommunity.objects.filter(campaign__id=campaign_id, is_deleted=False)
             events = []
-            for community in communities:
-                events.extend(Event.objects.filter(community__id=community.community.id, is_deleted=False, is_published=True))
+            community_ids = communities.values_list('community__id', flat=True)
+            
+            events.extend(Event.objects.filter(community__id__in=community_ids, is_deleted=False, is_published=True, end_date_and_time__gte=datetime.now()))
+            
             to_return = []
             for event in events:
+                community = communities.filter(community__id=event.community.id).first()
                 obj = {
                     "id": event.id,
                     "name": event.name,
                     "community":{
                         "id": event.community.id,
                         "name": event.community.name,
-                        "alias": communities.filter(campaign__id=campaign_id, community__id=event.community.id).first().alias
+                        "alias": community.alias if community else None
                     }
                 }
                 to_return.append(obj)
