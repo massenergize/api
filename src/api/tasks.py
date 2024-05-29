@@ -23,7 +23,7 @@ from database.models import Community, CommunityAdminGroup, CommunityMember, Com
     UserActionRel, UserProfile
 from task_queue.nudges.cadmin_events_nudge import generate_event_list_for_community, send_events_report
 from task_queue.nudges.user_event_nudge import prepare_user_events_nudge
-
+from django.core.cache import cache
 
 def generate_csv_and_email(data, download_type, community_name=None, email=None,filename=None):
     response = HttpResponse(content_type="text/csv")
@@ -286,6 +286,12 @@ def deactivate_user(self,email):
 
 @shared_task(bind=True)
 def send_scheduled_email(self,subject, message, recipients, image):
+    cache_key =f"email_sent_{subject.replace(' ', '_')}"
+    is_running = cache.get(cache_key)
+    if is_running:
+        logging.info("Task already picked up by another worker")
+        return
+    cache.set(cache_key, True)
     try:
         data = {
            "body": message,
@@ -299,8 +305,17 @@ def send_scheduled_email(self,subject, message, recipients, image):
     except Exception as e:
         logging.error(f"Error sending email: {str(e)}")
         
+    finally:
+        cache.delete(cache_key)
+        
 @shared_task(bind=True)
 def automatically_activate_nudge(self,community_nudge_setting_id):
+    cache_key =f"nudge_activated_{community_nudge_setting_id}"
+    is_running = cache.get(cache_key)
+    if is_running:
+        logging.info("Task already picked up by another worker")
+        return
+    cache.set(cache_key, True)
     try:
         community_nudge_setting = CommunityNotificationSetting.objects.filter(id=community_nudge_setting_id).first()
         if not community_nudge_setting:
@@ -313,4 +328,7 @@ def automatically_activate_nudge(self,community_nudge_setting_id):
         
     except Exception as e:
         logging.error(f"Error automatically activating nudge: {str(e)}")
+        
+    finally:
+        cache.delete(cache_key)
     
