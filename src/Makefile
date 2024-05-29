@@ -1,17 +1,20 @@
-init:
+essential-folders:
+	@if [ ! -d ".massenergize" ]; then mkdir .massenergize; fi
+	@if [ ! -d ".massenergize/creds" ]; then mkdir .massenergize/creds; fi
+.PHONY: essential-folders
+
+init: essential-folders
 	pip3 install -r requirements.txt
-	mkdir .massenergize
-	mkdir .massenergize/creds
 .PHONY: init
 
-start:
+start: essential-folders
 	@echo "Setting environment variables ..."
 	python3 _main_/utils/startup/prepare.py
 	@echo "Initializing server now ..."
 	python3 manage.py runserver
 .PHONY: start
 
-startd:
+startd: essential-folders
 	@echo "Setting environment variables ..."
 	DOCKER_MODE=true python3 _main_/utils/startup/prepare.py
 	sudo docker-compose down --remove-orphans
