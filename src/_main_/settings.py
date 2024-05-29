@@ -14,7 +14,6 @@ import os
 import firebase_admin
 from firebase_admin import credentials
 from dotenv import load_dotenv
-from pathlib import Path  # python3 only
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.celery import CeleryIntegration

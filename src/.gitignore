@@ -1,18 +1,23 @@
 
 # Elastic Beanstalk Files
-.elasticbeanstalk/*
-!.elasticbeanstalk/*.cfg.yml
-!.elasticbeanstalk/*.global.yml
-.env
-dev.env
-prod.env
-.ebextensions/securelistener-clb.config
+.elasticbeanstalk
+.ebextensions
 prepare-for-deploy.py
 deployment/aws/
 *.sqlite3*
 test_data/
-celerybeat-schedule.db
+*.db
 *.rdb*
 *.venv
 venv
 .hide
+.logs
+__pycache__
+.coverage
+Dockerrun.aws.json
+*.env
+passport.key.json
+_main_/config/*json
+.vscode
+.massenergize
+settings.json
