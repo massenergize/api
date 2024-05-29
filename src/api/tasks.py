@@ -24,7 +24,7 @@ from database.models import Community, CommunityAdminGroup, CommunityMember, Com
 from task_queue.nudges.cadmin_events_nudge import generate_event_list_for_community, send_events_report
 from task_queue.nudges.user_event_nudge import prepare_user_events_nudge
 from django.core.cache import cache
-
+from _main_.celery.app import app
 def generate_csv_and_email(data, download_type, community_name=None, email=None,filename=None):
     response = HttpResponse(content_type="text/csv")
     now = datetime.datetime.now().strftime("%Y%m%d")
@@ -284,51 +284,55 @@ def deactivate_user(self,email):
     if user:
         user.delete()
 
-@shared_task(bind=True)
-def send_scheduled_email(self,subject, message, recipients, image):
-    cache_key =f"email_sent_{subject.replace(' ', '_')}"
-    is_running = cache.get(cache_key)
-    if is_running:
-        logging.info("Task already picked up by another worker")
-        return
-    cache.set(cache_key, True)
-    try:
-        data = {
-           "body": message,
-           "subject": subject,
-           "image":image
-        }
-        is_sent = send_massenergize_email_with_attachments(BROADCAST_EMAIL_TEMPLATE, data, recipients, None, None)
-        if is_sent:
-            logging.info(f"Successfully sent email to {str(recipients)}")
 
-    except Exception as e:
-        logging.error(f"Error sending email: {str(e)}")
+@app.task
+def send_scheduled_email(subject, message, recipients, image):
+    cache_key = f"email_sent_{subject.replace(' ', '_')}"
+    
+    if cache.add(cache_key, True, timeout=3600):
         
-    finally:
-        cache.delete(cache_key)
-        
-@shared_task(bind=True)
-def automatically_activate_nudge(self,community_nudge_setting_id):
-    cache_key =f"nudge_activated_{community_nudge_setting_id}"
-    is_running = cache.get(cache_key)
-    if is_running:
+        try:
+            data = {"body": message, "subject": subject, "image": image}
+            
+            is_sent = send_massenergize_email_with_attachments(BROADCAST_EMAIL_TEMPLATE, data, recipients, None, None)
+            
+            if is_sent:
+                logging.info(f"Successfully sent email to {str(recipients)}")
+                
+        except Exception as e:
+            logging.error(f"Error sending email: {str(e)}")
+            
+        finally:
+            logging.info(f"===== Deleting Cache Key: {cache_key} =====")
+            cache.delete(cache_key)
+            
+    else:
         logging.info("Task already picked up by another worker")
-        return
-    cache.set(cache_key, True)
-    try:
-        community_nudge_setting = CommunityNotificationSetting.objects.filter(id=community_nudge_setting_id).first()
-        if not community_nudge_setting:
-            return
-        community_nudge_setting.activate_on = None
-        community_nudge_setting.is_active = True
-        community_nudge_setting.save()
         
-        logging.info(f"Successfully activated nudge for community: {community_nudge_setting.community.name}")
+@app.task
+def automatically_activate_nudge(community_nudge_setting_id):
+    
+    cache_key =f"nudge_activation_{community_nudge_setting_id}"
+    
+    if cache.add(cache_key, True, timeout=3600):
         
-    except Exception as e:
-        logging.error(f"Error automatically activating nudge: {str(e)}")
-        
-    finally:
-        cache.delete(cache_key)
+        try:
+            community_nudge_setting = CommunityNotificationSetting.objects.filter(id=community_nudge_setting_id).first()
+            if not community_nudge_setting:
+                logging.error(f"Community Nudge Setting with id({community_nudge_setting_id}) not found")
+                return
+            community_nudge_setting.activate_on = None
+            community_nudge_setting.is_active = True
+            community_nudge_setting.save()
+            
+            logging.info(f"Successfully activated nudge for community: {community_nudge_setting.community.name}")
+            
+        except Exception as e:
+            logging.error(f"Error automatically activating nudge: {str(e)}")
+            
+        finally:
+            logging.info(f"===== Deleting Cache Key: {cache_key} =====")
+            cache.delete(cache_key)
+    else:
+        logging.info("Task already picked up by another worker")
     
