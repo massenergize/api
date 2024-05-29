@@ -99,7 +99,7 @@ class MassEnergizeApiEnvConfig:
 
 
     def get_logging_settings(self):
-        if self.is_local():
+        if self.is_local() or self.is_test():
             return get_local_logging_settings()
         return get_default_logging_settings(self.name)
 
