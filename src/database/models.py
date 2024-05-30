@@ -326,6 +326,10 @@ class Media(models.Model):
                 self.hash = hash
         super().save(*args, **kwargs)
 
+    def get_s3_key(self): 
+        return self.file.name
+
+
 
     class Meta:
         db_table = "media"

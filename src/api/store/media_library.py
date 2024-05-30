@@ -49,8 +49,8 @@ class MediaLibraryStore:
             return None, CustomMassenergizeError(e)
 
     def print_duplicates(self, args, context: Context):
-        grouped_dupes = find_duplicate_items()
-        filename = "summary-of-duplicates" 
+        grouped_dupes = find_duplicate_items(False,**args)
+        filename = "Summary-of-duplicates" 
         csv_file = summarize_duplicates_into_csv(grouped_dupes,filename)
 
         response = HttpResponse(content_type="text/csv")

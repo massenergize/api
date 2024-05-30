@@ -14,44 +14,32 @@ import os
 import firebase_admin
 from firebase_admin import credentials
 from dotenv import load_dotenv
-from pathlib import Path  # python3 only
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.celery import CeleryIntegration
-
 from _main_.utils.utils import is_test_mode
+from .utils.stage import MassEnergizeApiEnvConfig
 
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ********  LOAD CONFIG DATA ***********#
-# DJANGO_ENV can be passed in through the makefile, with "make start env=local"
-DJANGO_ENV = os.environ.get("DJANGO_ENV","remote")
+
+
+STAGE = MassEnergizeApiEnvConfig()
+STAGE.load_env_variables()
 
 # Database selection, development DB unless one of these chosen
-IS_PROD = False
-IS_CANARY = True
-IS_LOCAL = False
+IS_PROD = STAGE.is_prod()
+IS_CANARY = STAGE.is_canary()
+IS_LOCAL = STAGE.is_local()
 
 RUN_SERVER_LOCALLY = IS_LOCAL
 RUN_CELERY_LOCALLY = IS_LOCAL
 
 if is_test_mode():
     RUN_CELERY_LOCALLY = True
-
-try:
-    if IS_PROD:
-        env_path = Path('.') / 'prod.env'
-    elif IS_CANARY:
-        env_path = Path('.') / 'canary.env'
-    elif IS_LOCAL:
-        env_path = Path('.') / 'local.env'
-    else:
-        env_path = Path('.') / 'dev.env'
-    load_dotenv(dotenv_path=env_path, verbose=True)
-except Exception:
-    load_dotenv()
 
 # ********  END LOAD CONFIG DATA ***********#
 
@@ -61,29 +49,21 @@ SECRET_KEY =  os.environ.get("SECRET_KEY")
 DEBUG = RUN_SERVER_LOCALLY
 
 ALLOWED_HOSTS = [
-    "me-prod-env.us-east-2.elasticbeanstalk.com",
     '0.0.0.0',
     '127.0.0.1',
     'localhost:3000',
     'localhost',
-    '.massenergize.org',
-    '.massenergize.com',
-    '.massenergize.dev',
-    '.massenergize.test',
-    'MassenergizeApi-env.eba-zfppgz2y.us-east-2.elasticbeanstalk.com',
-    'ApiDev-env.eba-5fq2r9ph.us-east-2.elasticbeanstalk.com',
-    'dev-api-env.eba-nfqpwkju.us-east-2.elasticbeanstalk.com',
-    'massenergize-canary-api.us-east-2.elasticbeanstalk.com',
-    'massenergize.test',
-    'massenergize.test:3000',
+    # feel free to add more for your local testing
 ]
+
+# get the domains we set in our vault and add them.
+ALLOWED_HOSTS.extend(STAGE.get_allowlist_domains())
 
 if RUN_SERVER_LOCALLY:
     ALLOWED_HOSTS = ['*']
     
 
 INSTALLED_APPS = [
-    # 'channels',
     'django_hosts',
     'authentication',
     'carbon_calculator',
@@ -100,25 +80,24 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     "apps__campaigns"
-    # 'socket_notifications'
 ]
 
 MIDDLEWARE = [
+    'cid.middleware.CidMiddleware',
     'django_hosts.middleware.HostsRequestMiddleware',
     'authentication.middleware.RemoveHeaders',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
-    # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
     #custom middlewares
     'authentication.middleware.MassenergizeJWTAuthMiddleware',
-
-    'django_hosts.middleware.HostsResponseMiddleware'
+    'django_hosts.middleware.HostsResponseMiddleware',
+    '_main_.utils.metrics.middleware.MetricsMiddleware'
 ]
 
 
@@ -201,9 +180,9 @@ if is_test_mode():
     DATABASES['default'] = DATABASES['test_db']
 
 # CACHES = {
-#     'default': {
-#         'BACKEND': os.getenv('CACHE_BACKEND'),
-#         'LOCATION': os.getenv('CACHE_LOCATION'),
+#     "default": {
+#         "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+#         "LOCATION": "main_cache_table",
 #     }
 # }
 
@@ -219,22 +198,14 @@ ROOT_URLCONF = '_main_.urls'
 ROOT_HOSTCONF = '_main_.hosts'
 DEFAULT_HOST = 'main'
 
-
 # firebase setup
-FIREBASE_CREDENTIALS = credentials.Certificate({
-  "type": "service_account",
-  "project_id": os.environ.get('FIREBASE_SERVICE_ACCOUNT_PROJECT_ID'),
-  "private_key_id": os.environ.get('FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY_ID'),
-  "private_key": os.environ.get('FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY'),
-  "client_email": os.environ.get('FIREBASE_SERVICE_ACCOUNT_CLIENT_EMAIL'),
-  "client_id": os.environ.get('FIREBASE_SERVICE_ACCOUNT_CLIENT_ID'),
-  "client_x509_cert_url": os.environ.get('FIREBASE_SERVICE_ACCOUNT_CLIENT_URL'),
-  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-  "token_uri": "https://oauth2.googleapis.com/token",
-  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-})
-firebase_admin.initialize_app(FIREBASE_CREDENTIALS)
-
+FIREBASE_CREDENTIALS = STAGE.get_firebase_auth()
+if FIREBASE_CREDENTIALS:
+    firebase_admin.initialize_app(
+        credentials.Certificate(FIREBASE_CREDENTIALS)
+    )
+else:
+    print("ERROR: You most likely cannot perform authentication.  It seems we could not initialize firebase.")
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -252,6 +223,13 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+
+### Begin Logger setttings ####
+CID_GENERATE = True
+CID_CONCATENATE = True
+LOGGING = STAGE.get_logging_settings()
+
+### End Logger settings ###
 
 # Sentry Logging Initialization
 sentry_dsn = os.environ.get('SENTRY_DSN')

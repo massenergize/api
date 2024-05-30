@@ -17,7 +17,7 @@ class CommunityService:
   def __init__(self):
     self.store =  CommunityStore()
 
-  def get_community_info(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def get_community_info(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     community, err = self.store.get_community_info(context, args)
     if err:
       return None, err
@@ -44,7 +44,7 @@ class CommunityService:
     communities, err = self.store.list_communities(context, args)
     if err:
       return None, err
-    return serialize_all(communities), None
+    return serialize_all(communities, info=True), None
 
 
   def create_community(self,context, args) -> Tuple[dict, MassEnergizeAPIError]:

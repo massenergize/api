@@ -31,9 +31,12 @@ CSV_FIELD_NAMES = [
     "primary_media_id",
     "usage_stats",
     "usage_summary",
+    "readable_compiled_size_of_duplicates", 
+    "compiled_size_of_duplicates",
     "ids_of_duplicates",
-    "duplicates",
-]
+    "duplicates"
+    
+, ]
 
 COMMUNITY_NOTIFICATION_TYPES = [USER_EVENTS_NUDGES_FF]
 

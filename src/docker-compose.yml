@@ -1,27 +1,22 @@
-version: '3.8'
-
 services:
   app:
     build: .
     command: sh -c "python manage.py runserver 0.0.0.0:8000"
-    container_name: app
     ports:
       - "80:8000" # for deployed version
-      - "8000:8000" # for localhost testing
-    image: 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-canary
+      - "8000:8000" # for local testing
+
+    image: massenergize/api
     restart: on-failure
-    env_file:
-      - canary.env
+
 
   celery_worker:
     command: sh -c "celery -A _main_.celery.app worker -l info"
     depends_on:
       - app
     hostname: celery_worker
-    image: 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-canary
+    image: massenergize/api
     restart: on-failure
-    env_file:
-      - canary.env
 
 
   celery_beat:
@@ -29,7 +24,5 @@ services:
     depends_on:
       - app
     hostname: celery_beat
-    image: 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-canary
+    image: massenergize/api
     restart: on-failure
-    env_file:
-      - canary.env

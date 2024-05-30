@@ -7,11 +7,14 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from sentry_sdk import capture_message
 from typing import Tuple
+from _main_.utils.metrics import timed
+
 
 class HomePageSettingsStore:
   def __init__(self):
     self.name = "HomePageSettings Store/DB"
 
+  @timed
   def get_home_page_setting_info(self,context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       args['community'] = get_community_or_die(context, args)
