@@ -23,17 +23,18 @@ class MetricsMiddleware(MiddlewareMixin):
 
     @run_in_background
     def send_cw_metrics(self, request):
-        if not STAGE.can_send_logs_to_cloudwatch():
-            return 
-
-        if hasattr(request, 'start_time'):
-            latency = (time.time() - request.start_time) * 1000 # convert to milliseconds
-            print(request.path, latency)
-            return #TODO; remove
-
+        if not hasattr(request, 'start_time'):
+            return
+        
+        latency = (time.time() - request.start_time) * 1000 # convert to milliseconds
+            
         try:
+            if not STAGE.can_send_logs_to_cloudwatch():
+                logger.info(f"Path: {request.path} Latency: {latency}ms")
+                return 
+
             self.cloudwatch.put_metric_data(
-                        Namespace='ApiService',
+                        Namespace=f'{STAGE.name.title()}MassenergizeApiService',
                         MetricData=[
                         {
                             'MetricName': 'Latency',

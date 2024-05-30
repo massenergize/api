@@ -900,6 +900,9 @@ class CampaignStore:
 
             if not campaign_id:
                 return None, CustomMassenergizeError("Campaign id not found!")
+            
+            if not community_id and not is_other:
+                return None, CustomMassenergizeError("Please select a community!")
 
             campaign = Campaign.objects.filter(id=campaign_id).first()
             if not campaign:
