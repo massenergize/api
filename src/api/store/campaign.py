@@ -808,16 +808,17 @@ class CampaignStore:
     def add_campaign_technology_event(self, context: Context, args):
         try:
             campaign_technology_id = args.pop("campaign_technology_id", None)
+            campaign_technology_ids = args.pop("campaign_technology_ids", None)
             event_ids = args.pop("event_ids", None)
 
             created_list = []
 
-            if not campaign_technology_id:
-                return None, CustomMassenergizeError("campaign_technology_id is required!")
+            if not campaign_technology_ids:
+                return None, CustomMassenergizeError("campaign_technology_ids is required!")
             
-            campaign_tech = CampaignTechnology.objects.filter(id=campaign_technology_id).first()
+            campaign_techs = CampaignTechnology.objects.filter(id__in=campaign_technology_ids)
             
-            if not campaign_tech:
+            if not campaign_techs:
                 return None, CustomMassenergizeError("campaignTechnology with id not found!")
 
             if not event_ids:
