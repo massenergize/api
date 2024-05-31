@@ -3,7 +3,7 @@ import functools
 import boto3
 import threading
 import random 
-from _main_.settings import STAGE
+from _main_.settings import EnvConfig
 
 DEFAULT_CAPTURE_RATE = 1 # for now we want to capture 100% of the logs.
 FUNCTION_LATENCY_NAMESPACE = "ApiService/FunctionPerformance"
@@ -52,7 +52,7 @@ def send_metric(func, execution_time, name_space=FUNCTION_LATENCY_NAMESPACE, ext
 
 
 def put_metric_data(name_space, metric_data):
-    if not STAGE.can_send_logs_to_cloudwatch():
+    if not EnvConfig.can_send_logs_to_cloudwatch():
         return 
 
     try:
