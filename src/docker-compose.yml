@@ -9,12 +9,12 @@ services:
     image: massenergize/api
     restart: on-failure
 
-
   celery_worker:
     command: sh -c "celery -A _main_.celery.app worker -l info"
     depends_on:
       - app
     hostname: celery_worker
+
     image: massenergize/api
     restart: on-failure
 
@@ -24,5 +24,6 @@ services:
     depends_on:
       - app
     hostname: celery_beat
+
     image: massenergize/api
     restart: on-failure

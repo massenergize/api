@@ -152,6 +152,6 @@ migrate-local:
 	DJANGO_ENV=local make migrate
 .PHONY: migrate-local
 
-
 create-cache-table-local:
 	DJANGO_ENV=local python manage.py createcachetable
+
