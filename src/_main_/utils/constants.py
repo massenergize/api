@@ -83,7 +83,6 @@ INSPIRATIONAL_MESSAGES = [
     "Protect our planet, it's the only home we have.",
     "Small steps lead to big changes.",
     "Eco-friendly is the way to be.",
-    "Green is the new black.",
     "Let's work together for a sustainable future.",
     "Our actions today shape the world of tomorrow.",
     "Be part of the change for a better world.",
