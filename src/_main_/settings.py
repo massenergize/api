@@ -14,7 +14,6 @@ import os
 import firebase_admin
 from firebase_admin import credentials
 from dotenv import load_dotenv
-from pathlib import Path  # python3 only
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.celery import CeleryIntegration
@@ -28,13 +27,13 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # ********  LOAD CONFIG DATA ***********#
 
 
-STAGE = MassEnergizeApiEnvConfig()
-STAGE.load_env_variables()
+EnvConfig = MassEnergizeApiEnvConfig()
+EnvConfig.load_env_variables()
 
 # Database selection, development DB unless one of these chosen
-IS_PROD = STAGE.is_prod()
-IS_CANARY = STAGE.is_canary()
-IS_LOCAL = STAGE.is_local()
+IS_PROD = EnvConfig.is_prod()
+IS_CANARY = EnvConfig.is_canary()
+IS_LOCAL = EnvConfig.is_local()
 
 RUN_SERVER_LOCALLY = IS_LOCAL
 RUN_CELERY_LOCALLY = IS_LOCAL
@@ -58,7 +57,7 @@ ALLOWED_HOSTS = [
 ]
 
 # get the domains we set in our vault and add them.
-ALLOWED_HOSTS.extend(STAGE.get_allowlist_domains())
+ALLOWED_HOSTS.extend(EnvConfig.get_allowlist_domains())
 
 if RUN_SERVER_LOCALLY:
     ALLOWED_HOSTS = ['*']
@@ -200,7 +199,7 @@ ROOT_HOSTCONF = '_main_.hosts'
 DEFAULT_HOST = 'main'
 
 # firebase setup
-FIREBASE_CREDENTIALS = STAGE.get_firebase_auth()
+FIREBASE_CREDENTIALS = EnvConfig.get_firebase_auth()
 if FIREBASE_CREDENTIALS:
     firebase_admin.initialize_app(
         credentials.Certificate(FIREBASE_CREDENTIALS)
@@ -228,7 +227,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ### Begin Logger setttings ####
 CID_GENERATE = True
 CID_CONCATENATE = True
-LOGGING = STAGE.get_logging_settings()
+LOGGING = EnvConfig.get_logging_settings()
 
 ### End Logger settings ###
 

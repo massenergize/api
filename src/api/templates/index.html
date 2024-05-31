@@ -8,13 +8,13 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css?family=Roboto+Mono:100':300,400,600,700&amp;lang=en"
     />
-    <title>{{SITE_TITLE}} - {{BUILD_INFO.BUILD_VERSION}}</title>
+    <title>{{SITE_TITLE}} - {{RELEASE_INFO.version}}</title>
     <style>
       html,
       body {
         font-family: "Roboto Mono", monospace;
-        background: #212121;
-        height: 100%;
+        background: {{SITE_BACKGROUND_COLOR}};
+        height: 90%;
       }
 
       .container {
@@ -28,7 +28,7 @@
       .text {
         font-weight: 100;
         font-size: 28px;
-        color: #fafafa;
+        color: {{SITE_FONT_COLOR}};
       }
 
       .dud {
@@ -47,10 +47,7 @@
     </div>
 
       <code>
-        {% for d in deployments %}
-        <p style="font-size: 10px;color:white">Build Version: {{d.version}}</p>
-        <p style="font-size: 10px;color:yellow">Release Notes: {{d.notes}}</p>
-        {% endfor %}
+        <p style="font-size: 10px;color:white">{{DEPLOY_NOTES}}</p>
       </code>
       <br/>
       <br/>
@@ -94,7 +91,7 @@
             complete++;
             output += to;
           } else if (this.frame >= start) {
-            if (!char || Math.random() < 0.28) {
+            if (!char || Math.random() < .7) {
               char = this.randomChar();
               this.queue[i].char = char;
             }
@@ -116,11 +113,7 @@
       }
     }
 
-    const phrases = [
-      "{{SITE_TITLE}}",
-      "BUILD_VERSION: v{{BUILD_INFO.BUILD_VERSION}}",
-      "Welcome 😊! Bienvenue! Bienvenido",
-    ];
+    const phrases = {{ INSPIRATIONS | safe}}
 
     const el = document.querySelector(".text");
     const fx = new TextScramble(el);
@@ -128,7 +121,7 @@
     let counter = 0;
     const next = () => {
       fx.setText(phrases[counter]).then(() => {
-        setTimeout(next, 800);
+        setTimeout(next, 8000);
       });
       counter = (counter + 1) % phrases.length;
     };

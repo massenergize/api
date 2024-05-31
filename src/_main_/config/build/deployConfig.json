@@ -1,6 +1,6 @@
 {
-  "IS_PROD": false,
+  "IS_PROD": true,
   "IS_CANARY": false,
-  "BUILD_VERSION": "5.2.19",
-  "BUILD_VERSION_NOTES": "Jan 31, 2024: Campaigns initial prod deployment\n"
+  "BUILD_VERSION": "5.2.22",
+  "BUILD_VERSION_NOTES": "May 29, 2024: Bulk messaging fix\n"
 }

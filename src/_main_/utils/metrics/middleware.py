@@ -3,11 +3,11 @@ import boto3
 import logging
 from django.utils.deprecation import MiddlewareMixin
 from botocore.exceptions import NoCredentialsError, ClientError
-from _main_.settings import STAGE
+from _main_.settings import EnvConfig
 
 
 from _main_.utils.utils import run_in_background
-logger = logging.getLogger(STAGE.get_logger_identifier())
+logger = logging.getLogger(EnvConfig.get_logger_identifier())
 
 class MetricsMiddleware(MiddlewareMixin):
     def __init__(self, get_response=None):
@@ -23,17 +23,18 @@ class MetricsMiddleware(MiddlewareMixin):
 
     @run_in_background
     def send_cw_metrics(self, request):
-        if not STAGE.can_send_logs_to_cloudwatch():
-            return 
-
-        if hasattr(request, 'start_time'):
-            latency = (time.time() - request.start_time) * 1000 # convert to milliseconds
-            print(request.path, latency)
-            return #TODO; remove
-
+        if not hasattr(request, 'start_time'):
+            return
+        
+        latency = (time.time() - request.start_time) * 1000 # convert to milliseconds
+            
         try:
+            if not EnvConfig.can_send_logs_to_cloudwatch():
+                logger.info(f"Path: {request.path} Latency: {latency}ms")
+                return 
+
             self.cloudwatch.put_metric_data(
-                        Namespace='ApiService',
+                        Namespace=f'{EnvConfig.name.title()}MassenergizeApiService',
                         MetricData=[
                         {
                             'MetricName': 'Latency',
@@ -44,7 +45,7 @@ class MetricsMiddleware(MiddlewareMixin):
                                 },
                                 {
                                     'Name': 'Stage',
-                                    'Value': STAGE.name
+                                    'Value': EnvConfig.name
                                 }
                             ],
                             'Unit': 'Milliseconds',
@@ -59,7 +60,7 @@ class MetricsMiddleware(MiddlewareMixin):
                                 },
                                 {
                                     'Name': 'Stage',
-                                    'Value': STAGE.name
+                                    'Value': EnvConfig.name
                                 }
                             ],
                             'Unit': 'Count',

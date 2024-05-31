@@ -27,6 +27,7 @@ class MiscellaneousHandler(RouteHandler):
         self.add("/data.carbonEquivalency.delete", self.delete_carbon_equivalency)
         self.add("/home", self.home)
         self.add("/health_check", self.health_check)
+        self.add("/version", self.version)
         self.add("/auth.login.testmode", self.authenticateFrontendInTestMode)
         self.add("", self.home)
         # settings should be called preferences
@@ -144,6 +145,11 @@ class MiscellaneousHandler(RouteHandler):
     def health_check(self, request):
         context: Context = request.context
         return self.service.health_check(context, request)
+
+
+    def version(self, request):
+        context: Context = request.context
+        return self.service.version(context, request)
 
     def authenticateFrontendInTestMode(self, request):
         context: Context = request.context

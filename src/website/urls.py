@@ -3,6 +3,8 @@ from website import views
 
 urlpatterns = [
   path('', views.home, name='home'),
+  path('home', views.api_home, name='api_home'),
+  path('version', views.version, name="version"),
   path('health_check', views.health_check, name="health_check"),
   path('campaign/<slug:campaign_id>', views.campaign, name='campaign'),
   path('campaign/<slug:campaign_id>/technology/<slug:campaign_technology_id>', views.campaign_technology, name='campaign_technology'),
