@@ -932,11 +932,11 @@ def contact_us(request, subdomain=None):
     return render(request, "page__contact_us.html", args)
 
 def health_check(request):
-    return JsonResponse(data={"ok": True, "msg": "Thanks for coming.  I am doing really well. yay!"}, safe=False)
+    return MiscellaneousHandler().health_check(request)
 
 
 def version(request):
-    return JsonResponse(data=EnvConfig.release_info, safe=False)
+    return MiscellaneousHandler().version(request)
 
 
 def generate_sitemap(request):

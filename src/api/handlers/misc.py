@@ -7,6 +7,7 @@ from _main_.utils.context import Context
 from api.decorators import admins_only, super_admins_only
 from database.utils.settings.admin_settings import AdminPortalSettings
 from database.utils.settings.user_settings import UserPortalSettings
+from django.http import JsonResponse
 
 
 class MiscellaneousHandler(RouteHandler):
@@ -144,12 +145,18 @@ class MiscellaneousHandler(RouteHandler):
 
     def health_check(self, request):
         context: Context = request.context
-        return self.service.health_check(context, request)
-
+        data, err = self.service.health_check(context)
+        if err:
+            return MassenergizeResponse(data=data, error=err)
+        return JsonResponse(data=data, safe=False)
 
     def version(self, request):
         context: Context = request.context
-        return self.service.version(context, request)
+        data, err = self.service.version(context, request)
+        if err:
+            return MassenergizeResponse(data=data, error=err)
+        return JsonResponse(data=data, safe=False)
+
 
     def authenticateFrontendInTestMode(self, request):
         context: Context = request.context

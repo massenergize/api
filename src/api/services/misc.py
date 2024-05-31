@@ -90,13 +90,11 @@ class MiscellaneousService:
             },
         )
 
-    def health_check(self, ctx: Context, args):
-        #TODO: return the environment info: dev, canary, prod and then the git commit / tag and version info
+    def health_check(self, ctx: Context):
         return { "ok": True }, None
 
 
     def version(self, ctx: Context, args):
-        #TODO: return the environment info: dev, canary, prod and then the git commit / tag and version info
         return EnvConfig.release_info, None
 
     def create_carbon_equivalency(self, args) -> Tuple[dict, MassEnergizeAPIError]:
