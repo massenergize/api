@@ -237,8 +237,8 @@ class DownloadStore:
         if isinstance(user, Subscriber):
             full_name = user.name
             if full_name is None:
-                first_name = ""
-                last_name = ""
+                first_name = "---"
+                last_name = "---"
             else:
                 space = full_name.find(" ")
                 first_name = full_name[:space]
@@ -259,8 +259,8 @@ class DownloadStore:
 
         full_name = user.full_name
         if not full_name:
-            first_name = ""
-            last_name = ""
+            first_name = "---"
+            last_name = "---"
         else:
             space = full_name.find(" ")
             first_name = full_name[:space]
