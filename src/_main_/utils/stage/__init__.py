@@ -177,7 +177,6 @@ class MassEnergizeApiEnvConfig:
             return "Unable to get IP address"
 
     def get_release_info(self):
-        build_info = load_json("release_info.json")
-        print(build_info)
-        return build_info
+        release_info = load_json("release_info.json")
+        return release_info
         
