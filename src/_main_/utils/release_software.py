@@ -1,8 +1,8 @@
 import json
 import datetime
-import os
+import os,sys
 import subprocess
-from _main_.utils.utils import load_json
+from utils import load_json
 
 def save_release_info(release_info, filename='release_info.json'):
     with open(filename, 'w') as file:
@@ -21,7 +21,7 @@ def increment_version(version, release_type):
     elif release_type == 'patch':
         patch += 1
     else:
-        raise ValueError("Invalid release type")
+        sys.exit(1)
     
     return f"{major}.{minor}.{patch}"
 
@@ -47,15 +47,16 @@ def main():
     current_version = release_info["version"]
     print(f"Current version: {current_version}")
     
-    release_type = input("Enter the release type (major, minor, patch): ").strip().lower()
+    release_type = input("\033[94mEnter the release type (major, minor, patch): \033[0m").strip().lower()
     if release_type not in ['major', 'minor', 'patch']:
-        print("Invalid release type")
-        return
+        print("Sorry: invalid release type: must be one of: 'major', 'minor', 'patch'")
+        sys.exit(1)
+        
     
     new_version = increment_version(current_version, release_type)
     print(f"New version will be: {new_version}")
     
-    confirm = input("Are you sure you want to proceed? (yes/y): ").strip().lower()
+    confirm = input("\033[91mAre you sure you want to proceed? (yes/y): \033[0m").strip().lower()
     if confirm not in ['yes', 'y']:
         print("Release aborted")
         return
@@ -72,7 +73,39 @@ def main():
     print(f"New version: {new_version}")
     print(f"Released by: {github_username}")
     print(f"Release date: {release_info['release_date']}")
-    print(new_version) # we use this in the `make release`` command
+
+    try:
+        with open('version.txt', 'w') as version_file:
+            version_file.write(new_version)
+    except:
+        print("Could not write to version.txt")
+
+def welcome_message():
+    ascii_art = """\033[92m
+##########################################################################################################
+#    ____  ________    _________   _____ ______  __________  __  _____  ______    _   ______  __________ #
+#   / __ \/ ____/ /   / ____/   | / ___// ____/ / ____/ __ \/  |/  /  |/  /   |  / | / / __ \/ ____/ __ \#
+#  / /_/ / __/ / /   / __/ / /| | \__ \/ __/   / /   / / / / /|_/ / /|_/ / /| | /  |/ / / / / __/ / /_/ /#
+# / _, _/ /___/ /___/ /___/ ___ |___/ / /___  / /___/ /_/ / /  / / /  / / ___ |/ /|  / /_/ / /___/ _, _/ #
+#/_/ |_/_____/_____/_____/_/  |_/____/_____/  \____/\____/_/  /_/_/  /_/_/  |_/_/ |_/_____/_____/_/ |_|  #
+##########################################################################################################                     
+
+Howdy, Namaste, Mabuhay, Welcome, Bienvenue, Akwaaba!
+\033[0m"""
+
+    warning = """\033[96m
+---------------------------------------------------------------------
+ABOUT TO RELEASE ?
+---------------------------------------------------------------------
+1. Make sure you tested
+2. Make sure you have release notes
+3. Have you given the right stakeholders the headsup?
+4. Head to AWS and trigger a deployment in the pipeline when done.
+     \033[0m"""
+    
+    print(ascii_art)
+    print(warning)
 
 if __name__ == "__main__":
+    welcome_message()
     main()
