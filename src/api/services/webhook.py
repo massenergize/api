@@ -99,6 +99,7 @@ class WebhookService:
         db_msg_id = extract_msg_id(split_body[0])
 
         if not db_msg_id and not email:
+            logging.error("INBOUND_PROCESSING:Could not extract email or message id")
             return {"success":False}, None
       
         res, err = self.message_service.reply_from_community_admin(context, {
@@ -112,12 +113,14 @@ class WebhookService:
             })
 
         if err:
+            logging.error(f"INBOUND_PROCESSING_MESSAGE_CREATION: {str(err)}")
           return None, str(err)
     
         return {"success":True}, None
         
     except Exception as e:
       capture_message(str(e), level="error")
+      logging.error(f"INBOUND_PROCESSING_EXCEPTION: {str(e)}")
       return None, MassEnergizeAPIError(e)
 
 
