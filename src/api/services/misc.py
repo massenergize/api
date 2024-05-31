@@ -73,8 +73,8 @@ class MiscellaneousService:
             SITE_BACKGROUND_COLOR = "#310161"
             SITE_FONT_COLOR = "white"
         else:
-            SITE_BACKGROUND_COLOR = "#FFFFFF"
-            SITE_FONT_COLOR = "black"
+            SITE_BACKGROUND_COLOR = "#115852"
+            SITE_FONT_COLOR = "white"
 
         random.shuffle(INSPIRATIONAL_MESSAGES) 
         return render(
