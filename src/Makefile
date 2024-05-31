@@ -155,3 +155,14 @@ migrate-local:
 
 create-cache-table-local:
 	DJANGO_ENV=local python manage.py createcachetable
+
+
+.PHONY: release
+release:
+	@echo "Running release script..."
+	@VERSION=$$(python3 _main_/utils/release.py | tail -n 1) && \
+	echo "New version is $$VERSION" && \
+	git add release_info.json && \
+	git commit -m "Release version $$VERSION" && \
+	git tag -a "v$$VERSION" -m "Release version $$VERSION" && \
+	git push origin main
