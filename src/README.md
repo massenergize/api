@@ -136,13 +136,11 @@ sudo nano /etc/hosts
 when the `hosts` file opens add this on a new line in the file
 
 ```
-127.0.0.1 massenergize.test
-127.0.0.1 api
-127.0.0.1 communities
-127.0.0.1 share
-127.0.0.1 mc
-127.0.0.1 cc
-127.0.0.1 djangoadmin
+127.0.0.1       massenergize.test
+127.0.0.1       community.massenergize.test
+127.0.0.1       communities.massenergize.test
+127.0.0.1       api.massenergize.test
+127.0.0.1       share.massenergize.test
 ```
 
 and then press `control(^) + o` and then `Enter` to write to the `hosts` file.
@@ -171,13 +169,11 @@ Press `control(^) + x` to exit the file
    - Add this to the hosts file
 
    ```
-   127.0.0.1 massenergize.test
-   127.0.0.1 api
-   127.0.0.1 communities
-   127.0.0.1 share
-   127.0.0.1 mc
-   127.0.0.1 cc
-   127.0.0.1 djangoadmin
+   127.0.0.1       massenergize.test
+   127.0.0.1       community.massenergize.test
+   127.0.0.1       communities.massenergize.test
+   127.0.0.1       api.massenergize.test
+   127.0.0.1       share.massenergize.test
    ```
 
 4. Save the changes.
