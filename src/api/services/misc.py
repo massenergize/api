@@ -105,7 +105,7 @@ class MiscellaneousService:
             },
         )
 
-    def health_check(self, args):
+    def health_check(self, ctx: Context, args):
         #TODO: return the environment info: dev, canary, prod and then the git commit / tag and version info
         return { "ok": True }, None
 
