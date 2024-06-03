@@ -1993,8 +1993,8 @@ class Action(models.Model):
         data["image"] = get_json_if_not_none(self.image)
         data["calculator_action"] = get_summary_info(self.calculator_action)
         if self.calculator_action:
-            data["category"] = self.calculator_action.category.name
-            data["subcategory"] = self.calculator_action.sub_category.name
+            data["category"] =  self.calculator_action.category.simple_json() if self.calculator_action.category else None
+            data["subcategory"] = self.calculator_action.sub_category.simple_json() if self.calculator_action.sub_category else None
         data["tags"] = [t.simple_json() for t in self.tags.all()]
         data["community"] = get_summary_info(self.community)
         data["created_at"] = self.created_at

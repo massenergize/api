@@ -213,8 +213,9 @@ class CarbonCalculator:
         #for action in self.allActions:
         actions = Action.objects.filter() #no is_deleted field?
         for action in actions:
-            if not self.allActions[action].initialized:
-                ret = self.allActions[action].Query()
+            theAction = self.allActions.get(action,None)
+            if theAction and not theAction.initialized:
+                ret = theAction.Query()
                 if ret["status"] != VALID_QUERY:
                     print("Action " + theAction.name + " initialization failed")
                     return ret
@@ -225,20 +226,22 @@ class CarbonCalculator:
             id = action.id
             points = action.average_points
 
-            category = action.category.name if action.category else ""
-            subcategory = action.sub_category.name if action.sub_category else ""
+            # category = action.category.name if action.category else ""
+            # subcategory = action.sub_category.name if action.sub_category else ""
 
-            actionList.append( {'id': id, 'name':name, 'title':title, 'description':description, 'average_points':points, 'category': category, 'subcategory': subcategory} ) 
+            actionList.append( {'id': id, 'name':name, 'title':title, 'description':description, 'average_points':points, 'category': action.category.simple_json() if action.category else None, 'subcategory': action.sub_category.simple_json() if action.sub_category else None} ) 
 
         categoryList = []
         cats = Category.objects.filter(is_deleted=False)
         for category in cats:
-            categoryList.append({'id': category.id, 'name': category.name})
+            # categoryList.append({'id': category.id, 'name': category.name})
+            categoryList.append(category.simple_json())
 
         subcatList = []
         subcats = Subcategory.objects.filter(is_deleted=False)
         for subcat in subcats:
-            subcatList.append({'id': subcat.id, 'name': subcat.name, "category":subcat.category.name,})
+            subcatList.append(subcat.simple_json())
+            # subcatList.append({'id': subcat.id, 'name': subcat.name, "category":subcat.category.name if subcat.category else None, "category_id": subcat.category.id if subcat.category else None})
         
         response['actions'] = actionList
         response['categories'] = categoryList
@@ -250,9 +253,9 @@ class CarbonCalculator:
 # inputs is a dictionary of input parameters
         queryFailed = {'status':INVALID_QUERY}
         if action in self.allActions:
-            theAction = self.allActions[action]
+            theAction = self.allActions[action] # Might throw keyError
             if not theAction.initialized:       # this initializes the calculation if not done previously
-                ret = self.allActions[action].Query()    
+                ret = self.allActions[action].Query()    # Might throw keyError
                 if ret["status"] != VALID_QUERY:
                     print("Action " + theAction.name + " initialization failed")
                     return queryFailed
