@@ -21,25 +21,26 @@ class WebhookHandler(RouteHandler):
         self.add("/webhooks.inbound.get", self.process_inbound_webhook)
     
     def bounce_email_webhook(self, request):
+        context: Context = request.context
+    
         try:
-            context: Context = request.context
-            
-            try:
-                args = json.loads(request.body)
-            
-            except json.JSONDecodeError as e:
-                logging.error(f'JSON_FORMAT_ERROR:{str(e)}')
-                return MassenergizeResponse(error=str(e))
-            
-            res, err = self.service.bounce_email_webhook(context, args)
-            
-            if err:
-                return err
-            return MassenergizeResponse(data=res)
-        
-        except Exception as e:
-            logging.error(f"BOUNCE EMAIL WEBHOOK ERROR: {str(e)}")
-            return MassenergizeResponse(error=str(e))
+            request_data = json.loads(request.body)
+        except json.JSONDecodeError as json_error:
+            logging.error(f'Failed to parse request body as JSON: {json_error}')
+            return MassenergizeResponse(error=str(json_error))
+    
+        try:
+            response_data, error = self.service.bounce_email_webhook(context, request_data)
+    
+            if error:
+                logging.error(f'Error processing bounce email webhook: {error}')
+                return error
+    
+            return MassenergizeResponse(data=response_data)
+    
+        except Exception as unexpected_error:
+            logging.error(f'Unexpected error processing bounce email webhook: {unexpected_error}')
+            return MassenergizeResponse(error=str(unexpected_error))
     
     def process_inbound_webhook(self, request):
         context: Context = request.context
