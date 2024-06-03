@@ -832,7 +832,6 @@ class CampaignStore:
             
             all_events = Event.objects.filter(id__in=event_ids)
             
-            # Create a list of tuples for each combination of campaign_tech and event
             combinations = [(campaign_tech, event) for campaign_tech in campaign_techs for event in all_events]
             
             for campaign_tech, event in combinations:
