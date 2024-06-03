@@ -804,42 +804,47 @@ class CampaignStore:
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
-
+    
     def add_campaign_technology_event(self, context: Context, args):
         try:
-            campaign_technology_id = args.pop("campaign_technology_id", None)
+            campaign_technology_ids = args.pop("campaign_technology_ids", None)
             event_ids = args.pop("event_ids", None)
-
-            created_list = []
-
-            if not campaign_technology_id:
-                return None, CustomMassenergizeError("campaign_technology_id is required!")
             
-            campaign_tech = CampaignTechnology.objects.filter(id=campaign_technology_id).first()
+            data_to_return = []
             
-            if not campaign_tech:
-                return None, CustomMassenergizeError("campaignTechnology with id not found!")
-
+            if not campaign_technology_ids:
+                return None, CustomMassenergizeError("campaign_technology_ids is required!")
+            
             if not event_ids:
                 return None, CustomMassenergizeError("event_ids is required!")
             
+            campaign_techs = CampaignTechnology.objects.filter(id__in=campaign_technology_ids)
+            
+            if not campaign_techs:
+                return None, CustomMassenergizeError("No campaignTechnology found!")
+            
             if not context.user_is_super_admin:
-                if context.user_email != campaign_tech.campaign.owner.email:
-                    campaign_manager = CampaignManager.objects.filter(user__id=context.user_id,campaign__id=campaign_tech.campaign.id, is_deleted=False)
+                campaign = campaign_techs.first().campaign
+                if context.user_email != campaign.owner.email:
+                    campaign_manager = CampaignManager.objects.filter(user__id=context.user_id,campaign__id=campaign.id, is_deleted=False)
                     if not campaign_manager:
-                        return None, CustomMassenergizeError("Not authorized to add event")
-                    
+                        return None, CustomMassenergizeError("Unauthorized to add event")
+            
             all_events = Event.objects.filter(id__in=event_ids)
             
-            for event in all_events:
+            # Create a list of tuples for each combination of campaign_tech and event
+            combinations = [(campaign_tech, event) for campaign_tech in campaign_techs for event in all_events]
+            
+            for campaign_tech, event in combinations:
                 campaign_event, _ = CampaignTechnologyEvent.objects.get_or_create(campaign_technology=campaign_tech, event=event, is_deleted=False)
-                created_list.append(campaign_event.simple_json())
-
-            return created_list, None
+                data_to_return.append(campaign_event.simple_json())
+            
+            return data_to_return, None
+        
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
-
+    
     def generate_campaign_link(self, context: Context, args):
         try:
             campaign_id = args.pop("campaign_id", None)
