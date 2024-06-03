@@ -12,6 +12,8 @@ from database.models import UserProfile
 import re
 import urllib.parse
 
+from _main_.utils.massenergize_errors import CustomMassenergizeError
+
 ONE_DAY = 60*60*24
 HARD_BOUNCE="HardBounce"
 WELCOME_MESSAGE="Welcome Message From MassEnergize"
@@ -87,6 +89,10 @@ class WebhookService:
         reply = args.get("StrippedTextReply")
         text_body = args.get("TextBody")
         from_email = args.get("From")
+        
+        if not text_body:
+            logging.error("INBOUND_PROCESSING:No text body found in the inbound email")
+            return None,  CustomMassenergizeError("No text body found in the inbound email")
 
         split_body = text_body.strip().split("Here is a copy of the message:")
         
@@ -114,7 +120,7 @@ class WebhookService:
 
         if err:
             logging.error(f"INBOUND_PROCESSING_MESSAGE_CREATION: {str(err)}")
-          return None, str(err)
+            return None, str(err)
     
         return {"success":True}, None
         
