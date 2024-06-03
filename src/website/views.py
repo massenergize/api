@@ -4,8 +4,9 @@ from django.shortcuts import render, redirect
 from _main_.utils.common import serialize_all
 from _main_.utils.massenergize_response import MassenergizeResponse
 from django.http import Http404, JsonResponse
-from _main_.settings import IS_PROD, IS_CANARY, RUN_SERVER_LOCALLY, STAGE
+from _main_.settings import IS_PROD, IS_CANARY, RUN_SERVER_LOCALLY, EnvConfig
 from sentry_sdk import capture_message
+from api.handlers.misc import MiscellaneousHandler
 from api.store.misc import MiscellaneousStore
 from _main_.utils.constants import RESERVED_SUBDOMAIN_LIST, STATES
 from api.utils.api_utils import get_distance_between_coords
@@ -31,7 +32,7 @@ from _main_.utils.metrics import timed
 import zipcodes
 
 import logging
-logger = logging.getLogger(STAGE.get_logger_identifier())
+logger = logging.getLogger(EnvConfig.get_logger_identifier())
 
 extract_text_from_html = html2text.HTML2Text()
 extract_text_from_html.ignore_links = True
@@ -363,6 +364,10 @@ def home(request):
         return community(request, subdomain)
 
     return redirect(HOST)
+
+def api_home(request):
+    return MiscellaneousHandler().home(request)
+
 
 @timed
 def search_communities(request):
@@ -927,7 +932,11 @@ def contact_us(request, subdomain=None):
     return render(request, "page__contact_us.html", args)
 
 def health_check(request):
-    return JsonResponse(data={"ok": True, "msg": "Thanks for coming.  I am doing really well. yay!"}, safe=False)
+    return MiscellaneousHandler().health_check(request)
+
+
+def version(request):
+    return MiscellaneousHandler().version(request)
 
 
 def generate_sitemap(request):

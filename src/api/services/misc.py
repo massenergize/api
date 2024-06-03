@@ -1,4 +1,5 @@
 from django.test import Client
+from _main_.utils.constants import INSPIRATIONAL_MESSAGES
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.massenergize_errors import (
     MassEnergizeAPIError,
@@ -10,10 +11,11 @@ from _main_.utils.context import Context
 from django.shortcuts import render
 from api.tests.common import signinAs
 from database.models import Deployment
-from _main_.settings import IS_PROD, IS_CANARY, BASE_DIR, TEST_PASSPORT_KEY
+from _main_.settings import IS_PROD, IS_CANARY, BASE_DIR, EnvConfig, TEST_PASSPORT_KEY
 from _main_.utils.utils import load_json, load_text_contents
 from django.db.models.query import QuerySet
 from typing import Tuple
+import random
 
 # PASSPORT_KEY = os.environ.get("TEST_PASSPORT_KEY")
 class MiscellaneousService:
@@ -61,54 +63,39 @@ class MiscellaneousService:
         return result, None
 
     def home(self, ctx: Context, request):
-        deployments = Deployment.objects.all()[:3]
-        build_info = load_json(BASE_DIR + "/_main_/config/build/deployConfig.json")
-        deploy_notes = load_text_contents(
-            BASE_DIR + "/_main_/config/build/deployNotes.txt"
-        )
-
-        deployment = Deployment.objects.filter(
-            version=build_info.get("BUILD_VERSION", "")
-        ).first()
-        if deployment:
-            if deployment.notes != deploy_notes:
-                deployment.notes = deploy_notes
-                deployment.save()
-        else:
-            deployment = Deployment.objects.create(
-                version=build_info.get("BUILD_VERSION", ""), notes=deploy_notes
-            )
+        release_info = EnvConfig.release_info or {}
+        SITE_TITLE = f"MassEnergize-API-{EnvConfig.name}"
 
         if IS_PROD:
-            SITE_TITLE = "MassEnergize-API"
             SITE_BACKGROUND_COLOR = "#310161"
             SITE_FONT_COLOR = "white"
         elif IS_CANARY:
-            SITE_TITLE = "CANARY: MassEnergize-API"
             SITE_BACKGROUND_COLOR = "#310161"
             SITE_FONT_COLOR = "white"
         else:
-            SITE_TITLE = "DEV: MassEnergize-API"
-            SITE_BACKGROUND_COLOR = "#0b5466"
+            SITE_BACKGROUND_COLOR = "#115852"
             SITE_FONT_COLOR = "white"
 
+        random.shuffle(INSPIRATIONAL_MESSAGES) 
         return render(
             request,
             "index.html",
             {
-                "deployments": deployments,
-                "BUILD_INFO": build_info,
-                "DEPLOY_NOTES": deploy_notes,
+                "RELEASE_INFO": release_info,
+                "DEPLOY_NOTES": f"API Version: {release_info.get('version')} |> Released by: {release_info.get('released_by')} On {release_info.get('release_date')}",
+                "INSPIRATIONS": INSPIRATIONAL_MESSAGES,
                 "SITE_TITLE": SITE_TITLE,
                 "SITE_BACKGROUND_COLOR": SITE_BACKGROUND_COLOR,
                 "SITE_FONT_COLOR": SITE_FONT_COLOR,
             },
         )
 
-    def health_check(self, args):
-        #TODO: return the environment info: dev, canary, prod and then the git commit / tag and version info
+    def health_check(self, ctx: Context):
         return { "ok": True }, None
 
+
+    def version(self, ctx: Context, args):
+        return EnvConfig.release_info, None
 
     def create_carbon_equivalency(self, args) -> Tuple[dict, MassEnergizeAPIError]:
         carbon_data, err = self.store.create_carbon_equivalency(args)
