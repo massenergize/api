@@ -618,7 +618,7 @@ class CampaignsIntegrationTestCase(TestCase):
         self.assertEqual(response['success'], True)
 
     def test_add_campaign_technology_event(self):
-        payload = {"campaign_technology_id": self.CAMPAIGN_TECHNOLOGY.id, "event_ids": [self.event_1.id],}
+        payload = {"campaign_technology_ids": [self.CAMPAIGN_TECHNOLOGY.id], "event_ids": [self.event_1.id],}
         Console.header("Testing the campaigns.technology.events.add endpoint")
         signinAs(self.client, self.SADMIN)
         response = self.make_request("campaigns.technology.events.add", payload)
