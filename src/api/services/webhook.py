@@ -84,7 +84,7 @@ class WebhookService:
 
     return {"success":True}, None
   
-  def process_inbound_webhook(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def process_inbound_webhook(self, context: Context, args):
     try:
         reply = args.get("StrippedTextReply")
         text_body = args.get("TextBody")
@@ -96,11 +96,11 @@ class WebhookService:
 
         split_body = text_body.strip().split("Here is a copy of the message:")
         
-        if len(split_body) < 2: # will probably be a postmark test
-          return {"success":False},None
+        if len(split_body) < 2:   # will probably be a postmark test
+            return {"success": False}, None
         
         user_msg_content = split_body[1].strip().split("If possible, please reply through the admin portal rather than")[0].strip()
-        subject,email = extract_email_content(user_msg_content)
+        subject, email = extract_email_content(user_msg_content)
 
         db_msg_id = extract_msg_id(split_body[0])
 
@@ -122,12 +122,12 @@ class WebhookService:
             logging.error(f"INBOUND_PROCESSING_MESSAGE_CREATION: {str(err)}")
             return None, str(err)
     
-        return {"success":True}, None
+        return {"success": True}, None
         
     except Exception as e:
-      capture_message(str(e), level="error")
-      logging.error(f"INBOUND_PROCESSING_EXCEPTION: {str(e)}")
-      return None, MassEnergizeAPIError(e)
+        capture_message(str(e), level="error")
+        logging.error(f"INBOUND_PROCESSING_EXCEPTION: {str(e)}")
+        return None, MassEnergizeAPIError(e)
 
 
 
