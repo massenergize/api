@@ -12,6 +12,8 @@ from database.models import UserProfile
 import re
 import urllib.parse
 
+from _main_.utils.massenergize_errors import CustomMassenergizeError
+
 ONE_DAY = 60*60*24
 HARD_BOUNCE="HardBounce"
 WELCOME_MESSAGE="Welcome Message From MassEnergize"
@@ -82,23 +84,28 @@ class WebhookService:
 
     return {"success":True}, None
   
-  def process_inbound_webhook(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def process_inbound_webhook(self, context: Context, args):
     try:
         reply = args.get("StrippedTextReply")
         text_body = args.get("TextBody")
         from_email = args.get("From")
+        
+        if not text_body:
+            logging.error("INBOUND_PROCESSING:No text body found in the inbound email")
+            return None,  CustomMassenergizeError("No text body found in the inbound email")
 
         split_body = text_body.strip().split("Here is a copy of the message:")
         
-        if len(split_body) < 2: # will probably be a postmark test
-          return {"success":False},None
+        if len(split_body) < 2:   # will probably be a postmark test
+            return {"success": False}, None
         
         user_msg_content = split_body[1].strip().split("If possible, please reply through the admin portal rather than")[0].strip()
-        subject,email = extract_email_content(user_msg_content)
+        subject, email = extract_email_content(user_msg_content)
 
         db_msg_id = extract_msg_id(split_body[0])
 
         if not db_msg_id and not email:
+            logging.error("INBOUND_PROCESSING:Could not extract email or message id")
             return {"success":False}, None
       
         res, err = self.message_service.reply_from_community_admin(context, {
@@ -112,13 +119,15 @@ class WebhookService:
             })
 
         if err:
-          return None, str(err)
+            logging.error(f"INBOUND_PROCESSING_MESSAGE_CREATION: {str(err)}")
+            return None, str(err)
     
-        return {"success":True}, None
+        return {"success": True}, None
         
     except Exception as e:
-      capture_message(str(e), level="error")
-      return None, MassEnergizeAPIError(e)
+        capture_message(str(e), level="error")
+        logging.error(f"INBOUND_PROCESSING_EXCEPTION: {str(e)}")
+        return None, MassEnergizeAPIError(e)
 
 
 
