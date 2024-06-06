@@ -104,35 +104,53 @@ def create_media_file(file, name):
 
 # -------------------------- Menu Utils --------------------------
 
+def has_no_custom_website(community):
+    if community.community_website and community.community_website.first() and community.community_website.first().website:
+        return False
+    return True
 
-def prepend_prefix_to_links(menu_item: object, prefix: object) -> object:
+
+def prepend_prefix_to_links(menu_item, prefix):
+  
     if not menu_item:
         return None
+    
     if "link" in menu_item:
         existing_link = menu_item["link"]
+        
         if existing_link.startswith("/"):
             existing_link = existing_link[1:]
-        menu_item["link"] = f"/{prefix}/{existing_link}"
+            
+        menu_item["link"] = f"{prefix}/{existing_link}"
+        
     if "children" in menu_item:
+        
         for child in menu_item["children"]:
             prepend_prefix_to_links(child, prefix)
+            
     return menu_item
 
 
 def modify_menu_items_if_published(menu_items, page_settings, prefix):
-    if not menu_items or not page_settings or not prefix:
+    
+    if not menu_items or not page_settings:
         return []
 
     main_menu = []
 
     for item in menu_items:
+        
         if not item.get("children"):
             name = item.get("link", "").strip("/")
+            
             if name in page_settings and not page_settings[name]:
                 main_menu.remove(item)
+                
         else:
+            
             for child in item["children"]:
                 name = child.get("link", "").strip("/")
+                
                 if name in page_settings and not page_settings[name]:
                     item["children"].remove(child)
 
@@ -168,12 +186,12 @@ def get_viable_menu_items(community):
         "testimonials": testimonial_page_settings.is_published,
         "teams": teams_page_settings.is_published,
         "events": events_page_settings.is_published,
-    }, community.subdomain)
+    },f'{"/"+community.subdomain if has_no_custom_website(community) else ""}')
 
     footer_menu_content = all_menu.get(name='PortalFooterQuickLinks')
 
     portal_footer_quick_links = [
-        {**item, "link": "/"+community.subdomain + "/" + item["link"]}
+        {**item, "link": f'{"/"+community.subdomain if has_no_custom_website(community) else ""}/{item["link"]}'}
         if not item.get("children") and item.get("navItemId", None) != "footer-report-a-bug-id"
         else item
         for item in footer_menu_content.content["links"]
