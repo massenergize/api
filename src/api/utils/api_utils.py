@@ -139,32 +139,32 @@ def prepend_prefix_to_links(menu_item, prefix):
 
 
 def modify_menu_items_if_published(menu_items, page_settings, prefix):
+    def process_items(items):
+        active_menu_items = []
+        for item in items:
+            if not item.get("children"):
+                name = item.get("link", "").strip("/")
+                
+                if name in page_settings and page_settings[name]:
+                    active_menu_items.append(item)
+            
+            else:
+                item["children"] = process_items(item["children"])
+                
+                if item["children"]:
+                    active_menu_items.append(item)
+        return active_menu_items
     
     if not menu_items or not page_settings:
         return []
-
+    
+    processed_menu_items = process_items(menu_items)
     main_menu = []
-
-    for item in menu_items:
-        
-        if not item.get("children"):
-            name = item.get("link", "").strip("/")
-            
-            if name in page_settings and not page_settings[name]:
-                menu_items.remove(item)
-                
-        else:
-            
-            for child in item["children"]:
-                name = child.get("link", "").strip("/")
-                
-                if name in page_settings and not page_settings[name]:
-                    item["children"].remove(child)
-
-    for item in menu_items:
+    
+    for item in processed_menu_items:
         f = prepend_prefix_to_links(item, prefix)
         main_menu.append(f)
-
+    
     return main_menu
 
 
