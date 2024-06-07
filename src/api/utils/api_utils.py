@@ -5,6 +5,8 @@ from database.models import AboutUsPageSettings, ActionsPageSettings, Community,
     VendorsPageSettings
 import pyshorteners
 
+from _main_.utils.constants import COMMUNITY_URL_ROOT
+
 
 def is_admin_of_community(context, community_id):
     # super admins are admins of any community
@@ -104,9 +106,14 @@ def create_media_file(file, name):
 
 # -------------------------- Menu Utils --------------------------
 
-def has_no_custom_website(community):
-    if community.community_website and community.community_website.first() and community.community_website.first().website:
+
+def has_no_custom_website(community, host):
+    if host and host == COMMUNITY_URL_ROOT:
+        return True
+    
+    elif community.community_website and community.community_website.first() and community.community_website.first().website:
         return False
+    
     return True
 
 
@@ -144,7 +151,7 @@ def modify_menu_items_if_published(menu_items, page_settings, prefix):
             name = item.get("link", "").strip("/")
             
             if name in page_settings and not page_settings[name]:
-                main_menu.remove(item)
+                menu_items.remove(item)
                 
         else:
             
@@ -161,7 +168,7 @@ def modify_menu_items_if_published(menu_items, page_settings, prefix):
     return main_menu
 
 
-def get_viable_menu_items(community):
+def get_viable_menu_items(community, host):
     about_us_page_settings = AboutUsPageSettings.objects.filter(community=community).first()
     events_page_settings = EventsPageSettings.objects.filter(community=community).first()
     impact_page_settings = ImpactPageSettings.objects.filter(community=community).first()
@@ -176,7 +183,7 @@ def get_viable_menu_items(community):
     all_menu = Menu.objects.all()
 
     nav_menu = all_menu.get(name="PortalMainNavLinks")
-
+    
     portal_main_nav_links = modify_menu_items_if_published(nav_menu.content, {
         "impact": impact_page_settings.is_published,
         "aboutus": about_us_page_settings.is_published,
@@ -186,12 +193,12 @@ def get_viable_menu_items(community):
         "testimonials": testimonial_page_settings.is_published,
         "teams": teams_page_settings.is_published,
         "events": events_page_settings.is_published,
-    },f'{"/"+community.subdomain if has_no_custom_website(community) else ""}')
-
+    },f'{"/"+community.subdomain if has_no_custom_website(community, host) else ""}')
+    
     footer_menu_content = all_menu.get(name='PortalFooterQuickLinks')
 
     portal_footer_quick_links = [
-        {**item, "link": f'{"/"+community.subdomain if has_no_custom_website(community) else ""}/{item["link"]}'}
+        {**item, "link": f'{"/"+community.subdomain if has_no_custom_website(community, host) else ""}/{item["link"]}'}
         if not item.get("children") and item.get("navItemId", None) != "footer-report-a-bug-id"
         else item
         for item in footer_menu_content.content["links"]
