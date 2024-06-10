@@ -156,6 +156,7 @@ class MassEnergizeApiEnvConfig:
             name = _current_run_info.get('django_env', name)
             is_docker_mode = _current_run_info.get('is_docker_mode', is_docker_mode)
         else:
+            load_dotenv()
             name = os.getenv("DJANGO_ENV", "dev")
             is_docker_mode = "DOCKER_CONTAINER" in os.environ
         
