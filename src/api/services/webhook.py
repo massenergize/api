@@ -36,29 +36,48 @@ def extract_email_content(text):
 
   return subject, email
 
+def get_messsage_id_from_link_list(url_parts):
+    try:
+        edit_index = url_parts.index('edit')
+        message_id = url_parts[edit_index + 1]
+        
+        if message_id.isdigit():
+            return message_id
+        
+        return None
+    except ValueError:
+        logging.error("INBOUND_PROCESSING:ValueError while extracting message id from the url")
+        return None
+
 
 def extract_msg_id(text):
     try:
-        text_link = text.strip().split("and respond to message")
-        text_link = text_link[0].strip()
-        url_pattern = r"https://click\.pstmrk\.it\S+"
-        url = re.findall(url_pattern, text_link)
- 
-        if not len(url):
+        url_pattern = r"<(https?:\\/\\/click\.pstmrk\.it[^\s>]+)>"
+        match = re.search(url_pattern, text)
+        
+        if not match:
+            logging.error("INBOUND_PROCESSING:Could not extract message id from the email body")
             return None
         
-        parsed_url = urllib.parse.urlparse(url[0])
+        url = match.group(1)
+        
+        parsed_url = urllib.parse.urlparse(url)
         path = parsed_url.path
         path = urllib.parse.unquote(path)
-        id = path.split("/")
-        return id[5]
+        splitted_path_list = path.split("/")
+        
+        message_id = get_messsage_id_from_link_list(splitted_path_list)
+        
+        if not message_id:
+            logging.error("INBOUND_PROCESSING:Incorrect message id format in the email body")
+            return None
+        
+        return message_id
     
     except Exception as e:
-        logging.error(str(e))
+        logging.error(f"INBOUND_PROCESSING:Exception while extracting message id from the email body: {str(e)}")
         return None
-    
-
-   
+      
 
 class WebhookService:
   """
