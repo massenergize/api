@@ -5,7 +5,7 @@ from database.models import AboutUsPageSettings, ActionsPageSettings, Community,
     VendorsPageSettings
 import pyshorteners
 
-from _main_.utils.constants import COMMUNITY_URL_ROOT_UPDATED
+from _main_.utils.constants import COMMUNITY_URL_ROOT
 
 
 def is_admin_of_community(context, community_id):
@@ -108,7 +108,7 @@ def create_media_file(file, name):
 
 
 def has_no_custom_website(community, host):
-    if host and host == COMMUNITY_URL_ROOT_UPDATED:
+    if host and host == COMMUNITY_URL_ROOT:
         return True
     
     elif community.community_website and community.community_website.first() and community.community_website.first().website:

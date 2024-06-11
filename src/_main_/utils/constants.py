@@ -22,15 +22,6 @@ COMMUNITY_URL_ROOT = (
     if IS_LOCAL
     else "https://community.massenergize.dev"
 )
-COMMUNITY_URL_ROOT_UPDATED = (
-    "https://communities.massenergize.org"
-    if IS_PROD
-    else "https://communities-canary.massenergize.org"
-    if IS_CANARY
-    else "http://communities.massenergize.test:3000"
-    if IS_LOCAL
-    else "https://communities.massenergize.dev"
-)
 
 ADMIN_URL_ROOT = (
     "https://admin.massenergize.org"
