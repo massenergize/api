@@ -1,0 +1,87 @@
+{
+  "navbar_menus": [
+    {
+      "name": "Home",
+      "children": [
+        {
+          "link": "/",
+          "name": "Home"
+        },
+        {
+          "link": "/?tour=true",
+          "name": "Take the tour",
+          "navItemId": "take-the-tour"
+        }
+      ],
+      "navItemId": "menu-home-id"
+    },
+    {
+      "name": "Actions",
+      "children": [
+        {
+          "link": "/actions",
+          "name": "All Actions"
+        },
+        {
+          "link": "/services",
+          "name": "Service Providers"
+        },
+        {
+          "link": "/testimonials",
+          "name": "Testimonials"
+        }
+      ],
+      "navItemId": "menu-actions-id"
+    },
+    {
+      "link": "/teams",
+      "name": "Teams",
+      "navItemId": "menu-teams-id"
+    },
+    {
+      "link": "/events",
+      "name": "Events",
+      "navItemId": "menu-events-id"
+    },
+    {
+      "name": "About Us",
+      "children": [
+        {
+          "link": "/impact",
+          "name": "Impact"
+        },
+        {
+          "link": "/aboutus",
+          "name": "Our Story"
+        },
+        {
+          "link": "/donate",
+          "name": "Donate"
+        },
+        {
+          "link": "/contactus",
+          "name": "Contact Us"
+        }
+      ],
+      "navItemId": "menu-about-us-id"
+    }
+  ],
+
+  "footer_menus":  [
+      {
+        "link": "policies?name=Privacy%20Policy",
+        "name": "Privacy Policy",
+        "navItemId": "footer-privacy-policy-id"
+      },
+      {
+        "link": "policies?name=Terms%20of%20Service",
+        "name": "Terms of Service",
+        "navItemId": "footer-terms-of-service-id"
+      },
+      {
+        "link": "https://docs.google.com/forms/d/e/1FAIpQLScxNPrJNsyy6k834hsPdy_Rf0jaDcczRAkjCM3Z1xgYn49Zsw/viewform",
+        "name": "Report a bug/Suggest a feature",
+        "navItemId": "footer-report-a-bug-id"
+      }
+    ]
+}

@@ -4007,3 +4007,80 @@ class CommunityNotificationSetting(models.Model):
     
     class Meta:
         indexes = [ models.Index(fields=["community", "notification_type"]),]
+        
+        
+class CustomMenu(models.Model):
+    """
+    A class used to represent a Custom Menu on the MassEnergize Platform
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    title = models.CharField(max_length=SHORT_STR_LEN)
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True, related_name="custom_menus", blank=True, null=True)
+    is_deleted = models.BooleanField(default=False, blank=True)
+    is_published = models.BooleanField(default=True, blank=True)
+    is_footer_menu = models.BooleanField(default=False, blank=True)
+    
+    more_info = models.JSONField(blank=True, null=True)
+    community_logo_link = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+
+    def __str__(self):
+        return self.title
+
+    def simple_json(self):
+        res = model_to_dict(self)
+        res["community"] = get_summary_info(self.community)
+        return res
+    
+    def get_menu_items(self):
+        return CustomMenuItem.objects.filter(menu=self, parent=None)
+
+    def full_json(self):
+        res =  self.simple_json()
+        res["menu_items"] = [item.full_json() for item in self.get_menu_items()]
+        return res
+
+    class Meta:
+        db_table = "custom_menus"
+        verbose_name_plural = "CustomMenus"
+        ordering = ("title",)
+        
+    
+class CustomMenuItem(models.Model):
+    '''
+     A class used to represent a Custom Menu Item on the MassEnergize Platform
+    '''
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=SHORT_STR_LEN)
+    link = models.CharField(max_length=SHORT_STR_LEN)
+    menu = models.ForeignKey(CustomMenu, on_delete=models.CASCADE, db_index=True, related_name="menu_items")
+    parent = models.ForeignKey("self", on_delete=models.SET_NULL, null=True, blank=True, related_name="children")
+    order = models.IntegerField(default=0)
+    
+    is_published = models.BooleanField(default=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return self.name + " - " + self.menu.name if self.menu else ""
+    
+    def simple_json(self):
+        return model_to_dict(self, exclude=["menu", "parent"])
+    
+    def get_children(self):
+        return CustomMenuItem.objects.filter(parent=self)
+    
+    def full_json(self):
+        res = self.simple_json()
+        res["children"] = [c.simple_json() for c in self.get_children()]
+        # res["menu"] = get_summary_info(self.menu)
+        # res["parent"] = get_summary_info(self.parent)
+        return res
+    
+    
+    class Meta:
+        db_table = "custom_menu_items"
+        verbose_name_plural = "CustomMenuItems"
+        ordering = ("order",)
+    
