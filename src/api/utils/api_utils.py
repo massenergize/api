@@ -1,11 +1,11 @@
 from math import atan2, cos, radians, sin, sqrt
 from database.models import AboutUsPageSettings, ActionsPageSettings, Community, CommunityAdminGroup, \
-    ContactUsPageSettings, EventsPageSettings, ImpactPageSettings, Media, Menu, \
+    ContactUsPageSettings, DonatePageSettings, EventsPageSettings, ImpactPageSettings, Media, Menu, \
     TeamsPageSettings, TestimonialsPageSettings, UserProfile, \
     VendorsPageSettings
 import pyshorteners
 
-from _main_.utils.constants import COMMUNITY_URL_ROOT_UPDATED
+from _main_.utils.constants import COMMUNITY_URL_ROOT
 
 
 def is_admin_of_community(context, community_id):
@@ -108,7 +108,7 @@ def create_media_file(file, name):
 
 
 def has_no_custom_website(community, host):
-    if host and host == COMMUNITY_URL_ROOT_UPDATED:
+    if host and host == COMMUNITY_URL_ROOT:
         return True
     
     elif community.community_website and community.community_website.first() and community.community_website.first().website:
@@ -149,10 +149,13 @@ def modify_menu_items_if_published(menu_items, page_settings, prefix):
                     active_menu_items.append(item)
             
             else:
-                item["children"] = process_items(item["children"])
-                
-                if item["children"]:
+                if item.get("name") == "Home":
                     active_menu_items.append(item)
+                else:
+                    item["children"] = process_items(item["children"])
+                    
+                    if item["children"]:
+                        active_menu_items.append(item)
         return active_menu_items
     
     if not menu_items or not page_settings:
@@ -177,6 +180,7 @@ def get_viable_menu_items(community, host):
     teams_page_settings = TeamsPageSettings.objects.filter(community=community).first()
     testimonial_page_settings = TestimonialsPageSettings.objects.filter(community=community).first()
     vendors_page_settings = VendorsPageSettings.objects.filter(community=community).first()
+    donate_page_settings = DonatePageSettings.objects.filter(community=community).first()
 
 
     menu_items = {}
@@ -193,6 +197,7 @@ def get_viable_menu_items(community, host):
         "testimonials": testimonial_page_settings.is_published,
         "teams": teams_page_settings.is_published,
         "events": events_page_settings.is_published,
+        "donate": donate_page_settings.is_published,
     },f'{"/"+community.subdomain if has_no_custom_website(community, host) else ""}')
     
     footer_menu_content = all_menu.get(name='PortalFooterQuickLinks')
