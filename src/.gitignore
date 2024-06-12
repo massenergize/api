@@ -1,7 +1,12 @@
 
 # Elastic Beanstalk Files
-.elasticbeanstalk
-.ebextensions
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
+.env
+dev.env
+prod.env
+.ebextensions/securelistener-clb.config
 prepare-for-deploy.py
 deployment/aws/
 *.sqlite3*
@@ -10,6 +15,9 @@ test_data/
 *.rdb*
 *.venv
 venv
+.coverage
+.logs/
+
 .hide
 .logs
 __pycache__
