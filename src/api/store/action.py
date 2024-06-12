@@ -1,5 +1,6 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
+from _main_.utils.metrics import timed
 from _main_.utils.utils import Console
 from api.store.common import get_media_info, make_media_info
 from api.tests.common import RESET, makeUserUpload
@@ -31,6 +32,7 @@ class ActionStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
+  @timed
   def list_actions(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       actions = []

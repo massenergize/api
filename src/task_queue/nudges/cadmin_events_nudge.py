@@ -1,6 +1,7 @@
 from _main_.utils.common import encode_data_for_URL, serialize_all
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
 from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
+from _main_.utils.feature_flag_keys import COMMUNITY_ADMIN_WEEKLY_EVENTS_NUDGE_FF
 from api.utils.api_utils import get_sender_email
 from api.utils.constants import WEEKLY_EVENTS_NUDGE_TEMPLATE
 from database.utils.settings.model_constants.events import EventConstants
@@ -26,8 +27,6 @@ default_pref = {
     "admin_portal_settings": AdminPortalSettings.Defaults,
 }
 
-WEEKLY_EVENT_NUDGE = "weekly_event_nudge-feature-flag"
-
 
 def is_viable(item):
     if item[0]  and item[1]:
@@ -48,7 +47,7 @@ def generate_event_list_for_community(com):
         community__is_published=True,
         is_published=True,
         is_deleted=False
-    ).exclude(community=com).exclude(shared_to__id=com.id).distinct()
+    ).exclude(community=com).exclude(shared_to__id=com.id).distinct().order_by("start_date_and_time")
     
     return {
         "events": prepare_events_email_data(events),
@@ -61,7 +60,7 @@ def get_comm_admins(com):
     only get admins whose communities have been allowed in the feature flag to receive events
     nudge
     """
-    flag = FeatureFlag.objects.filter(key=WEEKLY_EVENT_NUDGE).first()    
+    flag = FeatureFlag.objects.filter(key=COMMUNITY_ADMIN_WEEKLY_EVENTS_NUDGE_FF).first()
 
     all_community_admins = CommunityAdminGroup.objects.filter(community=com).values_list('members__preferences', "members__email", "members__full_name", "members__notification_dates", "members__user_info")
 
@@ -180,7 +179,7 @@ def prepare_events_email_data(events):
 def send_events_nudge(task=None):
     try:
         admins_emailed=[]
-        flag = FeatureFlag.objects.get(key=WEEKLY_EVENT_NUDGE)
+        flag = FeatureFlag.objects.get(key=COMMUNITY_ADMIN_WEEKLY_EVENTS_NUDGE_FF)
         if not flag or not flag.enabled():
             return False
 
@@ -192,8 +191,11 @@ def send_events_nudge(task=None):
             event_list = d.get("events", [])
             if len(admins) > 0 and len(event_list) > 0:
                 email_list = get_email_list(admins)
-                for name, email, user_info in email_list.items():
-                    stat = send_events_report(name, email, event_list, user_info)
+
+                #for name, email, user_info in email_list.items():
+                #    stat = send_events_report(name, email, event_list, user_info)
+                for name, email in email_list.items():
+                    stat = send_events_report(name, email, event_list)
                     if not stat:
                         print("send_events_report error return")
                         return False
@@ -205,9 +207,12 @@ def send_events_nudge(task=None):
         return False
 
 
-def send_events_report(name, email, event_list, user_info):
+#def send_events_report(name, email, event_list, user_info):
+def send_events_report(name, email, event_list):
     try:
-        login_method= (user_info or {}).get("login_method", None)
+        # 14-Dec-23 - fix for user_info not provided
+        user = UserProfile.objects.filter(email=email).first()
+        login_method= (user.user_info or {}).get("login_method", None)
         cred = encode_data_for_URL({"email": email, "login_method":login_method})
         change_preference_link = ADMIN_URL_ROOT+f"/admin/profile/preferences/?cred={cred}"
         data = {}

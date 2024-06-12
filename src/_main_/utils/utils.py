@@ -1,6 +1,7 @@
 import json, os
 import django.db.models.base as Base
 import inspect
+import threading
 from django.db.models.fields.related import ManyToManyField, ForeignKey
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
@@ -142,3 +143,14 @@ def is_url_valid(url):
         return False
     return True
 
+
+def run_in_background(func):
+    """
+    When you decorate a function with this, it will run the function
+    in the background and return immediately.
+    Use this if you don't care about the response of the function.
+    """
+    def wrapper(*args, **kwargs):
+        thread = threading.Thread(target=func, args=args, kwargs=kwargs)
+        thread.start()
+    return wrapper

@@ -31,6 +31,10 @@ import requests
 from io import BytesIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
+from apps__campaigns.models import Technology
+
+from database.models import Vendor
+
 RESET = "reset"
 ME_DEFAULT_TEST_IMAGE = "https://www.whitehouse.gov/wp-content/uploads/2021/04/P20210303AS-1901-cropped.jpg"
 
@@ -154,8 +158,8 @@ def makeAction(**kwargs):
 
 
 def makeAdminGroup(**kwargs):
-    key = round(time.time() * 1000)
-    name = kwargs.get("name") or f"New Group - {key}"
+    key = datetime.now()
+    name = kwargs.get("name") or f"New Group - {str(key)}"
     members = kwargs.pop("members")
     group, exists= CommunityAdminGroup.objects.get_or_create(**{**kwargs, "name": name})
     if members:
@@ -338,3 +342,23 @@ def image_url_to_base64(image_url = None):
         base64_image = f'data:{content_type};base64,{base64_image}'
         return base64_image
     return None
+
+
+
+def make_technology(**kwargs):
+    tech = Technology.objects.create(**{
+        **kwargs,
+        "name": kwargs.get("name") or f"New Technology-{datetime.now().timestamp()}",
+        "description": kwargs.get("description") or "New Technology Description",
+    })
+
+    return tech
+
+def make_vendor(**kwargs):
+    vendor = Vendor.objects.create(**{
+        **kwargs,
+        "name": kwargs.get("name") or f"New Vendor-{datetime.now().timestamp()}",
+        "description": kwargs.get("description") or "New Vendor Description",
+    })
+
+    return vendor

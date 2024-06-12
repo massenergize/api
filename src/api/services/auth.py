@@ -13,6 +13,7 @@ import jwt
 from sentry_sdk import capture_message
 import requests
 import os
+from _main_.utils.metrics import timed
 
 class AuthService:
   """
@@ -23,6 +24,7 @@ class AuthService:
     self.name = "AuthService"
 
 
+  @timed
   def login(self, context: Context):
     # This does the same work as verify
 
@@ -33,9 +35,7 @@ class AuthService:
       login_method = args.get('login_method', None)
       if firebase_id_token:
         decoded_token = auth.verify_id_token(firebase_id_token)
-        user_email = decoded_token.get("email")
-
-        
+        user_email = decoded_token.get("email")        
         user = UserProfile.objects.filter(email=user_email).first()
         if (not user or not user.accepts_terms_and_conditions):
           # there is a case where user is authenticated with firebase but
@@ -84,6 +84,7 @@ class AuthService:
       capture_message("not_an_admin", level="error")
       return None, None, CustomMassenergizeError('not_an_admin')
     except Exception as e:
+      print(e)
       capture_message("Authentication Error", level="error")
       return None, None, CustomMassenergizeError(e)
 

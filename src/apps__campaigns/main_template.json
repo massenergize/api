@@ -1,0 +1,72 @@
+{
+    "campaign": {
+        "title":"Campaign Template",
+        "description":"<p>This is a description for a template campaign</p>",
+        "is_template":false,
+        "primary_logo":"media/me-round-logo.png",
+        "secondary_logo":"media/me-biom.png",
+        "image":"media/campaign_image.jpg",
+        "tagline":"This is a tagline for a template campaign",
+        "advert":{
+            "title":"Want to learn more?",
+            "description":"Campaigns are a great way to organize your community around a specific topic. You can use campaigns to educate your community about a topic, to promote a specific action, or to track progress towards a goal. You can also use campaigns to organize events, like a community solar workshop or a home energy assessment day. You can even use campaigns to raise money for a specific project. The possibilities are endless!"
+        },
+        "communities_section":{
+            "title":"See more clean energy info from your community"
+        }
+    },
+    "technologies":[
+        {
+            "name":"Technology 1",
+            "description":"<p>This a description for Technology 1</p>",
+            "image":"media/green-tech.svg",
+            "summary":"Edit Me",
+            "overviews":[
+                {
+                    "title":"Lower our climate impact",
+                    "description":"<p>Generate fossil-free electricity and reduce greenhouse gas emissions.</p>"
+                },
+                {
+                    "title":"Cut your electric bill",
+                    "description":"<p>Save big with lower electricity bills</p>"
+                }
+
+            ],
+            "deals":[
+                {
+                    "title":"30% Federal Investment Tax Credit",
+                    "description":"<p>Our government is thanking you for your investment to reduce greenhouse gas emissions! If you own your system, the Federal Investment Tax Credit (ITC) provides a credit for 30% of your total system costs. So come tax time, calculate what you owe and subtract 30% of the cost of your solar system from your federal tax bill. Don’t worry, if you owe less in taxes than the 30% of your system cost, you can carry over those credits to the following years.</p>"
+                },
+                {
+                    "title":"Up to $1,000 in Mass state tax credits",
+                    "description":"<p>Lucky you! You live in Massachusetts where you also could receive a Massachusetts tax credit for the lesser of $1,000 or 15% of qualifying costs if you buy your own solar.</p>"
+                },
+                {
+                    "title":"No money down",
+                    "description":"Short on cash-in-hand and not interested in borrowing money?  Many solar companies will install solar panels on your roof at no cost to you using one of two options."
+                }
+        
+            ],
+            "coaches":[
+                {
+                    "name":"Tech 1 Coach",
+                    "community":"Community"
+                }
+            ],
+            "coaches_section":{
+                "title":"Meet our coaches",
+                "description":"<p>Add a short note about your coaches here </p>"
+            },
+            "deal_section":{
+                "title":"Don't Pay Full Price",
+                "description":"<p>Add a short not about the deals for this technology </p>"
+            },
+            "overview_title":"Tell me more about Technology 1",
+            "vendors-section":{
+                "title":"Find a vendor",
+                "description":"<p>Add a short note to help users find vendors</p>"
+            }
+        }
+    ]
+
+}

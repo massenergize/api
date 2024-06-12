@@ -5,6 +5,7 @@ from api.services.team import TeamService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from api.decorators import admins_only, super_admins_only, login_required
+from api.store.common import expect_media_fields
 
 class TeamHandler(RouteHandler):
 
@@ -65,6 +66,7 @@ class TeamHandler(RouteHandler):
     self.validator.rename("primary_community_id", "community_id")
     # logo image depends on whether from user portal or admin portal
     #self.validator.expect("logo", "str_list")
+    expect_media_fields(self)
 
     args, err = self.validator.verify(args)
     if err:
@@ -110,6 +112,7 @@ class TeamHandler(RouteHandler):
     self.validator.rename("primary_community_id", "community_id")
     # logo image depends on whether from user portal or admin portal
     # self.validator.expect("logo", "str_list")
+    expect_media_fields(self)
 
     args, err = self.validator.verify(args)
     if err:

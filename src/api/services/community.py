@@ -17,7 +17,7 @@ class CommunityService:
   def __init__(self):
     self.store =  CommunityStore()
 
-  def get_community_info(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def get_community_info(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     community, err = self.store.get_community_info(context, args)
     if err:
       return None, err
@@ -44,7 +44,7 @@ class CommunityService:
     communities, err = self.store.list_communities(context, args)
     if err:
       return None, err
-    return serialize_all(communities), None
+    return serialize_all(communities, info=True), None
 
 
   def create_community(self,context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -132,5 +132,35 @@ class CommunityService:
     if err:
       return None, err
     return serialize_all(completed_actions_list), None
+  
+  def list_community_features(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    feature_flags, err = self.store.list_community_features(context, args)
+    if err:
+      return None, err
+    return feature_flags, None
+  
+  def request_feature_for_community(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    feature_flag, err = self.store.request_feature_for_community(context, args)
+    if err:
+      return None, err
+    return feature_flag, None
+  
+  def update_community_notification_settings(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    nudge_settings, err = self.store.update_community_notification_settings(context, args)
+    if err:
+      return None, err
+    return nudge_settings, None
+
+  def list_community_notification_settings(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+        nudge_settings, err = self.store.list_community_notification_settings(context, args)
+        if err:
+            return None, err
+        return nudge_settings, None
+  
+  def list_communities_feature_flags(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    feature_flags, err = self.store.list_communities_feature_flags(context, args)
+    if err:
+      return None, err
+    return serialize_all(feature_flags, info=True), None
 
 

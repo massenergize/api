@@ -1,0 +1,214 @@
+{
+    "campaign": {
+        "title":"PlugIN",
+        "description":"<p>plugIN supports residents in the communities of Acton, Framingham, Natick and Wayland to create a healthier community by reducing greenhouse gas emissions. We are helping residents to decide if a heat pump, community solar and/or home solar are right for them. We provide the information: the how-to, the financial incentives, and what others think of their experiences, combined with the support they need: community volunteers to answer questions and help provide guidance; and community member feedback on their experiences.&nbsp;</p><p>&nbsp;</p><p>plugIN is a collaboration among the Towns of Acton, Natick and Wayland and the City of Framingham, the non-profit&nbsp;<a href='http://www.massenergize.org/' target='_blank' style='background-color: transparent; color: rgb(100, 176, 88);'>MassEnergize, Inc.</a>, and the community-based organizations of the Acton Climate Coalition, Energize Acton, EcoNatick, Energize Framingham and Energize Wayland.</p>",
+        "is_template":false,
+        "primary_logo":"media/me-round-logo.png",
+        "secondary_logo":"media/me-biom.png",
+        "image":"media/campaign_image.jpg",
+        "tagline":"This is a tagline",
+        "advert":{
+            "title":"plugIN to climate solutions",
+            "description":"plugIN helps residents create healthier homes and communities by reducing greenhouse gas emissions. It is a collaboration among the Towns of Acton, Natick and Wayland and the City of Framingham, and the non-profit MassEnergize. Local community-based organizations are key partners in this effort: Acton Climate Coalition, Energize Acton, EcoNatick, Energize Framingham and Energize Wayland."
+        },
+        "communities_section":{
+            "title":"See more clean energy info from your community"
+        }
+    },
+    "technologies":[
+        {
+            "name":"Home Solar",
+            "description":"<p>plugIN helps residents create healthier homes and communities by reducing greenhouse gas emissions. It is a collaboration among the Towns of Acton, Natick and Wayland and the City of Framingham, and the non-profit MassEnergize. Local community-based organizations are key partners in this effort: Acton Climate Coalition, Energize Acton, EcoNatick, Energize Framingham and Energize Wayland</p>",
+            "image":"media/pump.jpeg",
+            "summary":"Have you been thinking about finally going solar on your roof? Learn, get help and find vendors here.",
+            "overviews":[
+                {
+                    "title":"Lower our climate impact",
+                    "description":"<p>Generate fossil-free electricity and reduce greenhouse gas emissions.</p>"
+                },
+                {
+                    "title":"Cut your electric bill",
+                    "description":"<p>Save big with lower electricity bills</p>"
+                },
+                {
+                    "title":"Invest in your home",
+                    "description":"<p>Increase your home's value when you buy your solar and pay it off in 5-7 years.</p>"
+                },
+                {
+                    "title":"Get back at the tax man",
+                    "description":"<p>Receive a 30% federal tax credit and up to a $1,000 state tax credit</p>"
+                },
+                {
+                    "title":"Plays well with others",
+                    "description":"<p>Heat pumps, electric vehicles and batteries, oh my! Your solar can build your path to some serious greenhouse gas reductions.</p>"
+                }
+            ],
+            "deals":[
+                {
+                    "title":"30% Federal Investment Tax Credit",
+                    "description":"<p>Our government is thanking you for your investment to reduce greenhouse gas emissions! If you own your system, the Federal Investment Tax Credit (ITC) provides a credit for 30% of your total system costs. So come tax time, calculate what you owe and subtract 30% of the cost of your solar system from your federal tax bill. Don’t worry, if you owe less in taxes than the 30% of your system cost, you can carry over those credits to the following years.</p>"
+                },
+                {
+                    "title":"Up to $1,000 in Mass state tax credits",
+                    "description":"<p>Lucky you! You live in Massachusetts where you also could receive a Massachusetts tax credit for the lesser of $1,000 or 15% of qualifying costs if you buy your own solar.</p>"
+                },
+                {
+                    "title":"No money down",
+                    "description":"Short on cash-in-hand and not interested in borrowing money?  Many solar companies will install solar panels on your roof at no cost to you using one of two options."
+                },
+                {
+                    "title":"Solar Mass Renewable Target (SMART)",
+                    "description":"The State of Massachusetts wants us to invest in solar so they set up the Solar Massachusetts Renewable Target (SMART) program to pay you for the clean electricity that your home solar produces. Your solar installer will be the best way to estimate your payments. You could be getting a check in the mail every month for 10 years! Be sure to clarify with your installer who receives these credits. FYI, it's the electricity companies like Eversource that handle the payments."
+                }
+        
+            ],
+            "coaches":[
+                {
+                    "name":"Tapan Maniar",
+                    "community":"Wayland"
+                },{
+                    "name":"John Harper",
+                    "community":"Wayland"
+                }
+            ],
+            "coaches_section":{
+                "title":"Meet our coaches",
+                "description":"<p>Our volunteers are from Acton, Framingham, Natick and Wayland.These generous neighbors installed solar on their own homes and want to share their expertise with you. These “coaches” can help you on everything from getting started to comparing quotes and have no financial stake in your decision</p>"
+            },
+            "deal_section":{
+                "title":"Don't Pay Full Price",
+                "description":"<p>From the federal Inflation Reduction Act to no-money down solar leases (aka Power Purchase Agreements), we can help you find ways to make your heat pump project more affordable.</p>"
+            },
+            "overview_title":"Tell me more about home solar",
+            "vendors-section":{
+                "title":"Find a vendor",
+                "description":"<p>Be sure to get more than one quote. We have included a few solar installers on this site and encourage you to look at the EnergySage marketplace. Qualified installers will be able to provide a free estimate. A good installer should automatically sign you up for any available rebates or savings. plugIN and all of its collaborators explicitly disclaim all liability and do not recommend nor endorse any specific vendors. </p>"
+            }
+        },
+        {
+            "name":"Heat Pumps",
+            "description":"<p>plugIN helps residents create healthier homes and communities by reducing greenhouse gas emissions. It is a collaboration among the Towns of Acton, Natick and Wayland and the City of Framingham, and the non-profit MassEnergize. Local community-based organizations are key partners in this effort: Acton Climate Coalition, Energize Acton, EcoNatick, Energize Framingham and Energize Wayland</p>",
+            "image":"media/pump.jpeg",
+            "summary":"Heat pumps do it all - heat, cool, dehumidify and heat water. They increase the comfort of your home and reduce greenhouse gas emissions ",
+            "overviews":[
+                {
+                    "title":"Heating, Cooling & Hot Water",
+                    "description":"Want one system for your home that does it all? Look no further than heat pumps. Heating, cooling, hot water - heat pumps, they got it."
+
+                },
+                {
+                    "title":"No Fossil Fuels",
+                    "description":"Heating and cooling are the biggest sources of emissions in your home. Heat pumps use electricity from the grid - and Massachusetts has a cleaner grid every year."
+                },
+                {
+                    "title":"Safer",
+                    "description":"Heat pumps don’t burn fossil fuels so you reduce the risk of fires and explosions."
+
+                },
+                {
+                    "title":"Add A/C and Comfort",
+                    "description":"Whether it's adding air conditioning or making that cold room cozier, heat pumps can make your home more comfortable"
+
+                },{
+                    "title":"Cold Climate Ready",
+                    "description":"<p>Maine homeowners are adopting heat pumps at&nbsp; <a href='https://www.maine.gov/governor/mills/news/after-maine-surpasses-100000-heat-pump-goal-two-years-ahead-schedule-governor-mills-sets-new#:~:text=Fairfield%2C%20MAINE%20%E2%80%93%20Governor%20Janet%20Mills,and%20curbing%20harmful%20carbon%20emissions.' target='_blank' style='color: rgb(100, 176, 88); font-family: Montserrat, sans-serif; background-color: rgb(255, 255, 255); font-size: 20px;'>record speed</a> &nbsp;- proving they work in New England.&nbsp;</span></p>"
+                },
+                {
+                    "title":"Don't Pay Full Price",
+                    "description":"$10k sound not too bad? That’s 2023 incentive levels from Mass Save. Add a $2000 federal tax credit and now we’re talking."
+                }
+            ],
+            "deals":[
+                {
+                    "title":"Up to $10,000 from Mass Save",
+                    "description":"<p><a href='https://goclean.masscec.com/' target='_blank' style='color: rgb(7, 17, 16); font-family: Montserrat, sans-serif; background-color: rgb(255, 255, 255); font-size: 20px;'>Mass Save offers&nbsp;</a><a href='https://www.masssave.com/en/residential/rebates-and-incentives/air-source-heat-pumps' target='_blank' style='color: rgb(7, 17, 16); font-family: Montserrat, sans-serif; background-color: rgb(255, 255, 255); font-size: 20px;''>residential heat pump rebates</a><span style='color: rgb(7, 17, 16); font-family: Montserrat, sans-serif; background-color: rgb(255, 255, 255); font-size: 16px;'>&nbsp;of up to $10,000 for air-source heat pumps (ASHPs) and $15,000 for ground-source heat pumps (GSHPs), with additional incentives for low and moderate income households. Many installers will apply on your behalf for any available rebates.</span></p>"
+                },{
+                    "title": "0% HEAT Loan",
+                    "description":"<p><span style='color: rgb(7, 17, 16); font-family: Montserrat, sans-serif; background-color: rgb(255, 255, 255); font-size: 20px;'>Heat pumps are eligible for a 0% interest&nbsp;</span><a href='https://www.masssave.com/saving/residential-rebates/heat-loan-program' target='_blank' style='color: rgb(0, 123, 255); font-family: Montserrat, sans-serif; background-color: rgb(255, 255, 255); font-size: 20px;'>Mass Save HEAT loan</a><span style='color: rgb(7, 17, 16); font-family: Montserrat, sans-serif; background-color: rgb(255, 255, 255); font-size: 20px;'>&nbsp;of up to $50,000, payable over 7 years if you qualify.</span></p>"
+                },{
+                    "title":"Up to $2,000 federal tax credit",
+                    "description":"<p><span style='color: rgb(7, 17, 16); font-family: Montserrat, sans-serif; font-size: 20px; background-color: rgb(255, 255, 255);'>Receive a&nbsp;</span><a href='https://www.rewiringamerica.org/app/ira-calculator/information/heat-pump-air-conditioner-heater' target='_blank' style='color: rgb(100, 176, 88); font-family: Montserrat, sans-serif; font-size: 20px; background-color: rgb(255, 255, 255);'>30% federal tax credit</a><span style='color: rgb(7, 17, 16); font-family: Montserrat, sans-serif; font-size: 20px; background-color: rgb(255, 255, 255);'>&nbsp;(up to $2,000) on a new heat pump installation each year. Most heat pump installations qualify for the $2,000 maximum. Heat pump water heaters are also eligible. Plus, there's a one-time 30% tax credit (up to $600) for an electric panel upgradewhen done with a heat pump installation. Thanks, Inflation Reduction Act!</span></p>"
+                },
+                {
+                    "title":"Limited income? 50%-100% off!",
+                    "description":"<p><span style='color: rgb(7, 17, 16); font-family: Montserrat, sans-serif; font-size: 20px; background-color: rgb(255, 255, 255);'>See if you qualify for up to $8,000! Low and moderate income households qualify for 50% - 100% off the installed cost of heat pumps. Check your eligibility on&nbsp;</span><a href='https://homes.rewiringamerica.org/calculator' target='_blank' style='color: rgb(100, 176, 88); font-family: Montserrat, sans-serif; font-size: 20px; background-color: rgb(255, 255, 255);'>Rewiring America's savings calculator</a><span style='color: rgb(7, 17, 16); font-family: Montserrat, sans-serif; font-size: 20px; background-color: rgb(255, 255, 255);'>.</span></p>"
+                }
+            ],
+            "coaches":[
+                {
+                    "name":"Jim Snyder-Grant",
+                    "community":"Acton"
+                },{
+                    "name":"Erlin Ellsworth",
+                    "community":"Framingham"
+                },
+                {
+                    "name":"Anne Harris",
+                    "community":"Wayland"
+                },{
+                    "name":"Steve Breit",
+                    "community":"Wayland"
+                }
+            ],
+            "coaches_section":{
+                "title":"Meet our coaches",
+                "description":"<div><p>Our volunteers are from Acton, Framingham, Natick and Wayland.</p><p>These generous neighbors have gone back to school to learn all about heat pumps and want to share their expertise with you. These “coaches” can get into the details with a limited number of residents and have no financial stake in your decision. Coaches were trained by the &nbsp; <a href='https://heatsmartalliance.org/' target='_blank' style='color: rgb(100, 176, 88); background-color: transparent;'>Heat Smart Alliance</a> &nbsp; and/or &nbsp; <a href='https://abodeem.com/homeowners/community-programs/' target='_blank' style='color: rgb(100, 176, 88); background-color: transparent;'>Abode</a>.&nbsp;</p></div>"
+            },
+            "deal_section":{
+                "title":"Don't Pay Full Price",
+                "description":"<p>From the federal Inflation Reduction Act to Massachusetts’ Mass Save® incentives and the 0% HEAT loans, we can help you find ways to make your heat pump project more affordable.</p>"
+            },
+            "overview_title":"Tell me more about heat pumps",
+            "vendors-section":{
+                "title":"Find a vendor",
+                "description":"<p>The&nbsp; <a href=https://abodeem.com/homeowners/participating-contractor-listing/?provider=Melrose-City%20of&amp;language&amp;offerings&amp;manufacturer' target='_blank' style='background-color: transparent; color: rgb(100, 176, 88);'>vendors</a>&nbsp;listed below have been vetted by&nbsp; <a href='https://abodeem.com/homeowners/paid-consulting-service/' target='_blank' style='background-color: transparent; color: rgb(100, 176, 88);'>Abode Energy.</a>&nbsp;Be sure to get more than one quote. Qualified installers will be able to provide a free estimate. A good installer should automatically sign you up for any available rebates or savings</p> <p>Plug In and all of its collaborators explicitly disclaim all liability and do not recommend nor endorse any specific vendors.&nbsp;</p>"
+            }
+
+        },
+        {
+            "name":"Community Solar",
+            "description":"<p>plugIN helps residents create healthier homes and communities by reducing greenhouse gas emissions. It is a collaboration among the Towns of Acton, Natick and Wayland and the City of Framingham, and the non-profit MassEnergize. Local community-based organizations are key partners in this effort: Acton Climate Coalition, Energize Acton, EcoNatick, Energize Framingham and Energize Wayland</p>",
+            "image":"media/pump.jpeg",
+            "summary":"Want to pay less for your electricity? If you pay an electric bill, you are eligible to sign up for community solar. Low income households receive the most significant discounts but everyone can save.",
+            "overviews":[
+                {
+                    "title":"Build a clean energy economy",
+                    "description":"Your subscription to community solar farm helps give investors the confidence to lend money to build more solar projects - cleaning up our electricity grid by generating fossil-free electricity and reducing greenhouse gas emissions"
+                },{
+                    "title":"Lower your electric bill",
+                    "description":"Save 5-10% on your  electricity bills. Lower-income households can save 20% on their electricity bills"
+                },
+                {
+                   "title":"Flexible", 
+                     "description":"Your contract works like a month-to-month subscription with ability to cancel at any time for no fee."
+                },{
+                    "title":"Works for all",
+                    "description":"Renters, condo owners, those with shady or old roofs who can’t install roof top solar, and those with roof top solar can all subscribe"
+                },{
+                    "title":"No upfront costs",
+                    "description":"You will see your savings on every bill once the project is activated (typically 2-3 months after signing up)"
+                },{
+                    "title":"Employs local",
+                    "description":"Solar projects are built by local workers"
+                }
+            ],
+            "deals":[],
+            "coaches":[{
+                "name":"Aimee Powelka",
+                "community":"Framingham"
+            }],
+            "coaches_section":{
+                "title":"Meet our coaches",
+                "description":"<p>Our volunteers are from Acton, Framingham, Natick and Wayland.</p><p>These generous neighbors have gone back to school to learn all about heat pumps and want to share their expertise with you. These “coaches” can get into the details with a limited number of residents and have no financial stake in your decision. Coaches were trained by the &nbsp; <a href='https://heatsmartalliance.org/' target='_blank' style='color: rgb(100, 176, 88); background-color: transparent;'>Heat Smart Alliance</a> &nbsp; and/or &nbsp; <a href='https://abodeem.com/homeowners/community-programs/' target='_blank' style='color: rgb(100, 176, 88); background-color: transparent;'>Abode</a>.&nbsp;</p>"
+            },
+            "deal_section":{},
+            "overview_title":"Tell me more about community solar",
+            "vendors-section":{
+                "title":"Find a community solar provider",
+                "description":"<div><p>You can find community solar providers on the&nbsp; <a href='https://www.energysage.com/p/energize-framingham/' target='_blank' style='background-color: transparent; color: rgb(100, 176, 88);'>EnergySage&nbsp;</a>web site. Just find your electricity bill, enter your zip code and monthly energy use.&nbsp;EnergySage&nbsp;will identify providers that are taking new subscribers. Be sure to talk to more than one community solar provider.&nbsp;Solar providers will be able to estimate how much you as a community solar subscriber will save on your electric bill each month and over the course of a year.&nbsp;</p><p>Plug In and all of its collaborators explicitly disclaim all liability and do not recommend nor endorse any vendors.</p></div>"
+            }
+
+        }
+    ]
+
+}

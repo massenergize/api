@@ -1,5 +1,5 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError
-from api.constants import ACTION_USERS, ACTIONS, COMMUNITIES, METRICS, SAMPLE_USER_REPORT, TEAMS, USERS, CADMIN_REPORT, SADMIN_REPORT, COMMUNITY_PAGEMAP
+from api.constants import ACTION_USERS, ACTIONS, CAMPAIGN_INTERACTION_PERFORMANCE_REPORT, CAMPAIGN_PERFORMANCE_REPORT, CAMPAIGN_VIEWS_PERFORMANCE_REPORT, COMMUNITIES, FOLLOWED_REPORT, LIKE_REPORT, LINK_PERFORMANCE_REPORT, METRICS, SAMPLE_USER_REPORT, TEAMS, USERS, CADMIN_REPORT, SADMIN_REPORT, COMMUNITY_PAGEMAP
 from api.store.download import DownloadStore
 from _main_.utils.context import Context
 from typing import Tuple
@@ -131,4 +131,72 @@ class DownloadService:
         }
         download_data.delay(data, COMMUNITY_PAGEMAP)
         return [], None
+    
 
+
+    def campaign_follows_download(self, context: Context, campaign_id) -> Tuple[list, MassEnergizeAPIError]:
+        data = {
+            'campaign_id': campaign_id,
+            'user_is_community_admin': context.user_is_community_admin,
+            'user_is_super_admin':context.user_is_super_admin,
+            'email': context.user_email,
+            'user_is_logged_in': context.user_is_logged_in
+        }
+        download_data.delay(data, FOLLOWED_REPORT)
+        return [], None
+
+    
+    def campaign_likes_download(self, context: Context, campaign_id) -> Tuple[list, MassEnergizeAPIError]:
+        data = {
+            'campaign_id': campaign_id,
+            'user_is_community_admin': context.user_is_community_admin,
+            'user_is_super_admin':context.user_is_super_admin,
+            'email': context.user_email,
+            'user_is_logged_in': context.user_is_logged_in,
+        }
+        download_data.delay(data, LIKE_REPORT)
+        return [], None
+    
+
+    def campaign_link_performance_download(self, context: Context, campaign_id) -> Tuple[list, MassEnergizeAPIError]:
+        data = {
+            'campaign_id': campaign_id,
+            'user_is_community_admin': context.user_is_community_admin,
+            'user_is_super_admin':context.user_is_super_admin,
+            'email': context.user_email,
+        }
+        download_data.delay(data, LINK_PERFORMANCE_REPORT)
+        return [], None
+    
+    
+    def campaign_performance_download(self, context: Context, campaign_id) -> Tuple[list, MassEnergizeAPIError]:
+        data = {
+            'campaign_id': campaign_id,
+            'user_is_community_admin': context.user_is_community_admin,
+            'user_is_super_admin':context.user_is_super_admin,
+            'email': context.user_email
+        }
+        download_data.delay(data, CAMPAIGN_PERFORMANCE_REPORT)
+        return [], None
+
+
+    def campaign_views_performance_download(self, context: Context, campaign_id) -> Tuple[list, MassEnergizeAPIError]:
+        data = {
+            'campaign_id': campaign_id,
+            'user_is_community_admin': context.user_is_community_admin,
+            'user_is_super_admin':context.user_is_super_admin,
+            'email': context.user_email
+        }
+        download_data.delay(data, CAMPAIGN_VIEWS_PERFORMANCE_REPORT)
+        return [], None
+    
+
+    def campaign_interaction_performance_download(self, context: Context, campaign_id) -> Tuple[list, MassEnergizeAPIError]:
+        data = {
+            'campaign_id': campaign_id,
+            'user_is_community_admin': context.user_is_community_admin,
+            'user_is_super_admin':context.user_is_super_admin,
+            'email': context.user_email
+        }
+        download_data.delay(data, CAMPAIGN_INTERACTION_PERFORMANCE_REPORT)
+        return [], None

@@ -28,6 +28,7 @@ class MessageHandler(RouteHandler):
     self.add("/messages.replyFromCommunityAdmin", self.reply_from_community_admin)
     self.add("/messages.forwardToTeamAdmins", self.forward_to_team_admins)
     self.add("/messages.send", self.send_message)
+    self.add("/messages.listScheduled", self.list_scheduled_messages)
 
   @admins_only
   def info(self, request):
@@ -107,6 +108,19 @@ class MessageHandler(RouteHandler):
 
     args, err = self.validator.verify(args, strict=True)
     messages, err = self.service.list_community_admin_messages_for_community_admin(context, args)
+    if err:
+      return err
+
+    return MassenergizeResponse(data=messages)
+  
+  @admins_only
+  def list_scheduled_messages(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    self.validator.expect("message_ids",list, is_required=False)
+
+    args, err = self.validator.verify(args, strict=True)
+    messages, err = self.service.list_scheduled_messages(context, args)
     if err:
       return err
 

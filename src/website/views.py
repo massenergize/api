@@ -1,10 +1,12 @@
+from uuid import UUID
 import html2text, traceback
 from django.shortcuts import render, redirect
 from _main_.utils.common import serialize_all
 from _main_.utils.massenergize_response import MassenergizeResponse
 from django.http import Http404, JsonResponse
-from _main_.settings import IS_PROD, IS_CANARY, RUN_SERVER_LOCALLY
+from _main_.settings import IS_PROD, IS_CANARY, RUN_SERVER_LOCALLY, EnvConfig
 from sentry_sdk import capture_message
+from api.handlers.misc import MiscellaneousHandler
 from api.store.misc import MiscellaneousStore
 from _main_.utils.constants import RESERVED_SUBDOMAIN_LIST, STATES
 from api.utils.api_utils import get_distance_between_coords
@@ -22,12 +24,15 @@ from database.models import (
     ImpactPageSettings,
     CustomCommunityWebsiteDomain,
 )
+from apps__campaigns.models import Campaign, CampaignTechnology
 from django.db.models import Q
 from django.template.loader import render_to_string
-
+from _main_.utils.metrics import timed
 
 import zipcodes
 
+import logging
+logger = logging.getLogger(EnvConfig.get_logger_identifier())
 
 extract_text_from_html = html2text.HTML2Text()
 extract_text_from_html.ignore_links = True
@@ -49,13 +54,19 @@ HOME_SUBDOMAIN_SET = set(
 IS_LOCAL = RUN_SERVER_LOCALLY  # API and community portal running locally
 if IS_LOCAL:
     PORTAL_HOST = "http://massenergize.test:3000"
+    CAMPAIGN_HOST = "http://localhost:3000"
 elif IS_CANARY:
     PORTAL_HOST = "https://community-canary.massenergize.org"
+    CAMPAIGN_HOST = "https://campaigns-canary.massenergize.org"
 elif IS_PROD:
     PORTAL_HOST = "https://community.massenergize.org"
+    CAMPAIGN_HOST = (
+        "https://campaigns.massenergize.org"  # Change value when we have the appropriate link
+    )
 else:
     # we know it is dev
     PORTAL_HOST = "https://community.massenergize.dev"
+    CAMPAIGN_HOST = "https://campaigns.massenergize.dev"  # Change value when we have the appropriate link
 
 
 if IS_LOCAL:
@@ -82,6 +93,92 @@ META = {
     "tags": ["#ClimateChange"],
     "is_local": IS_LOCAL,
 }
+
+@timed
+def campaign(request, campaign_id):
+
+    campaign = None
+    try:
+        uuid_id = UUID(campaign_id, version=4)
+        campaign = Campaign.objects.filter(id=uuid_id, is_deleted=False).first()
+    except ValueError:
+        campaign = Campaign.objects.filter(slug=campaign_id, is_deleted=False).first()
+    if not campaign:
+        raise Http404
+    image = campaign.image.file.url
+
+    redirect_url = f"{CAMPAIGN_HOST}{request.get_full_path()}"
+    meta = {
+            "image_url": _get_file_url(campaign.image),
+            # "subdomain": subdomain,
+            "title": campaign.title,
+            "description": _extract(campaign.description),
+            "url": f"{redirect_url}/actions/{id}",
+            "redirect_to": redirect_url,
+            "created_at": campaign.created_at,
+            "updated_at": campaign.updated_at,
+            "stay_put": request.GET.get("stay_put", None),
+        }
+    # meta = {
+    #     "title": campaign.title,
+    #     "redirect_to": f"{CAMPAIGN_HOST}/campaign/{campaign.id}",
+    #     "image": image,
+    #     "image_url": image,
+    #     "summary_large_image": image,
+    #     "description": campaign.description,
+    #     # "stay_put": True,
+    # }
+    args = {
+        "meta": meta,
+        "title": campaign.title,
+        "id": campaign.id,
+        "image": image,
+        "campaign": campaign,
+        "tagline": campaign.tagline,
+    }
+    return render(request, "campaign.html", args)
+
+
+def campaign_technology(request, campaign_id, campaign_technology_id):
+    camp_tech = CampaignTechnology.objects.filter(
+        id=campaign_technology_id, is_deleted=False
+    ).first()
+    if not camp_tech or not campaign_technology_id or not campaign_id:
+        raise Http404
+
+    technology = camp_tech.technology
+    image = _get_file_url(technology.image)
+
+    redirect_url = f"{CAMPAIGN_HOST}{request.get_full_path()}"
+    meta = {
+        "image_url": image,
+        # "subdomain": subdomain,
+        "title": technology.name,
+        "description": _extract(technology.description),
+        "url": redirect_url,
+        "redirect_to": redirect_url,
+        "created_at": technology.created_at,
+        "updated_at": technology.updated_at,
+        "stay_put": request.GET.get("stay_put", None),
+    }
+
+
+    # meta = {
+    #     "title": technology.name,
+    #     "redirect_to":f"{CAMPAIGN_HOST}/campaign/{campaign_id}/technology/{campaign_technology_id}" ,
+    #     "image": image,
+    #     "image_url": image,
+    #     "summary_large_image": image,
+    #     "description": technology.description,
+    #     "stay_put": True,
+    # }
+    args = {
+        "meta": meta,
+        "title": technology.name,
+        "id": campaign_technology_id,
+        "image": image,
+    }
+    return render(request, "campaign_technology.html", args)
 
 
 def _restructure_communities(communities):
@@ -234,9 +331,13 @@ def _separate_communities(communities, lat, long):
                 if community not in other:
                     other.append(community)
                 continue
-            community_zipcode_info = zipcodes.matching(location.zipcode)
-            community_zipcode_lat = community_zipcode_info[0]["lat"]
-            community_zipcode_long = community_zipcode_info[0]["long"]
+            
+            try:
+                community_zipcode_info = zipcodes.matching(location.zipcode)
+                community_zipcode_lat = community_zipcode_info[0]["lat"]
+                community_zipcode_long = community_zipcode_info[0]["long"]
+            except ValueError as e:
+                continue
 
             distance = get_distance_between_coords(
                 float(lat),
@@ -254,7 +355,7 @@ def _separate_communities(communities, lat, long):
                     other.append(community)
     return close, other
 
-
+@timed
 def home(request):
     subdomain = _get_subdomain(request, False)
     if not subdomain or subdomain in HOME_SUBDOMAIN_SET:
@@ -264,7 +365,11 @@ def home(request):
 
     return redirect(HOST)
 
+def api_home(request):
+    return MiscellaneousHandler().home(request)
 
+
+@timed
 def search_communities(request):
     exact = []
     other = []
@@ -315,7 +420,7 @@ def search_communities(request):
     data_dict = {"html_from_view": html}
     return JsonResponse(data=data_dict, safe=False)
 
-
+@timed
 def communities(request):
     lat = request.POST.get("latitude")
     long = request.POST.get("longitude")
@@ -826,6 +931,13 @@ def contact_us(request, subdomain=None):
 
     return render(request, "page__contact_us.html", args)
 
+def health_check(request):
+    return MiscellaneousHandler().health_check(request)
+
+
+def version(request):
+    return MiscellaneousHandler().version(request)
+
 
 def generate_sitemap(request):
     d = MiscellaneousStore().generate_sitemap_for_portal()
@@ -838,19 +950,23 @@ def generate_sitemap_main(request):
 
 
 def handler400(request, exception):
+    logger.error(exception, exc_info=1)
     return MassenergizeResponse(error="bad_request")
 
 
 def handler403(request, exception):
+    logger.error(exception, exc_info=1)
     return MassenergizeResponse(error="permission_denied")
 
 
 def handler404(request, exception):
+    logger.error(f"resource_not_found: path={request.path}")
     if request.path.startswith("/v2"):
         return MassenergizeResponse(error="method_deprecated")
     return MassenergizeResponse(error="resource_not_found")
 
 
 def handler500(request):
+    logger.error("ServerError", exc_info=1)
     capture_message(str(traceback.print_exc()))
     return MassenergizeResponse(error="server_error")
