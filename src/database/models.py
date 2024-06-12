@@ -2,6 +2,9 @@ import datetime
 from datetime import timezone, timedelta
 import json
 import uuid
+
+from slugify import slugify
+
 from _main_.utils.policy.PolicyConstants import PolicyConstants
 from apps__campaigns.helpers import get_user_accounts
 from database.utils.settings.model_constants.events import EventConstants
@@ -4031,7 +4034,7 @@ class CustomMenu(models.Model):
 
     def simple_json(self):
         res = model_to_dict(self)
-        res["community"] = get_summary_info(self.community)
+        res["id"] = str(self.id)
         return res
     
     def get_menu_items(self):
@@ -4054,7 +4057,7 @@ class CustomMenuItem(models.Model):
     '''
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=SHORT_STR_LEN)
-    link = models.CharField(max_length=SHORT_STR_LEN)
+    link = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
     menu = models.ForeignKey(CustomMenu, on_delete=models.CASCADE, db_index=True, related_name="menu_items")
     parent = models.ForeignKey("self", on_delete=models.SET_NULL, null=True, blank=True, related_name="children")
     order = models.IntegerField(default=0)
@@ -4063,10 +4066,13 @@ class CustomMenuItem(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     def __str__(self):
-        return self.name + " - " + self.menu.name if self.menu else ""
+        return self.name + " - " + self.menu.title if self.menu else ""
     
     def simple_json(self):
-        return model_to_dict(self, exclude=["menu", "parent"])
+        res = model_to_dict(self, exclude=["menu", "parent"])
+        res["id"] = str(self.id)
+        return res
+    
     
     def get_children(self):
         return CustomMenuItem.objects.filter(parent=self)
@@ -4074,10 +4080,7 @@ class CustomMenuItem(models.Model):
     def full_json(self):
         res = self.simple_json()
         res["children"] = [c.simple_json() for c in self.get_children()]
-        # res["menu"] = get_summary_info(self.menu)
-        # res["parent"] = get_summary_info(self.parent)
         return res
-    
     
     class Meta:
         db_table = "custom_menu_items"

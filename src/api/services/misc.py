@@ -1,3 +1,5 @@
+import logging
+
 from django.test import Client
 from _main_.utils.constants import INSPIRATIONAL_MESSAGES
 from _main_.utils.footage.FootageConstants import FootageConstants
@@ -140,3 +142,17 @@ class MiscellaneousService:
             return None, err
 
         return res, None
+    
+    
+    def create_from_template(self,context, args):
+      try:
+        res, err = self.store.create_from_template(context,args)
+        
+        if err:
+          return None, err
+        
+        return serialize(res, full=True), None
+      
+      except Exception as e:
+          logging.error(f"CREATE_FROM_TEMPLATE_EXCEPTION_ERROR: {str(e)}")
+          return None, CustomMassenergizeError(str(e))

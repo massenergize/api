@@ -36,6 +36,8 @@ class MiscellaneousHandler(RouteHandler):
         self.add("/settings.list", self.fetch_available_preferences)
         self.add("/what.happened", self.fetch_footages)
         self.add("/actions.report", self.actions_report)
+        
+        self.add("/menus.create-from-template", self.create_from_template)
 
     @admins_only
     def fetch_footages(self, request):
@@ -191,6 +193,25 @@ class MiscellaneousHandler(RouteHandler):
         args["host"] = request.META.get("HTTP_ORIGIN")
         
         data, err = self.service.load_menu_items(context, args)
+        if err:
+            return err
+        return MassenergizeResponse(data=data)
+    
+    
+    def create_from_template(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("title", str, is_required=True)
+        self.validator.expect("is_footer_menu", bool, is_required=True)
+        self.validator.expect("community_id", int, is_required=False)
+        self.validator.expect("subdomain", str, is_required=False)
+
+        args, err = self.validator.verify(args)
+        if err:
+            return err
+
+        data, err = self.service.create_from_template(context, args)
         if err:
             return err
         return MassenergizeResponse(data=data)

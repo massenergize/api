@@ -1,8 +1,10 @@
+import logging
+
 from _main_.utils.footage.spy import Spy
 from api.tests.common import createUsers
 from database.models import (
     Action,
-    Vendor,
+    CustomMenu, CustomMenuItem, Vendor,
     Subdomain,
     Event,
     Community,
@@ -512,3 +514,54 @@ class MiscellaneousStore:
             return menu, None
         except Exception as e:
             return None, CustomMassenergizeError(e)
+        
+        
+    def create_from_template(self, context, args):
+        try:
+            community_id = args.get("community_id", None)
+            subdomain = args.get("subdomain", None)
+            title = args.get("title", None)
+            is_footer_menu = args.get("is_footer_menu", False)
+            
+            if not title:
+                return None, CustomMassenergizeError("Title is required")
+            
+            if not community_id and not subdomain:
+                return None, CustomMassenergizeError("Community or subdomain is required")
+            
+            community, _ = get_community(community_id=community_id, subdomain=subdomain)
+            
+            if not community:
+                return None, CustomMassenergizeError("Community not found")
+            
+            # load template json
+            template_menus = json_loader(f"database/raw_data/portal/default_menus.json")
+            
+            if not is_footer_menu:
+                template_menus = template_menus["navbar_menus"]
+            else:
+                template_menus = template_menus["footer_menus"]
+            
+            menu, created = CustomMenu.objects.get_or_create(community=community, title=title, is_footer_menu=is_footer_menu)
+            if not created:
+                return menu, None
+            
+            instances = []
+            for idx, item in enumerate(template_menus):
+                if item.get("children"):
+                    menu_item = CustomMenuItem(menu=menu, name=item.get("name"), link=item.get("link"), order=idx)
+                    menu_item.save()
+                    
+                    for index, child in enumerate(item["children"]):
+                        instances.append(CustomMenuItem(menu=menu, name=child.get("name"), link=child.get("link"), parent=menu_item, order=index))
+                        
+                else:
+                    instances.append(CustomMenuItem(menu=menu, name=item.get("name"), link=item.get("link"), order=idx))
+            
+            CustomMenuItem.objects.bulk_create(instances)
+            
+            return menu, None
+        
+        except Exception as e:
+            logging.error(f"CREATE_FROM_TEMPLATE_EXCEPTION_ERROR: {str(e)}")
+            return None, CustomMassenergizeError(str(e))
