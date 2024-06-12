@@ -89,7 +89,9 @@ class Subcategory(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     
     def simple_json(self):
-        return model_to_dict(self)
+        data =  model_to_dict(self,exclude=["category"])
+        data["category"] = self.category.simple_json() if self.category else None
+        return data
 
     def full_json(self):
         return self.simple_json()
