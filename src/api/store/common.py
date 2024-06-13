@@ -8,12 +8,12 @@ from _main_.settings import AWS_S3_REGION_NAME, AWS_STORAGE_BUCKET_NAME, IS_LOCA
 from _main_.utils.common import serialize, serialize_all
 from api.constants import CSV_FIELD_NAMES
 from carbon_calculator.models import Action
-from database.utils.common import calculate_hash_for_bucket_item, get_image_size_from_bucket
+from database.utils.common import calculate_hash_for_bucket_item, get_image_size_from_bucket, json_loader
 from xhtml2pdf import pisa
 import pytz
 from _main_.utils.utils import Console
 from api.store.utils import getCarbonScoreFromActionRel
-from database.models import Community, CommunityAdminGroup, Event, Media, Team, UserActionRel
+from database.models import Community, CommunityAdminGroup, CustomMenuItem, Event, Media, Team, UserActionRel
 from django.db.models import Q, Model
 from django.utils import timezone
 import boto3
@@ -662,3 +662,43 @@ def generate_hashes():
             image.hash = NON_EXISTENT_IMAGE 
             image.save() 
     return count
+
+
+def create_default_menu_items(menu, is_footer=False):
+    """
+    Creates default menu items for a community
+    """
+    try:
+        template_menus = json_loader(f"database/raw_data/portal/default_menus.json")
+        if not template_menus:
+            return None, "Template menus not found"
+        if is_footer:
+            template_menus = template_menus.get("footer_menus", [])
+        else:
+            template_menus = template_menus.get("navbar_menus", [])
+        
+        instances = []
+        
+        for idx, item in enumerate(template_menus):
+            if item.get("children"):
+                menu_item = CustomMenuItem(menu=menu, name=item.get("name"), link=item.get("link"), order=idx,
+                                           is_link_external=False, key=item.get("navItemId"))
+                menu_item.save()
+                
+                for index, child in enumerate(item["children"]):
+                    instances.append(
+                        CustomMenuItem(menu=menu, name=child.get("name"), link=child.get("link"), parent=menu_item, order=index, is_link_external=False, key=child.get("navItemId")))
+            
+            else:
+                instances.append(CustomMenuItem(menu=menu, name=item.get("name"), link=item.get("link"), order=idx, is_link_external=False, key=item.get("navItemId")))
+        
+        CustomMenuItem.objects.bulk_create(instances)
+        
+        return menu, None
+        
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return None, str(e)
+    
+        
+
