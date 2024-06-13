@@ -627,4 +627,107 @@ class MiscellaneousStore:
         except Exception as e:
             logging.error(f"RESET(STORE)_CUSTOM_MENU_EXCEPTION_ERROR: {str(e)}")
             return None, CustomMassenergizeError(str(e))
+        
+        
+    def create_menu_item(self, context, args):
+        try:
+            menu_id = args.get("menu_id", None)
+            name = args.get("name", None)
+            link = args.get("link", None)
+            is_link_external = args.get("is_link_external", False)
+            order = args.get("order", None)
+            parent_id = args.get("parent_id", None)
+            is_published = args.get("is_published", None)
+            
+            parent = None
+            
+            if not menu_id:
+                return None, CustomMassenergizeError("Menu ID is required")
+            
+            menu = CustomMenu.objects.filter(id=menu_id).first()
+            if not menu:
+                return None, CustomMassenergizeError("Menu not found")
+            
+            if parent_id:
+                parent = CustomMenuItem.objects.filter(id=parent_id).first()
+                if not parent:
+                    return None, CustomMassenergizeError("Parent menu item not found")
+            
+            menu_item = CustomMenuItem.objects.create(menu=menu, name=name, link=link, parent=parent, order=order, is_published=is_published, is_link_external=is_link_external)
+            
+            return menu_item, None
+        
+        except Exception as e:
+            logging.error(f"CREATE_MENU_ITEM_EXCEPTION_ERROR: {str(e)}")
+            return None, CustomMassenergizeError(str(e))
+        
+    
+    def update_menu_item(self, context, args):
+        try:
+            menu_item_id = args.get("menu_item_id", None)
+            name = args.get("name", None)
+            link = args.get("link", None)
+            is_link_external = args.get("is_link_external", False)
+            order = args.get("order", None)
+            parent_id = args.get("parent_id", None)
+            is_published = args.get("is_published", None)
+            
+            parent = None
+            
+            if not menu_item_id:
+                return None, CustomMassenergizeError("Menu Item ID is required")
+            
+            menu_item = CustomMenuItem.objects.filter(id=menu_item_id).first()
+            if not menu_item:
+                return None, CustomMassenergizeError("Menu Item not found")
+            
+            if parent_id:
+                parent = CustomMenuItem.objects.filter(id=parent_id).first()
+                if not parent:
+                    return None, CustomMassenergizeError("Parent menu item not found")
+            
+            if name:
+                menu_item.name = name
+                
+            if link:
+                menu_item.link = link
+                
+            if is_link_external:
+                menu_item.is_link_external = is_link_external
+                
+            if order:
+                menu_item.order = order
+                
+            if parent:
+                menu_item.parent = parent
+                
+            if is_published:
+                menu_item.is_published = is_published
+                
+            menu_item.save()
+            
+            return menu_item, None
+        
+        except Exception as e:
+            logging.error(f"UPDATE_MENU_ITEM_EXCEPTION_ERROR: {str(e)}")
+            return None, CustomMassenergizeError(str(e))
+        
+        
+    def delete_menu_item(self, context, args):
+        try:
+            menu_item_id = args.get("menu_item_id", None)
+            
+            if not menu_item_id:
+                return None, CustomMassenergizeError("Menu Item ID is required")
+            
+            menu_item = CustomMenuItem.objects.filter(id=menu_item_id).first()
+            if not menu_item:
+                return None, CustomMassenergizeError("Menu Item not found")
+            
+            menu_item.delete()
+            return True, None
+        
+        except Exception as e:
+            logging.error(f"DELETE_MENU_ITEM_EXCEPTION_ERROR: {str(e)}")
+            return None, CustomMassenergizeError(str(e))
             

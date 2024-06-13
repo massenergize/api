@@ -196,3 +196,43 @@ class MiscellaneousService:
         except Exception as e:
             logging.error(f"RESET_CUSTOM_MENU_EXCEPTION_ERROR: {str(e)}")
             return None, CustomMassenergizeError(str(e))
+        
+    def create_menu_item(self,context, args):
+        try:
+            res, err = self.store.create_menu_item(context,args)
+            
+            if err:
+                return None, err
+            
+            return serialize(res, full=True), None
+        
+        except Exception as e:
+            logging.error(f"CREATE_MENU_ITEM_EXCEPTION_ERROR: {str(e)}")
+            return None, CustomMassenergizeError(str(e))
+        
+        
+    def update_menu_item(self,context, args):
+        try:
+            res, err = self.store.update_menu_item(context,args)
+            
+            if err:
+                return None, err
+            
+            return serialize(res, full=True), None
+        
+        except Exception as e:
+            logging.error(f"UPDATE_MENU_ITEM_EXCEPTION_ERROR: {str(e)}")
+            return None, CustomMassenergizeError(str(e))
+        
+    def delete_menu_item(self,context, args):
+        try:
+            res, err = self.store.delete_menu_item(context,args)
+            
+            if err:
+                return None, err
+            
+            return res, None
+        
+        except Exception as e:
+            logging.error(f"DELETE_MENU_ITEM_EXCEPTION_ERROR: {str(e)}")
+            return None, CustomMassenergizeError(str(e))
