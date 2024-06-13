@@ -6,7 +6,7 @@ from api.store.common import get_media_info, make_media_info
 from api.tests.common import RESET, makeUserUpload
 from api.utils.api_utils import is_admin_of_community
 from api.utils.filter_functions import get_actions_filter_params
-from database.models import Action, UserProfile, Community, Media
+from database.models import Action, UserProfile, Community, Media, Tag, TagCollection
 from carbon_calculator.models import Action as CCAction
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, NotAuthorizedError, CustomMassenergizeError
 from _main_.utils.context import Context
@@ -24,12 +24,7 @@ class ActionStore:
       action_id = args.get("id", None)
       actions_retrieved = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(id=action_id)
 
-      # may want to add a filter on is_deleted, switched on context
-      # if context.not_if_deleted:
-      #   actions_retrieved = actions_retrieved.filter(is_deleted=False)
-
       action: Action = actions_retrieved.first()
-
       if not action:
         return None, InvalidResourceError()
       return action, None
@@ -65,6 +60,29 @@ class ActionStore:
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
+
+  def add_tags(self, action, ccAction, tags = None):
+    tag_options = Tag.objects.filter(name = ccAction.category, tag_collection__name = "Category").values("id")
+        
+    #resets the tags so don't have to worry about past CCAction ones
+    if not tag_options:
+
+      category_tags = Tag.objects.filter(tag_collection__name="Category")
+
+      tag_collection = TagCollection.objects.filter(name="Category").first()
+      new_tag = Tag.objects.create(name=ccAction.category.name, tag_collection=tag_collection, rank=len(category_tags)+1)
+      new_tag.save()
+      tag_id= new_tag.id
+
+    else: 
+      tag_id = str(tag_options[0]["id"])
+
+
+    if tags:
+      tags.append(tag_id)
+      action.tags.set(tags)
+    else:
+      action.tags.set(tag_id)
 
 
   def create_action(self, context: Context, args, user_submitted) -> Tuple[dict, MassEnergizeAPIError]:
@@ -117,7 +135,6 @@ class ActionStore:
             user_media_upload.user = user 
             user_media_upload.save()
 
-      #save so you set an id
       new_action.save()
 
       if tags:
@@ -130,6 +147,10 @@ class ActionStore:
         ccAction = CCAction.objects.filter(pk=calculator_action).first()
         if ccAction:
           new_action.calculator_action = ccAction
+
+          # new: assign the category based on the Carbon Calculator action category
+          if ccAction.category:
+            self.add_tags(new_action, ccAction, tags)       
 
       new_action.save()
       # ----------------------------------------------------------------
@@ -290,6 +311,11 @@ class ActionStore:
         ccAction = CCAction.objects.filter(pk=calculator_action).first()
         if ccAction:
           action.calculator_action = ccAction
+
+          # Assign the category based on the Carbon Calculator action category
+          if ccAction.category:
+            self.add_tags( action, ccAction, tags)
+
         else:
           action.calculator_action = None
 

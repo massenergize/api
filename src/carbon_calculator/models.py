@@ -63,6 +63,44 @@ class CarbonCalculatorMedia(models.Model):
     class Meta:
         db_table = "media_files_cc"
 
+class Category(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=NAME_STR_LEN,unique=True)
+    is_deleted = models.BooleanField(default=False, blank=True)
+    description = models.CharField(max_length=MED_STR_LEN, blank=True)
+    
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
+
+    def __str__(self):      
+        return self.name
+
+    class Meta:
+        db_table = 'categories_cc'
+
+class Subcategory(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=NAME_STR_LEN)
+    is_deleted = models.BooleanField(default=False, blank=True) #Cascade??
+    description = models.CharField(max_length=MED_STR_LEN, blank=True)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    
+    def simple_json(self):
+        data =  model_to_dict(self,exclude=["category"])
+        data["category"] = self.category.simple_json() if self.category else None
+        return data
+
+    def full_json(self):
+        return self.simple_json()
+
+    def __str__(self):      
+        return str(self.category.name) + ": " + str(self.name)
+
+    class Meta:
+        db_table = 'subcategories_cc'
 
 class Action(models.Model):
     """
@@ -81,12 +119,17 @@ class Action(models.Model):
     name = models.CharField(max_length=NAME_STR_LEN, unique=True)
     created_date = models.DateTimeField(auto_now_add=True)
     title = models.CharField(max_length=NAME_STR_LEN, blank=True)
-    category = models.CharField(max_length=NAME_STR_LEN, blank=True)
     description = models.CharField(max_length=MED_STR_LEN, blank=True) #"Action short description"
     helptext = models.CharField(max_length=MED_STR_LEN, blank=True) #"This text explains what the action is about, in 20 words or less."
     average_points = models.PositiveIntegerField(default=0)
     questions = models.JSONField(blank=True)    # list of questions by name
     picture = models.ForeignKey(CarbonCalculatorMedia, on_delete=models.SET_NULL, null=True, related_name='cc_action_picture')
+   
+    old_category = models.CharField(max_length=NAME_STR_LEN, blank=True)
+
+    category = models.ForeignKey(Category, on_delete= models.SET_NULL, null =True)
+    sub_category = models.ForeignKey(Subcategory, on_delete = models.SET_NULL, null =True)
+
     # for the possibility of deleting actions
     # is_deleted = models.BooleanField(default=False)
     
@@ -100,7 +143,10 @@ class Action(models.Model):
         return self.simple_json()
 
     def __str__(self): 
-        s = self.category + ' : ' + self.title     
+        if self.category is None:
+            s = self.name 
+        else:
+            s = self.category.name + ':' + self.name 
         return s
 
     class Meta:
