@@ -37,7 +37,15 @@ class MiscellaneousHandler(RouteHandler):
         self.add("/what.happened", self.fetch_footages)
         self.add("/actions.report", self.actions_report)
         
-        self.add("/menus.create-from-template", self.create_from_template)
+        self.add("/menus.create", self.create_from_template)
+        self.add("/menus.update", self.update_custom_menu)
+        self.add("/menus.delete", self.delete_custom_menu)
+        self.add("/menus.reset", self.reset_custom_menu)
+        #
+        # self.add("/menus.items.create", self.create_menu_item)
+        # self.add("/menus.items.update", self.update_menu_item)
+        # self.add("/menus.items.delete", self.delete_menu_item)
+        
 
     @admins_only
     def fetch_footages(self, request):
@@ -202,12 +210,12 @@ class MiscellaneousHandler(RouteHandler):
         context: Context = request.context
         args: dict = context.args
 
-        self.validator.expect("title", str, is_required=True)
-        self.validator.expect("is_footer_menu", bool, is_required=True)
+        self.validator.expect("title", str, is_required=False)
+        self.validator.expect("is_footer_menu", bool, is_required=False)
         self.validator.expect("community_id", int, is_required=False)
         self.validator.expect("subdomain", str, is_required=False)
 
-        args, err = self.validator.verify(args)
+        args, err = self.validator.verify(args, strict=True)
         if err:
             return err
 
@@ -215,3 +223,67 @@ class MiscellaneousHandler(RouteHandler):
         if err:
             return err
         return MassenergizeResponse(data=data)
+    
+    
+    def update_custom_menu(self, request):
+        try:
+            context: Context = request.context
+            args: dict = context.args
+
+            self.validator.expect("menu_id", int, is_required=True)
+            self.validator.expect("title", str, is_required=False)
+            self.validator.expect("community_logo_link", str, is_required=False)
+            self.validator.expect("community_logo", "str_list", is_required=False, options={"is_logo": True})
+            self.validator.expect("is_published", bool, is_required=False)
+
+            args, err = self.validator.verify(args, strict=True)
+            if err:
+                return err
+
+            data, err = self.service.update_custom_menu(context, args)
+            if err:
+                return err
+            return MassenergizeResponse(data=data)
+        
+        except Exception as e:
+            return MassenergizeResponse(error=str(e))
+        
+    
+    def delete_custom_menu(self, request):
+        try:
+            context: Context = request.context
+            args: dict = context.args
+
+            self.validator.expect("menu_id", int, is_required=True)
+
+            args, err = self.validator.verify(args, strict=True)
+            if err:
+                return err
+
+            data, err = self.service.delete_custom_menu(context, args)
+            if err:
+                return err
+            return MassenergizeResponse(data=data)
+        
+        except Exception as e:
+            return MassenergizeResponse(error=str(e))
+        
+        
+    def reset_custom_menu(self, request):
+        try:
+            context: Context = request.context
+            args: dict = context.args
+
+            self.validator.expect("menu_id", int, is_required=True)
+
+            args, err = self.validator.verify(args, strict=True)
+            if err:
+                return err
+
+            data, err = self.service.reset_custom_menu(context, args)
+            if err:
+                return err
+            return MassenergizeResponse(data=data)
+        
+        except Exception as e:
+            return MassenergizeResponse(error=str(e))

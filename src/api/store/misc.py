@@ -4,7 +4,7 @@ from _main_.utils.footage.spy import Spy
 from api.tests.common import createUsers
 from database.models import (
     Action,
-    CustomMenu, CustomMenuItem, Vendor,
+    CustomMenu, CustomMenuItem, Media, Vendor,
     Subdomain,
     Event,
     Community,
@@ -30,6 +30,7 @@ from _main_.utils.massenergize_errors import (
 from _main_.utils.context import Context
 from database.utils.common import json_loader
 from database.models import CarbonEquivalency
+from .common import create_default_menu_items
 from .utils import find_reu_community, split_location_string, check_location,get_community
 from sentry_sdk import capture_message
 from typing import Tuple
@@ -515,16 +516,12 @@ class MiscellaneousStore:
         except Exception as e:
             return None, CustomMassenergizeError(e)
         
-        
     def create_from_template(self, context, args):
         try:
             community_id = args.get("community_id", None)
             subdomain = args.get("subdomain", None)
-            title = args.get("title", None)
             is_footer_menu = args.get("is_footer_menu", False)
-            
-            if not title:
-                return None, CustomMassenergizeError("Title is required")
+            title = args.get("title", None)
             
             if not community_id and not subdomain:
                 return None, CustomMassenergizeError("Community or subdomain is required")
@@ -534,34 +531,100 @@ class MiscellaneousStore:
             if not community:
                 return None, CustomMassenergizeError("Community not found")
             
-            # load template json
-            template_menus = json_loader(f"database/raw_data/portal/default_menus.json")
+            if not title:
+                title = f"{community.name} - {'Footer' if is_footer_menu else 'Navbar'} Menu"
             
-            if not is_footer_menu:
-                template_menus = template_menus["navbar_menus"]
-            else:
-                template_menus = template_menus["footer_menus"]
-            
-            menu, created = CustomMenu.objects.get_or_create(community=community, title=title, is_footer_menu=is_footer_menu)
+            menu, created = CustomMenu.objects.get_or_create(community=community, title=title, is_footer_menu = is_footer_menu)
             if not created:
                 return menu, None
             
-            instances = []
-            for idx, item in enumerate(template_menus):
-                if item.get("children"):
-                    menu_item = CustomMenuItem(menu=menu, name=item.get("name"), link=item.get("link"), order=idx)
-                    menu_item.save()
-                    
-                    for index, child in enumerate(item["children"]):
-                        instances.append(CustomMenuItem(menu=menu, name=child.get("name"), link=child.get("link"), parent=menu_item, order=index))
-                        
-                else:
-                    instances.append(CustomMenuItem(menu=menu, name=item.get("name"), link=item.get("link"), order=idx))
-            
-            CustomMenuItem.objects.bulk_create(instances)
+            created_menu_items, err = create_default_menu_items(menu, is_footer_menu)
+            if err:
+                return None, CustomMassenergizeError(err)
             
             return menu, None
         
         except Exception as e:
             logging.error(f"CREATE_FROM_TEMPLATE_EXCEPTION_ERROR: {str(e)}")
             return None, CustomMassenergizeError(str(e))
+        
+        
+    def update_custom_menu(self, context, args):
+        try:
+            menu_id = args.get("menu_id", None)
+            title = args.get("title", None)
+            community_logo_link = args.get("community_logo_link", None)
+            community_logo = args.get("community_logo", None)
+            is_published = args.get("is_published", None)
+            
+            if not menu_id:
+                return None, CustomMassenergizeError("Menu ID is required")
+            
+            menu = CustomMenu.objects.filter(id=menu_id).first()
+            if not menu:
+                return None, CustomMassenergizeError("Menu not found")
+            
+            if title:
+                menu.title = title
+                
+            if community_logo_link:
+                menu.community_logo_link = community_logo_link
+
+            if is_published:
+                menu.is_published = is_published
+                
+            menu.save()
+            
+            if community_logo:
+                media = Media.objects.filter(id=community_logo).first()
+                if media:
+                   Community.objects.filter(id=menu.community.id).update(logo=media)
+                
+            return menu, None
+        
+        except Exception as e:
+            logging.error(f"UPDATE(STORE)_CUSTOM_MENU_EXCEPTION_ERROR: {str(e)}")
+            return None, CustomMassenergizeError(str(e))
+        
+        
+    def delete_custom_menu(self, context, args):
+        try:
+            menu_id = args.get("menu_id", None)
+            
+            if not menu_id:
+                return None, CustomMassenergizeError("Menu ID is required")
+            
+            menu = CustomMenu.objects.filter(id=menu_id).first()
+            if not menu:
+                return None, CustomMassenergizeError("Menu not found")
+            
+            menu.delete()
+            return True, None
+        
+        except Exception as e:
+            logging.error(f"DELETE(STORE)_CUSTOM_MENU_EXCEPTION_ERROR: {str(e)}")
+            return None, CustomMassenergizeError(str(e))
+    
+    def reset_custom_menu(self, context, args):
+        try:
+            menu_id = args.get("menu_id", None)
+            
+            if not menu_id:
+                return None, CustomMassenergizeError("Menu ID is required")
+            
+            menu = CustomMenu.objects.filter(id=menu_id).first()
+            if not menu:
+                return None, CustomMassenergizeError("Menu not found")
+            
+            # remove all menu items and apply the default menu items
+            menu.menu_items.all().delete()
+            created_menu_items, err = create_default_menu_items(menu, menu.is_footer_menu)
+            if err:
+                return None, CustomMassenergizeError(err)
+        
+            return menu, None
+        
+        except Exception as e:
+            logging.error(f"RESET(STORE)_CUSTOM_MENU_EXCEPTION_ERROR: {str(e)}")
+            return None, CustomMassenergizeError(str(e))
+            
