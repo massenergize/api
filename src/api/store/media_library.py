@@ -1,5 +1,21 @@
 from functools import reduce
+from typing import List
 from django.core.exceptions import ValidationError
+from database.utils.common import read_image_from_s3
+from database.utils.settings.model_constants.user_media_uploads import (
+    UserMediaConstants,
+)
+from api.store.common import calculate_hash_for_bucket_item, generate_hashes, remove_duplicates_and_attach_relations
+from _main_.utils.common import serialize
+from _main_.utils.common import serialize, serialize_all
+from api.store.common import (
+    attach_relations_to_media,
+    calculate_hash_for_bucket_item,
+    create_csv_file,
+    find_duplicate_items,
+    resolve_relations,
+    summarize_duplicates_into_csv,
+)
 from sentry_sdk import capture_message
 from _main_.utils.context import Context
 from _main_.utils.footage.FootageConstants import FootageConstants
@@ -7,9 +23,13 @@ from _main_.utils.footage.spy import Spy
 from _main_.utils.utils import Console
 from .utils import get_admin_communities, unique_media_filename
 from _main_.utils.massenergize_errors import CustomMassenergizeError
-from database.models import Community, Media, Tag, UserMediaUpload, UserProfile
+from database.models import Community, FeatureFlag, Media, Tag, UserMediaUpload, UserProfile
 from django.db.models import Q
 import time
+from django.http import HttpResponse
+from _main_.settings import IS_LOCAL
+import time
+
 
 limit = 32
 
@@ -17,6 +37,82 @@ limit = 32
 class MediaLibraryStore:
     def __init__(self):
         self.name = "MediaLibrary Store/DB"
+
+    def read_image(self, args):
+        try:
+            id = args.get("media_id", None)
+            image = Media.objects.filter(pk=id).get()
+            string = read_image_from_s3(image.file.name)
+            return string, None
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
+
+    def print_duplicates(self, args, context: Context):
+        grouped_dupes = find_duplicate_items(False,**args)
+        filename = "Summary-of-duplicates" 
+        csv_file = summarize_duplicates_into_csv(grouped_dupes,filename)
+
+        response = HttpResponse(content_type="text/csv")
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        response.write(csv_file)
+
+        return response, None
+
+    def group_disposable(self, original: dict, disposable: List[int]):
+        """This function simply identifies which items in the disposable list share the same image as the original.
+        NB: because we initially did not dynamically label uploaded images (many many years ago.. lool) there are many scenarios where a user has  uploaded the same image multiple times and because the image was the same (with name & everything), it always replaced the existing record in the bucket, but under new media records in the database.
+
+        So many duplicate images(media records) still share the same image reference with the original media record. This is why items that share the same image reference as the chosen original need to be identified and grouped.
+        Deletion for such records will be treated differently than other duplicates where the images are the same as the original, but are completely
+        different uploads in terms of the reference in the s3 bucket. In such cases the images in the s3 bucket will be removed as well!
+        """
+
+        media = Media.objects.filter(pk=original.get("id")).first()
+        if not media:
+            return None, None
+        can_delete = Media.objects.filter(pk__in=disposable)
+        only_records = []
+        with_image = []
+        for m in can_delete:
+            if m.file.name == media.file.name:
+                only_records.append(m)
+            else:
+                with_image.append(m)
+
+        return only_records, with_image
+
+    def clean_duplicates(self, args, context: Context):
+        hash = args.get("hash", None)
+        media_after_attaching = remove_duplicates_and_attach_relations(hash)
+        return serialize(media_after_attaching, True), None
+
+    def summarize_duplicates(self, args, context: Context):
+        grouped_dupes = find_duplicate_items()
+        response = {}
+        for hash, array in grouped_dupes.items():
+            combined = resolve_relations(array)
+            response[hash] = combined
+        return response, None
+
+    def generate_hashes(self, args, context: Context):
+        """
+          Goes over all media items in the database and generates hash values for them. 
+          It saves the hash value to the media object after that. 
+          If an image is corrupted or not valid in the bucket, the hash generation of that particular image will simply fail silently. 
+
+          This route is simply meant to be run once, since there are lots of images in our system that dont have their hash values generated already. 
+          All future image uploads will have their hash values generated automatically and saved to the media object. 
+          Check the Media model for the modifications on the "save()" function.
+      """
+        start = time.time()
+        generated = generate_hashes()
+
+        end = time.time()
+        msg = f"Generated hashes for {generated} items in {end - start} seconds"
+        print(msg)
+
+        return msg, None
 
     def edit_details(self, args, context: Context):
         try:
@@ -44,12 +140,15 @@ class MediaLibraryStore:
             copyright_att = args.get("copyright_att")
             tags = args.get("tags")
             communities = args.get("community_ids", [])
+            publicity = args.get("publicity", None)
             info = {
                 **(user_media_upload.info or {}),
                 "has_children": under_age,
                 "has_copyright_permission": copyright_permission,
                 "guardian_info": guardian_info,
                 "copyright_att": copyright_att,
+                "permission_key": args.get("permission_key", None),
+                "permission_notes": args.get("permission_notes", None),
             }
             user_media_upload.info = info
             # user_media_upload.save()
@@ -60,6 +159,8 @@ class MediaLibraryStore:
                 user_media_upload.communities.clear()
                 user_media_upload.communities.set(communities)
 
+            if publicity:
+                user_media_upload.publicity = publicity
             user_media_upload.save()
 
             if tags:
@@ -196,6 +297,7 @@ class MediaLibraryStore:
             else:
                 query |= qObj
 
+        count = Media.objects.filter(query).distinct().count()
         if not upper_limit and not lower_limit:
             images = Media.objects.filter(query).distinct().order_by("-id")[:limit]
         else:
@@ -205,7 +307,26 @@ class MediaLibraryStore:
                 .exclude(id__gte=lower_limit, id__lte=upper_limit)
                 .order_by("-id")[:limit]
             )
-        return images, None
+        return images, {"total": count}, None
+
+    def get_public_images(self, args):
+        upper_limit = args.get("upper_limit")
+        lower_limit = args.get("lower_limit")
+        count = Media.objects.filter(
+            user_upload__publicity=UserMediaConstants.open()
+        ).count()
+        if not upper_limit and not lower_limit:
+            images = Media.objects.filter(
+                user_upload__publicity=UserMediaConstants.open()
+            ).order_by("-id")[:limit]
+        else:
+            images = (
+                Media.objects.filter(user_upload__publicity=UserMediaConstants.open())
+                .exclude(id__gte=lower_limit, id__lte=upper_limit)
+                .order_by("-id")[:limit]
+            )
+
+        return images, {"total": count}, None
 
     def search(self, args, context: Context):
         community_ids = args.get("target_communities", [])
@@ -215,15 +336,18 @@ class MediaLibraryStore:
         other_admins = not mine and other_admins
         search_by_community = not most_recent and community_ids
         keywords = args.get("keywords", [])
+        public = args.get("public", False)
 
+        if public:
+            return self.get_public_images(args)
         if keywords:
             return self.get_by_keywords(args)
 
         if most_recent:
             if context.user_is_super_admin:
                 return self.get_most_recent(args, context)
-            else :
-                communities,_ = get_admin_communities(context)
+            else:
+                communities, _ = get_admin_communities(context)
                 args["target_communities"] = [c.id for c in communities]
                 return self.get_most_recent(args, context)
 
@@ -237,7 +361,7 @@ class MediaLibraryStore:
         if other_admins:
             return self.get_uploads_by_user(args)
 
-        return [], None
+        return [], {}, None
 
     def get_by_keywords(self, args):
         words = args.get("keywords", [])
@@ -255,6 +379,7 @@ class MediaLibraryStore:
             else:
                 query |= queryObj
 
+        count = Media.objects.filter(query).distinct().count()
         if not upper_limit and not lower_limit:
             images = Media.objects.filter(query).distinct().order_by("-id")[:limit]
         else:
@@ -265,13 +390,14 @@ class MediaLibraryStore:
                 .order_by("-id")[:limit]
             )
 
-        return images, None
+        return images, {"total": count}, None
 
     def get_uploads_by_user(self, args):
         user_ids = args.get("user_ids", [])
         upper_limit = args.get("upper_limit")
         lower_limit = args.get("lower_limit")
         query = Q(user_upload__user__id__in=user_ids)
+        count = Media.objects.filter(query).count()
         if upper_limit and lower_limit:
             images = (
                 Media.objects.filter(query)
@@ -281,9 +407,7 @@ class MediaLibraryStore:
         else:
             images = Media.objects.filter(query).order_by("-id")[:limit]
 
-        return images, None
-
-   
+        return images, {"total": count}, None
 
     def remove(self, args, context):
         media_id = args.get("media_id")
@@ -325,6 +449,7 @@ class MediaLibraryStore:
         is_universal = args.get("is_universal", None)
         communities = user = None
         description = args.get("description", None)
+        publicity = args.get("publicity", None)
         # ---------------------------------------------
         copyright_permission = args.get("copyright", "")
         under_age = args.get("underAge", "")
@@ -341,6 +466,8 @@ class MediaLibraryStore:
             "has_copyright_permission": copyright_permission,
             "guardian_info": guardian_info,
             "copyright_att": copyright_att,
+            "permission_key": args.get("permission_key", None),
+            "permission_notes": args.get("permission_notes", None),
         }
 
         try:
@@ -361,6 +488,7 @@ class MediaLibraryStore:
             is_universal=is_universal,
             tags=tags,
             info=info,
+            publicity=publicity,
         )
         # ----------------------------------------------------------------
         Spy.create_media_footage(
@@ -379,6 +507,9 @@ class MediaLibraryStore:
         user = kwargs.get("user")
         tags = kwargs.get("tags")
         info = kwargs.get("info")
+        publicity = kwargs.get("publicity", None)
+        if not publicity:
+            publicity = UserMediaConstants.open_to()
         communities = kwargs.get("communities")
         is_universal = kwargs.get("is_universal")
         is_universal = True if is_universal else False
@@ -391,7 +522,11 @@ class MediaLibraryStore:
             file=file,
         )
         user_media = UserMediaUpload(
-            user=user, media=media, is_universal=is_universal, info=info
+            user=user,
+            media=media,
+            is_universal=is_universal,
+            info=info,
+            publicity=publicity,
         )
         user_media.save()
         if media:

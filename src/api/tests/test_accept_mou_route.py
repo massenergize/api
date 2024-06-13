@@ -40,7 +40,7 @@ class MOUAcceptanceTestCase(TestCase):
         data["accept"] = False
         response = self.client.post(url, data)
         self.assertEqual(response.status_code, 200)
-        content = response.json().get("data")
+        content = response.json().get("data") or {}
         needs_to_accept_mou = content.get("needs_to_accept_mou")
       
         self.assertIsNone(needs_to_accept_mou)  # Means declining MOU worked

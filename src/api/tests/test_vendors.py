@@ -3,7 +3,7 @@ from django.conf import settings as django_settings
 from urllib.parse import urlencode
 from _main_.utils.constants import DEFAULT_PAGINATION_LIMIT
 from database.models import Team, Community, UserProfile, CommunityAdminGroup, Vendor
-from api.tests.common import signinAs, setupCC, createUsers
+from api.tests.common import signinAs, createUsers
 
 class VendorsTestCase(TestCase):
 
@@ -18,8 +18,6 @@ class VendorsTestCase(TestCase):
       
       signinAs(self.client, self.SADMIN)
   
-      setupCC(self.client)
-    
       COMMUNITY_NAME = "test_vendors"
       self.COMMUNITY = Community.objects.create(**{
         'subdomain': COMMUNITY_NAME,

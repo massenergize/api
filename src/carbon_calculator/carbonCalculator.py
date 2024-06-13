@@ -2,10 +2,12 @@
 # Brad Hubbard-Nelson (bradhn@mindspring.com)
 # Updated April 3
 #imports
-from datetime import datetime
-from .models import Action, Question, CarbonCalculatorMedia, CalcDefault
-#from django.utils import timezone
-
+import os
+import pytz
+from _main_.settings import BASE_DIR, RUN_SERVER_LOCALLY
+from datetime import datetime, date
+import time
+from .models import Action, Question, CarbonCalculatorMedia, Version, Category, Subcategory
 from io import BytesIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.utils.text import slugify
@@ -24,7 +26,51 @@ from .hotWater import EvalHotWaterAssessment, EvalHeatPumpWaterHeater, EvalSolar
 from .transportation import EvalReplaceCar, EvalReduceMilesDriven, EvalEliminateCar, EvalReduceFlights, EvalOffsetFlights
 from .foodWaste import EvalLowCarbonDiet, EvalReduceWaste, EvalCompost
 from .landscaping import EvalReduceLawnSize, EvalReduceLawnCare, EvalRakeOrElecBlower, EvalElectricMower
-#from .calcUsers import ExportCalcUsers, CalcUserUpdate
+
+CALCULATOR_VERSION = "4.0.5"
+QUESTIONS_DATA = BASE_DIR + "/carbon_calculator/content/Questions.csv"
+ACTIONS_DATA = BASE_DIR + "/carbon_calculator/content/Actions.csv"
+CATEGORIES_DATA = BASE_DIR + "/carbon_calculator/content/Categories.csv"
+SUBCATEGORIES_DATA = BASE_DIR + "/carbon_calculator/content/Subcategories.csv"
+DEFAULTS_DATA = BASE_DIR + "/carbon_calculator/content/defaults.csv"
+TOKEN_POINTS = 15
+
+def fileDateTime(path):
+    # file modification
+    timestamp = os.path.getmtime(path)
+    utc=pytz.UTC
+
+    # convert timestamp into DateTime object
+    datestamp = datetime.fromtimestamp(timestamp).replace(tzinfo=utc)
+    return datestamp
+
+def versionCheck():
+    version = Version.objects.all()
+    if not version:
+        version = Version.objects.create(version=CALCULATOR_VERSION, note="Initial Version")
+        print(version.note)
+        return False    # reload data
+    else:
+        version = version.latest('id')
+
+    # update based on date of most recent data file
+    files_updated = max(fileDateTime(QUESTIONS_DATA),
+                       fileDateTime(ACTIONS_DATA),
+                       fileDateTime(DEFAULTS_DATA))
+
+    today = str(date.today())
+    if version.version != CALCULATOR_VERSION: 
+        version.version = CALCULATOR_VERSION
+        version.note = "Calculator version update on "+today
+        print(version.note)
+        version.save()
+        return False    # reload data
+    elif version.updated_on < files_updated:
+        version.note = "Calculator data update on "+today
+        print(version.note)
+        version.save()
+        return False    # reload data
+    return True
 
 def SavePic2Media(picURL):
     if picURL == '':
@@ -65,24 +111,29 @@ def SavePic2Media(picURL):
                 return media
             else:
                 return None
+            
     except Exception as e:
         print("Error encountered: "+str(e))
         return None
 
 def AverageImpact(action, date=None, locality="default"):
     averageName = action.name + '_average_points'
-    return getDefault(locality, averageName, date)
-
+    impact = getDefault(locality, averageName, date, default=TOKEN_POINTS)
+    return impact
 
 class CarbonCalculator:
     def __init__(self, reset=False) :
-        #fails on initial migration during test
-        try:
-            print("Initializing Carbon Calculator")
-            # if no actions in database, import them
-            if reset:
 
-                # abnormal situation, except during testing or starting from blank database
+        start = time.time()
+        try:
+            print("Initializing Carbon Calculator, version "+CALCULATOR_VERSION)
+
+            # check version, reload if version or data has been updated
+            if not versionCheck():
+                reset = True
+
+            # reload data if starting from blank database or data version update
+            if reset:
                 if not self.ImportAll():
                     print("Error Initializing Carbon Calculator")
                     return
@@ -140,6 +191,10 @@ class CarbonCalculator:
                 theInstance = theClass(name)
                 self.allActions[name] = theInstance
 
+            end = time.time()
+            if RUN_SERVER_LOCALLY:
+                print("Carbon Calculator initialization time: "+str(end - start)+" seconds")
+
         except Exception as e:
             print(str(e))
             print("Calculator initialization skipped")
@@ -150,18 +205,47 @@ class CarbonCalculator:
             return self.allActions[action].Query()
         else:
             return self.AllActionsList()
-
+    
     def AllActionsList(self):
         response = {}
         actionList = []
-        for action in self.allActions:
-            name = self.allActions[action].name
-            title = self.allActions[action].title
-            description = self.allActions[action].description
-            id = self.allActions[action].id
-            points = self.allActions[action].average_points
-            actionList.append( {'id': id, 'name':name, 'title':title, 'description':description, 'average_points':points} )
+   
+        #for action in self.allActions:
+        actions = Action.objects.filter() #no is_deleted field?
+        for action in actions:
+            theAction = self.allActions.get(action,None)
+            if theAction and not theAction.initialized:
+                ret = theAction.Query()
+                if ret["status"] != VALID_QUERY:
+                    print("Action " + theAction.name + " initialization failed")
+                    return ret
+                
+            name = action.name
+            title = action.title
+            description = action.description
+            id = action.id
+            points = action.average_points
+
+            # category = action.category.name if action.category else ""
+            # subcategory = action.sub_category.name if action.sub_category else ""
+
+            actionList.append( {'id': id, 'name':name, 'title':title, 'description':description, 'average_points':points, 'category': action.category.simple_json() if action.category else None, 'subcategory': action.sub_category.simple_json() if action.sub_category else None} ) 
+
+        categoryList = []
+        cats = Category.objects.filter(is_deleted=False)
+        for category in cats:
+            # categoryList.append({'id': category.id, 'name': category.name})
+            categoryList.append(category.simple_json())
+
+        subcatList = []
+        subcats = Subcategory.objects.filter(is_deleted=False)
+        for subcat in subcats:
+            subcatList.append(subcat.simple_json())
+            # subcatList.append({'id': subcat.id, 'name': subcat.name, "category":subcat.category.name if subcat.category else None, "category_id": subcat.category.id if subcat.category else None})
+        
         response['actions'] = actionList
+        response['categories'] = categoryList
+        response["subcategories"] = subcatList
         response['status'] = VALID_QUERY
         return response
 
@@ -169,9 +253,12 @@ class CarbonCalculator:
 # inputs is a dictionary of input parameters
         queryFailed = {'status':INVALID_QUERY}
         if action in self.allActions:
-            theAction = self.allActions[action]
-            if not theAction.initialized:
-                return queryFailed
+            theAction = self.allActions[action] # Might throw keyError
+            if not theAction.initialized:       # this initializes the calculation if not done previously
+                ret = self.allActions[action].Query()    # Might throw keyError
+                if ret["status"] != VALID_QUERY:
+                    print("Action " + theAction.name + " initialization failed")
+                    return queryFailed
 
             try:
                 results = theAction.Eval(inputs)
@@ -183,6 +270,7 @@ class CarbonCalculator:
                 print(error)
                 return queryFailed
         else:
+            print("action not in allActions")
             return queryFailed
 
     def Reset(self):
@@ -193,19 +281,135 @@ class CarbonCalculator:
 
     def ImportAll(self):
         print("Importing Carbon Calculator information")
-        if not self.ImportQuestions('carbon_calculator/content/Questions.csv'):
+        if not self.ImportQuestions(QUESTIONS_DATA):
             return False
 
-        if not self.ImportActions('carbon_calculator/content/Actions.csv'):
+        if not self.ImportSubcategories(SUBCATEGORIES_DATA):
             return False
         
-        if not CCD.importDefaults(CCD, 'carbon_calculator/content/Defaults.csv'):
+        if not self.ImportActions(ACTIONS_DATA):
+            return False
+        
+        if not CCD.importDefaults(CCD, DEFAULTS_DATA):
             return False
         
         return True
 
-    # import via API
-    def Import(self, inputs):
+    
+    def subcategories_import_helper(self, inputlist, first, update_num, import_num):
+        for item in inputlist:
+            if first:
+                first = False
+            else:
+                if item[0] == '':
+                    return first, update_num, import_num
+                
+                subcategory_name = item[0]
+                category_name = item[1]
+
+                cat = Category.objects.filter(name=category_name).first()
+                if not cat:
+                    cat = Category.objects.create(name=category_name)
+
+                if cat: 
+                    qs = Subcategory.objects.filter(name=subcategory_name, category = cat)
+                    if not qs: 
+                        subcategory = Subcategory.objects.create(
+                            name=subcategory_name,
+                            description = item[3],
+                            category = cat,
+                        )
+                        import_num+=1
+                    elif qs:
+                        qs.update(
+                            description = item[3],
+                        )
+                        update_num +=1
+
+                else:
+                    print("Did not make subcategory for " + str(subcategory_name))
+
+        return first, update_num, import_num
+    
+    def actions_import_helper(self, inputlist, first, update_num, import_num):
+        for item in inputlist:
+            if first:
+                t = {}
+                for i in range(len(item)):
+                    t[item[i]] = i
+                first = False
+            else:
+                name = item[0]
+                if name == '':
+                    return first, update_num, import_num
+
+                qs = Action.objects.filter(name=name)
+
+                picture = None
+                #why len greater than or equal to 4??
+                if len(item)>=4 and name!='':
+                    #filter by is_deleted?
+                    cat = Category.objects.filter(name=item[t["Category"]]).first()
+                    subcat = Subcategory.objects.filter(name=item[t["Subcategory"]], category = cat).first()      
+
+                    if cat and not qs:
+                        action = Action(name=name,
+                            title = item[t["Title"]],
+                            description=item[t["Description"]],
+                            helptext= "" if not item[t["Helptext"]] else "",
+                            average_points=0 if not item[t["Avg points"]] else int(eval(item[t["Avg points"]])),
+                            questions=item[t["Questions"]].split(","),
+                            picture = picture,
+                            category = cat,
+                            sub_category = subcat,
+                            )
+                    
+                        if name in self.allActions:
+                            self.allActions[name].__init__(name)
+                        import_num+=1
+                    
+                    elif cat and qs:
+                        qs.update(
+                            title = item[t["Title"]],
+                            description=item[t["Description"]],
+                            helptext=item[t["Helptext"]],
+                            average_points= 0 if not item[t["Avg points"]] else int(eval(item[t["Avg points"]])),
+                            questions=item[t["Questions"]].split(","),
+                            picture = picture,
+                            category = cat,
+                            sub_category = subcat,
+                            )
+                        update_num +=1
+                        if name in self.allActions:
+                            self.allActions[name].__init__(name)
+
+                    if not cat:
+                        print("Did not make action for " + str(item[0]))
+           
+        return first, update_num, import_num
+
+    def import_helper(self, inputs, string, status, method):
+        try:
+            data_file = inputs.get(string, '')
+            if data_file != '':
+                with open(data_file, newline='') as csvfile:
+                    inputlist = csv.reader(csvfile)
+                    first = True
+                    import_num = 0
+                    update_num = 0
+                    first, update_num, import_num = method(inputlist, first, import_num, update_num)
+
+                    import_msg = "Imported %d Carbon Calculator %s \n" % (import_num, string)
+                    update_msg = "Updated %d Carbon Calculator %s" % (update_num, string)
+                    print(import_msg + update_msg)
+                    csvfile.close()
+                    return True
+        except Exception as e:
+            print(str(e))
+            return False
+
+    
+    def Import(self,inputs):
         if inputs.get('Confirm',NO) == YES:
 
             questionsFile = inputs.get('Questions','')
@@ -242,39 +446,47 @@ class CarbonCalculator:
                         if item[0] == '':
                             continue
 
-                        qs = Question.objects.filter(name=item[0])
-                        if qs:
-                            qs[0].delete()
-
                         skip = [[],[],[],[],[],[]]
                         for i in range(6):
                             ii = 5+2*i
                             if item[ii]!='' :
                                 skip[i] = item[ii].split(",")
 
-                        question = Question(name=item[0],
-                            category=item[1],
-                            question_text=item[2],
-                            question_type=item[3],
-                            response_1=item[4], skip_1=skip[0],
-                            response_2=item[6], skip_2=skip[1],
-                            response_3=item[8], skip_3=skip[2],
-                            response_4=item[10], skip_4=skip[3],
-                            response_5=item[12], skip_5=skip[4],
-                            response_6=item[14], skip_6=skip[5])
-                        #print('Importing Question ',question.name,': ',question.question_text)
-
+                        minimum_value = maximum_value = typical_value = None
                         if len(item)>19:
                             if len(item[16]):
-                                question.minimum_value = eval(item[16])
+                                minimum_value = eval(item[16])
                             if len(item[17])>0:
-                                question.maximum_value = eval(item[17])
+                                maximum_value = eval(item[17])
                             if len(item[18])>0:
-                                question.typical_value = eval(item[18])
+                                typical_value = eval(item[18])
 
-                        question.save()
-                        num+=1
-                msg = "Imported %d Carbon Calculator Questions" % num
+                        # update the unique Question with this name
+                        qs, created = Question.objects.update_or_create(
+                            name=item[0],
+                            defaults={
+                                'category':item[1],
+                                'question_text':item[2],
+                                'question_type':item[3],
+                                'response_1':item[4], 'skip_1':skip[0],
+                                'response_2':item[6], 'skip_2':skip[1],
+                                'response_3':item[8], 'skip_3':skip[2],
+                                'response_4':item[10], 'skip_4':skip[3],
+                                'response_5':item[12], 'skip_5':skip[4],
+                                'response_6':item[14], 'skip_6':skip[5],
+                                'minimum_value':minimum_value,
+                                'maximum_value':maximum_value,
+                                'typical_value':typical_value
+                            }
+                        )
+
+                        if created:
+                            num += 1
+
+                if num>0:
+                    msg = "Imported %d Carbon Calculator Questions" % num
+                else:
+                    msg = "Updated Carbon Calculator Questions from import"
                 print(msg)
                 csvfile.close()
             return True
@@ -286,41 +498,47 @@ class CarbonCalculator:
     def ImportActions(self, actionsFile):
         try:
             with open(actionsFile, newline='') as csvfile:
-                inputlist = csv.reader(csvfile)
-                first = True
+                reader = csv.reader(csvfile)
                 num = 0
-                for item in inputlist:
-                    if first:
-                        t = {}
-                        for i in range(len(item)):
-                            t[item[i]] = i
-                        first = False
-                    else:
-                        name = item[0]
-                        if name == '':
-                            continue
 
-                        qs = Action.objects.filter(name=name)
-                        if qs:
-                            qs[0].delete()
+                # dictionary of column indices by heading
+                column_index = {}
+                headers = next(reader, None)
+                for index in range(len(headers)):
+                    heading = headers[index] if index!=0 else 'Name'
+                    column_index[heading] = index
 
-                        picture = None
-                        if len(item)>=4 and name!='':
-                            picture = SavePic2Media(item[t["Picture"]])
-                            action = Action(name=item[0],
-                                title = item[t["Title"]],
-                                description=item[t["Description"]],
-                                helptext=item[t["Helptext"]],
-                                category=item[t["Category"]],
-                                average_points=int(eval(item[t["Avg points"]])),
-                                questions=item[t["Questions"]].split(","),
-                                picture = picture)
-                            action.save()
+                for item in reader:
+                    name = item[0]
+                    if name == '':
+                        continue
+                    avg_points = item[column_index["Avg points"]]
+                    cat = Category.objects.filter(name=item[column_index["Category"]]).first()
+                    subcat = Subcategory.objects.filter(name=item[column_index["Subcategory"]], category = cat).first() 
 
-                            if name in self.allActions:
-                                self.allActions[name].__init__(name)
-                            num+=1
-                msg = "Imported %d Carbon Calculator Actions" % num
+                    defaults = {
+                            'title':item[column_index["Title"]],
+                            'description':item[column_index["Description"]],
+                            'helptext':item[column_index["Helptext"]],
+                            'category':cat,
+                            'sub_category':subcat,
+                            'average_points': int(eval(avg_points)) if avg_points else TOKEN_POINTS,
+                            'questions':item[column_index["Questions"]].split(",")
+                        }
+
+                    # update the unique Action with this name
+                    qs, created = Action.objects.update_or_create(
+                        name=name,
+                        defaults=defaults
+                    )
+                    
+                    if created:
+                        num += 1
+
+                if num:
+                    msg = "Imported %d Carbon Calculator Actions" % num
+                else:
+                    msg = "Updated Carbon Calculator Actions from import"
                 print(msg)
                 csvfile.close()
             return True
@@ -328,6 +546,10 @@ class CarbonCalculator:
             print(str(e))
             print('Error importing Carbon Calculator actions')
             return False
+
+
+    def ImportSubcategories(self, inputfile):
+        return self.import_helper({'Subcategories': inputfile}, "Subcategories", True, self.subcategories_import_helper)
 
 
     def Export(self,inputs):
@@ -340,6 +562,7 @@ class CarbonCalculator:
 
 class CalculatorAction:
     def __init__(self,name):
+
         self.id = None
         self.name = name
         self.initialized = False
@@ -353,9 +576,10 @@ class CalculatorAction:
         self.savings = 0
         self.text = "" # "Explanation for the calculated results."
         self.picture = ""
-#
+
+    def Query(self):
         status, actionInfo = QuerySingleAction(self.name)
-        if status == VALID_QUERY:
+        if not self.id and status == VALID_QUERY:
             self.id = actionInfo["id"]
             self.title = actionInfo["title"]
             self.description = actionInfo["description"]
@@ -364,9 +588,8 @@ class CalculatorAction:
             self.average_points = actionInfo["average_points"]
             self.picture = actionInfo["picture"]
             self.initialized = True
+            self.category = actionInfo["category"]
 
-    def Query(self):
-        status, actionInfo = QuerySingleAction(self.name)
         return {"status":status, "action":actionInfo}
 
     def Eval(self, inputs):

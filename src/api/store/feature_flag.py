@@ -58,21 +58,24 @@ class FeatureFlagStore:
     ) -> Tuple[dict, MassEnergizeAPIError]:
         try:
             id = args.pop("id", None)
-            com_ids = args.pop("community_ids", [])
-            user_ids = args.pop("user_ids", [])
+            com_ids = args.pop("community_ids", None)
+            user_ids = args.pop("user_ids", None)
+
             found = FeatureFlag.objects.filter(id=id)
             if not found:
                 return None, CustomMassenergizeError(
                     "Sorry, could not find the feature you want to update"
                 )
-            communities = Community.objects.filter(id__in=com_ids) if com_ids else None
-            users = UserProfile.objects.filter(id__in=user_ids) if user_ids else None
+            
             found.update(**args)
             flag = found.first()
-            if communities:
+
+            communities = Community.objects.filter(id__in=com_ids) if com_ids!=None else None
+            users = UserProfile.objects.filter(id__in=user_ids) if user_ids!=None else None
+            if communities != None:
                 flag.communities.clear()
                 flag.communities.set(communities)
-            if users:
+            if users != None:
                 flag.users.clear()
                 flag.users.set(users)
             return flag, None

@@ -9,14 +9,14 @@ from api.utils.constants import (
     YEARLY_MOU_TEMPLATE,
 )
 from api.constants import STANDARD_USER, GUEST_USER
-from database.models import UserProfile, UserActionRel, Community, CommunityAdminGroup, CommunityMember, Event, RealEstateUnit, Team, Testimonial, Vendor, PolicyConstants, PolicyAcceptanceRecords, CommunitySnapshot, Goal, Action
+from database.models import FeatureFlag, UserProfile, UserActionRel, Community, CommunityAdminGroup, CommunityMember, Event, RealEstateUnit, Team, Testimonial, Vendor, PolicyConstants, PolicyAcceptanceRecords, CommunitySnapshot, Goal, Action
 from django.utils import timezone
 import datetime
 from django.utils.timezone import utc
 from django.db.models import Count
 from django.db.models import Q
 from django.core.exceptions import ObjectDoesNotExist
-
+from carbon_calculator.carbonCalculator import AverageImpact
 
 today = datetime.datetime.utcnow().replace(tzinfo=utc)
 one_week_ago = today - timezone.timedelta(days=7)
@@ -73,7 +73,7 @@ def query_db():
     }
 
 
-def super_admin_nudge():
+def super_admin_nudge(task=None):
     """
     Send a nudge to super admins.
     """
@@ -253,7 +253,7 @@ def _get_user_reported_info(community, users):
 
     carbon_user_reported = sum(
         [
-            action_rel.action.calculator_action.average_points
+            AverageImpact(action_rel.action.calculator_action, action_rel.date_completed)
             if action_rel.action.calculator_action
             else 0
             for action_rel in done_action_rels
@@ -363,7 +363,7 @@ def _create_community_timestamp(community, prim_dict):
     snapshot.save()
 
 
-def create_snapshots():
+def create_snapshots(task=None):
     try:
         communities = Community.objects.filter(is_deleted=False) #is_published, is_demo =False
         users = UserProfile.objects.filter(is_deleted=False)
@@ -408,7 +408,7 @@ def update_records(**kwargs):
 
 
 # Function to send MOU notifications to community admins
-def send_admin_mou_notification():
+def send_admin_mou_notification(task=None):
     """
     This function sends MOU (Memorandum of Understanding) notifications to all active community admins. It retrieves the last MOU record signed by each admin, checks if it's been over a year since they last signed, and sends an email notification if necessary. A timestamp of the latest notification is added to the policy record. If the admin has never been notified, then the function will record the current timestamp as the first notification. If there is no previous MOU record for the admin, the function assumes that they have never signed the MOU before and sends an MOU email to the admin.
     """
@@ -426,7 +426,6 @@ def send_admin_mou_notification():
     admins = UserProfile.objects.filter(is_deleted=False, is_community_admin=True)
     for admin in admins:
         admin_name = admin.full_name
-        print(admin_name)
         try:
             # Get last MOU record signed by the admin
             last_record = admin.accepted_policies.filter(
@@ -485,3 +484,5 @@ def send_admin_mou_notification():
             update_records(notices=[new_notification_time], user=admin)
     
     return "success"
+
+

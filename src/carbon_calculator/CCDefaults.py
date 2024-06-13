@@ -1,80 +1,100 @@
 from fileinput import filename
 from .models import CalcDefault
-#from .calcUsers import CalcUserLocality
 from datetime import datetime
-import time
-import timeit
+from django.utils import timezone
 import csv
-from pathlib import Path  # python3 only
+
+current_tz = timezone.get_current_timezone()
 
 def getLocality(inputs):
-    id = inputs.get("user_id","")
+
     community = inputs.get("community","")
-    #userID = inputs.get("user_id","")
     locality = "default"
     
-#    if id != "":
-#        loc = CalcUserLocality(id)
-#        if loc:
-#            locality = loc
-#
-#    elif community != "":
     if community != "":
         locality = community
 
     return locality
 
 
-def getDefault(locality, variable, date=None):
-    return CCD.getDefault(CCD,locality, variable, date)
+def localized_time(time_string):
+    # Airtable changed default time format, unexpectedly.  Make it work but protect iin case it changes backj
+    ind = time_string.find('/')
+    if ind>0:   # new format 11/1/2023
+        time = datetime.strptime(time_string, '%m/%d/%y  %H:%M')
+    else:   # old format 2023-10-01
+        time = datetime.strptime(time_string, '%Y-%m-%d  %H:%M')
+
+    return current_tz.localize(time)
+
+def date_import(date_string):
+    # Airtable changed default time format, unexpectedly.  Make it work but protect iin case it changes backj
+    ind = date_string.find('/')
+    if ind>0:   # new format 11/1/2023
+        date = datetime.strptime(date_string, '%m/%d/%y')
+    else:   # old format 2023-10-01
+        date = datetime.strptime(date_string, '%Y-%m-%d')
+    return date.date()
+
+def getDefault(locality, variable, date=None, default=None):
+    return CCD.getDefault(CCD,locality, variable, date, default=default)
+
+def removeDuplicates():
+    # assuming which duplicate is removed doesn't matter...
+    for row in CalcDefault.objects.all().reverse():
+        if CalcDefault.objects.filter(variable=row.variable, locality=row.locality, valid_date=row.valid_date).count() > 1:
+            row.delete()
 
 class CCD():
-
     DefaultsByLocality = {"default":{}} # the class variable
-    try:
-        cq = CalcDefault.objects.all()
-        for c in cq:
-            # valid date is 0 if not specified
-            date = '2000-01-01'
-            if c.valid_date != None:
-                date = c.valid_date
 
-            if c.locality not in DefaultsByLocality:
-                DefaultsByLocality[c.locality] = {}
-            if c.variable not in DefaultsByLocality[c.locality]:
-                DefaultsByLocality[c.locality][c.variable] = {"valid_dates":[date], "values":[c.value]}
-            else:
-                # already one value for this parameter, order by dates
-                f = False
-                for i in range(len(DefaultsByLocality[c.locality][c.variable]["values"])):
-                    valid_date = DefaultsByLocality[c.locality][c.variable]["valid_dates"][i]
-                    if date < valid_date:
-                        # insert value at this point
-                        f = True
-                        DefaultsByLocality[c.locality][c.variable]["valid_dates"].insert(i,date)
-                        DefaultsByLocality[c.locality][c.variable]["values"].insert(i,c.value)
-                        break
-                    elif date == valid_date:
-                        # multiple values with one date
-                        print('CCDefaults: multiple values with same valid date')
-                        f = True
-                        break
-                
-                # if not inserted into list, append to the end
-                if not f:
-                    DefaultsByLocality[c.locality][c.variable]["valid_dates"].append(date)
-                    DefaultsByLocality[c.locality][c.variable]["values"].append(c.value)
+    # This initialization routine runs when database ready to access
+    # Purpose: load Carbon Calculator constants into DefaultByLocality for routine access
+    # For each variable, there is a list of values for different localities and valid_dates, ordered by date
+    def loadDefaults(self):
+        self.DefaultsByLocality = {"default":{}} # the class variable
+        try:
+            cq = CalcDefault.objects.all()
+            for c in cq:
+                # valid date is 0 if not specified
+                date = datetime.strptime('2000-01-01','%Y-%m-%d').date()
+                if c.valid_date != None:
+                    date = c.valid_date
 
+                if c.locality not in self.DefaultsByLocality:
+                    self.DefaultsByLocality[c.locality] = {}
+                if c.variable not in self.DefaultsByLocality[c.locality]:
+                    self.DefaultsByLocality[c.locality][c.variable] = {"valid_dates":[date], "values":[c.value]}
+                else:
+                    # already one value for this parameter, order by dates
+                    found = False
+                    for i in range(len(self.DefaultsByLocality[c.locality][c.variable]["values"])):
+                        valid_date = self.DefaultsByLocality[c.locality][c.variable]["valid_dates"][i]
+                        if date < valid_date:
+                            # insert value at this point
+                            found = True
+                            self.DefaultsByLocality[c.locality][c.variable]["valid_dates"].insert(i,date)
+                            self.DefaultsByLocality[c.locality][c.variable]["values"].insert(i,c.value)
+                            break
+                        elif date == valid_date:
+                            # multiple values with one date; skip
+                            found = True
+                            break
+                        
+                    # if not inserted into list, append to the end
+                    if not found:
+                        self.DefaultsByLocality[c.locality][c.variable]["valid_dates"].append(date)
+                        self.DefaultsByLocality[c.locality][c.variable]["values"].append(c.value)
 
-    except Exception as e:
-        print(str(e))
-        print("CalcDefault initialization skipped")
+        except Exception as e:
+            print(str(e))
+            print("CalcDefault initialization skipped")
 
-    def __init__(self):
-        print("CCD __init__ called")
+    def getDefault(self, locality, variable, date, default=None):
+        # load default values if they haven't yet been loaded
+        if self.DefaultsByLocality["default"]=={}:
+            self.loadDefaults(self)
 
-
-    def getDefault(self, locality, variable, date):
         if locality not in self.DefaultsByLocality:
             locality = "default"
         if variable in self.DefaultsByLocality[locality]:
@@ -91,6 +111,8 @@ class CCD():
             return value
         
         # no defaults found.  Signal this as an error.
+        if default:
+            return default
         raise Exception('Carbon Calculator error: value for "'+variable+'" not found in CalcDefaults')        
 
     def exportDefaults(self,fileName):
@@ -119,78 +141,85 @@ class CCD():
         if csvfile:
             csvfile.close()
         return status
+    
     def importDefaults(self,fileName):
         csvfile = None
+        print("Updating Carbon Calculator constant values.")
+        removeDuplicates()
         try:
             status = True
             with open(fileName, newline='') as csvfile:
-                inputlist = csv.reader(csvfile)
-                first = True
-                for item in inputlist:
-                    if first:
-                        t = {}
-                        for i in range(len(item)):
-                            it = item[i]
-                            if i == 0:
-                                it = 'Variable'
-                            t[it] = i
-                        first = False
+                reader = csv.reader(csvfile)
+
+                # dictionary of column indices by heading
+                column_index = {}
+                headers = next(reader, None)
+                for index in range(len(headers)):
+                    heading = headers[index] if index!=0 else 'Variable'
+                    column_index[heading] = index
+
+                num = 0
+                for item in reader:
+                    if len(item)<6 or item[0] == '' or item[1] == '':
+                        continue
+
+                    variable = item[column_index["Variable"]]
+                    locality = item[column_index["Locality"]]
+                    valid_date = item[column_index["Valid Date"]]
+                    value = eval(item[column_index["Value"]])
+                    reference = item[column_index["Reference"]]
+                    updated = localized_time(item[column_index["Updated"]])
+
+                    if not valid_date or valid_date=="":
+                        valid_date = '2000-01-01'
+
+                    valid_date = date_import(valid_date)
+
+                    # update the default value for this variable, localith and valid_date
+                    qs, created = CalcDefault.objects.update_or_create(
+                        variable=variable, 
+                        locality=locality,
+                        valid_date=valid_date,
+                        defaults={
+                            'value':value,
+                            'reference':reference,
+                            'updated':updated
+                        })
+                    if created:
+                        num += 1
+
+                    if not locality in self.DefaultsByLocality:
+                        self.DefaultsByLocality[locality] = {}
+
+                    if not variable in self.DefaultsByLocality[locality]:
+                        self.DefaultsByLocality[locality][variable] = {}
+
+                        self.DefaultsByLocality[locality][variable]["valid_dates"] = [valid_date]
+                        self.DefaultsByLocality[locality][variable]["values"] = [value]
                     else:
-                        if len(item)<6 or item[0] == '' or item[1] == '':
-                            continue
-                        variable = item[t["Variable"]]
-                        locality = item[t["Locality"]]
-                        valid_date = item[t["Valid Date"]]
-                        value = eval(item[t["Value"]])
-                        reference = item[t["Reference"]]
-                        updated = item[t["Updated"]]
-
-                        if not valid_date or valid_date=="":
-                            valid_date = '2000-01-01'
-
-                        #valid_date = datetime.date(valid_date)
-                        valid_date = datetime.strptime(valid_date, "%Y-%m-%d").date()
-
-                        #qs = CalcDefault.objects.filter(variable=variable, locality=locality)
-                        #if qs:
-                        #    qs[0].delete()
-
-                        cd = CalcDefault(variable=variable,
-                                locality=locality,
-                                value=value,
-                                reference=reference,
-                                valid_date = valid_date,
-                                updated=updated)
-                        cd.save()
-
-                        if not locality in self.DefaultsByLocality:
-                            self.DefaultsByLocality[locality] = {}
-
-                        if not variable in self.DefaultsByLocality[locality]:
-                            self.DefaultsByLocality[locality][variable] = {}
-
-                            self.DefaultsByLocality[locality][variable]["valid_dates"] = [valid_date]
-                            self.DefaultsByLocality[locality][variable]["values"] = [value]
-                        else:
-                            f = False
-                            var = self.DefaultsByLocality[locality][variable]
-                            for i in range(len(var["valid_dates"])):
-                                compdate = var["valid_dates"][i]
-                                if type(compdate)==type('str'):
-                                    compdate = datetime.strptime(compdate, "%Y-%m-%d").date()
-                                if valid_date < compdate:
-                                    var["valid_dates"].insert(i,valid_date)
-                                    var["values"].insert(i,value)
-                                    f = True
-                                    break
-                                elif valid_date == compdate:
-                                    var["values"][i] = value
-                                    f = True
-                                    break
-                            if not f:
-                                var["valid_dates"].append(valid_date)
-                                var["values"].append(value)
- 
+                        f = False
+                        var = self.DefaultsByLocality[locality][variable]
+                        for i in range(len(var["valid_dates"])):
+                            compdate = var["valid_dates"][i]
+                            if type(compdate)==type('str'):
+                                compdate = datetime.strptime(compdate, "%Y-%m-%d").date()
+                            if valid_date < compdate:
+                                var["valid_dates"].insert(i,valid_date)
+                                var["values"].insert(i,value)
+                                f = True
+                                break
+                            elif valid_date == compdate:
+                                var["values"][i] = value
+                                f = True
+                                break
+                        if not f:
+                            var["valid_dates"].append(valid_date)
+                            var["values"].append(value)
+                if num>0:
+                    msg = "Imported %d Carbon Calculator Defaults" % num
+                else:
+                    msg = "Carbon Calculator default values updated"
+                print(msg)       
             status = True
         except Exception as error:
             print("Error importing Carbon Calculator Defaults from CSV file")

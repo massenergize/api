@@ -1,8 +1,13 @@
-from _main_.utils.common import serialize_all
+from _main_.utils.common import encode_data_for_URL, serialize_all
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
 from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
+from _main_.utils.feature_flag_keys import COMMUNITY_ADMIN_WEEKLY_EVENTS_NUDGE_FF
+from api.utils.api_utils import get_sender_email
 from api.utils.constants import WEEKLY_EVENTS_NUDGE_TEMPLATE
-from database.models import *
+from database.utils.settings.model_constants.events import EventConstants
+from database.models import Community, FeatureFlag, UserProfile, Event, CommunityAdminGroup
+from database.utils.settings.admin_settings import AdminPortalSettings
+from database.utils.settings.user_settings import UserPortalSettings
 from django.utils import timezone
 import datetime
 import pytz
@@ -21,8 +26,6 @@ default_pref = {
     "user_portal_settings": UserPortalSettings.Defaults,
     "admin_portal_settings": AdminPortalSettings.Defaults,
 }
-
-WEEKLY_EVENT_NUDGE = "weekly_event_nudge-feature-flag"
 
 
 def is_viable(item):
@@ -44,7 +47,7 @@ def generate_event_list_for_community(com):
         community__is_published=True,
         is_published=True,
         is_deleted=False
-    ).exclude(community=com).exclude(shared_to__id=com.id).distinct()
+    ).exclude(community=com).exclude(shared_to__id=com.id).distinct().order_by("start_date_and_time")
     
     return {
         "events": prepare_events_email_data(events),
@@ -57,23 +60,25 @@ def get_comm_admins(com):
     only get admins whose communities have been allowed in the feature flag to receive events
     nudge
     """
-    flag = FeatureFlag.objects.filter(key=WEEKLY_EVENT_NUDGE).first()
+    flag = FeatureFlag.objects.filter(key=COMMUNITY_ADMIN_WEEKLY_EVENTS_NUDGE_FF).first()
+
+    all_community_admins = CommunityAdminGroup.objects.filter(community=com).values_list('members__preferences', "members__email", "members__full_name", "members__notification_dates", "members__user_info")
+
     admins = []
-    user_list = []
-
-    all_community_admins = CommunityAdminGroup.objects.filter(community=com).values_list('members__preferences', "members__email", "members__full_name", "members__notification_dates")
-
     for i in list(all_community_admins):
         admins.append({
             "pref": i[0] if is_viable(i) else default_pref,
             "email": i[1],
             "name": i[2],
-            "notification_dates": i[3]
+            "notification_dates": i[3],
+            "user_info":i[4]
         })
 
+    # TODO: use flag.enabled_users() instead
+    user_list = []   
     if flag.user_audience == "SPECIFIC":
-       user_list = [str(u.email) for u in flag.users.all()]
-       admins = list(filter(lambda admin: admin.get("email") in user_list,admins ))
+        user_list = [str(u.email) for u in flag.users.all()]
+        admins = list(filter(lambda admin: admin.get("email") in user_list,admins ))
     elif flag.user_audience == "ALL_EXCEPT":
         user_list = [str(u.email) for u in flag.users.all()]
         admins = list(filter(lambda admin: admin.get("email") not in user_list,admins ))
@@ -171,25 +176,24 @@ def prepare_events_email_data(events):
 #  this is the function called in jobs.py
 
 
-def send_events_nudge():
+def send_events_nudge(task=None):
     try:
         admins_emailed=[]
-        flag = FeatureFlag.objects.filter(key=WEEKLY_EVENT_NUDGE).first()
+        flag = FeatureFlag.objects.get(key=COMMUNITY_ADMIN_WEEKLY_EVENTS_NUDGE_FF)
+        if not flag or not flag.enabled():
+            return False
 
         communities = Community.objects.filter(is_published=True, is_deleted=False)
-
-        if flag.audience == "SPECIFIC":
-            communities = communities.filter(id__in=[str(u.id) for u in flag.communities.all()])
-        elif flag.audience == "ALL_EXCEPT":
-            communities = communities.exclude(id__in=[str(u.id) for u in flag.communities.all()])
-
+        communities = flag.enabled_communities(communities)
         for com in communities:
             d = generate_event_list_for_community(com)
             admins = d.get("admins", [])
             event_list = d.get("events", [])
-
             if len(admins) > 0 and len(event_list) > 0:
                 email_list = get_email_list(admins)
+
+                #for name, email, user_info in email_list.items():
+                #    stat = send_events_report(name, email, event_list, user_info)
                 for name, email in email_list.items():
                     stat = send_events_report(name, email, event_list)
                     if not stat:
@@ -203,14 +207,20 @@ def send_events_nudge():
         return False
 
 
+#def send_events_report(name, email, event_list, user_info):
 def send_events_report(name, email, event_list):
     try:
-        change_preference_link = ADMIN_URL_ROOT+"/admin/profile/preferences"
+        # 14-Dec-23 - fix for user_info not provided
+        user = UserProfile.objects.filter(email=email).first()
+        login_method= (user.user_info or {}).get("login_method", None)
+        cred = encode_data_for_URL({"email": email, "login_method":login_method})
+        change_preference_link = ADMIN_URL_ROOT+f"/admin/profile/preferences/?cred={cred}"
         data = {}
         data["name"] = name.split(" ")[0]
         data["change_preference_link"] = change_preference_link
         data["events"] = event_list
-        send_massenergize_email_with_attachments(WEEKLY_EVENTS_NUDGE_TEMPLATE, data, [email], None, None)
+        # sent from MassEnergize to cadmins
+        send_massenergize_email_with_attachments(WEEKLY_EVENTS_NUDGE_TEMPLATE, data, [email], None, None, None)
         return True
     except Exception as e:
         print("send_events_report exception: " + str(e))

@@ -1,6 +1,8 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
-from api.tests.common import RESET
+from _main_.utils.utils import Console
+from api.store.common import get_media_info, make_media_info
+from api.tests.common import RESET, makeUserUpload
 from api.utils.api_utils import is_admin_of_community
 from api.utils.filter_functions import get_testimonials_filter_params
 from database.models import Testimonial, UserProfile, Media, Vendor, Action, Community, CommunityAdminGroup, Tag
@@ -36,8 +38,6 @@ class TestimonialStore:
       user_email = args.pop('user_email', None)
       user, _ = get_user(user_id, user_email)
 
-      testimonials = []
-
       if community:
         testimonials = Testimonial.objects.filter(
             community=community, is_deleted=False).prefetch_related('tags__tag_collection', 'action__tags', 'vendor', 'community')
@@ -69,6 +69,7 @@ class TestimonialStore:
 
   def create_testimonial(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
+      image_info = make_media_info(args)
       images = args.pop("image", None)
       tags = args.pop('tags', [])
       action = args.pop('action', None)
@@ -93,17 +94,7 @@ class TestimonialStore:
           new_testimonial.user = user
 
       
-      if images:
-        if type(images) == list:
-          # from admin portal, using media library
-          image = Media.objects.filter(id = images[0]).first(); 
-          new_testimonial.image = image
-        else:
-          # from community portal, image upload
-          images.name = unique_media_filename(images)
-
-          image = Media.objects.create(file=images, name=f"ImageFor {args.get('title', '')} Testimonial")
-          new_testimonial.image = image
+      
 
 
       if action:
@@ -119,6 +110,21 @@ class TestimonialStore:
         new_testimonial.community = testimonial_community
       else:
         testimonial_community = None
+
+      if images:
+        if type(images) == list:
+          # from admin portal, using media library
+          image = Media.objects.filter(id = images[0]).first(); 
+          new_testimonial.image = image
+        else:
+          # from community portal, image upload
+          images.name = unique_media_filename(images)
+          image = Media.objects.create(file=images, name=f"ImageFor {args.get('title', '')} Testimonial")
+          new_testimonial.image = image
+
+          user_media_upload = makeUserUpload(media = image,info=image_info, user = user,communities=[testimonial_community])
+          user_media_upload.user = user 
+          user_media_upload.save()
 
       tags_to_set = []
       for t in tags:
@@ -142,6 +148,7 @@ class TestimonialStore:
 
   def update_testimonial(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
+      image_info = make_media_info(args)
       id = args.pop("id", None)
       testimonials = Testimonial.objects.filter(id=id)
       if not testimonials:
@@ -178,6 +185,13 @@ class TestimonialStore:
       testimonials.update(**args)
       testimonial = testimonials.first() # refresh after update
 
+      if community:
+        testimonial_community = Community.objects.filter(id=community).first()
+        if testimonial_community:
+          testimonial.community = testimonial_community
+        else:
+          testimonial.community = None
+
       if images:
             if type(images) == list:
                 if images[0] == RESET: 
@@ -191,6 +205,13 @@ class TestimonialStore:
                 else:
                     image = Media.objects.create(file=images, name=f"ImageFor {testimonial.title} Testimonial")
                     testimonial.image = image
+                    makeUserUpload(media = image,info=image_info, user = testimonial.user,communities=[testimonial_community])
+      
+      if testimonial.image:
+        old_image_info, can_save_info = get_media_info(testimonial.image)
+        if can_save_info: 
+          testimonial.image.user_upload.info.update({**old_image_info,**image_info})
+          testimonial.image.user_upload.save()
       
       if action:
         testimonial_action = Action.objects.filter(id=action).first()
@@ -204,12 +225,7 @@ class TestimonialStore:
       else:
         testimonial.vendor = None
 
-      if community:
-        testimonial_community = Community.objects.filter(id=community).first()
-        if testimonial_community:
-          testimonial.community = testimonial_community
-        else:
-          testimonial.community = None
+
 
       if rank:
           testimonial.rank = rank

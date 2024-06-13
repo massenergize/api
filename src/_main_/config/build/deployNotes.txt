@@ -1,2 +1,1 @@
-Feb 24: Admin portal pagination:
-- deliver content in small chunks
+Jan 31, 2024: Campaigns initial prod deployment

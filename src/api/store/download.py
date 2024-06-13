@@ -1,3 +1,4 @@
+from _main_.utils.common import generate_workbook_with_sheets
 from _main_.utils.massenergize_errors import (
     NotAuthorizedError,
     MassEnergizeAPIError,
@@ -9,6 +10,7 @@ from _main_.utils.context import Context
 from collections import Counter
 from api.store.utils import get_human_readable_date
 from api.utils.api_utils import get_user_community_ids, is_admin_of_community
+from apps__campaigns.models import Campaign, CampaignActivityTracking, CampaignFollow, CampaignLink, CampaignTechnology, CampaignTechnologyFollow, CampaignTechnologyLike, CampaignTechnologyTestimonial, CampaignTechnologyView, CampaignView, Comment
 from database.models import (
     UserProfile,
     CommunityMember,
@@ -25,9 +27,22 @@ from database.models import (
     TagCollection,
     Goal,
     CommunitySnapshot,
+    CustomCommunityWebsiteDomain,
+    HomePageSettings,
+    ImpactPageSettings,
+    ActionsPageSettings,
+    EventsPageSettings,
+    Vendor,
+    TestimonialsPageSettings,
+    VendorsPageSettings,
+    TeamsPageSettings,
+    DonatePageSettings,
+    AboutUsPageSettings,
+    ContactUsPageSettings,
 )
 from api.store.team import get_team_users
 from api.constants import STANDARD_USER, GUEST_USER
+from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
 from api.store.tag_collection import TagCollectionStore
 from api.store.deviceprofile import DeviceStore
 from django.db.models import Q
@@ -38,9 +53,20 @@ from django.utils import timezone
 import datetime
 from django.utils.timezone import utc
 from carbon_calculator.carbonCalculator import AverageImpact
+from django.db.models import Count, Sum
+from uuid import UUID
+
 
 EMPTY_DOWNLOAD = (None, None)
 
+def hyperlink(text, link):
+    return '=HYPERLINK("'+link+'","'+text+'")'
+
+def update_user(item):
+    return item.user.email if item.user and not item.user.is_deleted else ""
+
+def update_date(item):
+    return item.updated_at.date() if item.updated_at else ""
 
 class DownloadStore:
     def __init__(self):
@@ -178,6 +204,13 @@ class DownloadStore:
             "Service Providers Count",
         ]
 
+        self.pagemap_columns = [
+            "Page Name",
+            "Status",
+            "Admin Page Name",
+            "Updated on",
+            "Updated by",
+        ]
         # Fields should include for Actions, Households, Carbon Reduction: user reported, manual addition, goal for this period, (calculated) % of goal.
 
         # For Actions entered data - the numbers entered into each category.
@@ -203,9 +236,14 @@ class DownloadStore:
 
         if isinstance(user, Subscriber):
             full_name = user.name
-            space = full_name.find(" ")
-            first_name = full_name[:space]
-            last_name = full_name[space + 1 :]
+            if full_name is None:
+                first_name = "---"
+                last_name = "---"
+            else:
+                space = full_name.find(" ")
+                first_name = full_name[:space]
+                last_name = full_name[space + 1 :]
+                
             user_cells_1 = {
                 "First Name": first_name,
                 "Last Name": last_name,
@@ -220,9 +258,13 @@ class DownloadStore:
                 return None
 
         full_name = user.full_name
-        space = full_name.find(" ")
-        first_name = full_name[:space]
-        last_name = full_name[space + 1 :]
+        if not full_name:
+            first_name = "---"
+            last_name = "---"
+        else:
+            space = full_name.find(" ")
+            first_name = full_name[:space]
+            last_name = full_name[space + 1 :]
 
         user_cells_1 = {
             "First Name": first_name,
@@ -393,7 +435,7 @@ class DownloadStore:
             }
         return self._get_cells_from_dict(self.user_info_columns_new, user_cells)
     
-    # Recieves an action, returns how many times it's been marked as Done in the last 30 days
+    # Receives an action, returns how many times it's been marked as Done in the last 30 days
     def _get_last_30_days_count(self, action):
         today = datetime.date.today()
         thirty_days_ago = today - timezone.timedelta(days = 30)
@@ -406,9 +448,8 @@ class DownloadStore:
 
     #Gets row information for the All Actions CSV and the All Communities and Actions CSV
     def _get_action_info_cells(self, action):
-
         average_carbon_points = (
-            AverageImpact(action.calculator_action, action.date_completed)
+            AverageImpact(action.calculator_action)
             if action.calculator_action
             else int(action.average_carbon_score)
             if action.average_carbon_score.isdigit()
@@ -979,7 +1020,6 @@ class DownloadStore:
 
         columns = self.action_info_columns
         data = [columns]
-
         for action in actions:
             data.append(self._get_action_info_cells(action))
 
@@ -1189,6 +1229,250 @@ class DownloadStore:
 
         return data
 
+    def _fill_pagemap_header(self, community):
+        data = []
+
+        line = community.name + " page map"	
+        data.append(line)
+        today = datetime.date.today()
+        line = "Generated: " + str(today)
+        data.append(line)
+        data.append("")			
+        return data
+    
+    def _get_pagemap_data(self, community):
+        data = []
+
+        #Home page
+        customDomain = CustomCommunityWebsiteDomain.objects.filter(community__id=community.id)
+        if customDomain:
+            communityURL = 'https://'+customDomain.first().website
+        else:
+            communityURL = f'{COMMUNITY_URL_ROOT}/{community.subdomain}'
+
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/community/community-admin'
+        pagedata = {"Page Name":hyperlink("Home Page", communityURL),
+                    "Status":"Enabled",  
+                    "Admin Page Name":hyperlink("Community Information",adminURL),
+                    }
+        data.append(pagedata)
+
+        #Community profile
+        adminURL = f'{ADMIN_URL_ROOT}/admin/community/{community.id}/profile'
+        pagedata = {"Admin Page Name":hyperlink("Community Profile",adminURL),
+                    }
+        data.append(pagedata)
+
+        #Community admins
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/community-admins'
+        pagedata = {"Admin Page Name":hyperlink("Community Admins",adminURL),
+                    }
+        data.append(pagedata)
+
+        #Home page settings
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/home'
+        pageSettings = HomePageSettings.objects.get(community__id=community.id)
+        pagedata = {"Admin Page Name":hyperlink("Home Page Settings",adminURL),
+                    "Updated on":update_date(pageSettings),
+                    }
+        data.append(pagedata)
+
+        #Goals and impact data
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/impacts'
+        pagedata = {"Admin Page Name":hyperlink("Goals and Impact Data",adminURL),
+                    }
+        data.append(pagedata)
+
+        #Impact page
+        pageSettings = ImpactPageSettings.objects.get(community__id=community.id)
+        status = "Enabled" if pageSettings.is_published else "Disabled"
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/impact'
+        pagedata = {"Page Name":hyperlink("Impact Page", communityURL+'/impact'), 
+                    "Status": status,  
+                    "Admin Page Name":hyperlink("Impact Page Settings",adminURL),
+                    "Updated on":update_date(pageSettings),
+                    }
+        data.append(pagedata)
+
+        #AboutUs page
+        pageSettings = AboutUsPageSettings.objects.get(community__id=community.id)
+        status = "Enabled" if pageSettings.is_published else "Disabled"
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/about'
+        pagedata = {"Page Name":hyperlink("AboutUs Page",communityURL+'/aboutus'), 
+                    "Status": status,  
+                    "Admin Page Name":hyperlink("AboutUs Page Settings",adminURL),
+                    "Updated on":update_date(pageSettings),
+                    }
+        data.append(pagedata)
+
+        #Donate Page
+        pageSettings = DonatePageSettings.objects.get(community__id=community.id)
+        status = "Enabled" if pageSettings.is_published else "Disabled"
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/donate'
+        pagedata = {"Page Name":hyperlink("Donate Page",communityURL+'/donate'), 
+                    "Status": status,  
+                    "Admin Page Name":hyperlink("Donate Page Settings",adminURL),
+                    "Updated on":update_date(pageSettings),
+                    }
+        data.append(pagedata)
+
+        #ContactUs Page
+        pageSettings = ContactUsPageSettings.objects.get(community__id=community.id)
+        status = "Enabled" if pageSettings.is_published else "Disabled"
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/contact_us'
+        pagedata = {"Page Name":hyperlink("ContactUs Page",communityURL+'/contactus'), 
+                    "Status": status,  
+                    "Admin Page Name":hyperlink("ContactUs Page Settings",adminURL),
+                    "Updated on":update_date(pageSettings),
+                    }
+        data.append(pagedata)
+
+        #All Actions Page
+        pageSettings = AboutUsPageSettings.objects.get(community__id=community.id)
+        status = "Enabled" if pageSettings.is_published else "Disabled"
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/all-actions'
+        pagedata = {"Page Name":hyperlink("All Actions Page",communityURL+'/actions'), 
+                    "Status": status,  
+                    "Admin Page Name":hyperlink("Actions Page Settings",adminURL),
+                    "Updated on":update_date(pageSettings),
+                    }
+        data.append(pagedata)
+
+        # individual action pages
+        actions = Action.objects.filter(community__id=community.id, is_deleted=False)
+        for action in actions:
+            status = "Published" if action.is_published else ""
+            adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{action.id}/action'
+            pagedata = {"Page Name":hyperlink(action.title,communityURL+'/actions/'+str(action.id)), 
+                        "Status": status,  
+                        "Admin Page Name":hyperlink("Edit Action Content",adminURL),
+                        "Updated on":update_date(action),
+                        "Updated by":update_user(action),
+                        }
+            data.append(pagedata)
+
+        #All Events Page
+        pageSettings = EventsPageSettings.objects.get(community__id=community.id)
+        status = "Enabled" if pageSettings.is_published else "Disabled"
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/all-events'
+        pagedata = {"Page Name":hyperlink("All Events Page",communityURL+'/events'), 
+                    "Status": status,  
+                    "Admin Page Name":hyperlink("Events Page Settings",adminURL),
+                    "Updated on":update_date(pageSettings),
+                    }
+        data.append(pagedata)
+
+        # individual event pages
+        events = Event.objects.filter(community__id=community.id, is_deleted=False)
+        for event in events:
+            status = "Published" if action.is_published else ""
+            adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{action.id}/event'
+            pagedata = {"Page Name":hyperlink(event.name,communityURL+'/events/'+str(action.id)), 
+                        "Status": status,  
+                        "Admin Page Name":hyperlink("Edit Event Content",adminURL),
+                        "Updated on":update_date(event),
+                        "Updated by":update_user(event),
+                        }
+            data.append(pagedata)
+
+        #All Testimonials Page
+        pageSettings = TestimonialsPageSettings.objects.get(community__id=community.id)
+        status = "Enabled" if pageSettings.is_published else "Disabled"
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/all-testimonials'
+        pagedata = {"Page Name":hyperlink("All Testimonials Page",communityURL+'/testimonials'), 
+                    "Status": status,  
+                    "Admin Page Name":hyperlink("Testimonials Page Settings",adminURL),
+                    "Updated on":update_date(pageSettings),
+                    }
+        data.append(pagedata)
+
+        # individual testimonial pages
+        items = Testimonial.objects.filter(community__id=community.id, is_deleted=False)
+        for item in items:
+            status = "Published" if item.is_published else ""
+            adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{item.id}/testimonial'
+            pagedata = {"Page Name":hyperlink(item.title,communityURL+'/testimonials/'+str(item.id)), 
+                        "Status": status,  
+                        "Admin Page Name":hyperlink("Edit Testimonial Content",adminURL),
+                        "Updated on":update_date(item),
+                        "Updated by":update_user(item),
+                        }
+            data.append(pagedata)
+
+        #All Service Providers page
+        pageSettings = VendorsPageSettings.objects.get(community__id=community.id)
+        status = "Enabled" if pageSettings.is_published else "Disabled"
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edity/{community.id}/all-vendors'
+        pagedata = {"Page Name":hyperlink("All Services Page",communityURL+'/services'), 
+                    "Status": status,  
+                    "Admin Page Name":hyperlink("Services Page Settings",adminURL),
+                    "Updated on":update_date(pageSettings),
+                    }
+        data.append(pagedata)
+
+        #individual service provider pages
+        items = Vendor.objects.filter(communities__id=community.id, is_deleted=False)
+        for item in items:
+            status = "Published" if item.is_published else ""
+            adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{item.id}/vendor'
+            pagedata = {"Page Name":hyperlink(item.name,communityURL+'/services/'+str(item.id)), 
+                        "Status": status,  
+                        "Admin Page Name":hyperlink("Edit Service Content",adminURL),
+                        "Updated on":update_date(item),
+                        "Updated by":update_user(item),
+                    }
+            data.append(pagedata)
+
+
+        #All Teams page
+        pageSettings = TeamsPageSettings.objects.get(community__id=community.id)
+        status = "Enabled" if pageSettings.is_published else "Disabled"
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/all-teams'
+        pagedata = {"Page Name":hyperlink("All Teams Page",communityURL+'/teams'), 
+                    "Status": status,  
+                    "Admin Page Name":hyperlink("Teams Page Settings",adminURL),
+                    "Updated on":update_date(pageSettings),
+                    }
+        data.append(pagedata)
+
+        # individual teams pages
+        items = Team.objects.filter(primary_community__id=community.id, is_deleted=False)
+        for item in items:
+            status = "Published" if item.is_published else ""
+            adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{item.id}/team'
+            pagedata = {"Page Name":hyperlink(item.name,communityURL+'/teams/'+str(item.id)), 
+                        "Status": status,  
+                        "Admin Page Name":hyperlink("Edit Team Content",adminURL),
+                        "Updated on":update_date(item),
+                        "Updated by":update_user(item),
+                        }
+            data.append(pagedata)
+        return data
+
+    def _fill_pagemap_cells(self, pagedata):
+        return self._get_cells_from_dict(self.pagemap_columns, pagedata)
+
+
+
+    def _community_pagemap_download(self, context, community_id):
+
+        community = Community.objects.get(id=community_id)
+
+        data = [self._fill_pagemap_header(community)]
+        data.append([])
+
+        # column titles
+        columns = self.pagemap_columns
+
+        data.append(columns)
+
+        pages = self._get_pagemap_data(community)
+        for page in pages:
+            row = self._fill_pagemap_cells(page)
+            data.append(row)
+        return data
+
+
     # For All Users CSV -- all users for a given team, or all users for a given community, or (for superadmins) all users overall 
     def users_download(
         self, context: Context, community_id, team_id
@@ -1249,14 +1533,9 @@ class DownloadStore:
                     self._community_actions_download(community_id),
                     community_name,
                 ), None
-            elif context.user_is_super_admin:
+            elif context.user_is_super_admin or context.user_is_community_admin:
                 #All Communities and Actions CSV method - action data across all communities
                 return (self._all_actions_download(), None), None
-            #  if user is cadmin  and no community id is passed, get actions of communities the user
-            #  an admin of
-            elif context.user_is_community_admin: 
-                ids = get_user_community_ids(context)
-                return (self._all_actions_download(community_ids=ids), None), None
             else:
                 return EMPTY_DOWNLOAD, NotAuthorizedError()
         except Exception as e:
@@ -1341,3 +1620,366 @@ class DownloadStore:
         except Exception as e:
             capture_message(str(e), level="error")
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
+        
+
+    def community_pagemap_download(
+        self, context: Context, community_id
+    ) -> Tuple[list, MassEnergizeAPIError]:
+        try:
+            if not context.user_is_admin():
+                return EMPTY_DOWNLOAD, NotAuthorizedError()
+            if community_id: 
+                return (
+                    self._community_pagemap_download(context, community_id),
+                    None,
+                ), None
+            else:
+                return EMPTY_DOWNLOAD, NotAuthorizedError()
+        except Exception as e:
+            print("community_pagemap_exception: " + str(e))
+            capture_message(str(e), level="error")
+            return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
+        
+
+    
+    def _campaign_follows_download(self, campaign):
+        columns = ["Date", "Email", "Community", "Zipcode", "From_Other_Community"]
+
+        def get_community_name(follow):
+            if follow.community:
+               if follow.community.name != "Other":
+                    return follow.community.name
+               else:
+                return follow.community_name
+            return "N/A"
+        
+        def get_zipcode(follow):
+            try:
+                if follow.zipcode:
+                    return follow.zipcode
+                elif not follow.community_name:
+                    location = follow.community.locations.first() if follow.community and follow.community.locations else None
+                    zipcode = location.zipcode if location else "N/A"
+                    return zipcode
+                return "N/A"
+            except Exception as e:
+                print(f"An error occurred: {e}")
+                return "N/A"
+        # 
+        data = [columns]
+        follows = CampaignFollow.objects.filter(campaign=campaign, is_deleted=False)
+        for follow in follows:
+            cell  = self._get_cells_from_dict(columns,{
+                "Date": get_human_readable_date(follow.created_at),
+                "Email": follow.user.email,
+                "Community": get_community_name(follow),
+                "Zipcode": get_zipcode(follow),
+                "From_Other_Community": "Yes" if follow.community_name else "No",
+            })
+            data.append(cell)
+        return data
+        
+
+
+    def campaign_follows_download(self, context: Context, campaign_id) -> Tuple[list, MassEnergizeAPIError]:
+        try:
+            if not context.user_is_admin():
+                return EMPTY_DOWNLOAD, NotAuthorizedError()
+            
+            campaign = Campaign.objects.filter(id=campaign_id, is_deleted=False).first()
+            if not campaign:
+                return EMPTY_DOWNLOAD, InvalidResourceError()
+            
+            return (self._campaign_follows_download(campaign), None), None
+            
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
+        
+
+
+        
+    def _campaign_likes_download(self, campaign):
+        columns = ["Date", "Email", "Community",  "Technology", "Zipcode"]
+
+        def get_community_name(like):
+            if like.community:
+               if like.community.name != "Other":
+                    return like.community.name
+               else:
+                return like.community_name
+            return "N/A"
+        
+        def get_zipcode(like):
+            if like.zipcode:
+                return like.zipcode
+            elif not like.community_name:
+                zipcode = like.community.locations.first().zipcode if like.community and like.community.locations else "N/A"
+                return zipcode
+                
+            return "N/A"
+        # 
+        data = [columns]
+        likes = CampaignTechnologyLike.objects.filter(campaign_technology__campaign__id=campaign.id, is_deleted=False)
+        for like in likes:
+            cell  = self._get_cells_from_dict(columns,{
+                "Date": get_human_readable_date(like.created_at),
+                "Email": like.user.email if like.user else "N/A",
+                "Community": get_community_name(like),
+                "Technology": like.campaign_technology.technology.name,
+                "Zipcode": get_zipcode(like),
+            })
+            data.append(cell)
+        return data    
+        
+
+    def campaign_likes_download(self, context: Context, campaign_id) -> Tuple[list, MassEnergizeAPIError]:
+        try:
+            if not context.user_is_admin():
+                return EMPTY_DOWNLOAD, NotAuthorizedError()
+            
+            campaign = Campaign.objects.filter(id=campaign_id, is_deleted=False).first()
+            if not campaign:
+                return EMPTY_DOWNLOAD, InvalidResourceError()
+            
+            return (self._campaign_likes_download(campaign), None), None
+            
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
+    
+
+    def _campaign_link_performance_download(self,campaign):
+        columns = ["Date", "Campaign", "Email",  "Source", "Medium", "Click Count"]
+        data = [columns]
+        clicks = CampaignLink.objects.filter(campaign__id=campaign.id, is_deleted=False)
+        for click in clicks:
+            cell  = self._get_cells_from_dict(columns,{
+                "Date": get_human_readable_date(click.created_at),
+                "Email": click.email,
+                "Source": click.utm_source,
+                "Medium": click.utm_medium,
+                "Click Count": click.visits,
+            })
+            data.append(cell)
+        return data
+
+    
+    def campaign_link_performance_download(self, context: Context, campaign_id) -> Tuple[list, MassEnergizeAPIError]:
+        try:
+            if not context.user_is_admin():
+                return EMPTY_DOWNLOAD, NotAuthorizedError()
+            
+            campaign = Campaign.objects.filter(id=campaign_id, is_deleted=False).first()
+            if not campaign:
+                return EMPTY_DOWNLOAD, InvalidResourceError()
+            
+            return (self._campaign_link_performance_download(campaign), None), None
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
+        
+
+    def campaign_views_performance_download(self, context: Context, campaign_id) -> Tuple[list, MassEnergizeAPIError]:
+        try:
+            if not context.user_is_admin():
+                return EMPTY_DOWNLOAD, NotAuthorizedError()
+            
+            campaign = Campaign.objects.filter(id=campaign_id, is_deleted=False).first()
+            if not campaign:
+                return EMPTY_DOWNLOAD, InvalidResourceError()
+            
+            columns = ["Date", "Campaign", "Technology",  "Email"]
+            data = [columns]
+            views = CampaignTechnologyView.objects.filter(campaign_technology__campaign__id=campaign_id, is_deleted=False)
+            for view in views:
+                cell  = self._get_cells_from_dict(columns,{
+                    "Campaign": view.campaign_technology.campaign.title,
+                    "Technology": view.campaign_technology.technology.name,
+                    "Email": view.email,
+                })
+                data.append(cell)
+            return (data, None), None
+            
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
+        
+
+
+    def _campaign_interaction_performance_download(self, campaign):
+        columns = ["Date", "Email",  "Source", "Element", "Target"]
+        data = [columns]
+        interactions = CampaignActivityTracking.objects.filter(campaign__id=campaign.id, is_deleted=False)
+        for interaction in interactions:
+            cell  = self._get_cells_from_dict(columns,{
+                "Date": get_human_readable_date(interaction.created_at),
+                "Source": interaction.source,
+                "Email": interaction.email,
+                "Target": interaction.target,
+                "Element": interaction.button_type
+                
+            })
+            data.append(cell)
+        return data
+
+    def campaign_interaction_performance_download(self, context: Context, campaign_id) -> Tuple[list, MassEnergizeAPIError]:
+        try:
+            if not context.user_is_admin():
+                return EMPTY_DOWNLOAD, NotAuthorizedError()
+            
+            campaign = Campaign.objects.filter(id=campaign_id, is_deleted=False).first()
+            if not campaign:
+                return EMPTY_DOWNLOAD, InvalidResourceError()
+            return (self._campaign_interaction_performance_download(campaign), None), None
+            
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
+        
+
+    
+
+    def _campaign_overview_download(self, campaign):
+        columns = ["Metric", "Value"]
+        data = [columns]
+
+        likes = CampaignTechnologyLike.objects.filter(campaign_technology__campaign__id=campaign.id, is_deleted=False).aggregate(total_likes=Sum('count'))['total_likes']
+        follows = CampaignFollow.objects.filter(campaign__id=campaign.id, is_deleted=False).count()
+        views = CampaignTechnologyView.objects.filter(campaign_technology__campaign__id=campaign.id, is_deleted=False).aggregate(total_views=Sum('count'))['total_views']
+        campaign_views = CampaignView.objects.filter(campaign__id=campaign.id, is_deleted=False).aggregate(total_views=Sum('count'))['total_views']
+        comments = Comment.objects.filter(campaign_technology__campaign__id=campaign.id, is_deleted=False).count()
+        shares = CampaignLink.objects.filter(campaign__id=campaign.id, is_deleted=False).count()
+        testimonials = CampaignTechnologyTestimonial.objects.filter(campaign_technology__campaign__id=campaign.id, is_deleted=False).count()
+
+        rows = [
+            ["Total Likes", likes],
+            ["Total Follows", follows],
+            ["Total Views", campaign_views],
+            ["Total Technology Views", views],
+            ["Total comments", comments],
+            ["Total Shares", shares],
+            ["Total testimonials", testimonials],
+        ]
+
+        data += [self._get_cells_from_dict(columns, {"Metric": row[0], "Value": row[1]}) for row in rows]
+
+        techs = CampaignTechnology.objects.filter(campaign__id=campaign.id, is_deleted=False)
+        for tech in techs:
+            likes = CampaignTechnologyLike.objects.filter(campaign_technology__id=tech.id, is_deleted=False).aggregate(total_likes=Sum('count'))['total_likes']
+            follows = CampaignTechnologyFollow.objects.filter(campaign_technology__id=tech.id, is_deleted=False).count()
+            views = CampaignTechnologyView.objects.filter(campaign_technology__id=tech.id, is_deleted=False).aggregate(total_views=Sum('count'))['total_views']
+            comments = Comment.objects.filter(campaign_technology__id=tech.id, is_deleted=False).count()
+            testimonials = CampaignTechnologyTestimonial.objects.filter(campaign_technology__id=tech.id, is_deleted=False).count()
+
+            rows = [
+                ["Total Likes", likes or 0],
+                ["Total Follows", follows or 0],
+                ["Total Views", views or 0],
+                ["Total comments", comments or 0],
+                ["Total testimonials", testimonials or 0],
+            ]
+
+            data.append([])
+            data.append([])
+            data.append(["Technology", tech.technology.name])
+            data += [self._get_cells_from_dict(columns, {"Metric": row[0], "Value": row[1]}) for row in rows]
+
+        return data
+    
+
+
+    def _get_performance_data_for_community(self, community, campaign):
+        try:
+           
+            follows = CampaignFollow.objects.filter(campaign__id=campaign.id, community__id=community.id, is_deleted=False)
+            likes = CampaignTechnologyLike.objects.filter(campaign_technology__campaign__id=campaign.id, community__id=community.id, is_deleted=False).first()
+            comments = Comment.objects.filter(campaign_technology__campaign__id=campaign.id, community__id=community.id, is_deleted=False).count()
+            testimonials = CampaignTechnologyTestimonial.objects.filter(campaign_technology__campaign__id=campaign.id, testimonial__community__id=community.id, is_deleted=False).count()
+            rows = [
+                ["Total Follows",follows.count() if follows else 0],
+                ["Total Likes", likes.count if likes else 0],
+                ["Total comments", comments],
+                ["Total testimonials", testimonials],
+            ]
+
+            columns = ["Metric", "Value"]
+            data = [columns]
+            data += [self._get_cells_from_dict(columns, {"Metric": row[0], "Value": row[1]}) for row in rows]
+
+            # show th list of followers
+
+            if follows:
+                data.append([])
+                data.append([])
+                data.append(["Followers"])
+                columns = ["Date", "Email", "Community", "Zipcode", "From_Other_Community"]
+                data.append(columns)
+
+                for follower in follows:
+                    cell  = self._get_cells_from_dict(columns,{
+                        "Date": get_human_readable_date(follower.created_at),
+                        "Email": follower.user.email,
+                        "Community": follower.community.name,
+                        "Zipcode": follower.zipcode,
+                        "From_Other_Community": "Yes" if follower.community_name else "No",
+                    })
+                    data.append(cell)
+            return data
+
+        
+        except Exception as e:
+            print("error: " + str(e))
+            return []
+
+        
+
+
+    def campaign_performance_download(self, context: Context, campaign_id) -> Tuple[list, MassEnergizeAPIError]:
+        try:
+            if not context.user_is_admin():
+                return EMPTY_DOWNLOAD, NotAuthorizedError()
+
+            campaign = None
+            try:
+                uuid_id = UUID(campaign_id, version=4)
+                campaign = Campaign.objects.filter(id=uuid_id, is_deleted=False).first()
+            except ValueError:
+                campaign = Campaign.objects.filter(slug=campaign_id, is_deleted=False).first()
+
+            if not campaign:
+                return EMPTY_DOWNLOAD, CustomMassenergizeError("Campaign not found")
+
+            sheet_data = {}
+            sheet_data["Campaign Overview"] = {
+                "data": self._campaign_overview_download(campaign)
+            }
+            sheet_data["Campaign Follows"] = {
+                "data": self._campaign_follows_download(campaign)
+            }
+
+            sheet_data["Campaign Link Performance"] = {
+                "data": self._campaign_link_performance_download(campaign)
+            }
+            
+            sheet_data["Campaign Interaction Performance"] = {
+                "data": self._campaign_interaction_performance_download(campaign)
+            }
+            # create sheet for ech community in the campaign
+            communities = campaign.campaign_community.filter(is_deleted=False)
+
+            for community in communities:
+                sheet_data[f"{community.community.name}"] = {
+                    "data": self._get_performance_data_for_community(community.community,campaign)
+                }
+
+            wb =generate_workbook_with_sheets(sheet_data)
+
+            return (wb, campaign.title), None
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
+        
+
+
+        

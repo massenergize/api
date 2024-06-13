@@ -1,11 +1,8 @@
 from sentry_sdk import capture_exception
 from _main_.utils.massenergize_errors import CustomMassenergizeError, MassEnergizeAPIError
-from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.pagination import paginate
 from api.store.community import CommunityStore
 from _main_.utils.common import serialize, serialize_all
-from _main_.utils.emailer.send_email import send_massenergize_rich_email
-from _main_.utils.emailer.email_types import COMMUNITY_REGISTRATION_EMAIL
 from _main_.utils.context import Context
 from typing import Tuple
 
@@ -20,7 +17,7 @@ class CommunityService:
   def __init__(self):
     self.store =  CommunityStore()
 
-  def get_community_info(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def get_community_info(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     community, err = self.store.get_community_info(context, args)
     if err:
       return None, err
@@ -47,7 +44,7 @@ class CommunityService:
     communities, err = self.store.list_communities(context, args)
     if err:
       return None, err
-    return serialize_all(communities), None
+    return serialize_all(communities, info=True), None
 
 
   def create_community(self,context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -103,8 +100,8 @@ class CommunityService:
     sorted = sort_items(communities, context.get_params())
     return paginate(sorted, context.get_pagination_data()), None
 
-  def list_communities_for_community_admin(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
-    communities, err = self.store.list_communities_for_community_admin(context)
+  def list_communities_for_community_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    communities, err = self.store.list_communities_for_community_admin(context, args)
     if err:
       return None, err
     sorted = sort_items(communities, context.get_params())
@@ -135,5 +132,35 @@ class CommunityService:
     if err:
       return None, err
     return serialize_all(completed_actions_list), None
+  
+  def list_community_features(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    feature_flags, err = self.store.list_community_features(context, args)
+    if err:
+      return None, err
+    return feature_flags, None
+  
+  def request_feature_for_community(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    feature_flag, err = self.store.request_feature_for_community(context, args)
+    if err:
+      return None, err
+    return feature_flag, None
+  
+  def update_community_notification_settings(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    nudge_settings, err = self.store.update_community_notification_settings(context, args)
+    if err:
+      return None, err
+    return nudge_settings, None
+
+  def list_community_notification_settings(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+        nudge_settings, err = self.store.list_community_notification_settings(context, args)
+        if err:
+            return None, err
+        return nudge_settings, None
+  
+  def list_communities_feature_flags(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    feature_flags, err = self.store.list_communities_feature_flags(context, args)
+    if err:
+      return None, err
+    return serialize_all(feature_flags, info=True), None
 
 

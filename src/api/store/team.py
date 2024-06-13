@@ -1,7 +1,8 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
-from api.tests.common import RESET
-from api.utils.api_utils import is_admin_of_community
+from api.tests.common import RESET, makeUserUpload
+from api.store.common import get_media_info, make_media_info
+from api.utils.api_utils import get_sender_email, is_admin_of_community
 from api.utils.filter_functions import get_team_member_filter_params, get_teams_filter_params
 from api.utils.constants import TEAM_APPROVAL_EMAIL_TEMPLATE
 from database.models import Team, UserProfile, Media, Community, TeamMember, CommunityAdminGroup, UserActionRel
@@ -9,7 +10,6 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.context import Context
 from _main_.utils.constants import COMMUNITY_URL_ROOT, ADMIN_URL_ROOT
 from .utils import get_community_or_die, get_user_or_die, get_admin_communities, getCarbonScoreFromActionRel, unique_media_filename
-from database.models import Team, UserProfile
 from sentry_sdk import capture_message
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
 from carbon_calculator.carbonCalculator import AverageImpact
@@ -134,9 +134,14 @@ class TeamStore:
       primary_community_id = args.pop('community_id', None)
       community_ids = args.pop('communities', None)   # in case of a team spanning multiple communities
 
+      user_email = args.pop('user_email', context.user_email)
+      image_info = make_media_info(args)
       logo_file = args.pop('logo', None)
+
+      # not used - but remove these args if present
       image_files = args.pop('pictures', None)
       video = args.pop('video', None)
+  
       parent_id = args.pop('parent_id', None)
       args.pop('undefined', None)
 
@@ -191,7 +196,7 @@ class TeamStore:
         else:
           return None, CustomMassenergizeError("Cannot set parent team")
 
-
+      user_media_upload = None
       if logo_file: #        
         if type(logo_file) == str:
           logo_file = [logo_file]
@@ -203,8 +208,24 @@ class TeamStore:
           # from community portal, image upload
           logo_file.name = unique_media_filename(logo_file)
           logo = Media.objects.create(file=logo_file, name=f"ImageFor {team.name} Team")
-
+        # create user media upload here 
+          user_media_upload = makeUserUpload(media = logo,info=image_info, communities=[community])
+  
         team.logo = logo
+
+      user = None
+      if user_email:
+        user_email = user_email.strip()
+        # verify that provided emails are valid user
+        if not UserProfile.objects.filter(email=user_email).exists():
+          return None, CustomMassenergizeError(f"Email: {user_email} is not registered with us")
+
+        user = UserProfile.objects.filter(email=user_email).first()
+        if user:
+          team.user = user
+          if user_media_upload:
+            user_media_upload.user = user 
+            user_media_upload.save()
 
       # TODO: this code does will not make sense when there are multiple communities for the team...
       # TODO: create a rich email template for this?
@@ -218,8 +239,9 @@ class TeamStore:
           (ADMIN_URL_ROOT, team.id))
 
         for cadmin in cadmins:
-          send_massenergize_email(subject="New team awaiting approval",msg=message, to=cadmin.email)
+          send_massenergize_email(subject="New team awaiting approval",msg=message, to=cadmin.email,sender=None )
       team.save()
+
       for admin in verified_admins:
         teamMember, _ = TeamMember.objects.get_or_create(team=team,user=admin)
         teamMember.is_admin = True
@@ -249,6 +271,7 @@ class TeamStore:
       community_ids = args.pop('communities', None)   # in case of a team spanning multiple communities
 
       logo = args.pop('logo', None)
+      image_info = make_media_info(args)
       parent_id = args.pop('parent_id', None)
       is_published = args.pop('is_published', False)
         
@@ -296,9 +319,10 @@ class TeamStore:
                   }
         
         team_admins = TeamMember.objects.filter(team=team, is_admin=True).select_related('user')
+        from_email = get_sender_email(community.id)
         for team_admin in team_admins:
           send_massenergize_email_with_attachments(TEAM_APPROVAL_EMAIL_TEMPLATE, message_data,
-                                                  team_admin.user.email, None, None)
+                                                  team_admin.user.email, None, None, from_email)
       else:
         # this is how teams can get be made not live
         team.is_published = is_published
@@ -341,7 +365,14 @@ class TeamStore:
 
             logo = Media.objects.create(file=logo, name=f"ImageFor {team.name} Team")
             team.logo = logo
-        
+            makeUserUpload(media = logo, info=image_info, user = team.user, communities=[community])         
+
+      if team.logo:
+        old_image_info, can_save_info = get_media_info(team.logo)
+        if can_save_info: 
+          team.logo.user_upload.info.update({**old_image_info,**image_info})
+          team.logo.user_upload.save()
+
       team.save()
 
       if context.is_admin_site: 

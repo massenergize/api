@@ -6,6 +6,7 @@ from api.store.event import EventStore
 from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT, ME_LOGO_PNG
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
+from api.utils.api_utils import get_sender_email
 from api.utils.filter_functions import sort_items
 from .utils import send_slack_message
 from api.store.utils import get_user_or_die
@@ -89,7 +90,7 @@ class EventService:
 
           # need to validate e-mails from community admins
           #from_email = community.owner_email
-          from_email = None
+          from_email = get_sender_email(event.community.id)
 
           homelink = f'{COMMUNITY_URL_ROOT}/{community.subdomain}'
 
@@ -107,6 +108,7 @@ class EventService:
             'logo': community_logo,
             'privacylink': f"{homelink}/policies?name=Privacy%20Policy"
           }
+
 
           send_massenergize_rich_email(
               subject, user_email, 'event_rsvp_email.html', content_variables, from_email)
@@ -131,7 +133,7 @@ class EventService:
 
   def list_recurring_event_exceptions(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
     exceptions, err = self.store.list_recurring_event_exceptions(context, args)
-    if err: 
+    if err:
       print(err)
       return None, err
     return exceptions, None
@@ -140,11 +142,11 @@ class EventService:
     events, err = self.store.update_recurring_event_date(context, args)
     if err:
       return None, err
-    
+
     return serialize_all(events), None
 
   def list_events(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
-    
+
     events, err = self.store.list_events(context, args)
     if err:
       return None, err
@@ -157,7 +159,7 @@ class EventService:
       event, err = self.store.create_event(context, args, user_submitted)
       if err:
         return None, err
-      
+
       if add_to_home_page:
         add_event_to_community_home_page(event)
 
@@ -190,8 +192,9 @@ class EventService:
           'title': event.name,
           'body': event.description,
         }
+        # sent from MassEnergize to cadmins
         send_massenergize_rich_email(
-              subject, admin_email, 'event_submitted_email.html', content_variables)
+              subject, admin_email, 'event_submitted_email.html', content_variables, None)
 
         if IS_PROD or IS_CANARY:
           send_slack_message(
@@ -204,7 +207,7 @@ class EventService:
             "message": event.description,
             "url": f"{ADMIN_URL_ROOT}/admin/edit/{event.id}/event",
             "community": community_name
-        }) 
+        })
 
       return serialize(event), None
     except Exception as e:
@@ -217,7 +220,7 @@ class EventService:
     if err:
       return None, err
     return serialize(event), None
-  
+
 
   def share_event(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
     event, err = self.store.share_event(context, args)
@@ -260,3 +263,16 @@ class EventService:
       return None, err
     sorted = sort_items(events, context.get_params())
     return paginate(sorted, context.get_pagination_data()), None
+
+
+  def create_event_reminder_settings(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    event, err = self.store.create_event_reminder_settings(context, args)
+    if err:
+      return None, err
+    return serialize(event), None
+
+  def delete_event_reminder_settings(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    nudge_settings, err = self.store.delete_event_reminder_settings(context, args)
+    if err:
+      return None, err
+    return nudge_settings, None

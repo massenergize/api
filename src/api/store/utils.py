@@ -1,4 +1,5 @@
 from _main_.settings import IS_LOCAL, IS_PROD, IS_CANARY
+from _main_.utils.metrics import timed
 from _main_.utils.utils import strip_website
 from database.models import Community, UserProfile, RealEstateUnit, Location, CustomCommunityWebsiteDomain
 from _main_.utils.massenergize_errors import CustomMassenergizeError, InvalidResourceError
@@ -43,7 +44,7 @@ def get_user(user_id, email=None):
     capture_message(str(e), level="error")
     return None, CustomMassenergizeError(e)
 
-
+@timed
 def get_community_or_die(context: Context, args) -> Community:
   subdomain = args.pop('subdomain', None)
   community_id = args.pop('community_id', None)
@@ -121,19 +122,19 @@ def get_new_title(new_community, old_title):
   if loc == 0 :
     new_title = old_title[9:]
   elif loc > 0:
-    new_title = old_title[0:loc-1]
+    new_title = old_title[0:loc]
   else:
     loc = old_title.find("TEMP")
     if loc==0:
       new_title = old_title[5:]
     elif loc>0:
-      new_title = old_title[0:loc-1]
+      new_title = old_title[0:loc]
     else:
       loc = old_title.find("TMP")
       if loc==0:
         new_title = old_title[4:]
       elif loc>0:
-        new_title = old_title[0:loc-1]
+        new_title = old_title[0:loc]
 
   if not new_community: return new_title
 
@@ -142,7 +143,7 @@ def get_new_title(new_community, old_title):
   suffix = f'-{new_community.subdomain}'
   len_suffix = len(suffix)
   new_title_len = min(len(new_title), SHORT_STR_LEN - len_suffix)
-  return new_title[0:new_title_len-1]+suffix
+  return new_title[0:new_title_len]+suffix
 
 
 def find_reu_community(reu, verbose=False):

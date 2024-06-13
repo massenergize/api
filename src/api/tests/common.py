@@ -1,3 +1,4 @@
+import base64
 import time
 import jwt
 from http.cookies import SimpleCookie
@@ -30,8 +31,12 @@ import requests
 from io import BytesIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
-RESET = "reset"
+from apps__campaigns.models import Technology
 
+from database.models import Vendor
+
+RESET = "reset"
+ME_DEFAULT_TEST_IMAGE = "https://www.whitehouse.gov/wp-content/uploads/2021/04/P20210303AS-1901-cropped.jpg"
 
 def makeFootage(**kwargs):
     communities = kwargs.pop("communities",None)    
@@ -81,7 +86,8 @@ def makeFlag(**kwargs):
         **{
             "expires_on": future_expiration,
             "audience": FeatureFlagConstants.for_everyone(),
-            "key": str(time.time()) + "-feature",
+            "user_audience": FeatureFlagConstants.for_everyone(),
+            "key": name + "-feature",
             **kwargs,
             "name": name,
         }
@@ -89,8 +95,13 @@ def makeFlag(**kwargs):
 
     if coms:
         flag.communities.set(coms)
+        flag.audience = FeatureFlagConstants.for_specific_audience()
+        flag.save()
+
     if users:
         flag.users.set(users)
+        flag.user_audience = FeatureFlagConstants.for_specific_audience()
+        flag.save()
 
     return flag
 
@@ -147,8 +158,8 @@ def makeAction(**kwargs):
 
 
 def makeAdminGroup(**kwargs):
-    key = round(time.time() * 1000)
-    name = kwargs.get("name") or f"New Group - {key}"
+    key = datetime.now()
+    name = kwargs.get("name") or f"New Group - {str(key)}"
     members = kwargs.pop("members")
     group, exists= CommunityAdminGroup.objects.get_or_create(**{**kwargs, "name": name})
     if members:
@@ -231,21 +242,6 @@ def makeCommunity(**kwargs):
     return com
 
 
-def setupCC(client):
-    cq = CalcDefault.objects.all()
-    num = cq.count()
-    if num <= 0:
-        client.post(
-            "/cc/import",
-            {
-                "Confirm": "Yes",
-                "Actions": "carbon_calculator/content/Actions.csv",
-                "Questions": "carbon_calculator/content/Questions.csv",
-                "Defaults": "carbon_calculator/content/Defaults.csv",
-            },
-        )
-
-
 def makeAuthToken(user):
     dt = datetime.now()
     dt.microsecond
@@ -308,7 +304,7 @@ def createImage(picURL=None):
 
     # this may break if that picture goes away.  Ha ha - keep you on your toes!
     if not picURL:
-        picURL = "https://www.whitehouse.gov/wp-content/uploads/2021/04/P20210303AS-1901-cropped.jpg"
+        picURL = ME_DEFAULT_TEST_IMAGE
 
     resp = requests.get(picURL)
     if resp.status_code != requests.codes.ok:
@@ -333,3 +329,36 @@ def createImage(picURL=None):
         )
 
     return image_file
+
+
+def image_url_to_base64(image_url = None): 
+    image_url = image_url or ME_DEFAULT_TEST_IMAGE
+    response = requests.get(image_url)
+
+    if response.status_code == 200:
+        image_data = response.content
+        base64_image = base64.b64encode(image_data).decode('utf-8')
+        content_type = response.headers.get('Content-Type')
+        base64_image = f'data:{content_type};base64,{base64_image}'
+        return base64_image
+    return None
+
+
+
+def make_technology(**kwargs):
+    tech = Technology.objects.create(**{
+        **kwargs,
+        "name": kwargs.get("name") or f"New Technology-{datetime.now().timestamp()}",
+        "description": kwargs.get("description") or "New Technology Description",
+    })
+
+    return tech
+
+def make_vendor(**kwargs):
+    vendor = Vendor.objects.create(**{
+        **kwargs,
+        "name": kwargs.get("name") or f"New Vendor-{datetime.now().timestamp()}",
+        "description": kwargs.get("description") or "New Vendor Description",
+    })
+
+    return vendor

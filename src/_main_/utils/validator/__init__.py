@@ -1,6 +1,7 @@
 from _main_.utils.massenergize_errors import CustomMassenergizeError
-from _main_.utils.common import parse_bool, parse_date, parse_list, parse_int, parse_string, parse_location, is_value, parse_str_list
+from _main_.utils.common import parse_bool, parse_date, parse_list, parse_int, parse_string, parse_location, is_value, parse_str_list, parse_dict
 from sentry_sdk import capture_message
+
 
 class Validator:
 
@@ -98,6 +99,9 @@ class Validator:
             parse_location(args)
           elif field_type == 'file':
             args[field_name] = args.get(field_name, None) or None
+
+          elif field_type == dict:
+            args[field_name] = parse_dict(args[field_name])
         else:
           if field_type == 'location':
             parse_location(args)

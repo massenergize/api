@@ -10,6 +10,7 @@ from types import FunctionType as function
 from _main_.utils.context import Context
 from _main_.utils.validator import Validator
 from api.decorators import admins_only, super_admins_only, login_required
+from api.store.common import expect_media_fields
 
 
 
@@ -107,7 +108,9 @@ class VendorHandler(RouteHandler):
       .expect("location", str, is_required=False)
       .expect("vendor_id", str)
     
-    )
+    ) 
+  
+    expect_media_fields(self)
 
     args, err = self.validator.verify(args)
     if err:
@@ -160,6 +163,7 @@ class VendorHandler(RouteHandler):
       .expect("location", "location", is_required=False)
     )
 
+    expect_media_fields(self)
     args, err = self.validator.verify(args)
     if err:
       return err

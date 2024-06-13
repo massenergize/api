@@ -1,7 +1,7 @@
 from types import FunctionType as function
-from django.urls import path, re_path
-from django.conf.urls import url
+from django.urls import path
 from _main_.utils.validator import Validator
+from _main_.utils.metrics import timed
 
 class RouteHandler:
   """
@@ -13,7 +13,7 @@ class RouteHandler:
 
   def add(self, route: str, view: function) -> bool:
     path = route[1:]
-    self.routes[path] = view
+    self.routes[path] = timed(view) # for now we want to time every handler
 
   def get_routes_to_views(self):
     res = []
