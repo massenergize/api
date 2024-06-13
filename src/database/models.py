@@ -4060,6 +4060,8 @@ class CustomMenuItem(models.Model):
     link = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
     menu = models.ForeignKey(CustomMenu, on_delete=models.CASCADE, db_index=True, related_name="menu_items")
     parent = models.ForeignKey("self", on_delete=models.SET_NULL, null=True, blank=True, related_name="children")
+    is_link_external = models.BooleanField(default=False, blank=True)
+    key = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
     order = models.IntegerField(default=0)
     
     is_published = models.BooleanField(default=True, blank=True)
@@ -4067,6 +4069,14 @@ class CustomMenuItem(models.Model):
     
     def __str__(self):
         return self.name + " - " + self.menu.title if self.menu else ""
+    
+    
+    def save(self, *args, **kwargs):
+        
+        if not self.key:
+            self.key = slugify(self.name) + "-key"
+        print("====> ", self.key)
+        super().save(*args, **kwargs)
     
     def simple_json(self):
         res = model_to_dict(self, exclude=["menu", "parent"])
