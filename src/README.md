@@ -130,14 +130,17 @@ Two ways to run the API:
 #### for Mac/linux
 
 ```sh
-cd /
-sudo nano etc/hosts
+sudo nano /etc/hosts
 ```
 
 when the `hosts` file opens add this on a new line in the file
 
 ```
 127.0.0.1 massenergize.test
+127.0.0.1 api.massenergize.test
+127.0.0.1 mc.massenergize.test
+127.0.0.1 communities.massenergize.test
+127.0.0.1 community.massenergize.test
 ```
 
 and then press `control(^) + o` and then `Enter` to write to the `hosts` file.
