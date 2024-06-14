@@ -4075,7 +4075,6 @@ class CustomMenuItem(models.Model):
         
         if not self.key:
             self.key = slugify(self.name) + "-key"
-        print("====> ", self.key)
         super().save(*args, **kwargs)
     
     def simple_json(self):

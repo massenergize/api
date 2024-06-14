@@ -236,3 +236,17 @@ class MiscellaneousService:
         except Exception as e:
             logging.error(f"DELETE_MENU_ITEM_EXCEPTION_ERROR: {str(e)}")
             return None, CustomMassenergizeError(str(e))
+        
+        
+    def get_menu_info(self,context, args):
+        try:
+            res, err = self.store.get_menu_info(context,args)
+            
+            if err:
+                return None, err
+            
+            return serialize(res, full=True), None
+        
+        except Exception as e:
+            logging.error(f"GET_MENU_INFO_EXCEPTION_ERROR: {str(e)}")
+            return None, CustomMassenergizeError(str(e))

@@ -560,7 +560,10 @@ class MiscellaneousStore:
             if not menu_id:
                 return None, CustomMassenergizeError("Menu ID is required")
             
+            print("== menu id==", menu_id)
+            
             menu = CustomMenu.objects.filter(id=menu_id).first()
+            print("== menu==", menu)
             if not menu:
                 return None, CustomMassenergizeError("Menu not found")
             
@@ -729,5 +732,23 @@ class MiscellaneousStore:
         
         except Exception as e:
             logging.error(f"DELETE_MENU_ITEM_EXCEPTION_ERROR: {str(e)}")
+            return None, CustomMassenergizeError(str(e))
+        
+    
+    def get_menu_info(self, context, args):
+        try:
+            menu_id = args.get("menu_id", None)
+            
+            if not menu_id:
+                return None, CustomMassenergizeError("Menu ID is required")
+            
+            menu = CustomMenu.objects.filter(id=menu_id).first()
+            if not menu:
+                return None, CustomMassenergizeError("Menu not found")
+            
+            return menu, None
+        
+        except Exception as e:
+            logging.error(f"GET_MENU_INFO_EXCEPTION_ERROR: {str(e)}")
             return None, CustomMassenergizeError(str(e))
             

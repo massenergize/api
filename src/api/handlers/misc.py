@@ -41,6 +41,7 @@ class MiscellaneousHandler(RouteHandler):
         self.add("/menus.update", self.update_custom_menu)
         self.add("/menus.delete", self.delete_custom_menu)
         self.add("/menus.reset", self.reset_custom_menu)
+        self.add("/menus.info", self.get_menu_info)
         #
         self.add("/menus.items.create", self.create_menu_item)
         self.add("/menus.items.update", self.update_menu_item)
@@ -230,7 +231,7 @@ class MiscellaneousHandler(RouteHandler):
             context: Context = request.context
             args: dict = context.args
 
-            self.validator.expect("menu_id", int, is_required=True)
+            self.validator.expect("menu_id", str, is_required=True)
             self.validator.expect("title", str, is_required=False)
             self.validator.expect("community_logo_link", str, is_required=False)
             self.validator.expect("community_logo", "str_list", is_required=False, options={"is_logo": True})
@@ -254,7 +255,7 @@ class MiscellaneousHandler(RouteHandler):
             context: Context = request.context
             args: dict = context.args
 
-            self.validator.expect("menu_id", int, is_required=True)
+            self.validator.expect("menu_id", str, is_required=True)
 
             args, err = self.validator.verify(args, strict=True)
             if err:
@@ -274,7 +275,7 @@ class MiscellaneousHandler(RouteHandler):
             context: Context = request.context
             args: dict = context.args
 
-            self.validator.expect("menu_id", int, is_required=True)
+            self.validator.expect("menu_id", str, is_required=True)
 
             args, err = self.validator.verify(args, strict=True)
             if err:
@@ -294,7 +295,7 @@ class MiscellaneousHandler(RouteHandler):
             context: Context = request.context
             args: dict = context.args
 
-            self.validator.expect("menu_id", int, is_required=True)
+            self.validator.expect("menu_id", str, is_required=True)
             self.validator.expect("name", str, is_required=True)
             self.validator.expect("link", str, is_required=True)
             self.validator.expect("is_link_external", bool, is_required=False)
@@ -320,7 +321,7 @@ class MiscellaneousHandler(RouteHandler):
             context: Context = request.context
             args: dict = context.args
 
-            self.validator.expect("menu_item_id", int, is_required=True)
+            self.validator.expect("menu_item_id", str, is_required=True)
             self.validator.expect("name", str, is_required=False)
             self.validator.expect("link", str, is_required=False)
             self.validator.expect("is_link_external", bool, is_required=False)
@@ -346,13 +347,33 @@ class MiscellaneousHandler(RouteHandler):
             context: Context = request.context
             args: dict = context.args
 
-            self.validator.expect("menu_item_id", int, is_required=True)
+            self.validator.expect("menu_item_id", str, is_required=True)
 
             args, err = self.validator.verify(args, strict=True)
             if err:
                 return err
 
             data, err = self.service.delete_menu_item(context, args)
+            if err:
+                return err
+            return MassenergizeResponse(data=data)
+        
+        except Exception as e:
+            return MassenergizeResponse(error=str(e))
+        
+        
+    def get_menu_info(self, request):
+        try:
+            context: Context = request.context
+            args: dict = context.args
+
+            self.validator.expect("menu_id", str, is_required=True)
+
+            args, err = self.validator.verify(args, strict=True)
+            if err:
+                return err
+
+            data, err = self.service.get_menu_info(context, args)
             if err:
                 return err
             return MassenergizeResponse(data=data)
