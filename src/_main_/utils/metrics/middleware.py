@@ -27,5 +27,4 @@ class MetricsMiddleware(MiddlewareMixin):
             return
         latency = (time.time() - request.start_time) * 1000 # convert to milliseconds
         logger.info(f"Path: {request.path} Latency(ms): {latency}")
-        logger.info()
 
