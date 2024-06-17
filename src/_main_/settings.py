@@ -59,6 +59,8 @@ ALLOWED_HOSTS = [
 # get the domains we set in our vault and add them.
 ALLOWED_HOSTS.extend(EnvConfig.get_allowlist_domains())
 
+CSRF_TRUSTED_ORIGINS = ALLOWED_HOSTS
+
 if RUN_SERVER_LOCALLY:
     ALLOWED_HOSTS = ['*']
     
