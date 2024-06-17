@@ -4,7 +4,7 @@ from urllib.parse import urlencode
 from _main_.settings import BASE_DIR
 from _main_.utils.massenergize_response import MassenergizeResponse
 from database.models import Team, Community, UserProfile, TeamMember, CommunityAdminGroup, CommunityMember, Action
-from api.tests.common import signinAs, setupCC, createUsers
+from api.tests.common import signinAs, createUsers
 from unittest.mock import patch
 from api.tasks import download_data
 
@@ -20,8 +20,6 @@ class DownloadTestCase(TestCase):
     self.USER, self.CADMIN, self.SADMIN = createUsers()
 
     signinAs(self.client, self.SADMIN)
-
-    setupCC(self.client)
 
     COMMUNITY_NAME = "test_downloads"
     self.COMMUNITY = Community.objects.create(**{

@@ -4,8 +4,7 @@ from urllib.parse import urlencode
 from _main_.settings import BASE_DIR
 from _main_.utils.massenergize_response import MassenergizeResponse
 from database.models import Team, Community, UserProfile, Goal, TeamMember, CommunityMember, RealEstateUnit, CommunityAdminGroup, Subdomain
-from _main_.utils.utils import load_json
-from api.tests.common import signinAs, setupCC, createUsers
+from api.tests.common import signinAs, createUsers
 
 class CommunitiesTestCase(TestCase):
 
@@ -20,8 +19,6 @@ class CommunitiesTestCase(TestCase):
     self.USER, self.CADMIN, self.SADMIN = createUsers()
 
     signinAs(self.client, self.SADMIN)
-
-    setupCC(self.client)
 
     name = 'turtles'  
     self.COMMUNITY = Community.objects.create(**{

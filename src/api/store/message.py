@@ -56,8 +56,10 @@ class MessageStore:
         try:
             message_id = args.pop("message_id", None) or args.pop("id", None)
             is_inbound = args.get("is_inbound", False)
+            
             if not message_id:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError(f"MESSAGE_ID:({message_id}) not valid. Please provide a valid message_id.")
+            
             message = Message.objects.filter(pk=message_id).first()
             community_id = message.community.id if message.community else None
          
@@ -65,10 +67,10 @@ class MessageStore:
                 return None, NotAuthorizedError()
 
             if not message:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError(f"Message with ID({message_id}) not found")
         
-
             return message, None
+        
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)

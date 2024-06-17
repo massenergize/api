@@ -2,7 +2,7 @@ from django.test import TestCase, Client
 #from urllib.parse import urlencode
 from django.utils.http import urlencode
 from database.models import CarbonEquivalency
-from api.tests.common import signinAs, setupCC, createUsers
+from api.tests.common import signinAs, createUsers
 
 class CarbonEquivalenciesTestCase(TestCase):
 
@@ -16,8 +16,6 @@ class CarbonEquivalenciesTestCase(TestCase):
         self.USER, self.CADMIN, self.SADMIN = createUsers()
 
         signinAs(self.client, self.SADMIN)
-
-        setupCC(self.client)
 
         equivalency = {"name": "trees", "value": "41"}
         self.CARBON_EQUIVALENCY = CarbonEquivalency.objects.create(**equivalency)

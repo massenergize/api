@@ -75,6 +75,7 @@ class TagCollectionStore:
             if not tag.name.strip():
               tag.delete()
               continue
+
             tag.name = v.strip()
             tag.save()
         elif k.startswith('tag_') and k.endswith('_rank'):
@@ -95,7 +96,6 @@ class TagCollectionStore:
           t = tags_to_add[i]
           tag = Tag.objects.create(name=t.strip().title(), tag_collection=tag_collection, rank=len(tags)+i+1)
           tag.save()
-
 
       tags_to_delete = args.pop('tags_to_delete', '')
       if tags_to_delete: 
