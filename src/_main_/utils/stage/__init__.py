@@ -180,4 +180,9 @@ class MassEnergizeApiEnvConfig:
     def get_release_info(self):
         release_info = load_json("release_info.json")
         return release_info
+    
+    def get_trusted_origins(self):
+        origins = os.getenv('CSRF_TRUSTED_ORIGINS', '').split(",")
+        origins = [o.strip() for o in origins if o.strip()]
+        return origins or []
         
