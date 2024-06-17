@@ -8,6 +8,7 @@ from _main_.utils.massenergize_errors import (
     CustomMassenergizeError,
 )
 from _main_.utils.common import serialize, serialize_all
+from api.store.common import get_list_of_internal_links
 from api.store.misc import MiscellaneousStore
 from _main_.utils.context import Context
 from django.shortcuts import render
@@ -249,4 +250,18 @@ class MiscellaneousService:
         
         except Exception as e:
             logging.error(f"GET_MENU_INFO_EXCEPTION_ERROR: {str(e)}")
+            return None, CustomMassenergizeError(str(e))
+        
+    def get_internal_links(self,context, args):
+        try:
+            is_footer = args.get("is_footer", False)
+            res, err = get_list_of_internal_links(is_footer)
+            
+            if err:
+                return None, CustomMassenergizeError(str(err))
+            
+            return res, None
+        
+        except Exception as e:
+            logging.error(f"GET_INTERNAL_LINKS_EXCEPTION_ERROR: {str(e)}")
             return None, CustomMassenergizeError(str(e))

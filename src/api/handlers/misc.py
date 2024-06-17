@@ -37,6 +37,8 @@ class MiscellaneousHandler(RouteHandler):
         self.add("/what.happened", self.fetch_footages)
         self.add("/actions.report", self.actions_report)
         
+        self.add("/menus.links.get", self.get_internal_links)
+        
         self.add("/menus.create", self.create_from_template)
         self.add("/menus.update", self.update_custom_menu)
         self.add("/menus.delete", self.delete_custom_menu)
@@ -374,6 +376,24 @@ class MiscellaneousHandler(RouteHandler):
                 return err
 
             data, err = self.service.get_menu_info(context, args)
+            if err:
+                return err
+            return MassenergizeResponse(data=data)
+        
+        except Exception as e:
+            return MassenergizeResponse(error=str(e))
+        
+        
+    def get_internal_links(self, request):
+        try:
+            context: Context = request.context
+            args: dict = context.args
+
+            args, err = self.validator.verify(args, strict=True)
+            if err:
+                return err
+
+            data, err = self.service.get_internal_links(context, args)
             if err:
                 return err
             return MassenergizeResponse(data=data)

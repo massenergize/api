@@ -700,5 +700,32 @@ def create_default_menu_items(menu, is_footer=False):
         print(f"Error: {str(e)}")
         return None, str(e)
     
+    
+def get_list_of_internal_links(is_footer=False):
+    """
+    Returns a list of internal links
+    """
+    try:
+        default_menu = json_loader(f"database/raw_data/portal/default_menus.json")
+        if not default_menu:
+            return None, "Could not load default menus."
+        if is_footer:
+            menu= default_menu.get("footer_menus", [])
+        else:
+            menu = default_menu.get("navbar_menus", [])
+            
+        internal_links = []
+        for item in menu:
+            if item.get("children"):
+                for child in item["children"]:
+                    internal_links.append({"name": child.get("name"), "link": child.get("link")})
+            else:
+                internal_links.append({"name": item.get("name"), "link": item.get("link")})
+        
+        return internal_links, None
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return None, str(e)
+    
         
 
