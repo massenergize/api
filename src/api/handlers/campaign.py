@@ -651,8 +651,8 @@ class CampaignHandler(RouteHandler):
         context: Context = request.context
         args: dict = context.args
 
-        self.validator.expect("campaign_technology_id", str, is_required=False)
-        self.validator.expect("event_ids", list, is_required=False)
+        self.validator.expect("campaign_technology_ids", "str_list", is_required=True)
+        self.validator.expect("event_ids", list, is_required=True)
         args, err = self.validator.verify(args)
         if err:
           return err
