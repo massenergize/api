@@ -7,6 +7,7 @@ from _main_.utils.context import Context
 from api.decorators import admins_only, super_admins_only
 from database.utils.settings.admin_settings import AdminPortalSettings
 from database.utils.settings.user_settings import UserPortalSettings
+from django.http import JsonResponse
 
 
 class MiscellaneousHandler(RouteHandler):
@@ -27,6 +28,7 @@ class MiscellaneousHandler(RouteHandler):
         self.add("/data.carbonEquivalency.delete", self.delete_carbon_equivalency)
         self.add("/home", self.home)
         self.add("/health_check", self.health_check)
+        self.add("/version", self.version)
         self.add("/auth.login.testmode", self.authenticateFrontendInTestMode)
         self.add("", self.home)
         # settings should be called preferences
@@ -143,7 +145,18 @@ class MiscellaneousHandler(RouteHandler):
 
     def health_check(self, request):
         context: Context = request.context
-        return self.service.health_check(context, request)
+        data, err = self.service.health_check(context)
+        if err:
+            return MassenergizeResponse(data=data, error=err)
+        return JsonResponse(data=data, safe=False)
+
+    def version(self, request):
+        context: Context = request.context
+        data, err = self.service.version(context, request)
+        if err:
+            return MassenergizeResponse(data=data, error=err)
+        return JsonResponse(data=data, safe=False)
+
 
     def authenticateFrontendInTestMode(self, request):
         context: Context = request.context
@@ -174,7 +187,9 @@ class MiscellaneousHandler(RouteHandler):
         args, err = self.validator.verify(args, strict=True)
         if err:
             return MassenergizeResponse(error=err)
-
+        
+        args["host"] = request.META.get("HTTP_ORIGIN")
+        
         data, err = self.service.load_menu_items(context, args)
         if err:
             return err

@@ -4,10 +4,9 @@ This is the test file for device profiles
 from django.test import  TestCase, Client
 from six import print_
 from database.models import DeviceProfile
-from database.models import DeviceProfile, Community, CommunityAdminGroup
-import json
+from database.models import DeviceProfile
 from urllib.parse import urlencode
-from api.tests.common import signinAs, setupCC, createUsers
+from api.tests.common import signinAs, createUsers
 
 class DeviceHandlerTest(TestCase):
 
@@ -21,8 +20,6 @@ class DeviceHandlerTest(TestCase):
       self.USER, self.CADMIN, self.SADMIN = createUsers()
     
       signinAs(self.client, self.SADMIN)
-
-      setupCC(self.client)
 
       signinAs(self.client, None)
 

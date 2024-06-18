@@ -1010,10 +1010,10 @@ class CommunityStore:
                 reserve_subdomain(subdomain, community)
 
             # save custom website if specified
-            if website:
-                ret, err = self.add_custom_website(context, {"community_id": community.id, "website": website})
-                if err:
-                    raise Exception("Failed to save custom website: " + str(err))
+            # if website:
+            ret, err = self.add_custom_website(context, {"community_id": community.id, "website": website})
+            if err:
+                raise Exception("Failed to save custom website: " + str(err))
 
             # ----------------------------------------------------------------
             Spy.create_community_footage(
@@ -1130,22 +1130,17 @@ class CommunityStore:
 
             # give a way to delete the website
             if website == None or website == "" or website == "None":
-                CustomCommunityWebsiteDomain.objects.filter(
-                    community=community
-                ).delete()
+            
+                CustomCommunityWebsiteDomain.objects.filter( community=community).delete()
                 return None, None
-
+            
             website = strip_website(website)
 
             # There can be only one custom website domain for a community site
             # if a different community website domain exists, modify it.
-            community_website = CustomCommunityWebsiteDomain.objects.filter(
-                community=community
-            ).first()
+            community_website = CustomCommunityWebsiteDomain.objects.filter(community=community).first()
             if not community_website:
-                community_website = CustomCommunityWebsiteDomain(
-                    website=website, community=community
-                )
+                community_website = CustomCommunityWebsiteDomain(website=website, community=community)
                 community_website.save()
             elif community_website.website != website:
                 community_website.website = website

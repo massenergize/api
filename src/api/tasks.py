@@ -1,30 +1,30 @@
 import csv
+import datetime
+import logging
+
+from celery import shared_task
+from django.db.models import Count
 from django.http import HttpResponse
+from django.utils import timezone
+from django.utils.timezone import utc
+
 from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
-from api.constants import ACTIONS, CAMPAIGN_INTERACTION_PERFORMANCE_REPORT, CAMPAIGN_PERFORMANCE_REPORT, CAMPAIGN_VIEWS_PERFORMANCE_REPORT, COMMUNITIES, FOLLOWED_REPORT, LIKE_REPORT, LINK_PERFORMANCE_REPORT, METRICS, SAMPLE_USER_REPORT, TEAMS, USERS, CADMIN_REPORT, SADMIN_REPORT, COMMUNITY_PAGEMAP
-from api.store.download import DownloadStore
-from api.constants import DOWNLOAD_POLICY
+from api.constants import ACTIONS, CADMIN_REPORT, CAMPAIGN_INTERACTION_PERFORMANCE_REPORT, CAMPAIGN_PERFORMANCE_REPORT, \
+    CAMPAIGN_VIEWS_PERFORMANCE_REPORT, COMMUNITIES, COMMUNITY_PAGEMAP, DOWNLOAD_POLICY, FOLLOWED_REPORT, LIKE_REPORT, \
+    LINK_PERFORMANCE_REPORT, METRICS, SAMPLE_USER_REPORT, TEAMS, USERS
 from api.store.common import create_pdf_from_rich_text, sign_mou
-from api.store.utils import get_user_from_context
-from api.utils.api_utils import get_sender_email
-from database.models import CommunityNotificationSetting, Policy
-from task_queue.nudges.cadmin_events_nudge import generate_event_list_for_community, send_events_report
-from api.store.utils import get_community, get_user
-from celery import shared_task
 from api.store.download import DownloadStore
-from api.utils.constants import BROADCAST_EMAIL_TEMPLATE, CADMIN_EMAIL_TEMPLATE, DATA_DOWNLOAD_TEMPLATE, SADMIN_EMAIL_TEMPLATE
-from database.models import Community, CommunityAdminGroup, CommunityMember, UserActionRel, UserProfile
-from django.utils import timezone
-import datetime
-from django.utils.timezone import utc
-from django.db.models import Count
-
+from api.store.utils import get_community, get_user, get_user_from_context
+from api.utils.api_utils import get_sender_email
+from api.utils.constants import BROADCAST_EMAIL_TEMPLATE, CADMIN_EMAIL_TEMPLATE, DATA_DOWNLOAD_TEMPLATE, \
+    SADMIN_EMAIL_TEMPLATE
+from database.models import Community, CommunityAdminGroup, CommunityMember, CommunityNotificationSetting, Policy, \
+    UserActionRel, UserProfile
+from task_queue.nudges.cadmin_events_nudge import generate_event_list_for_community, send_events_report
 from task_queue.nudges.user_event_nudge import prepare_user_events_nudge
-
+from django.core.cache import cache
 from _main_.celery.app import app
-
-
 def generate_csv_and_email(data, download_type, community_name=None, email=None,filename=None):
     response = HttpResponse(content_type="text/csv")
     now = datetime.datetime.now().strftime("%Y%m%d")
@@ -285,34 +285,54 @@ def deactivate_user(self,email):
         user.delete()
 
 
-
-
-
-
-
 @app.task
 def send_scheduled_email(subject, message, recipients, image):
-    try:
-        data = {
-           "body": message,
-           "subject": subject,
-           "image":image
-        }
-        send_massenergize_email_with_attachments(BROADCAST_EMAIL_TEMPLATE, data, recipients, None, None)
-
-    except Exception as e:
-        print(f"Error sending email: {str(e)}")
+    cache_key = f"email_sent_{subject.replace(' ', '_')}"
+    
+    if cache.add(cache_key, True, timeout=3600):
+        
+        try:
+            data = {"body": message, "subject": subject, "image": image}
+            
+            is_sent = send_massenergize_email_with_attachments(BROADCAST_EMAIL_TEMPLATE, data, recipients, None, None)
+            
+            if is_sent:
+                logging.info(f"Successfully sent email to {str(recipients)}")
+                
+        except Exception as e:
+            logging.error(f"Error sending email: {str(e)}")
+            
+        finally:
+            logging.info(f"===== Deleting Cache Key: {cache_key} =====")
+            cache.delete(cache_key)
+            
+    else:
+        logging.info("Task already picked up by another worker")
         
 @app.task
 def automatically_activate_nudge(community_nudge_setting_id):
-    try:
-        community_nudge_setting = CommunityNotificationSetting.objects.filter(id=community_nudge_setting_id).first()
-        if not community_nudge_setting:
-            return
-        community_nudge_setting.activate_on = None
-        community_nudge_setting.is_active = True
-        community_nudge_setting.save()
-        print(f"Successfully activated nudge for community: {community_nudge_setting.community.name}")
-    except Exception as e:
-        print(f"Error automatically activating nudge: {str(e)}")
+    
+    cache_key =f"nudge_activation_{community_nudge_setting_id}"
+    
+    if cache.add(cache_key, True, timeout=3600):
+        
+        try:
+            community_nudge_setting = CommunityNotificationSetting.objects.filter(id=community_nudge_setting_id).first()
+            if not community_nudge_setting:
+                logging.error(f"Community Nudge Setting with id({community_nudge_setting_id}) not found")
+                return
+            community_nudge_setting.activate_on = None
+            community_nudge_setting.is_active = True
+            community_nudge_setting.save()
+            
+            logging.info(f"Successfully activated nudge for community: {community_nudge_setting.community.name}")
+            
+        except Exception as e:
+            logging.error(f"Error automatically activating nudge: {str(e)}")
+            
+        finally:
+            logging.info(f"===== Deleting Cache Key: {cache_key} =====")
+            cache.delete(cache_key)
+    else:
+        logging.info("Task already picked up by another worker")
     

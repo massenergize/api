@@ -1,17 +1,20 @@
-init:
+essential-folders:
+	@if [ ! -d ".massenergize" ]; then mkdir .massenergize; fi
+	@if [ ! -d ".massenergize/creds" ]; then mkdir .massenergize/creds; fi
+.PHONY: essential-folders
+
+init: essential-folders
 	pip3 install -r requirements.txt
-	mkdir .massenergize
-	mkdir .massenergize/creds
 .PHONY: init
 
-start:
+start: essential-folders
 	@echo "Setting environment variables ..."
 	python3 _main_/utils/startup/prepare.py
 	@echo "Initializing server now ..."
 	python3 manage.py runserver
 .PHONY: start
 
-startd:
+startd: essential-folders
 	@echo "Setting environment variables ..."
 	DOCKER_MODE=true python3 _main_/utils/startup/prepare.py
 	sudo docker-compose down --remove-orphans
@@ -149,6 +152,19 @@ migrate-local:
 	DJANGO_ENV=local make migrate
 .PHONY: migrate-local
 
-
 create-cache-table-local:
 	DJANGO_ENV=local python manage.py createcachetable
+
+
+release:
+	@echo "Running release script..."
+	@python3 _main_/utils/release_software.py
+	@VERSION=$$(cat version.txt) && \
+	rm version.txt && \
+	echo "New version is $$VERSION" && \
+	git add release_info.json && \
+	git commit -m "Release version $$VERSION" && \
+	git tag -a "v$$VERSION" -m "Release version $$VERSION" && \
+	git push origin main && \
+	git push origin --tags
+.PHONY: release

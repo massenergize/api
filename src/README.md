@@ -141,6 +141,7 @@ when the `hosts` file opens add this on a new line in the file
 127.0.0.1 communities.massenergize.test
 127.0.0.1 api.massenergize.test
 127.0.0.1 share.massenergize.test
+127.0.0.1 mc.massenergize.test
 ```
 
 and then press `control(^) + o` and then `Enter` to write to the `hosts` file.
@@ -233,6 +234,7 @@ Firebase setup is crucial for running the API and enabling authentication.
 
 ```env
 SECRET_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+AWS_DEFAULT_REGION=us-west-1
 DATABASE_ENGINE=django.db.backends.postgresql
 DATABASE_NAME=
 DATABASE_USER=

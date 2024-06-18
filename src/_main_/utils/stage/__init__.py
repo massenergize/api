@@ -11,6 +11,7 @@ class MassEnergizeApiEnvConfig:
         self._set_api_run_info()
         self.secrets = None
         self.firebase_creds = None
+        self.release_info = self.get_release_info()
         
     
     def load_env_variables(self):
@@ -99,7 +100,7 @@ class MassEnergizeApiEnvConfig:
 
 
     def get_logging_settings(self):
-        if self.is_local() or not self.secrets:
+        if self.is_local() or self.is_test():
             return get_local_logging_settings()
         return get_default_logging_settings(self.name)
 
@@ -155,6 +156,7 @@ class MassEnergizeApiEnvConfig:
             name = _current_run_info.get('django_env', name)
             is_docker_mode = _current_run_info.get('is_docker_mode', is_docker_mode)
         else:
+            load_dotenv()
             name = os.getenv("DJANGO_ENV", "dev")
             is_docker_mode = "DOCKER_CONTAINER" in os.environ
         
@@ -174,3 +176,13 @@ class MassEnergizeApiEnvConfig:
             return ip_address
         except socket.error:
             return "Unable to get IP address"
+
+    def get_release_info(self):
+        release_info = load_json("release_info.json")
+        return release_info
+    
+    def get_trusted_origins(self):
+        origins = os.getenv('CSRF_TRUSTED_ORIGINS', '').split(",")
+        origins = [o.strip() for o in origins if o.strip()]
+        return origins or []
+        

@@ -6,7 +6,7 @@ from api.services.auth import AuthService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.massenergize_errors import NotAuthorizedError
 from _main_.utils.context import Context
-from _main_.settings import STAGE
+from _main_.settings import EnvConfig
 from api.constants import WHEN_USER_AUTHENTICATED_SESSION_EXPIRES
 
 ONE_YEAR = 365*24*60*60
@@ -50,7 +50,7 @@ class AuthHandler(RouteHandler):
       # expiration_time = get_date_and_time_in_milliseconds(hours=0.033) # FOR TESTING, UNCOMMENT THIS
       request.session[WHEN_USER_AUTHENTICATED_SESSION_EXPIRES] = expiration_time
 
-    if STAGE.is_local():
+    if EnvConfig.is_local():
       response.set_cookie("token", value=token, max_age=MAX_AGE, samesite='Strict')
     else:
       response.set_cookie("token", secure=True, value=token, max_age=MAX_AGE, samesite='None')
@@ -102,7 +102,7 @@ class AuthHandler(RouteHandler):
     # cookie expiration set to 1yr
     MAX_AGE = ONE_DAY
 
-    if STAGE.is_local():
+    if EnvConfig.is_local():
       response.set_cookie("token", value=token, max_age=MAX_AGE, samesite='Strict')
     else:
       response.set_cookie("token", secure=True, value=token, max_age=MAX_AGE, samesite='None')

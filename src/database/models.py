@@ -326,6 +326,10 @@ class Media(models.Model):
                 self.hash = hash
         super().save(*args, **kwargs)
 
+    def get_s3_key(self): 
+        return self.file.name
+
+
 
     class Meta:
         db_table = "media"
@@ -1975,7 +1979,6 @@ class Action(models.Model):
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=False, blank=True)
     is_approved = models.BooleanField(default=False, blank=True)
-    # is_user_submitted = models.BooleanField(default=False, blank=True, null=True)
 
     def __str__(self):
         return f"{str(self.id)} - {self.title}"
@@ -2005,6 +2008,9 @@ class Action(models.Model):
         )
         data["image"] = get_summary_info(self.image)
         data["calculator_action"] = get_summary_info(self.calculator_action)
+        if self.calculator_action:
+            data["category"] =  self.calculator_action.category.simple_json() if self.calculator_action.category else None
+            data["subcategory"] = self.calculator_action.sub_category.simple_json() if self.calculator_action.sub_category else None
         data["tags"] = [t.simple_json() for t in self.tags.all()]
         data["community"] = get_summary_info(self.community)
         data["created_at"] = self.created_at
