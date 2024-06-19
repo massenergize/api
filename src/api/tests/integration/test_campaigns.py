@@ -925,6 +925,8 @@ class CampaignsIntegrationTestCase(TestCase):
         response = self.make_request("campaigns.communities.vendors.list", payload)
         self.assertEqual(response['success'], False)
         self.assertEqual(response['error'], "permission_denied")
+        
+        
 
     @classmethod
     def tearDownClass(cls):
