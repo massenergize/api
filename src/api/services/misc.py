@@ -265,3 +265,17 @@ class MiscellaneousService:
         except Exception as e:
             logging.error(f"GET_INTERNAL_LINKS_EXCEPTION_ERROR: {str(e)}")
             return None, CustomMassenergizeError(str(e))
+        
+    
+    def load_user_portal_menu_v2(self,context, args):
+        try:
+            res, err = self.store.load_user_portal_menu_v2(context,args)
+            
+            if err:
+                return None, err
+            
+            return res, None
+        
+        except Exception as e:
+            logging.error(f"LOAD_USER_PORTAL_MENU_V2_EXCEPTION_ERROR: {str(e)}")
+            return None, CustomMassenergizeError(str(e))

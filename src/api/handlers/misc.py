@@ -19,7 +19,8 @@ class MiscellaneousHandler(RouteHandler):
     def registerRoutes(self) -> None:
         self.add("/menus.remake", self.remake_navigation_menu)
         self.add("/menus.list", self.navigation_menu_list)
-        self.add("/user.portal.menu.list", self.load_menu_items)
+        self.add("/user.portal.menu.list", self.load_user_portal_menu_v2)
+       
         self.add("/data.backfill", self.backfill)
         self.add("/data.carbonEquivalency.create", self.create_carbon_equivalency)
         self.add("/data.carbonEquivalency.update", self.update_carbon_equivalency)
@@ -38,6 +39,7 @@ class MiscellaneousHandler(RouteHandler):
         self.add("/actions.report", self.actions_report)
         
         self.add("/menus.links.get", self.get_internal_links)
+        self.add("/user.portal.menu.v2.list", self.load_user_portal_menu_v2)
         
         self.add("/menus.create", self.create_from_template)
         self.add("/menus.update", self.update_custom_menu)
@@ -394,6 +396,29 @@ class MiscellaneousHandler(RouteHandler):
                 return err
 
             data, err = self.service.get_internal_links(context, args)
+            if err:
+                return err
+            return MassenergizeResponse(data=data)
+        
+        except Exception as e:
+            return MassenergizeResponse(error=str(e))
+        
+        
+    def load_user_portal_menu_v2(self, request):
+        try:
+            context: Context = request.context
+            args: dict = context.args
+
+            self.validator.expect("community_id", int, is_required=False)
+            self.validator.expect("subdomain", str, is_required=False)
+
+            args, err = self.validator.verify(args, strict=True)
+            if err:
+                return err
+
+            args["host"] = request.META.get("HTTP_ORIGIN")
+
+            data, err = self.service.load_user_portal_menu_v2(context, args)
             if err:
                 return err
             return MassenergizeResponse(data=data)

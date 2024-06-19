@@ -77,11 +77,12 @@
         "link": "policies?name=Terms%20of%20Service",
         "name": "Terms of Service",
         "navItemId": "footer-terms-of-service-id"
-      },
-      {
+      }
+    ],
+
+  "bug_report":{
         "link": "https://docs.google.com/forms/d/e/1FAIpQLScxNPrJNsyy6k834hsPdy_Rf0jaDcczRAkjCM3Z1xgYn49Zsw/viewform",
         "name": "Report a bug/Suggest a feature",
         "navItemId": "footer-report-a-bug-id"
-      }
-    ]
+  }
 }

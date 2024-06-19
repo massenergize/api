@@ -664,7 +664,7 @@ def generate_hashes():
     return count
 
 
-def create_default_menu_items(menu, is_footer=False):
+def create_default_menu_items(menu: object, is_footer: object = False) -> object:
     """
     Creates default menu items for a community
     """

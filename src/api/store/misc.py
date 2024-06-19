@@ -34,7 +34,29 @@ from .common import create_default_menu_items
 from .utils import find_reu_community, split_location_string, check_location,get_community
 from sentry_sdk import capture_message
 from typing import Tuple
-from api.utils.api_utils import get_viable_menu_items
+from api.utils.api_utils import get_viable_menu_items, has_no_custom_website
+
+
+def recursively_remove_unpublished_and_prepend_prefix(menu_item, prefix):
+    if not menu_item:
+        return None
+    
+    if not menu_item.get("is_published", True):
+        return None
+    
+    if "children" in menu_item and len(menu_item["children"]) > 0:
+        menu_item["children"] = [recursively_remove_unpublished_and_prepend_prefix(child, prefix) for child in menu_item["children"]]
+    else:
+        if "link" in menu_item:
+            existing_link = menu_item["link"]
+            if menu_item["is_link_external"]:
+                return menu_item
+            else:
+                if existing_link.startswith("/"):
+                    existing_link = existing_link[1:]
+                menu_item["link"] = f"{prefix}/{existing_link}"
+
+    return menu_item
 
 
 class MiscellaneousStore:
@@ -532,7 +554,7 @@ class MiscellaneousStore:
                 return None, CustomMassenergizeError("Community not found")
             
             if not title:
-                title = f"{community.name} - {'Footer' if is_footer_menu else 'Navbar'} Menu"
+                title = f"{'Quick Links' if is_footer_menu else {community.name} +' - Navbar Menu'}"
             
             menu, created = CustomMenu.objects.get_or_create(community=community, title=title, is_footer_menu = is_footer_menu)
             if not created:
@@ -560,10 +582,9 @@ class MiscellaneousStore:
             if not menu_id:
                 return None, CustomMassenergizeError("Menu ID is required")
             
-            print("== menu id==", menu_id)
             
             menu = CustomMenu.objects.filter(id=menu_id).first()
-            print("== menu==", menu)
+            
             if not menu:
                 return None, CustomMassenergizeError("Menu not found")
             
@@ -656,7 +677,17 @@ class MiscellaneousStore:
                 if not parent:
                     return None, CustomMassenergizeError("Parent menu item not found")
             
-            menu_item = CustomMenuItem.objects.create(menu=menu, name=name, link=link, parent=parent, order=order, is_published=is_published, is_link_external=is_link_external)
+            menu_item, exists = CustomMenuItem.objects.get_or_create(
+                menu=menu,
+                name=name,
+                link=link,
+                parent=parent,
+                order=order,
+                is_published=is_published,
+                is_link_external=is_link_external
+            )
+            if not exists:
+                return None, CustomMassenergizeError("Menu Item already exists")
             
             return menu_item, None
         
@@ -752,3 +783,66 @@ class MiscellaneousStore:
             logging.error(f"GET_MENU_INFO_EXCEPTION_ERROR: {str(e)}")
             return None, CustomMassenergizeError(str(e))
             
+    def load_user_portal_menu_v2(self, context, args):
+        try:
+            community_id = args.get("community_id", None)
+            subdomain = args.get("subdomain", None)
+            host = args.get("host", None)
+            
+            if not community_id and not subdomain:
+                return None, CustomMassenergizeError("Community or subdomain is required")
+            
+            community, _ = get_community(community_id=community_id, subdomain=subdomain)
+            if not community:
+                return None, CustomMassenergizeError("Community not found")
+            
+            default_menu_json = json_loader("database/raw_data/portal/default_menus.json")
+            
+            prefix = f"/{community.subdomain}" if has_no_custom_website(community, host) else ""
+            
+            all_menus = CustomMenu.objects.filter(community=community, is_published=True)
+            
+            if not all_menus:
+                # later create a default menu
+                return None, CustomMassenergizeError("Menu not found")
+            
+            nav_menus = all_menus.filter(is_footer_menu=False).first()
+            
+            serialized_menu = nav_menus.full_json()
+            
+            final_menu = {}
+            
+            nav_menus = []
+            for item in serialized_menu.get("menu_items", []):
+                new_item = recursively_remove_unpublished_and_prepend_prefix(item, prefix)
+                if new_item:
+                    nav_menus.append(new_item)
+                    
+            final_menu["PortalMainNavLinks"] = nav_menus
+            
+            #  GET FOOTER MENU
+            
+            footer_menu = all_menus.filter(is_footer_menu=True).first()
+            
+            if not footer_menu:
+                # later create a default footer menu
+                print("No footer menu found")
+                return final_menu, None
+            
+            serialized_footer_menu = footer_menu.full_json()
+            
+            footer_menu_items = []
+            for item in serialized_footer_menu.get("menu_items", []):
+                new_item = recursively_remove_unpublished_and_prepend_prefix(item, prefix)
+                if new_item:
+                    footer_menu_items.append(new_item)
+                    
+            footer_menu_items.append(default_menu_json["bug_report"])
+                    
+            final_menu["PortalFooterLinks"] = {"title": footer_menu.title, "links": footer_menu_items}
+            
+            return final_menu, None
+        
+        except Exception as e:
+            logging.error(f"LOAD_USER_PORTAL_MENU_V2_EXCEPTION_ERROR: {str(e)}")
+            return None, CustomMassenergizeError(str(e))

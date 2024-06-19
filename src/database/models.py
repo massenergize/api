@@ -4039,8 +4039,8 @@ class CustomMenu(models.Model):
         res["id"] = str(self.id)
         return res
     
-    def get_menu_items(self):
-        return CustomMenuItem.objects.filter(menu=self, parent=None)
+    def get_menu_items(self, args={}):
+        return CustomMenuItem.objects.filter(menu=self, parent=None, **args).prefetch_related("children")
 
     def full_json(self):
         res =  self.simple_json()
@@ -4085,12 +4085,14 @@ class CustomMenuItem(models.Model):
         return res
     
     
-    def get_children(self):
-        return CustomMenuItem.objects.filter(parent=self)
+    def get_children(self, args={}):
+        return CustomMenuItem.objects.filter(parent=self, **args)
     
     def full_json(self):
         res = self.simple_json()
-        res["children"] = [c.simple_json() for c in self.get_children()]
+        children = self.get_children()
+        if children.count() > 0:
+            res["children"] = [c.simple_json() for c in self.get_children()]
         return res
     
     class Meta:
