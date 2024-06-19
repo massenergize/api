@@ -66,7 +66,6 @@ class ActionHandler(RouteHandler):
       .expect("tags", list, is_required=False)
       .expect("vendors", list, is_required=False)
     )
-
     args, err = self.validator.verify(args)
     if err:
       return err
@@ -92,7 +91,7 @@ class ActionHandler(RouteHandler):
       .expect("vendors", list, is_required=False)
       .expect("action_id", str, is_required=False)
     )
-    self = expect_media_fields(self)
+    expect_media_fields(self)
 
     args, err = self.validator.verify(args)
     if err:
@@ -153,7 +152,7 @@ class ActionHandler(RouteHandler):
       .expect("vendors", list, is_required=False)
     )
 
-    self = expect_media_fields(self)
+    expect_media_fields(self)
 
     args, err = self.validator.verify(args)
     if err:

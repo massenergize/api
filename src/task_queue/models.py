@@ -1,4 +1,6 @@
 import json
+from datetime import datetime
+
 from django.db import models
 from django.forms import model_to_dict
 from database.models import UserProfile
@@ -55,10 +57,11 @@ class Task(models.Model):
         to=UserProfile
     )
     last_run = models.DateField(blank=True, null=True)
+    is_archived = models.BooleanField(default=False)
 
     def simple_json(self):
         res = model_to_dict(self, exclude=['schedule'])
-        res["creator"] = get_summary_info(self.creator)["full_name"]
+        res["creator"] = get_summary_info(self.creator)["full_name"] if self.creator else None
         res["is_active"] = self.schedule.enabled if self.schedule else False
         res["last_run_at"] = self.schedule.last_run_at if self.schedule else None
         return res
@@ -75,6 +78,15 @@ class Task(models.Model):
     def delete_periodic_task(self):
         if self.schedule is not None:
             self.schedule.delete()
+            
+    def archive(self):
+        now = datetime.now()
+        self.is_archived = True
+        self.schedule.name = f'{self.name} (archived)-{str(now)}'
+        self.name = f'{self.name} (archived)-{str(now)}'
+        self.schedule.enabled = False
+        self.schedule.save()
+        self.save()
 
 
     def create_task(self):

@@ -1,17 +1,73 @@
-init:
+essential-folders:
+	@if [ ! -d ".massenergize" ]; then mkdir .massenergize; fi
+	@if [ ! -d ".massenergize/creds" ]; then mkdir .massenergize/creds; fi
+.PHONY: essential-folders
+
+init: essential-folders
 	pip3 install -r requirements.txt
-	touch prod.env
-	touch dev.env
-	touch local.env
 .PHONY: init
 
-# run this with 'make start env=local'
-env=local
-export DJANGO_ENV=$(env)
-start:
-	python3 deployment/prepare_to_deploy.py local 1
+start: essential-folders
+	@echo "Setting environment variables ..."
+	python3 _main_/utils/startup/prepare.py
+	@echo "Initializing server now ..."
 	python3 manage.py runserver
 .PHONY: start
+
+startd: essential-folders
+	@echo "Setting environment variables ..."
+	DOCKER_MODE=true python3 _main_/utils/startup/prepare.py
+	sudo docker-compose down --remove-orphans
+	sudo docker image prune -f
+	sudo docker builder prune -f
+	sudo docker-compose build
+	@echo "Running in docker mode!!!"
+	sudo docker-compose up
+.PHONY: startd
+
+local:
+	DJANGO_ENV="local" make start
+.PHONY: local
+
+dev:
+	DJANGO_ENV="dev" make start
+.PHONY: dev
+
+canary:
+	DJANGO_ENV="canary" make start
+.PHONY: canary
+
+prod:
+	DJANGO_ENV="prod" make start
+.PHONY: prod
+
+local-docker: install_redis_and_run
+	DJANGO_ENV="local" make startd
+.PHONY: local-docker
+
+dev-docker:
+	DJANGO_ENV="dev" make startd
+.PHONY: dev-docker
+
+canary-docker:
+	DJANGO_ENV="canary" make startd
+.PHONY: canary-docker
+
+prod-docker:
+	DJANGO_ENV="prod" make startd
+.PHONY: prod-docker
+
+install_redis_and_restart:
+	@if ! command -v redis-server > /dev/null; then \
+	    echo "Redis is not installed. Installing..."; \
+	    sudo apt-get update && sudo apt-get install redis-server -y; \
+	fi
+	@echo "Stopping Redis if it's running..."
+	-redis-cli shutdown > /dev/null 2>&1 || true
+	@echo "Starting Redis..."
+	redis-server --daemonize yes --port 6379
+.PHONY: install_redis_and_run
+
 
 prepare-prod:
 	python3 deployment/prepare_to_deploy.py --prod 0 1
@@ -89,7 +145,7 @@ test:
 	 touch test.sqlite3
 	 DJANGO_ENV=test python3 manage.py migrate
 	 DJANGO_ENV=test coverage run --source='.' manage.py test $(package)
-	 coverage html --precision=2
+	 coverage report
 .PHONY: test
 
 celery:

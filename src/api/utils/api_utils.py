@@ -1,9 +1,11 @@
 from math import atan2, cos, radians, sin, sqrt
 from database.models import AboutUsPageSettings, ActionsPageSettings, Community, CommunityAdminGroup, \
-    ContactUsPageSettings, EventsPageSettings, ImpactPageSettings, Media, Menu, \
+    ContactUsPageSettings, DonatePageSettings, EventsPageSettings, ImpactPageSettings, Media, Menu, \
     TeamsPageSettings, TestimonialsPageSettings, UserProfile, \
     VendorsPageSettings
 import pyshorteners
+
+from _main_.utils.constants import COMMUNITY_URL_ROOT
 
 
 def is_admin_of_community(context, community_id):
@@ -105,42 +107,71 @@ def create_media_file(file, name):
 # -------------------------- Menu Utils --------------------------
 
 
-def prepend_prefix_to_links(menu_item: object, prefix: object) -> object:
+def has_no_custom_website(community, host):
+    if host and host == COMMUNITY_URL_ROOT:
+        return True
+    
+    elif community.community_website and community.community_website.first() and community.community_website.first().website:
+        return False
+    
+    return True
+
+
+def prepend_prefix_to_links(menu_item, prefix):
+  
     if not menu_item:
         return None
+    
     if "link" in menu_item:
-        menu_item["link"] = "/" + prefix + menu_item["link"]
+        existing_link = menu_item["link"]
+        
+        if existing_link.startswith("/"):
+            existing_link = existing_link[1:]
+            
+        menu_item["link"] = f"{prefix}/{existing_link}"
+        
     if "children" in menu_item:
+        
         for child in menu_item["children"]:
             prepend_prefix_to_links(child, prefix)
+            
     return menu_item
 
 
 def modify_menu_items_if_published(menu_items, page_settings, prefix):
-    if not menu_items or not page_settings or not prefix:
+    def process_items(items):
+        active_menu_items = []
+        for item in items:
+            if not item.get("children"):
+                name = item.get("link", "").strip("/")
+                
+                if name in page_settings and page_settings[name]:
+                    active_menu_items.append(item)
+            
+            else:
+                if item.get("name") == "Home":
+                    active_menu_items.append(item)
+                else:
+                    item["children"] = process_items(item["children"])
+                    
+                    if item["children"]:
+                        active_menu_items.append(item)
+        return active_menu_items
+    
+    if not menu_items or not page_settings:
         return []
-
+    
+    processed_menu_items = process_items(menu_items)
     main_menu = []
-
-    for item in menu_items:
-        if not item.get("children"):
-            name = item.get("link", "").strip("/")
-            if name in page_settings and not page_settings[name]:
-                main_menu.remove(item)
-        else:
-            for child in item["children"]:
-                name = child.get("link", "").strip("/")
-                if name in page_settings and not page_settings[name]:
-                    item["children"].remove(child)
-
-    for item in menu_items:
+    
+    for item in processed_menu_items:
         f = prepend_prefix_to_links(item, prefix)
         main_menu.append(f)
-
+    
     return main_menu
 
 
-def get_viable_menu_items(community):
+def get_viable_menu_items(community, host):
     about_us_page_settings = AboutUsPageSettings.objects.filter(community=community).first()
     events_page_settings = EventsPageSettings.objects.filter(community=community).first()
     impact_page_settings = ImpactPageSettings.objects.filter(community=community).first()
@@ -149,13 +180,14 @@ def get_viable_menu_items(community):
     teams_page_settings = TeamsPageSettings.objects.filter(community=community).first()
     testimonial_page_settings = TestimonialsPageSettings.objects.filter(community=community).first()
     vendors_page_settings = VendorsPageSettings.objects.filter(community=community).first()
+    donate_page_settings = DonatePageSettings.objects.filter(community=community).first()
 
 
     menu_items = {}
     all_menu = Menu.objects.all()
 
     nav_menu = all_menu.get(name="PortalMainNavLinks")
-
+    
     portal_main_nav_links = modify_menu_items_if_published(nav_menu.content, {
         "impact": impact_page_settings.is_published,
         "aboutus": about_us_page_settings.is_published,
@@ -165,12 +197,13 @@ def get_viable_menu_items(community):
         "testimonials": testimonial_page_settings.is_published,
         "teams": teams_page_settings.is_published,
         "events": events_page_settings.is_published,
-    }, community.subdomain)
-
+        "donate": donate_page_settings.is_published,
+    },f'{"/"+community.subdomain if has_no_custom_website(community, host) else ""}')
+    
     footer_menu_content = all_menu.get(name='PortalFooterQuickLinks')
 
     portal_footer_quick_links = [
-        {**item, "link": "/"+community.subdomain + "/" + item["link"]}
+        {**item, "link": f'{"/"+community.subdomain if has_no_custom_website(community, host) else ""}/{item["link"]}'}
         if not item.get("children") and item.get("navItemId", None) != "footer-report-a-bug-id"
         else item
         for item in footer_menu_content.content["links"]

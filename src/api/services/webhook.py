@@ -1,3 +1,5 @@
+import logging
+
 from sentry_sdk import capture_message
 from _main_.utils.massenergize_errors import MassEnergizeAPIError
 from _main_.utils.context import Context
@@ -9,6 +11,8 @@ from api.constants import GUEST_USER
 from database.models import UserProfile
 import re
 import urllib.parse
+
+from _main_.utils.massenergize_errors import CustomMassenergizeError
 
 ONE_DAY = 60*60*24
 HARD_BOUNCE="HardBounce"
@@ -32,22 +36,48 @@ def extract_email_content(text):
 
   return subject, email
 
+def get_messsage_id_from_link_list(url_parts):
+    try:
+        edit_index = url_parts.index('edit')
+        message_id = url_parts[edit_index + 1]
+        
+        if message_id.isdigit():
+            return message_id
+        
+        return None
+    except ValueError:
+        logging.error("INBOUND_PROCESSING:ValueError while extracting message id from the url")
+        return None
+
 
 def extract_msg_id(text):
-    link = text.strip().split("and respond to message")
-    link = link[1].strip()
-    url_match = re.search(r'<(.*?)>', link)
-    url = url_match.group(1)
-    if url:
-      parsed_url = urllib.parse.urlparse(url)
-      path = parsed_url.path
-      path = urllib.parse.unquote(path)
-      id = path.split("/")
-      return id[5]
-    return None
-       
-
-   
+    try:
+        url_pattern = r"<(https?:\\/\\/click\.pstmrk\.it[^\s>]+)>"
+        match = re.search(url_pattern, text)
+        
+        if not match:
+            logging.error("INBOUND_PROCESSING:Could not extract message id from the email body")
+            return None
+        
+        url = match.group(1)
+        
+        parsed_url = urllib.parse.urlparse(url)
+        path = parsed_url.path
+        path = urllib.parse.unquote(path)
+        splitted_path_list = path.split("/")
+        
+        message_id = get_messsage_id_from_link_list(splitted_path_list)
+        
+        if not message_id:
+            logging.error("INBOUND_PROCESSING:Incorrect message id format in the email body")
+            return None
+        
+        return message_id
+    
+    except Exception as e:
+        logging.error(f"INBOUND_PROCESSING:Exception while extracting message id from the email body: {str(e)}")
+        return None
+      
 
 class WebhookService:
   """
@@ -73,38 +103,50 @@ class WebhookService:
 
     return {"success":True}, None
   
-
-
-  
-  def process_inbound_webhook(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def process_inbound_webhook(self, context: Context, args):
     try:
         reply = args.get("StrippedTextReply")
         text_body = args.get("TextBody")
         from_email = args.get("From")
+        
+        if not text_body:
+            logging.error("INBOUND_PROCESSING:No text body found in the inbound email")
+            return None,  CustomMassenergizeError("No text body found in the inbound email")
 
-        splitted_body = text_body.strip().split("Here is a copy of the message:")
-        if len(splitted_body) < 2: # will probably be a postmark test
-          return {"success":False},None
-        user_msg_content = splitted_body[1].strip().split("If possible, please reply through the admin portal rather than")[0].strip()
-        subject,email = extract_email_content(user_msg_content)
+        split_body = text_body.strip().split("Here is a copy of the message:")
+        
+        if len(split_body) < 2:   # will probably be a postmark test
+            return {"success": False}, None
+        
+        user_msg_content = split_body[1].strip().split("If possible, please reply through the admin portal rather than")[0].strip()
+        subject, email = extract_email_content(user_msg_content)
 
-        db_msg_id = extract_msg_id(splitted_body[0])
-        if db_msg_id and email:
-          res, err = self.message_service.reply_from_community_admin(context, {
+        db_msg_id = extract_msg_id(split_body[0])
+
+        if not db_msg_id and not email:
+            logging.error("INBOUND_PROCESSING:Could not extract email or message id")
+            return {"success":False}, None
+      
+        res, err = self.message_service.reply_from_community_admin(context, {
             "title": f"Re: {subject}",
             "body": reply,
-            "to": email, 
+            "to": email,
             "message_id": db_msg_id,
-            "from_email": from_email
-          })
+            "from_email": from_email,
+            "is_inbound": True,
+            "email": email
+            })
 
-          if err:
+        if err:
+            logging.error(f"INBOUND_PROCESSING_MESSAGE_CREATION: {str(err)}")
             return None, str(err)
-          
-          return {"success":True}, None
+    
+        return {"success": True}, None
+        
     except Exception as e:
-      capture_message(str(e), level="error")
-      return None, MassEnergizeAPIError(e)
+        capture_message(str(e), level="error")
+        logging.error(f"INBOUND_PROCESSING_EXCEPTION: {str(e)}")
+        return None, MassEnergizeAPIError(e)
 
 
 

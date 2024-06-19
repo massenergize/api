@@ -242,21 +242,6 @@ def makeCommunity(**kwargs):
     return com
 
 
-def setupCC(client):
-    cq = CalcDefault.objects.all()
-    num = cq.count()
-    if num <= 0:
-        client.post(
-            "/cc/import",
-            {
-                "Confirm": "Yes",
-                "Actions": "carbon_calculator/content/Actions.csv",
-                "Questions": "carbon_calculator/content/Questions.csv",
-                "Defaults": "carbon_calculator/content/Defaults.csv",
-            },
-        )
-
-
 def makeAuthToken(user):
     dt = datetime.now()
     dt.microsecond

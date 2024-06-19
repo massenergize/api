@@ -4,8 +4,9 @@ from django.shortcuts import render, redirect
 from _main_.utils.common import serialize_all
 from _main_.utils.massenergize_response import MassenergizeResponse
 from django.http import Http404, JsonResponse
-from _main_.settings import IS_PROD, IS_CANARY, RUN_SERVER_LOCALLY
+from _main_.settings import IS_PROD, IS_CANARY, RUN_SERVER_LOCALLY, EnvConfig
 from sentry_sdk import capture_message
+from api.handlers.misc import MiscellaneousHandler
 from api.store.misc import MiscellaneousStore
 from _main_.utils.constants import RESERVED_SUBDOMAIN_LIST, STATES
 from api.utils.api_utils import get_distance_between_coords
@@ -26,10 +27,12 @@ from database.models import (
 from apps__campaigns.models import Campaign, CampaignTechnology
 from django.db.models import Q
 from django.template.loader import render_to_string
-
+from _main_.utils.metrics import timed
 
 import zipcodes
 
+import logging
+logger = logging.getLogger(EnvConfig.get_logger_identifier())
 
 extract_text_from_html = html2text.HTML2Text()
 extract_text_from_html.ignore_links = True
@@ -91,7 +94,7 @@ META = {
     "is_local": IS_LOCAL,
 }
 
-
+@timed
 def campaign(request, campaign_id):
 
     campaign = None
@@ -328,9 +331,13 @@ def _separate_communities(communities, lat, long):
                 if community not in other:
                     other.append(community)
                 continue
-            community_zipcode_info = zipcodes.matching(location.zipcode)
-            community_zipcode_lat = community_zipcode_info[0]["lat"]
-            community_zipcode_long = community_zipcode_info[0]["long"]
+            
+            try:
+                community_zipcode_info = zipcodes.matching(location.zipcode)
+                community_zipcode_lat = community_zipcode_info[0]["lat"]
+                community_zipcode_long = community_zipcode_info[0]["long"]
+            except ValueError as e:
+                continue
 
             distance = get_distance_between_coords(
                 float(lat),
@@ -348,7 +355,7 @@ def _separate_communities(communities, lat, long):
                     other.append(community)
     return close, other
 
-
+@timed
 def home(request):
     subdomain = _get_subdomain(request, False)
     if not subdomain or subdomain in HOME_SUBDOMAIN_SET:
@@ -358,7 +365,11 @@ def home(request):
 
     return redirect(HOST)
 
+def api_home(request):
+    return MiscellaneousHandler().home(request)
 
+
+@timed
 def search_communities(request):
     exact = []
     other = []
@@ -409,7 +420,7 @@ def search_communities(request):
     data_dict = {"html_from_view": html}
     return JsonResponse(data=data_dict, safe=False)
 
-
+@timed
 def communities(request):
     lat = request.POST.get("latitude")
     long = request.POST.get("longitude")
@@ -920,6 +931,13 @@ def contact_us(request, subdomain=None):
 
     return render(request, "page__contact_us.html", args)
 
+def health_check(request):
+    return MiscellaneousHandler().health_check(request)
+
+
+def version(request):
+    return MiscellaneousHandler().version(request)
+
 
 def generate_sitemap(request):
     d = MiscellaneousStore().generate_sitemap_for_portal()
@@ -932,19 +950,23 @@ def generate_sitemap_main(request):
 
 
 def handler400(request, exception):
+    logger.error(exception, exc_info=1)
     return MassenergizeResponse(error="bad_request")
 
 
 def handler403(request, exception):
+    logger.error(exception, exc_info=1)
     return MassenergizeResponse(error="permission_denied")
 
 
 def handler404(request, exception):
+    logger.error(f"resource_not_found: path={request.path}")
     if request.path.startswith("/v2"):
         return MassenergizeResponse(error="method_deprecated")
     return MassenergizeResponse(error="resource_not_found")
 
 
 def handler500(request):
+    logger.error("ServerError", exc_info=1)
     capture_message(str(traceback.print_exc()))
     return MassenergizeResponse(error="server_error")

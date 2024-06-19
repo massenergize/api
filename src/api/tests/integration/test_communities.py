@@ -9,7 +9,7 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from database.models import CommunityNotificationSetting, Team, Community, UserProfile, Goal, TeamMember, \
   CommunityMember, RealEstateUnit, CommunityAdminGroup, Subdomain
 from _main_.utils.utils import Console, load_json
-from api.tests.common import make_feature_flag, signinAs, setupCC, createUsers
+from api.tests.common import make_feature_flag, signinAs, createUsers
 
 class CommunitiesTestCase(TestCase):
 
@@ -24,8 +24,6 @@ class CommunitiesTestCase(TestCase):
     self.USER, self.CADMIN, self.SADMIN = createUsers()
 
     signinAs(self.client, self.SADMIN)
-
-    setupCC(self.client)
 
     name = 'turtles'  
     self.COMMUNITY = Community.objects.create(**{
@@ -98,10 +96,11 @@ class CommunitiesTestCase(TestCase):
     self.COMMUNITY.goal = goal
     self.COMMUNITY.save()
     self.COMMUNITY2.save()
+    
     self.community_notification_setting = CommunityNotificationSetting.objects.create(community=self.COMMUNITY, is_active=False,
                                                                notification_type=USER_EVENTS_NUDGES_FF)
     self.ff = make_feature_flag(key=f"test_{USER_EVENTS_NUDGES_FF}")
-      
+    
   @classmethod
   def tearDownClass(self):
     pass

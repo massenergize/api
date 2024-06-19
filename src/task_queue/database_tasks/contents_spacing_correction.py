@@ -3,9 +3,9 @@ import datetime
 from django.apps import apps
 from sentry_sdk import capture_message
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
-from _main_.utils.feature_flag_keys import UPDATE_HTML_CONTENT_FORMAT_FF
+#from _main_.utils.feature_flag_keys import UPDATE_HTML_CONTENT_FORMAT_FF
 from api.utils.constants import DATA_DOWNLOAD_TEMPLATE
-from database import models as db_models
+#from database import models as db_models
 from django.http import HttpResponse
 import re
 
@@ -56,19 +56,19 @@ def auto_correct_spacing(instance, field_name, field_value):
 
 
 
-def is_feature_enabled(instance):
-    communities = db_models.Community.objects.filter(is_deleted=False)
-    flag = db_models.FeatureFlag.objects.filter(key=UPDATE_HTML_CONTENT_FORMAT_FF).first()
-    if not flag or not flag.enabled():
-        return False
-    enabled_communities = flag.enabled_communities(communities)
-    if hasattr(instance, "community"):
-        if not instance.community or instance.community in enabled_communities:
-            return True
-    elif hasattr(instance, "primary_community"):
-        if not instance.primary_community or instance.primary_community in enabled_communities:
-            return True
-    return False
+#def is_feature_enabled(instance):
+#    communities = db_models.Community.objects.filter(is_deleted=False)
+##    flag = db_models.FeatureFlag.objects.filter(key=UPDATE_HTML_CONTENT_FORMAT_FF).first()
+##    if not flag or not flag.enabled():
+##        return False
+#    enabled_communities = flag.enabled_communities(communities)
+#    if hasattr(instance, "community"):
+#        if not instance.community or instance.community in enabled_communities:
+#            return True
+#    elif hasattr(instance, "primary_community"):
+#        if not instance.primary_community or instance.primary_community in enabled_communities:
+#            return True
+#    return False
     
 
 def process_spacing_data(task=None):
@@ -87,8 +87,8 @@ def process_spacing_data(task=None):
                          if field_value:
                             count = len(re.findall(PATTERN, field_value))
                             if count > 0:
-                                if is_feature_enabled(instance):
-                                    auto_correct_spacing(instance, field_name, field_value)
+#                                if is_feature_enabled(instance):
+                                auto_correct_spacing(instance, field_name, field_value)
                                 
                                 data.append({
                                         "Community": get_community(instance),

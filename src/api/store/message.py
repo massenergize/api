@@ -55,19 +55,22 @@ class MessageStore:
     def get_message_info(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
         try:
             message_id = args.pop("message_id", None) or args.pop("id", None)
+            is_inbound = args.get("is_inbound", False)
+            
             if not message_id:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError(f"MESSAGE_ID:({message_id}) not valid. Please provide a valid message_id.")
+            
             message = Message.objects.filter(pk=message_id).first()
             community_id = message.community.id if message.community else None
-
-            if not is_admin_of_community(context,community_id):
+         
+            if not is_admin_of_community(context,community_id) and not is_inbound:
                 return None, NotAuthorizedError()
 
             if not message:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError(f"Message with ID({message_id}) not found")
         
-
             return message, None
+        
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
@@ -392,34 +395,43 @@ class MessageStore:
                 messages = Message.objects.filter(pk=message_id)
                 if not messages.first():
                     return None, InvalidResourceError()
-                # revoke the previous task
+                
                 message_schedule_info = messages.first().schedule_info or {}
                 task_id = message_schedule_info.get("schedule_id", None)
+                
                 if task_id:
                     result = AsyncResult(task_id)
                     result.revoke()
-                # schedule new task and update message
+                    
                 scheduled_at =messages.first().scheduled_at
 
                 if messages.first().scheduled_at != schedule:
                    scheduled_at = schedule
                 
-                schedule_id = send_scheduled_email.apply_async(args=[ subject,message,email_list, logo],eta=schedule)
+                schedule_id = send_scheduled_email.apply_async(args=[ subject,message,email_list, logo],eta=schedule,retry=False)
+                
                 schedule_info ={} if not args.get("schedule", None) else {"schedule_id": schedule_id.id if schedule_id else None,"recipients":{"audience_type":audience_type, "audience":audience, "sub_audience_type":sub_audience_type, "community_ids":communities}}
+                
                 messages.update(**{"schedule_info": schedule_info, "body": message, "title": subject, "scheduled_at":scheduled_at, "community":associated_community })
+                
                 return messages.first(), None
+            
             else:
-                schedule_id = send_scheduled_email.apply_async(args=[ subject,message,email_list, logo],eta=schedule)
+                schedule_id = send_scheduled_email.apply_async(args=[ subject,message,email_list, logo],eta=schedule,retry=False)
+                
                 new_message = Message(
-                title=subject,
-                body=message,
-                user=user,
-                scheduled_at= schedule,
-                schedule_info = {} if not args.get("schedule", None) else {"schedule_id": schedule_id.id if schedule_id else None, "recipients":{"audience_type":audience_type, "audience":audience, "sub_audience_type":sub_audience_type, "community_ids":communities}},
-                community=associated_community
+                    title=subject,
+                    body=message,
+                    user=user,
+                    scheduled_at= schedule,
+                    schedule_info = {} if not args.get("schedule", None) else {"schedule_id": schedule_id.id if schedule_id else None, "recipients":{"audience_type":audience_type, "audience":audience, "sub_audience_type":sub_audience_type, "community_ids":communities}},
+                    community=associated_community
                 )
+                
                 new_message.save()
+                
                 return new_message, None
+            
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)

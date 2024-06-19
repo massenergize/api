@@ -498,6 +498,7 @@ class MiscellaneousStore:
         try:
             subdomain = args.get("subdomain", None)
             community_id = args.get("community_id", None)
+            host = args.get("host", None)
 
             if not subdomain and not community_id:
                 return None, CustomMassenergizeError("No community or subdomain provided")
@@ -506,7 +507,7 @@ class MiscellaneousStore:
             if not community:
                 return None, CustomMassenergizeError("Community not found")
 
-            menu = get_viable_menu_items(community)
+            menu = get_viable_menu_items(community, host=host)
 
             return menu, None
         except Exception as e:

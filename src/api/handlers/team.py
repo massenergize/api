@@ -66,7 +66,7 @@ class TeamHandler(RouteHandler):
     self.validator.rename("primary_community_id", "community_id")
     # logo image depends on whether from user portal or admin portal
     #self.validator.expect("logo", "str_list")
-    self = expect_media_fields(self)
+    expect_media_fields(self)
 
     args, err = self.validator.verify(args)
     if err:
@@ -112,7 +112,7 @@ class TeamHandler(RouteHandler):
     self.validator.rename("primary_community_id", "community_id")
     # logo image depends on whether from user portal or admin portal
     # self.validator.expect("logo", "str_list")
-    self = expect_media_fields(self)
+    expect_media_fields(self)
 
     args, err = self.validator.verify(args)
     if err:
