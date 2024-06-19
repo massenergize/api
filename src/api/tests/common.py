@@ -13,7 +13,7 @@ from database.models import (
     Community,
     CommunityAdminGroup,
     CommunityMember,
-    Event,
+    CustomMenu, CustomMenuItem, Event,
     FeatureFlag,
     Footage,
     HomePageSettings,
@@ -372,3 +372,25 @@ def make_feature_flag(**kwargs):
     })
 
     return flag
+
+
+def makeCustomMenu(**kwargs):
+    com = kwargs.get("community")
+    title = kwargs.get("title") or f"New Menu-{datetime.now().timestamp()}"
+    return CustomMenu.objects.create(**{
+        **kwargs,
+        "title": title,
+        "community": com,
+    })
+
+
+def makeCustomMenuItem(**kwargs):
+    menu = kwargs.get("menu")
+    name = kwargs.get("name") or f"New Menu Item-{datetime.now().timestamp()}"
+    parent = kwargs.get("parent")
+    return CustomMenuItem.objects.create(**{
+        **kwargs,
+        "title": name,
+        "menu": menu,
+        "parent": parent,
+    })

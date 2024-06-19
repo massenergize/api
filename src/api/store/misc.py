@@ -545,16 +545,18 @@ class MiscellaneousStore:
             is_footer_menu = args.get("is_footer_menu", False)
             title = args.get("title", None)
             
+            print("args: ", args)
+            
             if not community_id and not subdomain:
                 return None, CustomMassenergizeError("Community or subdomain is required")
             
-            community, _ = get_community(community_id=community_id, subdomain=subdomain)
+            community, error = get_community(community_id=community_id, subdomain=subdomain)
             
-            if not community:
+            if error:
                 return None, CustomMassenergizeError("Community not found")
             
             if not title:
-                title = f"{'Quick Links' if is_footer_menu else {community.name} +' - Navbar Menu'}"
+                title = f"{'Quick Links' if is_footer_menu else community.name +' - Navbar Menu'}"
             
             menu, created = CustomMenu.objects.get_or_create(community=community, title=title, is_footer_menu = is_footer_menu)
             if not created:
@@ -803,7 +805,7 @@ class MiscellaneousStore:
             all_menus = CustomMenu.objects.filter(community=community, is_published=True)
             
             if not all_menus:
-                # later create a default menu
+                # later route the user to old portal menus
                 return None, CustomMassenergizeError("Menu not found")
             
             nav_menus = all_menus.filter(is_footer_menu=False).first()

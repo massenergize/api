@@ -211,7 +211,7 @@ class MiscellaneousHandler(RouteHandler):
         return MassenergizeResponse(data=data)
     
     
-    @admins_only
+    # @admins_only
     def create_from_template(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -230,7 +230,7 @@ class MiscellaneousHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=data)
     
-    @admins_only
+    # @admins_only
     def update_custom_menu(self, request):
         try:
             context: Context = request.context
