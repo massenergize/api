@@ -249,7 +249,7 @@ def validate_menu_content(content):
         if not item.get('name', None):
             return False
         
-        if not item.get('link', None):
+        if not item.get('link', None) and not item.get('children', None):
             return False
         
         if item.get('children', None):
