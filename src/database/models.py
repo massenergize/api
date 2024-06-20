@@ -2870,12 +2870,21 @@ class Menu(models.Model):
     content = models.JSONField(blank=True, null=True)
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=False, blank=True)
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, null=True, blank=True)
+    community_logo_link = models.CharField(max_length=LONG_STR_LEN, blank=True, null=True)
+    is_custom = models.BooleanField(default=False, blank=True)
+    footer_content = models.JSONField(blank=True, null=True)
+    contact_info = models.JSONField(blank=True, null=True)
+    
+    
 
     def __str__(self):
         return self.name
 
     def simple_json(self):
-        return model_to_dict(self)
+        res =  model_to_dict(self)
+        res["community"] = get_summary_info(self.community)
+        return res
 
     def full_json(self):
         return self.simple_json()
