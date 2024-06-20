@@ -579,6 +579,8 @@ class MiscellaneousStore:
             if not menu:
                 return None, CustomMassenergizeError("Menu not found")
             
+            args["is_custom"] = True
+            
             menu.update(**args)
             
             if content:
