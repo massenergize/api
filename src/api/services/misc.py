@@ -76,7 +76,7 @@ class MiscellaneousService:
             SITE_BACKGROUND_COLOR = "#115852"
             SITE_FONT_COLOR = "white"
 
-        random.shuffle(INSPIRATIONAL_MESSAGES) 
+        random.shuffle(INSPIRATIONAL_MESSAGES)
         return render(
             request,
             "index.html",
@@ -140,3 +140,77 @@ class MiscellaneousService:
             return None, err
 
         return res, None
+    
+    def create_menu(self, context, args):
+        try:
+            res, err = self.store.create_menu(context, args)
+            
+            if err:
+                return None, err
+            
+            return serialize(res), None
+        
+        except Exception as e:
+            return None, CustomMassenergizeError(str(e))
+        
+    def update_menu(self, context, args):
+        try:
+            res, err = self.store.update_menu(context, args)
+            
+            if err:
+                return None, err
+            
+            return serialize(res), None
+        
+        except Exception as e:
+            return None, CustomMassenergizeError(str(e))
+        
+    def delete_menu(self, context, args):
+        try:
+            res, err = self.store.delete_menu(context, args)
+            
+            if err:
+                return None, err
+            
+            return serialize(res), None
+        
+        except Exception as e:
+            return None, CustomMassenergizeError(str(e))
+        
+    def get_menu(self, context, args):
+        try:
+            res, err = self.store.get_menu(context, args)
+            
+            if err:
+                return None, err
+            
+            return serialize(res), None
+        
+        except Exception as e:
+            return None, CustomMassenergizeError(str(e))
+        
+    def reset_menu(self, context, args):
+        try:
+            res, err = self.store.reset_menu(context, args)
+            
+            if err:
+                return None, err
+            
+            return serialize(res), None
+        
+        except Exception as e:
+            return None, CustomMassenergizeError(str(e))
+        
+    def get_menus_for_admin(self, context, args):
+        try:
+            res, err = self.store.get_menus_for_admin(context, args)
+            
+            if err:
+                return None, err
+            
+            return serialize_all(res), None
+        
+        except Exception as e:
+            return None, CustomMassenergizeError(str(e))
+        
+        
