@@ -1,3 +1,5 @@
+import logging
+
 from django.test import Client
 from _main_.utils.constants import INSPIRATIONAL_MESSAGES
 from _main_.utils.footage.FootageConstants import FootageConstants
@@ -10,6 +12,7 @@ from api.store.misc import MiscellaneousStore
 from _main_.utils.context import Context
 from django.shortcuts import render
 from api.tests.common import signinAs
+from api.utils.api_utils import get_list_of_internal_links
 from database.models import Deployment
 from _main_.settings import IS_PROD, IS_CANARY, BASE_DIR, EnvConfig, TEST_PASSPORT_KEY
 from _main_.utils.utils import load_json, load_text_contents
@@ -211,6 +214,20 @@ class MiscellaneousService:
             return serialize_all(res), None
         
         except Exception as e:
+            return None, CustomMassenergizeError(str(e))
+    
+    def get_internal_links(self, context, args):
+        try:
+            is_footer = args.get("is_footer", False)
+            res, err = get_list_of_internal_links(is_footer)
+            
+            if err:
+                return None, CustomMassenergizeError(str(err))
+            
+            return res, None
+        
+        except Exception as e:
+            logging.error(f"GET_INTERNAL_LINKS_EXCEPTION_ERROR: {str(e)}")
             return None, CustomMassenergizeError(str(e))
         
         

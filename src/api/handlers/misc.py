@@ -43,6 +43,7 @@ class MiscellaneousHandler(RouteHandler):
         self.add("/menus.get", self.get_menu)
         self.add("/menus.reset", self.reset_menu)
         self.add("/menus.listForAdmins", self.get_menus_for_admin)
+        self.add("/menus.links.get", self.get_internal_links)
 
     @admins_only
     def fetch_footages(self, request):
@@ -335,6 +336,25 @@ class MiscellaneousHandler(RouteHandler):
                 return err
                 
             data, err = self.service.get_menus_for_admin(context, args)
+            if err:
+                return err
+            return MassenergizeResponse(data=data)
+        
+        except Exception as e:
+            return MassenergizeResponse(error=str(e))
+    
+    def get_internal_links(self, request):
+        try:
+            context: Context = request.context
+            args: dict = context.args
+            
+            self.validator.expect("is_footer", bool, is_required=False)
+            
+            args, err = self.validator.verify(args, strict=True)
+            if err:
+                return err
+            
+            data, err = self.service.get_internal_links(context, args)
             if err:
                 return err
             return MassenergizeResponse(data=data)
