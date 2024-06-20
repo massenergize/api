@@ -288,3 +288,32 @@ def remove_unpublished_items(content):
                 published_items.append(item)
             
     return published_items
+
+
+def get_list_of_internal_links(is_footer=False):
+    """
+    Returns a list of internal links
+    """
+    try:
+        default_menu = load_default_menus_from_json()
+        if not default_menu:
+            return None, "Could not load default menus."
+        if is_footer:
+            menu = default_menu.get("PortalFooterQuickLinks", {})
+            menu = menu.get("links", [])
+        else:
+            menu = default_menu.get("PortalMainNavLinks", [])
+           
+        
+        internal_links = []
+        for item in menu:
+            if item.get("children"):
+                for child in item["children"]:
+                    internal_links.append({"name": child.get("name"), "link": child.get("link")})
+            else:
+                internal_links.append({"name": item.get("name"), "link": item.get("link")})
+        
+        return internal_links, None
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return None, str(e)
