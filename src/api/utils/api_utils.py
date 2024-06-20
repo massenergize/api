@@ -1,4 +1,8 @@
+import secrets
+import string
 from math import atan2, cos, radians, sin, sqrt
+
+from _main_.utils.utils import load_json
 from database.models import AboutUsPageSettings, ActionsPageSettings, Community, CommunityAdminGroup, \
     ContactUsPageSettings, DonatePageSettings, EventsPageSettings, ImpactPageSettings, Media, Menu, \
     TeamsPageSettings, TestimonialsPageSettings, UserProfile, \
@@ -104,6 +108,25 @@ def create_media_file(file, name):
     media.save()
     return media
 
+
+def generate_random_key(name, key_length=10):
+    """
+    Generate a random key of specified length with an associated name,
+    and return them as a single string in the format 'name-key'.
+
+    :param name: The name to associate with the key.
+    :param key_length: Length of the random key. Default is 10.
+    :return: A string in the format 'name-key'.
+    """
+    
+    alphabet = string.ascii_letters + string.digits
+    key = ''.join(secrets.choice(alphabet) for _ in range(key_length))
+    
+    if not name:
+        return key
+    
+    return f"{name}-{key}"
+
 # -------------------------- Menu Utils --------------------------
 
 
@@ -121,14 +144,13 @@ def prepend_prefix_to_links(menu_item, prefix):
   
     if not menu_item:
         return None
-    
     if "link" in menu_item:
         existing_link = menu_item["link"]
         
         if existing_link.startswith("/"):
             existing_link = existing_link[1:]
-            
-        menu_item["link"] = f"{prefix}/{existing_link}"
+        if not existing_link.startswith(("http", "https")):
+            menu_item["link"] = f"{prefix}/{existing_link}"
         
     if "children" in menu_item:
         
@@ -138,40 +160,40 @@ def prepend_prefix_to_links(menu_item, prefix):
     return menu_item
 
 
-def modify_menu_items_if_published(menu_items, page_settings, prefix):
+def modify_menu_items_if_published(menu_items, page_settings):
     def process_items(items):
         active_menu_items = []
         for item in items:
             if not item.get("children"):
                 name = item.get("link", "").strip("/")
                 
-                if name in page_settings and page_settings[name]:
-                    active_menu_items.append(item)
+                if name in page_settings:
+                    active_menu_items.append({**item,"is_published": page_settings[name], "id": generate_random_key(name), "is_link_external": False})
             
             else:
                 if item.get("name") == "Home":
+                    item["id"] = generate_random_key(item["name"])
+                    children = [{**child, "id": generate_random_key(child.get("name")), "is_published": True, "is_link_external":False} for child in item["children"]]
+                    item["children"] = children
                     active_menu_items.append(item)
                 else:
                     item["children"] = process_items(item["children"])
+                    item["id"] = generate_random_key(item["name"])
                     
                     if item["children"]:
                         active_menu_items.append(item)
+                        
         return active_menu_items
     
     if not menu_items or not page_settings:
         return []
     
     processed_menu_items = process_items(menu_items)
-    main_menu = []
     
-    for item in processed_menu_items:
-        f = prepend_prefix_to_links(item, prefix)
-        main_menu.append(f)
-    
-    return main_menu
+    return processed_menu_items
 
 
-def get_viable_menu_items(community, host):
+def  get_viable_menu_items(community):
     about_us_page_settings = AboutUsPageSettings.objects.filter(community=community).first()
     events_page_settings = EventsPageSettings.objects.filter(community=community).first()
     impact_page_settings = ImpactPageSettings.objects.filter(community=community).first()
@@ -182,13 +204,11 @@ def get_viable_menu_items(community, host):
     vendors_page_settings = VendorsPageSettings.objects.filter(community=community).first()
     donate_page_settings = DonatePageSettings.objects.filter(community=community).first()
 
+    all_menu = load_json("database/raw_data/portal/menu.json")
 
-    menu_items = {}
-    all_menu = Menu.objects.all()
-
-    nav_menu = all_menu.get(name="PortalMainNavLinks")
+    nav_menu = all_menu.get("PortalMainNavLinks")
     
-    portal_main_nav_links = modify_menu_items_if_published(nav_menu.content, {
+    portal_main_nav_links = modify_menu_items_if_published(nav_menu, {
         "impact": impact_page_settings.is_published,
         "aboutus": about_us_page_settings.is_published,
         "contactus": contact_us_page_settings.is_published,
@@ -198,21 +218,73 @@ def get_viable_menu_items(community, host):
         "teams": teams_page_settings.is_published,
         "events": events_page_settings.is_published,
         "donate": donate_page_settings.is_published,
-    },f'{"/"+community.subdomain if has_no_custom_website(community, host) else ""}')
+    })
     
-    footer_menu_content = all_menu.get(name='PortalFooterQuickLinks')
+    footer_menu_content = all_menu.get('PortalFooterQuickLinks')
 
-    portal_footer_quick_links = [
-        {**item, "link": f'{"/"+community.subdomain if has_no_custom_website(community, host) else ""}/{item["link"]}'}
-        if not item.get("children") and item.get("navItemId", None) != "footer-report-a-bug-id"
-        else item
-        for item in footer_menu_content.content["links"]
-    ]
-    portal_footer_contact_info = all_menu.get(name='PortalFooterContactInfo')
-    return [
-        {**nav_menu.simple_json(), "content": portal_main_nav_links},
-        {**footer_menu_content.simple_json(), "content": {"links": portal_footer_quick_links}},
-        portal_footer_contact_info.simple_json()
-
-    ]
+    portal_footer_contact_info = all_menu.get('PortalFooterContactInfo')
+    return {
+        "PortalMainNavLinks": portal_main_nav_links,
+        "PortalFooterQuickLinks": footer_menu_content,
+        "PortalFooterContactInfo": portal_footer_contact_info
+    }
 # -------------------------- Menu Utils --------------------------
+
+
+def load_default_menus_from_json(json_file_path=None):
+    if not json_file_path:
+        json_file_path = "database/raw_data/portal/menu.json"
+        
+    json = load_json(json_file_path)
+    
+    return json
+
+
+def validate_menu_content(content):
+    
+    if not content or not isinstance(content, list):
+        return False
+    
+    for item in content:
+        if not item.get('name', None):
+            return False
+        
+        if not item.get('link', None):
+            return False
+        
+        if item.get('children', None):
+            
+            if not validate_menu_content(item['children']):
+                
+                return False
+    return True
+
+
+def prepare_menu_items_for_portal(content, prefix):
+        if not content:
+            return None
+
+        prepared_menu_items = []
+        
+        for item in content:
+            prepared_menu_item = prepend_prefix_to_links(item, prefix)
+            prepared_menu_items.append(prepared_menu_item)
+            
+        return prepared_menu_items
+
+def remove_unpublished_items(content):
+    if not content:
+        return None
+
+    published_items = []
+    
+    for item in content:
+        if not item.get("children"):
+            if item.get("is_published"):
+                published_items.append(item)
+        else:
+            item["children"] = remove_unpublished_items(item["children"])
+            if item["children"]:
+                published_items.append(item)
+            
+    return published_items
