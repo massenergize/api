@@ -1,15 +1,17 @@
+import logging
+
 from api.utils.api_utils import get_viable_menu_items
 from database.models import Community, Menu
 
 
-def backfill_menu():
+def back_fill_menu():
 	try:
 		communities = Community.objects.filter(is_deleted=False)
 		for community in communities:
 			
 			menu = Menu.objects.filter(community=community, is_custom=False).first()
 			if menu:
-				print("=== Backfilling menu for community: Menu already exists ", community.name)
+				logging.warning(f"=== Back filling menu for {community.name}: Menu already exists ")
 				continue
 				
 			prepared_menu = get_viable_menu_items(community)
@@ -24,11 +26,11 @@ def backfill_menu():
 				is_published=True
 			)
 			menu.save()
-			print("=== Backfilling menu for community: Done ", community.name)
+			logging.info(f"=== Back filling menu for {community.name}: Done ")
 				
-		print("=== Backfilling menu: Done")
+		logging.info("=== Back filling menu: Done")
 	except Exception as e:
-		print("=== Backfilling menu: Error ", e)
+		logging.error(f"=== Back filling menu: Exception: {str(e)} ")
 		return None, e
 			
 			

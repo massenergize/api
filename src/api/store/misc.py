@@ -523,8 +523,6 @@ class MiscellaneousStore:
             portal_main_nav_links = remove_unpublished_items(portal_main_nav_links)
             portal_footer_quick_links = remove_unpublished_items(portal_footer_quick_links)
             
-            
-            
             return [
                 {"name": "PortalMainNavLinks", "content": portal_main_nav_links},
                 {"name": menu.footer_content.get("name", "Quick Links"), "content": {"links": portal_footer_quick_links}},
@@ -533,7 +531,7 @@ class MiscellaneousStore:
             ], None
         
         except Exception as e:
-            return None, CustomMassenergizeError(e)
+            return None, CustomMassenergizeError(str(e))
         
         
     def create_menu(self, context, args):
@@ -677,8 +675,8 @@ class MiscellaneousStore:
             default_menus = load_default_menus_from_json()
             
             menu.content = default_menus["PortalMainNavLinks"]
-            menu.footer_content = default_menus["PortalFooterQuickLinks"]
-            menu.contact_info = default_menus["PortalFooterContactInfo"]
+            # menu.footer_content = default_menus["PortalFooterQuickLinks"]
+            # menu.contact_info = default_menus["PortalFooterContactInfo"]
             menu.is_custom = False
             menu.save()
             

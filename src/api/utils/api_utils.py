@@ -123,9 +123,9 @@ def generate_random_key(name, key_length=10):
     key = ''.join(secrets.choice(alphabet) for _ in range(key_length))
     
     if not name:
-        return key
+        return key.lower()
     
-    return f"{name}-{key}"
+    return f"{name}-{key}".lower()
 
 # -------------------------- Menu Utils --------------------------
 
@@ -173,7 +173,7 @@ def modify_menu_items_if_published(menu_items, page_settings):
             else:
                 if item.get("name") == "Home":
                     item["id"] = generate_random_key(item["name"])
-                    children = [{**child, "id": generate_random_key(child.get("name")), "is_published": True, "is_link_external":False} for child in item["children"]]
+                    children = [{**child, "id": generate_random_key(child.get("name")), "is_published": True, "is_link_external": False} for child in item["children"]]
                     item["children"] = children
                     active_menu_items.append(item)
                 else:
@@ -193,7 +193,7 @@ def modify_menu_items_if_published(menu_items, page_settings):
     return processed_menu_items
 
 
-def  get_viable_menu_items(community):
+def get_viable_menu_items(community):
     about_us_page_settings = AboutUsPageSettings.objects.filter(community=community).first()
     events_page_settings = EventsPageSettings.objects.filter(community=community).first()
     impact_page_settings = ImpactPageSettings.objects.filter(community=community).first()
