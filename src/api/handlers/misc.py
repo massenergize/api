@@ -43,7 +43,7 @@ class MiscellaneousHandler(RouteHandler):
         self.add("/menus.get", self.get_menu)
         self.add("/menus.reset", self.reset_menu)
         self.add("/menus.listForAdmins", self.get_menus_for_admin)
-        self.add("/menus.links.get", self.get_internal_links)
+        self.add("/links.internal.get", self.get_internal_links)
 
     @admins_only
     def fetch_footages(self, request):
@@ -204,6 +204,7 @@ class MiscellaneousHandler(RouteHandler):
         return MassenergizeResponse(data=data)
     
     
+    @admins_only
     def create_menu(self, request):
         try:
             context: Context = request.context
@@ -226,7 +227,7 @@ class MiscellaneousHandler(RouteHandler):
         except Exception as e:
             return MassenergizeResponse(error=str(e))
         
-        
+    @admins_only
     def update_menu(self, request):
         try:
             context: Context = request.context
@@ -256,7 +257,7 @@ class MiscellaneousHandler(RouteHandler):
         except Exception as e:
             return MassenergizeResponse(error=str(e))
         
-        
+    @admins_only
     def delete_menu(self, request):
         try:
             context: Context = request.context
@@ -278,7 +279,7 @@ class MiscellaneousHandler(RouteHandler):
         except Exception as e:
             return MassenergizeResponse(error=str(e))
         
-        
+    @admins_only
     def get_menu(self, request):
         try:
             context: Context = request.context
@@ -301,7 +302,7 @@ class MiscellaneousHandler(RouteHandler):
             return MassenergizeResponse(error=str(e))
         
         
-    
+    @admins_only
     def reset_menu(self, request):
         try:
             context: Context = request.context
@@ -322,7 +323,8 @@ class MiscellaneousHandler(RouteHandler):
         
         except Exception as e:
             return MassenergizeResponse(error=str(e))
-        
+    
+    @admins_only
     def get_menus_for_admin(self, request):
         try:
             context: Context = request.context

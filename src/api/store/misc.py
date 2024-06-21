@@ -549,7 +549,7 @@ class MiscellaneousStore:
             
             default_menus = load_default_menus_from_json()
             
-            name = f"{community.name} Main Navigation"
+            name = f"{community.subdomain} Main Menu"
             args["name"] = name
             args["community"] = community
             args["is_custom"] = True

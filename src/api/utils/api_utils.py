@@ -168,18 +168,13 @@ def modify_menu_items_if_published(menu_items, page_settings):
                 name = item.get("link", "").strip("/")
                 
                 if name in page_settings:
-                    active_menu_items.append({**item,"is_published": page_settings[name], "id": generate_random_key(name), "is_link_external": False})
+                    active_menu_items.append({**item,"is_published": page_settings[name]})
             
             else:
                 if item.get("name") == "Home":
-                    item["id"] = generate_random_key(item["name"])
-                    children = [{**child, "id": generate_random_key(child.get("name")), "is_published": True, "is_link_external": False} for child in item["children"]]
-                    item["children"] = children
                     active_menu_items.append(item)
                 else:
                     item["children"] = process_items(item["children"])
-                    item["id"] = generate_random_key(item["name"])
-                    
                     if item["children"]:
                         active_menu_items.append(item)
                         
@@ -209,15 +204,15 @@ def get_viable_menu_items(community):
     nav_menu = all_menu.get("PortalMainNavLinks")
     
     portal_main_nav_links = modify_menu_items_if_published(nav_menu, {
-        "impact": impact_page_settings.is_published,
-        "aboutus": about_us_page_settings.is_published,
-        "contactus": contact_us_page_settings.is_published,
-        "actions": actions_page_settings.is_published,
-        "services": vendors_page_settings.is_published,
-        "testimonials": testimonial_page_settings.is_published,
-        "teams": teams_page_settings.is_published,
-        "events": events_page_settings.is_published,
-        "donate": donate_page_settings.is_published,
+        "impact": impact_page_settings.is_published if impact_page_settings else True,
+        "aboutus": about_us_page_settings.is_published if about_us_page_settings else True,
+        "contactus": contact_us_page_settings.is_published if contact_us_page_settings else True,
+        "actions": actions_page_settings.is_published if actions_page_settings else True,
+        "services": vendors_page_settings.is_published if vendors_page_settings else True,
+        "testimonials": testimonial_page_settings.is_published if testimonial_page_settings else True,
+        "teams": teams_page_settings.is_published if teams_page_settings else True,
+        "events": events_page_settings.is_published if events_page_settings else True,
+        "donate": donate_page_settings.is_published if donate_page_settings else True,
     })
     
     footer_menu_content = all_menu.get('PortalFooterQuickLinks')
