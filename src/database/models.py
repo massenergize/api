@@ -571,6 +571,12 @@ class Community(models.Model):
        res = model_to_dict(self, ["id", "name", "subdomain"])
        res["logo"] = get_json_if_not_none(self.logo)
        return res
+    
+    def get_logo_link_from_menu(self):
+        menu = Menu.objects.filter(community=self, is_published=True)
+        if menu:
+            return menu.first().community_logo_link
+        return None
 
     def simple_json(self):
         res = model_to_dict(
@@ -593,7 +599,7 @@ class Community(models.Model):
         )
         res["logo"] = get_json_if_not_none(self.logo)
         res["favicon"] = get_json_if_not_none(self.favicon)
-        # this will not slow it down measurably
+        res["community_logo_link"] = self.get_logo_link_from_menu()
         res["feature_flags"] = get_enabled_flags(self)
         return res
 
