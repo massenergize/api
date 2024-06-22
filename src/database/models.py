@@ -757,6 +757,7 @@ class Community(models.Model):
             "feature_flags": get_enabled_flags(self),
             "is_demo": self.is_demo,
             "contact_sender_alias": self.contact_sender_alias,
+            "community_logo_link": self.get_logo_link_from_menu(),
         }
 
     class Meta:
