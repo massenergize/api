@@ -1,39 +1,22 @@
+from typing import Tuple
+
+from sentry_sdk import capture_message
+
+from _main_.utils.context import Context
 from _main_.utils.footage.spy import Spy
-from api.tests.common import createUsers
-from database.models import (
-    Action,
-    Media,
-    Vendor,
-    Subdomain,
-    Event,
-    Community,
-    Menu,
-    Team,
-    TeamMember,
-    CommunityMember,
-    RealEstateUnit,
-    CommunityAdminGroup,
-    UserProfile,
-    Data,
-    TagCollection,
-    UserActionRel,
-    Data,
-    Location,
-    HomePageSettings,
-)
 from _main_.utils.massenergize_errors import (
     CustomMassenergizeError,
     InvalidResourceError,
     MassEnergizeAPIError,
 )
-from _main_.utils.context import Context
+from api.tests.common import createUsers
+from api.utils.api_utils import load_default_menus_from_json, \
+    remove_unpublished_items, validate_menu_content
+from database.models import Action, CarbonEquivalency, Community, CommunityAdminGroup, CommunityMember, Data, Event, \
+    HomePageSettings, Location, Media, Menu, RealEstateUnit, Subdomain, TagCollection, Team, TeamMember, UserActionRel, \
+    UserProfile, Vendor
 from database.utils.common import json_loader
-from database.models import CarbonEquivalency
-from .utils import find_reu_community, split_location_string, check_location,get_community
-from sentry_sdk import capture_message
-from typing import Tuple
-from api.utils.api_utils import get_viable_menu_items, has_no_custom_website, load_default_menus_from_json, \
-    prepare_menu_items_for_portal, remove_unpublished_items, validate_menu_content
+from .utils import check_location, find_reu_community, get_community, split_location_string
 
 
 class MiscellaneousStore:
@@ -515,13 +498,8 @@ class MiscellaneousStore:
             
             menu = menus.first()
             
-            prefix = "/"+community.subdomain if has_no_custom_website(community, host) else ""
-            
-            portal_main_nav_links = prepare_menu_items_for_portal(menu.content, prefix)
-            portal_footer_quick_links = prepare_menu_items_for_portal(menu.footer_content.get("links", []), prefix)
-            
-            portal_main_nav_links = remove_unpublished_items(portal_main_nav_links)
-            portal_footer_quick_links = remove_unpublished_items(portal_footer_quick_links)
+            portal_main_nav_links = remove_unpublished_items(menu.conten)
+            portal_footer_quick_links = remove_unpublished_items(menu.footer_content.get("links", []))
             
             return [
                 {"name": "PortalMainNavLinks", "content": portal_main_nav_links},
