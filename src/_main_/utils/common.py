@@ -112,13 +112,21 @@ def parse_string(s):
         return None
 
 
+# def parse_int(b):
+#     try:
+#         return int(b)
+#     except Exception as e:
+#         capture_message(str(e), level="error")
+#         return 1
+
 def parse_int(b):
+    if not str(b).isdigit():
+        raise ValueError("Input must be a digit")
     try:
         return int(b)
     except Exception as e:
         capture_message(str(e), level="error")
         return 1
-
 
 def parse_date(d):
     try:
