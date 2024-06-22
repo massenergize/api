@@ -175,7 +175,7 @@ class MiscellaneousService:
             if err:
                 return None, err
             
-            return serialize(res), None
+            return res, None
         
         except Exception as e:
             return None, CustomMassenergizeError(str(e))

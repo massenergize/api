@@ -570,6 +570,9 @@ class MiscellaneousStore:
             footer_content = args.pop('footer_content', None)
             contact_info = args.pop('contact_info', None)
             
+            if not menu_id:
+                return None, CustomMassenergizeError("id not provided")
+            
             community_logo_id = args.pop('community_logo_id', None)
             
             menu = Menu.objects.filter(id=menu_id)
@@ -617,11 +620,12 @@ class MiscellaneousStore:
             if not menu:
                 return None, CustomMassenergizeError("Menu not found")
             
+            menu = menu.first()
             if not menu.is_custom:
                 return None, CustomMassenergizeError("Cannot delete default menu. Try resetting it instead")
             
             menu.delete()
-            return menu.first(), None
+            return True, None
         except Exception as e:
             return None, CustomMassenergizeError(str(e))
         
