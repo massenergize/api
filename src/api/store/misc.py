@@ -498,7 +498,7 @@ class MiscellaneousStore:
             
             menu = menus.first()
             
-            portal_main_nav_links = remove_unpublished_items(menu.conten)
+            portal_main_nav_links = remove_unpublished_items(menu.content)
             portal_footer_quick_links = remove_unpublished_items(menu.footer_content.get("links", []))
             
             return [
