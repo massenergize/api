@@ -86,46 +86,6 @@ build-and-push-prod:
 	git push origin prod@$(VERSION)
 .PHONY: build-and-push-prod
 
-#prepare-canary:
-#	python3 deployment/prepare_to_deploy.py --canary 0 1
-#.PHONY: prepare-canary
-
-CANARY_VERSION=latest
-build-and-push-canary:
-	$(eval CANARY_VERSION := $(shell cat api_version_canary.txt))	
-	aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 202758212688.dkr.ecr.us-east-2.amazonaws.com
-	docker build -t massenergize/api-canary .
-	docker tag massenergize/api-canary:latest 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-canary:$(CANARY_VERSION)
-	docker push 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-canary:$(CANARY_VERSION)
-	eb deploy --label $(CANARY_VERSION)
-
-	git tag canary@$(CANARY_VERSION)
-	git push origin canary@$(CANARY_VERSION)
-.PHONY: build-and-deploy-canary
-
-#prepare-dev:
-#	python3 deployment/prepare_to_deploy.py --dev 0 1
-#.PHONY: deploy-dev
-
-DEV_VERSION=latest
-build-and-push-dev:
-	$(eval DEV_VERSION := $(shell cat api_version_dev.txt))	
-	aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 202758212688.dkr.ecr.us-east-2.amazonaws.com
-	docker build -t massenergize/api-dev .
-	docker tag massenergize/api-dev:latest 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-dev:$(DEV_VERSION)
-	docker push 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-dev:$(DEV_VERSION)
-	eb deploy --label $(DEV_VERSION)
-
-	git tag dev@$(DEV_VERSION)
-	git push origin dev@$(DEV_VERSION)
-.PHONY: build-and-push-dev
-
-deploy:
-	python3 deployment/prepare_to_deploy.py --dev
-	docker-compose build
-	docker-compose push
-.PHONY: deploy
-
 # Default: test api routes
 package=api
 #package = carbon_calculator
@@ -166,34 +126,30 @@ beat-remote:
 	celery -A _main_.celery.app beat -l info
 
 
-#-------------- NEW DEPLOYMENT STRATEGY ----------------
-deploy-dev:
-	DJANGO_ENV=dev python3 deployment/prepare_to_deploy.py --dev 0 1 && DJANGO_ENV=dev make build-and-push-dev
-.PHONY: deploy-dev
-
-deploy-canary:
-	DJANGO_ENV=canary python3 deployment/prepare_to_deploy.py --canary 0 1 && DJANGO_ENV=canary make build-and-push-canary
-.PHONY: deploy-canary
-
-deploy-prod:
-	DJANGO_ENV=prod python3 deployment/prepare_to_deploy.py --prod 0 1 && DJANGO_ENV=prod make build-and-push-prod
-.PHONY: deploy-prod
-
 #-------------- NEW  MIGRATE ----------------
+migrate:
+	@echo "Setting environment variables ..."
+	python3 _main_/utils/startup/prepare.py
+	python3 manage.py makemigrations
+	python3 manage.py showmigrations
+	python3 _main_/utils/startup/migration_prompt.py
+	python3 manage.py migrate
+.PHONY: migrate
+
 migrate-dev:
-	DJANGO_ENV=dev python manage.py migrate
+	DJANGO_ENV=dev make migrate
 .PHONY: migrate-dev
 
 migrate-prod:
-	DJANGO_ENV=prod python manage.py migrate
+	DJANGO_ENV=prod make migrate
 .PHONY: migrate-prod
 
 migrate-canary:
-	DJANGO_ENV=canary python manage.py migrate
+	DJANGO_ENV=canary make migrate
 .PHONY: migrate-canary
 
 migrate-local:
-	DJANGO_ENV=local python manage.py migrate
+	DJANGO_ENV=local make migrate
 .PHONY: migrate-local
 
 back-fill-menu-local:
@@ -211,3 +167,16 @@ back-fill-menu-prod:
 back-fill-menu-canary:
 	DJANGO_ENV=canary python manage.py back-fill-menu
 .PHONY: back-fill-menu-canary
+
+release:
+	@echo "Running release script..."
+	@python3 _main_/utils/release_software.py
+	@VERSION=$$(cat version.txt) && \
+	rm version.txt && \
+	echo "New version is $$VERSION" && \
+	git add release_info.json && \
+	git commit -m "Release version $$VERSION" && \
+	git tag -a "v$$VERSION" -m "Release version $$VERSION" && \
+	git push origin main && \
+	git push origin --tags
+.PHONY: release
