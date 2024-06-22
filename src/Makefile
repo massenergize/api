@@ -145,7 +145,7 @@ test:
 	 touch test.sqlite3
 	 DJANGO_ENV=test python3 manage.py migrate
 	 DJANGO_ENV=test coverage run --source='.' manage.py test $(package)
-	 coverage report
+	 coverage report --precision=2
 .PHONY: test
 
 celery:
@@ -195,3 +195,19 @@ migrate-canary:
 migrate-local:
 	DJANGO_ENV=local python manage.py migrate
 .PHONY: migrate-local
+
+back-fill-menu-local:
+	DJANGO_ENV=local python manage.py back-fill-menu
+.PHONY: back-fill-menu-local
+
+back-fill-menu-dev:
+	DJANGO_ENV=dev python manage.py back-fill-menu
+.PHONY: back-fill-menu-dev
+
+back-fill-menu-prod:
+	DJANGO_ENV=prod python manage.py back-fill-menu
+.PHONY: back-fill-menu-prod
+
+back-fill-menu-canary:
+	DJANGO_ENV=canary python manage.py back-fill-menu
+.PHONY: back-fill-menu-canary

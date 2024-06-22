@@ -5,6 +5,7 @@ from http.cookies import SimpleCookie
 from datetime import datetime, timedelta
 from django.utils import timezone
 
+from _main_.utils.utils import load_json
 from ..store.utils import unique_media_filename
 from _main_.settings import SECRET_KEY
 from _main_.utils.feature_flags.FeatureFlagConstants import FeatureFlagConstants
@@ -18,7 +19,7 @@ from database.models import (
     Footage,
     HomePageSettings,
     Media,
-    Message,
+    Menu, Message,
     RealEstateUnit,
     Team,
     Testimonial,
@@ -34,6 +35,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from apps__campaigns.models import Technology
 
 from database.models import Vendor
+from ..utils.api_utils import load_default_menus_from_json
 
 RESET = "reset"
 ME_DEFAULT_TEST_IMAGE = "https://www.whitehouse.gov/wp-content/uploads/2021/04/P20210303AS-1901-cropped.jpg"
@@ -240,6 +242,21 @@ def makeCommunity(**kwargs):
     )
 
     return com
+
+
+def makeMenu(community):
+    menu_json = load_default_menus_from_json()
+    menu = Menu(
+        name=community.subdomain + " Main Menu",
+        community=community,
+        is_custom=True,
+        content=menu_json["PortalMainNavLinks"],
+        footer_content=menu_json["PortalFooterQuickLinks"],
+        contact_info=menu_json["PortalFooterContactInfo"],
+        is_published=True,
+    )
+    menu.save()
+    return menu
 
 
 def makeAuthToken(user):
