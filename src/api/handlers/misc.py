@@ -196,8 +196,6 @@ class MiscellaneousHandler(RouteHandler):
         if err:
             return MassenergizeResponse(error=err)
         
-        args["host"] = request.META.get("HTTP_ORIGIN")
-        
         data, err = self.service.load_menu_items(context, args)
         if err:
             return err
