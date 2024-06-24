@@ -14,6 +14,7 @@ import pytz
 from django.db.models import Q
 from dateutil.relativedelta import relativedelta
 
+from task_queue.helpers import get_event_location
 
 WEEKLY = "weekly"
 BI_WEEKLY = "bi-weekly"
