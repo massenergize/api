@@ -278,6 +278,8 @@ def remove_unpublished_items(content):
             if item.get("is_published"):
                 published_items.append(item)
         else:
+            if not item.get("is_published"):
+                continue
             item["children"] = remove_unpublished_items(item["children"])
             if item["children"]:
                 published_items.append(item)
