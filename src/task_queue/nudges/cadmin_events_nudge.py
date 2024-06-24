@@ -159,23 +159,6 @@ def get_logo(event):
         return event.get("community").get("logo").get("url")
     return ""
 
-
-def get_event_location(event):
-    evnt_type = event.get("event_type", "").lower()
-    location_mapping = {
-        "both": "Hybrid",
-        "in-person": "In-Person",
-        "online": "Online",
-    }
-    location = location_mapping.get(evnt_type, None)
-    if location:
-        return location
-    
-    if event.get("location"): return "In-Person"
-    if event.get("online_location"): return "Online"
-    return "N/A"
-    
-
 def prepare_events_email_data(events):
     events = serialize_all(events, full=True)
     data = [{
