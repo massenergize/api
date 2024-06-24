@@ -483,7 +483,6 @@ class MiscellaneousStore:
         try:
             subdomain = args.get("subdomain", None)
             community_id = args.get("community_id", None)
-            host = args.get("host", None)
 
             if not subdomain and not community_id:
                 return None, CustomMassenergizeError("No community or subdomain provided")
