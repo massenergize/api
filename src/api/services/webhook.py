@@ -121,7 +121,7 @@ class WebhookService:
         user_msg_content = split_body[1].strip().split("If possible, please reply through the admin portal rather than")[0].strip()
         subject, email = extract_email_content(user_msg_content)
 
-        db_msg_id = extract_msg_id(split_body[0])
+        db_msg_id = extract_msg_id(text_body)
 
         if not db_msg_id and not email:
             logging.error("INBOUND_PROCESSING:Could not extract email or message id")
