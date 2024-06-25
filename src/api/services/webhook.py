@@ -50,11 +50,8 @@ def get_messsage_id_from_link_list(url_parts):
         return None
     
 def trim_text(text):
-    trimmed_text = re.sub(r'On .*? wrote:.*?© MassEnergize, \d{4}', '', text, flags=re.DOTALL)
-
-    trimmed_text = re.sub(r'>', '', trimmed_text)
+    trimmed_text = re.sub(r'\n>', '', text)
     trimmed_text = re.sub(r'[\n\r]+', '\n', trimmed_text).strip()
-
     return trimmed_text
 
 
