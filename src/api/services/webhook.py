@@ -70,6 +70,7 @@ def extract_msg_id(text):
         
         if not url:
             logging.error("INBOUND_PROCESSING:No url found in the email body")
+
             return None
         
         logging.info(f"INBOUND_PROCESSING:Extracted url: {url}")
