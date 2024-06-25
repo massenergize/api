@@ -48,22 +48,31 @@ def get_messsage_id_from_link_list(url_parts):
     except ValueError:
         logging.error("INBOUND_PROCESSING:ValueError while extracting message id from the url")
         return None
+    
+def trim_text(text):
+    trimmed_text = re.sub(r'On .*? wrote:.*?© MassEnergize, \d{4}', '', text, flags=re.DOTALL)
+
+    trimmed_text = re.sub(r'>', '', trimmed_text)
+    trimmed_text = re.sub(r'[\n\r]+', '\n', trimmed_text).strip()
+
+    return trimmed_text
 
 
 def extract_msg_id(text):
     try:
-        logging.info(f"MESSAGE_BODY:{text}")
+        text = trim_text(text)
         
-        url_pattern = r"<(https?:\\/\\/click\.pstmrk\.it[^\s>]+)>"
-        match = re.search(url_pattern, text)
+        pattern = r"https://click\.pstmrk\.it/[^\s]+"
         
-        logging.info(f"URL_MATCH:{match}")
+        match = re.search(pattern, text)
         
-        if not match:
-            logging.error("INBOUND_PROCESSING:Could not extract message id from the email body")
+        url = match.group(0) if match else None
+        
+        if not url:
+            logging.error("INBOUND_PROCESSING:No url found in the email body")
             return None
         
-        url = match.group(1)
+        logging.info(f"INBOUND_PROCESSING:Extracted url: {url}")
         
         parsed_url = urllib.parse.urlparse(url)
         path = parsed_url.path
