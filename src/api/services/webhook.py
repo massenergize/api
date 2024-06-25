@@ -66,7 +66,10 @@ def extract_msg_id(text):
         path = urllib.parse.unquote(path)
         splitted_path_list = path.split("/")
         
+        logging.info(f"INBOUND_PROCESSING:Extracted path list: {splitted_path_list}")
+        
         message_id = get_messsage_id_from_link_list(splitted_path_list)
+        logging.info(f"INBOUND_PROCESSING:Extracted_message_id: {message_id}")
         
         if not message_id:
             logging.error("INBOUND_PROCESSING:Incorrect message id format in the email body")
@@ -122,11 +125,17 @@ class WebhookService:
         subject, email = extract_email_content(user_msg_content)
 
         db_msg_id = extract_msg_id(text_body)
-
-        if not db_msg_id and not email:
-            logging.error("INBOUND_PROCESSING:Could not extract email or message id")
+        
+        logging.info(f"INBOUND_PROCESSING:Extracted message id: {db_msg_id}")
+        
+        if not db_msg_id:
+            logging.error("INBOUND_PROCESSING:Could not extract message id from the email body")
             return {"success":False}, None
-      
+        
+        if not email:
+            logging.error("INBOUND_PROCESSING:Could not extract email from the email body")
+            return {"success":False}, None
+
         res, err = self.message_service.reply_from_community_admin(context, {
             "title": f"Re: {subject}",
             "body": reply,
