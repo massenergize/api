@@ -52,8 +52,12 @@ def get_messsage_id_from_link_list(url_parts):
 
 def extract_msg_id(text):
     try:
+        logging.info(f"MESSAGE_BODY:{text}")
+        
         url_pattern = r"<(https?:\\/\\/click\.pstmrk\.it[^\s>]+)>"
         match = re.search(url_pattern, text)
+        
+        logging.info(f"URL_MATCH:{match}")
         
         if not match:
             logging.error("INBOUND_PROCESSING:Could not extract message id from the email body")
@@ -64,12 +68,9 @@ def extract_msg_id(text):
         parsed_url = urllib.parse.urlparse(url)
         path = parsed_url.path
         path = urllib.parse.unquote(path)
-        splitted_path_list = path.split("/")
+        split_path_list = path.split("/")
         
-        logging.info(f"INBOUND_PROCESSING:Extracted path list: {splitted_path_list}")
-        
-        message_id = get_messsage_id_from_link_list(splitted_path_list)
-        logging.info(f"INBOUND_PROCESSING:Extracted_message_id: {message_id}")
+        message_id = get_messsage_id_from_link_list(split_path_list)
         
         if not message_id:
             logging.error("INBOUND_PROCESSING:Incorrect message id format in the email body")
