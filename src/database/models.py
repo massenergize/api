@@ -3906,7 +3906,7 @@ class FeatureFlag(models.Model):
         elif self.audience == "ALL_EXCEPT":
             return communities_in.exclude(id__in=community_ids)
         
-        return None
+        return []
 
     def enabled_users(self, users_in: QuerySet):
         if self.user_audience == "EVERYONE":

@@ -1397,7 +1397,15 @@ class CommunityStore:
                 (Q(audience=FeatureFlagConstants().for_all_except()) & ~Q(communities__in=communities))
             ).exclude(expires_on__lt=datetime.now()).prefetch_related('communities')
             
-            return feature_flags, None
+            ff = []
+            for flag in feature_flags:
+                ff.append({
+                    "key": flag.key,
+                    "name": flag.name,
+                    "communities": None if subdomain or community_id else [c.id for c in flag.enabled_communities() if c.id in communities]
+                })
+            
+            return ff, None
         
         except Exception as e:
             return None, CustomMassenergizeError(str(e))
