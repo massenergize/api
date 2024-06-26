@@ -1,3 +1,4 @@
+
 import logging
 
 from sentry_sdk import capture_message
@@ -11,6 +12,7 @@ from api.constants import GUEST_USER
 from database.models import UserProfile
 import re
 import urllib.parse
+from email.utils import parseaddr
 
 from _main_.utils.massenergize_errors import CustomMassenergizeError
 
@@ -18,23 +20,26 @@ ONE_DAY = 60*60*24
 HARD_BOUNCE="HardBounce"
 WELCOME_MESSAGE="Welcome Message From MassEnergize"
 
-
+def extract_email(input_string):
+  parsed_tuple = parseaddr(input_string)
+  split_email = parsed_tuple[0].split("<")
+  return split_email[0].strip()
 
 def extract_email_content(text):
-  subject_match = re.search(r"Subject: (.+)\n", text)
-  if subject_match:
-      subject = subject_match.group(1)
-  else:
-      subject = None
-
-  email_match = re.search(r"From: (.+)\n", text)
-  if email_match:
-      email = email_match.group(1)
-      email = re.search(r"\(([^)]+)\)", email).group(1)
-  else:
-      email = None
-
-  return subject, email
+    subject_match = re.search(r"Subject: (.+)\n", text)
+    if subject_match:
+        subject = subject_match.group(1)
+    else:
+        subject = None
+    
+    email_match = re.search(r"From: (.+)\n", text)
+    
+    if email_match:
+        email = extract_email(email_match.group(1))
+    else:
+        email = None
+    
+    return subject, email
 
 def get_messsage_id_from_link_list(url_parts):
     try:
