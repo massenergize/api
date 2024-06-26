@@ -17,6 +17,8 @@ from datetime import timedelta
 from database.utils.settings.model_constants.events import EventConstants
 from django.utils import timezone
 
+from task_queue.helpers import get_event_location
+
 WEEKLY = "per_week"
 BI_WEEKLY = "biweekly"
 MONTHLY = "per_month"
@@ -210,7 +212,7 @@ def prepare_events_email_data(events):
             "logo": get_logo(event),
             "title": truncate_title(event.get("name")),
             "date": get_date_range(event.get("start_date_and_time"), event.get("end_date_and_time")),
-            "location": "In person" if event.get("location") else "Online",
+            "location": get_event_location(event),
             "view_link": f'{COMMUNITY_URL_ROOT}/{event.get("community", {}).get("subdomain")}/events/{event.get("id")}',
             } for event in events]
     return data

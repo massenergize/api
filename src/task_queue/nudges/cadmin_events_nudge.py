@@ -14,6 +14,7 @@ import pytz
 from django.db.models import Q
 from dateutil.relativedelta import relativedelta
 
+from task_queue.helpers import get_event_location
 
 WEEKLY = "weekly"
 BI_WEEKLY = "bi-weekly"
@@ -165,7 +166,7 @@ def prepare_events_email_data(events):
             "title": event.get("name"),
             "community": event.get("community", {}).get("name") if event.get("community") else "N/A",
             "date": human_readable_date(event.get("start_date_and_time")),
-            "location": "In person" if event.get("location") else "Online",
+            "location": get_event_location(event),
             "share_link": generate_redirect_url("SHARING", event.get("id")),
             "view_link": generate_redirect_url("VIEW", event.get("id"), event.get("community")),
             } for event in events]
