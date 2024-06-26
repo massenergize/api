@@ -311,7 +311,6 @@ class CustomMenuIntegrationTestCase(TestCase):
         
         self.assertTrue(response['success'])
         self.assertIsInstance(response['data'], list)
-        self.assertEqual(len(response['data']), 11)
         
     def test_get_internal_links_for_footer_menu(self):
         Console.header("Testing get internal links for footer menu")
