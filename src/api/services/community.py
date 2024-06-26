@@ -161,6 +161,6 @@ class CommunityService:
     feature_flags, err = self.store.list_communities_feature_flags(context, args)
     if err:
       return None, err
-    return serialize_all(feature_flags, info=True), None
+    return feature_flags, None
 
 
