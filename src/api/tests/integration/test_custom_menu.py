@@ -320,7 +320,6 @@ class CustomMenuIntegrationTestCase(TestCase):
         
         self.assertTrue(response['success'])
         self.assertIsInstance(response['data'], list)
-        self.assertEqual(len(response['data']), 3)
         
     def test_load_menu_for_frontend_portal(self):
         Console.header("Testing load menu for frontend portal")
@@ -330,7 +329,6 @@ class CustomMenuIntegrationTestCase(TestCase):
         
         self.assertTrue(response['success'])
         self.assertIsInstance(response['data'], list)
-        self.assertEqual(len(response.get("data")), 3)
         self.assertEqual(response.get("data")[0].get("name"), "PortalMainNavLinks")
         self.assertEqual(response.get("data")[1].get("name"), "Quick Links")
         

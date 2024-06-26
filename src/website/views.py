@@ -1,3 +1,4 @@
+import os
 from uuid import UUID
 import html2text, traceback
 from django.shortcuts import render, redirect
@@ -6,6 +7,7 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from django.http import Http404, JsonResponse
 from _main_.settings import IS_PROD, IS_CANARY, RUN_SERVER_LOCALLY, EnvConfig
 from sentry_sdk import capture_message
+from api.decorators import x_frame_options_exempt
 from api.handlers.misc import MiscellaneousHandler
 from api.store.misc import MiscellaneousStore
 from _main_.utils.constants import RESERVED_SUBDOMAIN_LIST, STATES
@@ -93,6 +95,13 @@ META = {
     "tags": ["#ClimateChange"],
     "is_local": IS_LOCAL,
 }
+
+@x_frame_options_exempt
+def rewiring_america(request):
+    args  ={
+        "rewiring_america": os.environ.get('REWIRING_AMERICA_API_KEY')
+    }
+    return render(request,"rewiring_america.html", args)
 
 @timed
 def campaign(request, campaign_id):

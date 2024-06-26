@@ -3,11 +3,20 @@ This contains custom decorators that can be used to check that specific
 conditions have been satisfied
 """
 from django.core.exceptions import PermissionDenied
+from django.http import HttpResponse
 from _main_.utils.context import Context
 from functools import wraps
 from django.views.decorators.http import require_http_methods
 
 
+def x_frame_options_exempt(view_func):
+    @wraps(view_func)
+    def wrapped_view(*args, **kwargs):
+        response = view_func(*args, **kwargs)
+        if isinstance(response, HttpResponse):
+            response['X-Frame-Options'] = 'ALLOWALL'
+        return response
+    return wrapped_view
 def login_required(function):
   """
   This decorator enforces that a user is logged in before a view can run
