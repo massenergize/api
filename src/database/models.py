@@ -1758,48 +1758,43 @@ class CarbonEquivalency(models.Model):
         db_table = "carbon_equivalencies"
 
 
-class Vendor(models.Model):
+class Affiliate(models.Model):
     """
-    A class used to represent a Vendor/Contractor that provides a service
-    associated with any of the actions.
+    A class used to generalize MassEnergize-approved groups such as Vendors and
+    Organizations with similar basic properties
 
     Attributes
     ----------
-    name : str
-      name of the Vendor
+    name: str
+      name of the Affiliate
     description: str
-      description of this service
+      description of the Affiliate's role
     logo: int
-      Foreign Key to Media file represtenting the logo for this Vendor
+      Foreign Key to Media file representing the logo for this Affiliate
     banner: int
-      Foreign Key to Media file represtenting the banner for this Vendor
+      Foreign Key to Media file representing the banner for this Affiliate
     address: int
-      Foreign Key for Location of this Vendor
+      Foreign Key for Location of this Affiliate
     key_contact: int
-      Foreign Key for MassEnergize User that is the key contact for this vendor
-    service_area: str
-      Information about whether this vendor provides services nationally,
-      statewide, county or Town services only
-    properties_services: str
-      Whether this vendor services Residential or Commercial units only
+      Foreign Key for MassEnergize User that is the key contact for this Affiliate
     onboarding_date: DateTime
-      When this vendor was onboard-ed on the MassEnergize Platform for this
+      When this Affiliate was onboard-ed on the MassEnergize Platform for this
         community
     onboarding_contact:
-      Which MassEnergize Staff/User onboard-ed this vendor
+      Which MassEnergize Staff/User onboard-ed this Affiliate
     verification_checklist:
       contains information about some steps and checks needed for due diligence
-      to be done on this vendor eg. Vendor MOU, Reesearch
+      to be done on this Affiliate eg. Affiliate MOU, Reesearch
     is_verified: boolean
       When the checklist items are all done and verified then set this as True
-      to confirm this vendor
+      to confirm this Affiliate
     more_info: JSON
-      any another dynamic information we would like to store about this Service
+      any another dynamic information we would like to store about this Affiliate
     created_at: DateTime
-      The date and time that this Vendor was added
+      The date and time that this Affiliate was added
     created_at: DateTime
       The date and time of the last time any updates were made to the information
-      about this Vendor
+      about this Affiliate
     is_approved: boolean
       after the community admin reviews this, can check the box
 
@@ -1815,7 +1810,7 @@ class Vendor(models.Model):
         blank=True,
         null=True,
         on_delete=models.SET_NULL,
-        related_name="vender_logo",
+        related_name="vendor_logo",
     )
     banner = models.ForeignKey(
         Media,
@@ -1826,10 +1821,6 @@ class Vendor(models.Model):
     )
     address = models.JSONField(blank=True, null=True)
     key_contact = models.JSONField(blank=True, null=True)
-    service_area = models.CharField(max_length=SHORT_STR_LEN)
-    service_area_states = models.JSONField(blank=True, null=True)
-    services = models.ManyToManyField(Service, blank=True)
-    properties_serviced = models.JSONField(blank=True, null=True)
     onboarding_date = models.DateTimeField(auto_now_add=True)
     onboarding_contact = models.ForeignKey(
         UserProfile,
@@ -1845,11 +1836,11 @@ class Vendor(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     communities = models.ManyToManyField(
-        Community, blank=True, related_name="community_vendors"
+        Community, blank=True, related_name="community_affiliates"
     )
-    tags = models.ManyToManyField(Tag, related_name="vendor_tags", blank=True)
-    # which user posted this vendor
-    user = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True, blank=True)
+    tags = models.ManyToManyField(Tag, related_name="affiliate_tags", blank=True)
+    # which user posted this Affiliate
+    user = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True)
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=False, blank=True)
     is_approved = models.BooleanField(default=False, blank=True)
@@ -1911,9 +1902,112 @@ class Vendor(models.Model):
             data["user_email"] = self.user.email
 
         return data
+    
+
+class Vendor(Affiliate):
+    """
+    A class used to represent a Vendor/Contractor that provides a service
+    associated with any of the actions.
+
+    Attributes
+    ----------
+    name: str
+      name of the Vendor
+    description: str
+      description of this service
+    logo: int
+      Foreign Key to Media file represtenting the logo for this Vendor
+    banner: int
+      Foreign Key to Media file represtenting the banner for this Vendor
+    address: int
+      Foreign Key for Location of this Vendor
+    key_contact: int
+      Foreign Key for MassEnergize User that is the key contact for this vendor
+    service_area: str
+      Information about whether this vendor provides services nationally,
+      statewide, county or Town services only
+    properties_services: str
+      Whether this vendor services Residential or Commercial units only
+    onboarding_date: DateTime
+      When this vendor was onboard-ed on the MassEnergize Platform for this
+        community
+    onboarding_contact:
+      Which MassEnergize Staff/User onboard-ed this vendor
+    verification_checklist:
+      contains information about some steps and checks needed for due diligence
+      to be done on this vendor eg. Vendor MOU, Reesearch
+    is_verified: boolean
+      When the checklist items are all done and verified then set this as True
+      to confirm this vendor
+    more_info: JSON
+      any another dynamic information we would like to store about this Service
+    created_at: DateTime
+      The date and time that this Vendor was added
+    created_at: DateTime
+      The date and time of the last time any updates were made to the information
+      about this Vendor
+    is_approved: boolean
+      after the community admin reviews this, can check the box
+
+    """
+
+    service_area = models.CharField(max_length=SHORT_STR_LEN)
+    service_area_states = models.JSONField(blank=True, null=True)
+    services = models.ManyToManyField(Service, blank=True)
+    properties_serviced = models.JSONField(blank=True, null=True)
 
     class Meta:
         db_table = "vendors"
+
+
+class Organization(Affiliate):
+    """
+    A class used to represent an Organization that provides a service
+    associated with any of the actions.
+
+    Attributes
+    ----------
+    name: str
+      name of the Organization
+    description: str
+      description of this service
+    logo: int
+      Foreign Key to Media file represtenting the logo for this Organization
+    banner: int
+      Foreign Key to Media file represtenting the banner for this Organization
+    address: int
+      Foreign Key for Location of this Organization
+    key_contact: int
+      Foreign Key for MassEnergize User that is the key contact for this Organization
+    onboarding_date: DateTime
+      When this Organization was onboard-ed on the MassEnergize Platform for this
+        community
+    onboarding_contact:
+      Which MassEnergize Staff/User onboard-ed this Organization
+    verification_checklist:
+      contains information about some steps and checks needed for due diligence
+      to be done on this Organization eg. Organization MOU, Reesearch
+    is_verified: boolean
+      When the checklist items are all done and verified then set this as True
+      to confirm this Organization
+    more_info: JSON
+      any another dynamic information we would like to store about this Service
+    created_at: DateTime
+      The date and time that this Organization was added
+    created_at: DateTime
+      The date and time of the last time any updates were made to the information
+      about this Organization
+    is_approved: boolean
+      after the community admin reviews this, can check the box
+    allowed_users:
+      Users allowed to create events under the Organization
+    
+    """
+
+    allowed_users = models.ManyToManyField(UserProfile, blank=True)
+
+    class Meta:
+        db_table = "organizations"
 
 
 class Action(models.Model):
@@ -3596,6 +3690,21 @@ class VendorsPageSettings(PageSettings):
         db_table = "vendors_page_settings"
         verbose_name_plural = "VendorsPageSettings"
 
+class OrganizationsPageSettings(PageSettings):
+    """
+    Represents the community's Organizations page settings.
+
+    Attributes
+    ----------
+    see description under PageSettings
+    """
+
+    def __str__(self):
+        return "OrganizationsPageSettings - %s" % (self.community)
+
+    class Meta:
+        db_table = "organizations_page_settings"
+        verbose_name_plural = "OrganizationsPageSettings"
 
 class EventsPageSettings(PageSettings):
     """

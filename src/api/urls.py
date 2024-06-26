@@ -5,9 +5,11 @@ from api.handlers.campaign import CampaignHandler
 from api.handlers.campaign_account import CampaignAccountHandler
 # from api.handlers.email_templates import EmailTemplatesHandler
 from api.handlers.media_library import MediaLibraryHandler
+from api.handlers.organization import OrganizationHandler
 from api.handlers.page_settings__aboutus import AboutUsPageSettingsHandler
 from api.handlers.page_settings__actions import ActionsPageSettingsHandler
 from api.handlers.page_settings__events import EventsPageSettingsHandler
+from api.handlers.page_settings__organizations import OrganizationsPageSettingsHandler
 from api.handlers.page_settings__vendors import VendorsPageSettingsHandler
 from api.handlers.page_settings__testimonials import TestimonialsPageSettingsHandler
 from api.handlers.community import CommunityHandler
@@ -79,6 +81,8 @@ ROUTE_HANDLERS = [
     UserHandler(),
     VendorHandler(),
     VendorsPageSettingsHandler(),
+    OrganizationHandler(),
+    OrganizationsPageSettingsHandler(),
     MediaLibraryHandler(),
     RegisterPageSettingsHandler(),
     SigninPageSettingsHandler(),

@@ -89,6 +89,7 @@ ITEM_TYPES = {
     "ACTION": {"key": "ACTION", "json_field": "is_action"},
     "EVENT": {"key": "EVENT", "json_field": "is_event"},
     "VENDOR": {"key": "VENDOR", "json_field": "is_vendor"},
+    "ORGANIZATION": {"key": "ORGANIZATION", "json_field": "is_organization"},
     "AUTH": {"key": "AUTH", "json_field": "is_authentication"},
     "TESTIMONIAL": {"key": "TESTIMONIAL", "json_field": "is_testimonial"},
     "MEDIA": {"key": "MEDIA", "json_field": "is_media"},
