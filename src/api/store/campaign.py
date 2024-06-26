@@ -922,6 +922,8 @@ class CampaignStore:
                     args["community"] = community
 
             follower, _ = CampaignFollow.objects.get_or_create(campaign=campaign, **args)
+            if not _:
+                return None, CustomMassenergizeError("Follower already exists!")
 
             return follower, None
         except Exception as e:
