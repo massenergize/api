@@ -13,13 +13,6 @@
           "is_published": true
         },
         {
-          "link": "/rewiring-america",
-          "name": "Rewiring America",
-          "id": "rewiring-america-id",
-          "is_link_external": false,
-          "is_published": true
-        },
-        {
           "link": "/?tour=true",
           "name": "Take the tour",
           "id": "menu-take-the-tour-id",
