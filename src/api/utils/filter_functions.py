@@ -377,7 +377,7 @@ def get_sort_params(params):
     sort =""
     if sort_params:
       sort+= sort_params.get("name")
-      if sort_params.get("direction") == "desc":
+      if sort_params.get("direction") == "asc":
         sort = "-"+sort
       return sort.lower()
     
@@ -391,10 +391,17 @@ def get_sort_params(params):
 
 
 def sort_items(queryset, params):
-  if not queryset:
-    return []
-  if isinstance(queryset, list):
+  try:
+    if not queryset:
+      return []
+    
+    if isinstance(queryset, list):
+      return queryset
+    
+    sort_params = get_sort_params(params)
+    sorted =  queryset.order_by(sort_params)
+    
+    return sorted
+  
+  except Exception as e:
     return queryset
-
-  sort_params = get_sort_params(params)
-  return queryset.order_by(sort_params)
