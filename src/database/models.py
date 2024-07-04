@@ -4061,6 +4061,33 @@ class SupportedLanguage(BaseModel):
         db_table = "supported_languages"
         ordering = ("name",)
 
+class CommunitySupportedLanguage(BaseModel):
+    """
+    A class used to represent the languages supported by the platform
+
+    Attributes
+    ----------
+    community : int Foreign key to the community
+    language : int Foreign key to the supported language
+    """
+
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
+    language = models.ForeignKey(SupportedLanguage, on_delete=models.CASCADE, db_index=True)
+
+    def __str__(self):
+        return f"{self.community.name} - {self.language.name}"
+
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
+
+    class Meta:
+        db_table = "community_supported_languages"
+        unique_together = ["community", "language"]
+        ordering = ("community", "language")
+
 class TextHash(RootModel):
     """
     A class used to represent the text hash table
