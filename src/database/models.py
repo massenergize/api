@@ -4085,3 +4085,35 @@ class TextHash(RootModel):
 
     class Meta:
         db_table = "text_hashes"
+
+class TranslationsCache(BaseModel):
+    """
+    A class used to represent the translations cache table
+
+    Attributes
+    ----------
+    hash	: str
+    source_language_code  : str
+    target_language_code  : str
+    translated_text	: str
+    last_translated	: DateTime
+    """
+
+    hash = models.ForeignKey(TextHash, on_delete=models.CASCADE, db_index=True)
+    source_language_code = models.CharField(max_length=LANG_CODE_STR_LEN)
+    target_language_code = models.CharField(max_length=LANG_CODE_STR_LEN)
+    translated_text = models.TextField(max_length=LONG_STR_LEN)
+    last_translated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.hash
+
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
+
+    class Meta:
+        db_table = "translations_cache"
+
