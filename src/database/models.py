@@ -328,7 +328,7 @@ class Media(models.Model):
                 self.hash = hash
         super().save(*args, **kwargs)
 
-    def get_s3_key(self): 
+    def get_s3_key(self):
         return self.file.name
 
 
@@ -3838,7 +3838,7 @@ class FeatureFlag(models.Model):
 
     def __str__(self):
         return f"{self.name}"
-    
+
     def info(self):
         return {"id": self.id, "name": self.name, "key": self.key,}
 
@@ -3898,16 +3898,16 @@ class FeatureFlag(models.Model):
           """
         if not communities_in:
             communities_in = Community.objects.filter(is_deleted=False)
-        
+
         community_ids = self.communities.values_list('id', flat=True)
-        
+
         if self.audience == "EVERYONE":
             return communities_in
         elif self.audience == "SPECIFIC":
             return communities_in.filter(id__in=community_ids)
         elif self.audience == "ALL_EXCEPT":
             return communities_in.exclude(id__in=community_ids)
-        
+
         return []
 
     def enabled_users(self, users_in: QuerySet):
@@ -4144,3 +4144,52 @@ class TranslationsCache(BaseModel):
     class Meta:
         db_table = "translations_cache"
 
+class ManualCommunityTranslation(TranslationsCache):
+    """
+    A class used to represent the manual translations done by the community
+
+    Attributes
+    ----------
+    community : int
+    """
+
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
+
+    def __str__(self):
+        return self.hash
+
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
+
+    class Meta:
+        db_table = "manual_community_translations"
+
+class StaticSiteText(BaseModel):
+    """
+    A class used to represent the static site text table
+
+    Attributes
+    ----------
+    text : str This is the text that will be displayed on the front-end site
+    key : str This is the key that will be used to look up the text
+    site : str This is the site that the text is meant for
+    """
+
+    text = models.TextField(max_length=LONG_STR_LEN)
+    key = models.CharField(max_length=SHORT_STR_LEN, unique=True)
+    site = models.CharField(max_length=SHORT_STR_LEN, default="")
+
+    def __str__(self):
+        return self.key
+
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
+
+    class Meta:
+        db_table = "static_site_texts"
