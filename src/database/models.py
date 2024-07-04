@@ -4060,3 +4060,28 @@ class SupportedLanguage(BaseModel):
     class Meta:
         db_table = "supported_languages"
         ordering = ("name",)
+
+class TextHash(RootModel):
+    """
+    A class used to represent the text hash table
+
+    Attributes
+    ----------
+    hash	: str
+    text	: str
+    """
+
+    hash = models.CharField(primary_key=True, max_length=SHORT_STR_LEN, unique=True)
+    text = models.TextField(max_length=LONG_STR_LEN)
+
+    def __str__(self):
+        return self.hash
+
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
+
+    class Meta:
+        db_table = "text_hashes"
