@@ -1,5 +1,6 @@
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.route_handler import RouteHandler
+from api.decorators import admins_only, super_admins_only
 from api.services.translation import TranslationsService
 from _main_.utils.context import Context
 
@@ -14,6 +15,7 @@ class TranslationsHandler(RouteHandler):
 	def registerRoutes(self):
 		self.add("/translations.languages.get", self.get_all_languages)
 	
+	@admins_only
 	def get_all_languages(self, request):
 		context: Context = request.context
 		args: dict = context.args
