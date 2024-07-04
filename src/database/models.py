@@ -3,6 +3,8 @@ from datetime import timezone, timedelta
 import json
 import uuid
 from _main_.utils.policy.PolicyConstants import PolicyConstants
+from _main_.utils.base_model import BaseModel
+from _main_.utils.base_model import RootModel
 from apps__campaigns.helpers import get_user_accounts
 from database.utils.settings.model_constants.events import EventConstants
 from django.db import models
@@ -571,7 +573,7 @@ class Community(models.Model):
        res = model_to_dict(self, ["id", "name", "subdomain"])
        res["logo"] = get_json_if_not_none(self.logo)
        return res
-    
+
     def get_logo_link_from_menu(self):
         menu = Menu.objects.filter(community=self, is_published=True)
         if menu:
@@ -1214,29 +1216,29 @@ class PolicyAcceptanceRecords(models.Model):
 
 class UserMediaUpload(models.Model):
     """A class that creates a relationship between a user(all user kinds) on the platform and media they have uploaded
-    
+
     Attributes
     ----------
     user : UserProfile
-    A user profile object of the currently signed in user who uploaded the media 
+    A user profile object of the currently signed in user who uploaded the media
 
-    communities: Community 
-    All communities that have access to the attached media object 
+    communities: Community
+    All communities that have access to the attached media object
 
-    media : Media 
+    media : Media
     A reference to the actual media object
 
     is_universal: bool
-    True/False value that indicates whether or not an image is open to everyone. 
-    PS: Its no longer being used (as at 12/10/23). We want more than two states, so we now use "publicity" 
+    True/False value that indicates whether or not an image is open to everyone.
+    PS: Its no longer being used (as at 12/10/23). We want more than two states, so we now use "publicity"
 
-    publicity: str 
+    publicity: str
     This value is used to determine whether or not an upload is OPEN_TO specific communities, CLOSED_TO, or wide open  to any communities check UserMediaConstants for all the available options
 
-    info: JSON 
+    info: JSON
     Json field that stores very important information about the attached media. Example: has_copyright_permission,copyright_att,guardian_info,size etc.
 
-    settings: JSON 
+    settings: JSON
     Just another field to store more information about the media (I dont think we use this...)
     """
 
@@ -2882,8 +2884,8 @@ class Menu(models.Model):
     is_custom = models.BooleanField(default=False, blank=True)
     footer_content = models.JSONField(blank=True, null=True)
     contact_info = models.JSONField(blank=True, null=True)
-    
-    
+
+
 
     def __str__(self):
         return self.name
@@ -3870,8 +3872,8 @@ class FeatureFlag(models.Model):
             for u in self.users.all()
         ]
         return res
-    
-    
+
+
     def is_enabled_for_community(self, community: Community):
         """
         Returns : True if the feature flag is enabled for the community
@@ -3994,7 +3996,7 @@ class Footage(models.Model):
 
 
 class CommunityNotificationSetting(models.Model):
-    
+
     COMMUNITY_NOTIFICATION_TYPES_CHOICES = [(item, item) for item in COMMUNITY_NOTIFICATION_TYPES]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -4009,7 +4011,7 @@ class CommunityNotificationSetting(models.Model):
 
     def __str__(self):
         return f"{self.community.name} - {self.notification_type}"
-    
+
     def info(self):
         return {"id": self.id, "is_active": self.is_active, "activate_on": str(self.activate_on) if self.activate_on else self.activate_on, "notification_type": self.notification_type,}
 
@@ -4022,6 +4024,39 @@ class CommunityNotificationSetting(models.Model):
         data["community"] = self.community.info()
         data["updated_by"] = self.updated_by.info() if self.updated_by else None
         return data
-    
+
     class Meta:
         indexes = [ models.Index(fields=["community", "notification_type"]),]
+
+# localisation
+
+class SupportedLanguage(BaseModel):
+    """
+    A class used to represent the languages supported by the platform
+
+    Attributes
+    ----------
+    name : str
+      name of the language.
+    code : str
+
+    """
+
+    code = models.CharField(max_length=LANG_CODE_STR_LEN, unique=True)
+    name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
+    is_rtl = models.BooleanField(default=False, blank=True) # not used now but maybe used in the future
+
+
+    def __str__(self):
+        return self.name
+
+
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
+
+    class Meta:
+        db_table = "supported_languages"
+        ordering = ("name",)
