@@ -5,6 +5,8 @@ import uuid
 
 from _main_.utils.base_model import CustomMeta
 from _main_.utils.policy.PolicyConstants import PolicyConstants
+from _main_.utils.base_model import BaseModel
+from _main_.utils.base_model import RootModel
 from apps__campaigns.helpers import get_user_accounts
 from database.utils.settings.model_constants.events import EventConstants
 from django.db import models
@@ -329,7 +331,7 @@ class Media(models.Model, metaclass=CustomMeta):
                 self.hash = hash
         super().save(*args, **kwargs)
 
-    def get_s3_key(self): 
+    def get_s3_key(self):
         return self.file.name
 
 
@@ -577,7 +579,7 @@ class Community(models.Model, metaclass=CustomMeta):
        res = model_to_dict(self, ["id", "name", "subdomain"])
        res["logo"] = get_json_if_not_none(self.logo)
        return res
-    
+
     def get_logo_link_from_menu(self):
         menu = Menu.objects.filter(community=self, is_published=True)
         if menu:
@@ -1226,29 +1228,29 @@ class PolicyAcceptanceRecords(models.Model, metaclass=CustomMeta):
 
 class UserMediaUpload(models.Model, metaclass=CustomMeta):
     """A class that creates a relationship between a user(all user kinds) on the platform and media they have uploaded
-    
+
     Attributes
     ----------
     user : UserProfile
-    A user profile object of the currently signed in user who uploaded the media 
+    A user profile object of the currently signed in user who uploaded the media
 
-    communities: Community 
-    All communities that have access to the attached media object 
+    communities: Community
+    All communities that have access to the attached media object
 
-    media : Media 
+    media : Media
     A reference to the actual media object
 
     is_universal: bool
-    True/False value that indicates whether or not an image is open to everyone. 
-    PS: Its no longer being used (as at 12/10/23). We want more than two states, so we now use "publicity" 
+    True/False value that indicates whether or not an image is open to everyone.
+    PS: Its no longer being used (as at 12/10/23). We want more than two states, so we now use "publicity"
 
-    publicity: str 
+    publicity: str
     This value is used to determine whether or not an upload is OPEN_TO specific communities, CLOSED_TO, or wide open  to any communities check UserMediaConstants for all the available options
 
-    info: JSON 
+    info: JSON
     Json field that stores very important information about the attached media. Example: has_copyright_permission,copyright_att,guardian_info,size etc.
 
-    settings: JSON 
+    settings: JSON
     Just another field to store more information about the media (I dont think we use this...)
     """
 
@@ -2934,8 +2936,8 @@ class Menu(models.Model, metaclass=CustomMeta):
     is_custom = models.BooleanField(default=False, blank=True)
     footer_content = models.JSONField(blank=True, null=True)
     contact_info = models.JSONField(blank=True, null=True)
-    
-    
+
+
 
     def __str__(self):
         return self.name
@@ -3902,7 +3904,7 @@ class FeatureFlag(models.Model, metaclass=CustomMeta):
 
     def __str__(self):
         return f"{self.name}"
-    
+
     def info(self):
         return {"id": self.id, "name": self.name, "key": self.key,}
 
@@ -3936,8 +3938,8 @@ class FeatureFlag(models.Model, metaclass=CustomMeta):
             for u in self.users.all()
         ]
         return res
-    
-    
+
+
     def is_enabled_for_community(self, community: Community):
         """
         Returns : True if the feature flag is enabled for the community
@@ -3962,16 +3964,16 @@ class FeatureFlag(models.Model, metaclass=CustomMeta):
           """
         if not communities_in:
             communities_in = Community.objects.filter(is_deleted=False)
-        
+
         community_ids = self.communities.values_list('id', flat=True)
-        
+
         if self.audience == "EVERYONE":
             return communities_in
         elif self.audience == "SPECIFIC":
             return communities_in.filter(id__in=community_ids)
         elif self.audience == "ALL_EXCEPT":
             return communities_in.exclude(id__in=community_ids)
-        
+
         return []
 
     def enabled_users(self, users_in: QuerySet):
@@ -4063,6 +4065,7 @@ class Footage(models.Model, metaclass=CustomMeta):
 
 class CommunityNotificationSetting(models.Model, metaclass=CustomMeta):
     
+
     COMMUNITY_NOTIFICATION_TYPES_CHOICES = [(item, item) for item in COMMUNITY_NOTIFICATION_TYPES]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -4077,7 +4080,7 @@ class CommunityNotificationSetting(models.Model, metaclass=CustomMeta):
 
     def __str__(self):
         return f"{self.community.name} - {self.notification_type}"
-    
+
     def info(self):
         return {"id": self.id, "is_active": self.is_active, "activate_on": str(self.activate_on) if self.activate_on else self.activate_on, "notification_type": self.notification_type,}
 
@@ -4090,7 +4093,174 @@ class CommunityNotificationSetting(models.Model, metaclass=CustomMeta):
         data["community"] = self.community.info()
         data["updated_by"] = self.updated_by.info() if self.updated_by else None
         return data
-    
+
     class Meta:
         indexes = [ models.Index(fields=["community", "notification_type"]),]
         fields_to_translate = ["notification_type"]
+
+
+# localisation
+
+class SupportedLanguage(BaseModel):
+    """
+    A class used to represent the languages supported by the platform
+
+    Attributes
+    ----------
+    name : str
+      name of the language.
+    code : str
+
+    """
+
+    code = models.CharField(max_length=LANG_CODE_STR_LEN, unique=True)
+    name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
+    is_rtl = models.BooleanField(default=False, blank=True) # not used now but maybe used in the future
+
+
+    def __str__(self):
+        return self.name
+
+
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
+
+    class Meta:
+        db_table = "supported_languages"
+        ordering = ("name",)
+
+class CommunitySupportedLanguage(BaseModel):
+    """
+    A class used to represent the languages supported by the platform
+
+    Attributes
+    ----------
+    community : int Foreign key to the community
+    language : int Foreign key to the supported language
+    """
+
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
+    language = models.ForeignKey(SupportedLanguage, on_delete=models.CASCADE, db_index=True)
+
+    def __str__(self):
+        return f"{self.community.name} - {self.language.name}"
+
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
+
+    class Meta:
+        db_table = "community_supported_languages"
+        unique_together = ["community", "language"]
+        ordering = ("community", "language")
+
+class TextHash(RootModel):
+    """
+    A class used to represent the text hash table
+
+    Attributes
+    ----------
+    hash	: str
+    text	: str
+    """
+
+    hash = models.CharField(primary_key=True, max_length=SHORT_STR_LEN, unique=True)
+    text = models.TextField(max_length=LONG_STR_LEN)
+
+    def __str__(self):
+        return self.hash
+
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
+
+    class Meta:
+        db_table = "text_hashes"
+
+class TranslationsCache(BaseModel):
+    """
+    A class used to represent the translations cache table
+
+    Attributes
+    ----------
+    hash	: str
+    source_language_code  : str
+    target_language_code  : str
+    translated_text	: str
+    last_translated	: DateTime
+    """
+
+    hash = models.ForeignKey(TextHash, on_delete=models.CASCADE, db_index=True)
+    source_language_code = models.CharField(max_length=LANG_CODE_STR_LEN)
+    target_language_code = models.CharField(max_length=LANG_CODE_STR_LEN)
+    translated_text = models.TextField(max_length=LONG_STR_LEN)
+    last_translated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.hash
+
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
+
+    class Meta:
+        db_table = "translations_cache"
+
+class ManualCommunityTranslation(TranslationsCache):
+    """
+    A class used to represent the manual translations done by the community
+
+    Attributes
+    ----------
+    community : int
+    """
+
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
+
+    def __str__(self):
+        return self.hash
+
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
+
+    class Meta:
+        db_table = "manual_community_translations"
+
+class StaticSiteText(BaseModel):
+    """
+    A class used to represent the static site text table
+
+    Attributes
+    ----------
+    text : str This is the text that will be displayed on the front-end site
+    key : str This is the key that will be used to look up the text
+    site : str This is the site that the text is meant for
+    """
+
+    text = models.TextField(max_length=LONG_STR_LEN)
+    key = models.CharField(max_length=SHORT_STR_LEN, unique=True)
+    site = models.CharField(max_length=SHORT_STR_LEN, default="")
+
+    def __str__(self):
+        return self.key
+
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
+
+    class Meta:
+        db_table = "static_site_texts"
