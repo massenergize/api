@@ -9,9 +9,8 @@ from api.services.utils import send_slack_message
 from task_queue.helpers import is_time_to_run
 from .jobs import FUNCTIONS
 from .models import Task
+from _main_.utils.massenergize_logger import logger
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 FAILED = "FAILED"
 SUCCEEDED = "SUCCEEDED"

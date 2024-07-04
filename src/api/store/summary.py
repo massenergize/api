@@ -19,7 +19,7 @@ from _main_.utils.massenergize_errors import (
     CustomMassenergizeError,
 )
 from _main_.utils.context import Context
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import logger
 from typing import Tuple
 from django.db.models import Q
 import pytz
@@ -322,7 +322,7 @@ class SummaryStore:
             ]
             return summary, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            logger.error(message=str(e), exception=e)
             return {}, CustomMassenergizeError(e)
 
     def summary_for_super_admin(self, context: Context):
@@ -346,5 +346,5 @@ class SummaryStore:
             return summary, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            logger.error(message=str(e), exception=e)
             return None, CustomMassenergizeError(e)

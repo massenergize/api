@@ -1,6 +1,6 @@
 from _main_.utils.massenergize_errors import CustomMassenergizeError
 from _main_.utils.common import parse_bool, parse_date, parse_list, parse_int, parse_string, parse_location, is_value, parse_str_list, parse_dict
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import logger
 
 
 class Validator:
@@ -119,5 +119,5 @@ class Validator:
       self.fields = {}
       self.rename_fields = set()
 
-      capture_message(str(e), level="error")
+      logger.error(message=str(e), exception=e)
       return None, CustomMassenergizeError(e)

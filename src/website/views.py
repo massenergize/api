@@ -1,3 +1,4 @@
+from http.client import BAD_REQUEST
 import os
 from uuid import UUID
 import html2text, traceback
@@ -6,7 +7,7 @@ from _main_.utils.common import serialize_all
 from _main_.utils.massenergize_response import MassenergizeResponse
 from django.http import Http404, JsonResponse
 from _main_.settings import IS_PROD, IS_CANARY, RUN_SERVER_LOCALLY, EnvConfig
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import logger
 from api.decorators import x_frame_options_exempt
 from api.handlers.misc import MiscellaneousHandler
 from api.store.misc import MiscellaneousStore
@@ -30,11 +31,8 @@ from apps__campaigns.models import Campaign, CampaignTechnology
 from django.db.models import Q
 from django.template.loader import render_to_string
 from _main_.utils.metrics import timed
-
 import zipcodes
-
-import logging
-logger = logging.getLogger(EnvConfig.get_logger_identifier())
+from _main_.utils.massenergize_logger import logger
 
 extract_text_from_html = html2text.HTML2Text()
 extract_text_from_html.ignore_links = True
@@ -959,23 +957,51 @@ def generate_sitemap_main(request):
 
 
 def handler400(request, exception):
-    logger.error(exception, exc_info=1)
+    logger.error(
+        exception=exception,
+        args={
+            'error_status_code': 400,
+            'error_type': "bad_request",
+            'request_path': request.path
+        }
+    )
     return MassenergizeResponse(error="bad_request")
 
 
 def handler403(request, exception):
-    logger.error(exception, exc_info=1)
+    logger.error(
+        exception=exception,
+        extra={
+            'error_status_code': 403,
+            'error_type': "permission_denied",
+            'request_path': request.path
+        }
+    )
     return MassenergizeResponse(error="permission_denied")
 
 
 def handler404(request, exception):
-    logger.error(f"resource_not_found: path={request.path}")
+    logger.error(
+        exception=exception,
+        extra={
+            'error_status_code': 404,
+            'error_type': "resource_not_found",
+            'request_path': request.path
+        }
+    )
+
     if request.path.startswith("/v2"):
-        return MassenergizeResponse(error="method_deprecated")
+        return MassenergizeResponse(error="resource_not_found")
     return MassenergizeResponse(error="resource_not_found")
 
 
 def handler500(request):
-    logger.error("ServerError", exc_info=1)
-    capture_message(str(traceback.print_exc()))
+    logger.error(
+        message=f"server_error",
+        extra={
+            'error_status_code': 500,
+            'error_type': "server_error",
+            'request_path': request.path
+        }
+    )
     return MassenergizeResponse(error="server_error")

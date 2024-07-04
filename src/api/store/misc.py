@@ -1,6 +1,6 @@
 from typing import Tuple
 
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import logger
 
 from _main_.utils.context import Context
 from _main_.utils.footage.spy import Spy
@@ -61,7 +61,7 @@ class MiscellaneousStore:
             main_menu = Menu.objects.all()
             return main_menu, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            logger.error(message=str(e), exception=e)
             return None, CustomMassenergizeError(e)
 
     def actions_report(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
@@ -123,7 +123,7 @@ class MiscellaneousStore:
 
             return {"teams_member_backfill": "done"}, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            logger.error(message=str(e), exception=e)
             return None, CustomMassenergizeError(e)
 
     def backfill_community_members(
@@ -162,7 +162,7 @@ class MiscellaneousStore:
 
             return {"name": "community_member_backfill", "status": "done"}, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            logger.error(message=str(e), exception=e)
             return None, CustomMassenergizeError(e)
 
     def backfill_graph_default_data(self, context: Context, args):
@@ -206,7 +206,7 @@ class MiscellaneousStore:
             return {"graph_default_data": "done"}, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            logger.error(message=str(e), exception=e)
             return None, CustomMassenergizeError(e)
 
     def backfill_real_estate_units(self, context: Context, args):
@@ -373,7 +373,7 @@ class MiscellaneousStore:
             return {"backfill_real_estate_units": "done"}, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            logger.error(message=str(e), exception=e)
             return None, CustomMassenergizeError(e)
 
     def create_carbon_equivalency(self, args):
@@ -382,7 +382,7 @@ class MiscellaneousStore:
             return new_carbon_equivalency, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            logger.error(message=str(e), exception=e)
             return None, CustomMassenergizeError(e)
 
     def update_carbon_equivalency(self, args):
@@ -400,7 +400,7 @@ class MiscellaneousStore:
             return carbon_equivalency, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            logger.error(message=str(e), exception=e)
             return None, CustomMassenergizeError(e)
 
     def get_carbon_equivalencies(self, args):

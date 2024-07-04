@@ -1,13 +1,8 @@
 import time
 import boto3
-import logging
+from _main_.utils.massenergize_logger import logger
 from django.utils.deprecation import MiddlewareMixin
-from botocore.exceptions import NoCredentialsError, ClientError
-from _main_.settings import EnvConfig
-
-
 from _main_.utils.utils import run_in_background
-logger = logging.getLogger(EnvConfig.get_logger_identifier())
 
 class MetricsMiddleware(MiddlewareMixin):
     def __init__(self, get_response=None):
@@ -26,5 +21,9 @@ class MetricsMiddleware(MiddlewareMixin):
         if not hasattr(request, 'start_time'):
             return
         latency = (time.time() - request.start_time) * 1000 # convert to milliseconds
-        logger.info(f"Path: {request.path} Latency(ms): {latency}")
+        
+        logger.info(
+            f"Path: {request.path} Latency(ms): {latency}", 
+            extra={"path": request.path, "latency": latency}
+        )
 

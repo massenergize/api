@@ -665,7 +665,7 @@ class Community(models.Model):
         if impact_page_settings:
             display_prefs = impact_page_settings.more_info or {}
         else:
-            # capture_message("Impact Page Settings not found", level="error")
+            # logger.error("Impact Page Settings not found", level="error")
             display_prefs = {}  # not usual - show nothing
 
         value = 0

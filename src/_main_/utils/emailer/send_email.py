@@ -3,7 +3,7 @@ from django.core.mail import send_mail, EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 import requests
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import logger
 import pystmark
 
 from _main_.settings import IS_CANARY, POSTMARK_ACCOUNT_TOKEN, POSTMARK_EMAIL_SERVER_TOKEN, POSTMARK_DOWNLOAD_SERVER_TOKEN, IS_PROD
@@ -34,7 +34,7 @@ def send_massenergize_email(subject, msg, to, sender=None):
 
   if not response.ok:
     #if IS_PROD:
-    #  capture_message(f"Error Occurred in Sending Email to {to}", level="error")
+    #  logger.error(f"Error Occurred in Sending Email to {to}", level="error")
     return False
   return True
 
@@ -56,7 +56,7 @@ def send_massenergize_email_with_attachments(temp, t_model, to, file, file_name,
   if not response.ok:
     logging.error("EMAILING_ERROR: "+str(response.json()))
     #if IS_PROD:
-    #  capture_message(f"Error Occurred in Sending Email to {to}", level="error")
+    #  logger.error(f"Error Occurred in Sending Email to {to}", level="error")
     return False
   return True
   
@@ -81,7 +81,7 @@ def send_massenergize_rich_email(subject, to, massenergize_email_type, content_v
 
   if not response.ok:
     #if IS_PROD:
-    #  capture_message(f"Error Occurred in Sending Email to {to}", level="error")
+    #  logger.error(f"Error Occurred in Sending Email to {to}", level="error")
     return False
   return True
 
@@ -99,7 +99,7 @@ def send_massenergize_mass_email(subject, msg, recipient_emails):
 
   if not response.ok:
     #if IS_PROD:
-    #  capture_message("Error occurred in sending some emails", level="error")
+    #  logger.error("Error occurred in sending some emails", level="error")
     return False
 
   return True
