@@ -2,6 +2,8 @@ import datetime
 from datetime import timezone, timedelta
 import json
 import uuid
+
+from _main_.utils.base_model import CustomMeta
 from _main_.utils.policy.PolicyConstants import PolicyConstants
 from apps__campaigns.helpers import get_user_accounts
 from database.utils.settings.model_constants.events import EventConstants
@@ -103,7 +105,7 @@ def fetch_few_visits(user):
 
 
 # -------------------------------------------------------------------------
-class Location(models.Model):
+class Location(models.Model, metaclass=CustomMeta):
     """
     A class used to represent a geographical region.  It could be a complete and
     proper address or just a city name, zipcode, county etc
@@ -170,7 +172,7 @@ class Location(models.Model):
         fields_to_translate = []
 
 
-class TagCollection(models.Model):
+class TagCollection(models.Model, metaclass=CustomMeta):
     """
     A class used to represent a collection of Tags.
 
@@ -205,7 +207,7 @@ class TagCollection(models.Model):
         fields_to_translate = ["name"]
 
 
-class Tag(models.Model):
+class Tag(models.Model, metaclass=CustomMeta):
     """
     A class used to represent an Tag.  It is essentially a string that can be
     used to describe or group items, actions, etc
@@ -253,7 +255,7 @@ class Tag(models.Model):
         fields_to_translate = ["name"]
 
 
-class Media(models.Model):
+class Media(models.Model, metaclass=CustomMeta):
     """
     A class used to represent any Media that is uploaded to this website
 
@@ -338,7 +340,7 @@ class Media(models.Model):
         fields_to_translate = []
 
 
-class Policy(models.Model):
+class Policy(models.Model, metaclass=CustomMeta):
     """
      A class used to represent a Legal Policy.  For instance the
      Terms and Agreement Statement that users have to agree to during sign up.
@@ -391,7 +393,7 @@ class Policy(models.Model):
         fields_to_translate = ["name", "description"]
 
 
-class Goal(models.Model):
+class Goal(models.Model, metaclass=CustomMeta):
     """
     A class used to represent a Goal
 
@@ -465,7 +467,7 @@ class Goal(models.Model):
         fields_to_translate = ["name", "description"]
 
 
-class Community(models.Model):
+class Community(models.Model, metaclass=CustomMeta):
     """
     A class used to represent a Community on this platform.
 
@@ -770,7 +772,7 @@ class Community(models.Model):
         fields_to_translate = ["name", "about_community", "geography_type"]
 
 
-class CommunitySnapshot(models.Model):
+class CommunitySnapshot(models.Model, metaclass=CustomMeta):
     id = models.AutoField(primary_key=True)
     community = models.ForeignKey(
         Community, null=True, on_delete=models.SET_NULL, blank=True
@@ -828,7 +830,7 @@ class CommunitySnapshot(models.Model):
         fields_to_translate = []
 
 
-class RealEstateUnit(models.Model):
+class RealEstateUnit(models.Model, metaclass=CustomMeta):
     """
     A class used to represent a Real Estate Unit.
 
@@ -884,7 +886,7 @@ class RealEstateUnit(models.Model):
         fields_to_translate = []
 
 
-class Role(models.Model):
+class Role(models.Model, metaclass=CustomMeta):
     """
     A class used to represent  Role for users on the MassEnergize Platform
 
@@ -918,7 +920,7 @@ class Role(models.Model):
         fields_to_translate = ["name", "description"]
 
 
-class UserProfile(models.Model):
+class UserProfile(models.Model, metaclass=CustomMeta):
     """
     A class used to represent a MassEnergize User
 
@@ -1172,7 +1174,7 @@ class UserProfile(models.Model):
         fields_to_translate = []
 
 
-class PolicyAcceptanceRecords(models.Model):
+class PolicyAcceptanceRecords(models.Model, metaclass=CustomMeta):
     """
      This model represents the user's acceptance of policies. It has the following fields:
     "user": a foreign key to the UserProfile model, which is set to null when the UserProfile is deleted.
@@ -1222,7 +1224,7 @@ class PolicyAcceptanceRecords(models.Model):
         fields_to_translate = []
 
 
-class UserMediaUpload(models.Model):
+class UserMediaUpload(models.Model, metaclass=CustomMeta):
     """A class that creates a relationship between a user(all user kinds) on the platform and media they have uploaded
     
     Attributes
@@ -1303,7 +1305,7 @@ class UserMediaUpload(models.Model):
         fields_to_translate = []
 
 
-class DeviceProfile(models.Model):
+class DeviceProfile(models.Model, metaclass=CustomMeta):
     """
     A class used to represent a MassEnergize User's Device
 
@@ -1412,7 +1414,7 @@ class DeviceProfile(models.Model):
         fields_to_translate = []
 
 
-class CommunityMember(models.Model):
+class CommunityMember(models.Model, metaclass=CustomMeta):
     id = models.AutoField(primary_key=True)
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
@@ -1440,7 +1442,7 @@ class CommunityMember(models.Model):
         fields_to_translate = []
 
 
-class Subdomain(models.Model):
+class Subdomain(models.Model, metaclass=CustomMeta):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
     community = models.ForeignKey(
@@ -1469,7 +1471,7 @@ class Subdomain(models.Model):
         fields_to_translate = []
 
 
-class CustomCommunityWebsiteDomain(models.Model):
+class CustomCommunityWebsiteDomain(models.Model, metaclass=CustomMeta):
     id = models.AutoField(primary_key=True)
     website = models.URLField(max_length=SHORT_STR_LEN, unique=True)
     community = models.ForeignKey(
@@ -1497,7 +1499,7 @@ class CustomCommunityWebsiteDomain(models.Model):
         fields_to_translate = []
 
 
-class Team(models.Model):
+class Team(models.Model, metaclass=CustomMeta):
     """
     A class used to represent a Team in a community
 
@@ -1624,7 +1626,7 @@ class Team(models.Model):
         fields_to_translate = ["name", "tagline", "description"]
 
 
-class TeamMember(models.Model):
+class TeamMember(models.Model, metaclass=CustomMeta):
     id = models.AutoField(primary_key=True)
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
@@ -1651,7 +1653,7 @@ class TeamMember(models.Model):
         fields_to_translate = []
 
 
-class Service(models.Model):
+class Service(models.Model, metaclass=CustomMeta):
     """
     A class used to represent a Service provided by a Vendor
 
@@ -1702,7 +1704,7 @@ class Service(models.Model):
         fields_to_translate = ["description", "name"]
 
 
-class ActionProperty(models.Model):
+class ActionProperty(models.Model, metaclass=CustomMeta):
     """
     A class used to represent an Action property.
 
@@ -1734,7 +1736,7 @@ class ActionProperty(models.Model):
         fields_to_translate = ["name", "short_description"]
 
 
-class CarbonEquivalency(models.Model):
+class CarbonEquivalency(models.Model, metaclass=CustomMeta):
     """
     Represents an carbon equivalency that can make
     carbon impact more comprehensible to users.
@@ -1782,7 +1784,7 @@ class CarbonEquivalency(models.Model):
         fields_to_translate = ["name", "explanation"]
 
 
-class Vendor(models.Model):
+class Vendor(models.Model, metaclass=CustomMeta):
     """
     A class used to represent a Vendor/Contractor that provides a service
     associated with any of the actions.
@@ -1941,7 +1943,7 @@ class Vendor(models.Model):
         fields_to_translate = ["description", "name", "service_area"]
 
 
-class Action(models.Model):
+class Action(models.Model, metaclass=CustomMeta):
     """
     A class used to represent an Action that can be taken by a user on this
     website.
@@ -2094,7 +2096,7 @@ class Action(models.Model):
         fields_to_translate = ["title", "about", "steps_to_take", "deep_dive", "featured_summary"]
 
 
-class Event(models.Model):
+class Event(models.Model, metaclass=CustomMeta):
     """
     A class used to represent an Event.
 
@@ -2248,7 +2250,7 @@ class Event(models.Model):
         fields_to_translate = ["name", "description", "featured_summary", "rsvp_message", "external_link_type", "event_type"]
 
 
-class EventNudgeSetting(models.Model):
+class EventNudgeSetting(models.Model, metaclass=CustomMeta):
     """
     A class used to represent the settings for nudges for an event.
     Communities: the list of communities this setting apply to for the event
@@ -2296,7 +2298,7 @@ class EventNudgeSetting(models.Model):
 
 # leaner class that stores information about events that have already passed
 # in the future, can use this class to revive events that may have been archived
-class PastEvent(models.Model):
+class PastEvent(models.Model, metaclass=CustomMeta):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=SHORT_STR_LEN)
     description = models.TextField(max_length=LONG_STR_LEN)
@@ -2307,7 +2309,7 @@ class PastEvent(models.Model):
         fields_to_translate = []
 
 
-class RecurringEventException(models.Model):
+class RecurringEventException(models.Model, metaclass=CustomMeta):
     """
     A class used to represent a RESCHEDULING of a recurring event.
 
@@ -2352,7 +2354,7 @@ class RecurringEventException(models.Model):
         fields_to_translate = []
 
 
-class EventAttendee(models.Model):
+class EventAttendee(models.Model, metaclass=CustomMeta):
     """
     A class used to represent events and attendees
 
@@ -2394,7 +2396,7 @@ class EventAttendee(models.Model):
         fields_to_translate = []
 
 
-class Permission(models.Model):
+class Permission(models.Model, metaclass=CustomMeta):
     """
      A class used to represent Permission(s) that are required by users to perform
      any tasks on this platform.
@@ -2431,7 +2433,7 @@ class Permission(models.Model):
         fields_to_translate = ["description", "name"]
 
 
-class UserPermissions(models.Model):
+class UserPermissions(models.Model, metaclass=CustomMeta):
     """
     A class used to represent Users and what they can do.
 
@@ -2464,10 +2466,10 @@ class UserPermissions(models.Model):
     class Meta:
         ordering = ("who",)
         db_table = "user_permissions"
-        translate = []
+        fields_to_translate = []
 
 
-class Testimonial(models.Model):
+class Testimonial(models.Model, metaclass=CustomMeta):
     """
      A class used to represent a Testimonial shared by a user.
 
@@ -2555,7 +2557,7 @@ class Testimonial(models.Model):
         fields_to_translate = ["title", "body"]
 
 
-class UserActionRel(models.Model):
+class UserActionRel(models.Model, metaclass=CustomMeta):
     """
      A class used to represent a user and his/her relationship with an action.
      Whether they marked an action as todo, done, etc
@@ -2628,7 +2630,7 @@ class UserActionRel(models.Model):
         fields_to_translate = []
 
 
-class CommunityAdminGroup(models.Model):
+class CommunityAdminGroup(models.Model, metaclass=CustomMeta):
     """
     This represents a binding of a group of users and a community for which they
     are admin for.
@@ -2667,7 +2669,7 @@ class CommunityAdminGroup(models.Model):
         fields_to_translate = ["description", "name"]
 
 
-class UserGroup(models.Model):
+class UserGroup(models.Model, metaclass=CustomMeta):
     """
     This represents a binding of a group of users and a community
     and the permissions they have.
@@ -2709,7 +2711,7 @@ class UserGroup(models.Model):
         fields_to_translate = ["description", "name"]
 
 
-class Data(models.Model):
+class Data(models.Model, metaclass=CustomMeta):
     """Instances of data points
 
     Attributes
@@ -2759,7 +2761,7 @@ class Data(models.Model):
         fields_to_translate = ["name"]
 
 
-class Graph(models.Model):
+class Graph(models.Model, metaclass=CustomMeta):
     """Instances keep track of a statistic from the admin
 
     Attributes
@@ -2801,7 +2803,7 @@ class Graph(models.Model):
         fields_to_translate = ["title"]
 
 
-class Button(models.Model):
+class Button(models.Model, metaclass=CustomMeta):
     """Buttons on the pages"""
 
     text = models.CharField(max_length=SHORT_STR_LEN, blank=True)
@@ -2826,7 +2828,7 @@ class Button(models.Model):
         fields_to_translate = ["text"]
 
 
-class SliderImage(models.Model):
+class SliderImage(models.Model, metaclass=CustomMeta):
     """Model the represents the database for Images that will be
     inserted into slide shows
 
@@ -2868,7 +2870,7 @@ class SliderImage(models.Model):
         fields_to_translate = ["title", "subtitle"]
 
 
-class Slider(models.Model):
+class Slider(models.Model, metaclass=CustomMeta):
     """
     Model that represents a model for a slider/carousel on the website
 
@@ -2912,7 +2914,7 @@ class Slider(models.Model):
         fields_to_translate = ["name", "description"]
 
 
-class Menu(models.Model):
+class Menu(models.Model, metaclass=CustomMeta):
     """Represents items on the menu/navigation bar (top-most bar on the webpage)
     Attributes
     ----------
@@ -2951,7 +2953,7 @@ class Menu(models.Model):
         fields_to_translate = ["name"]
 
 
-class Card(models.Model):
+class Card(models.Model, metaclass=CustomMeta):
     """Buttons on the pages"""
 
     title = models.CharField(max_length=SHORT_STR_LEN, blank=True)
@@ -2981,7 +2983,7 @@ class Card(models.Model):
         ordering = ("title",)
 
 
-class PageSection(models.Model):
+class PageSection(models.Model, metaclass=CustomMeta):
     """
      A class used to represent a PageSection
      #TODO: what about page sections like a gallery, slideshow, etc?
@@ -3024,7 +3026,7 @@ class PageSection(models.Model):
         return res
 
 
-class Page(models.Model):
+class Page(models.Model, metaclass=CustomMeta):
     """
      A class used to represent a Page on a community portal
      eg. The home page, about-us page, etc
@@ -3070,7 +3072,7 @@ class Page(models.Model):
         unique_together = [["name", "community"]]
 
 
-class BillingStatement(models.Model):
+class BillingStatement(models.Model, metaclass=CustomMeta):
     """
      A class used to represent a Billing Statement
 
@@ -3121,7 +3123,7 @@ class BillingStatement(models.Model):
         db_table = "billing_statements"
 
 
-class Subscriber(models.Model):
+class Subscriber(models.Model, metaclass=CustomMeta):
     """
      A class used to represent a subscriber / someone who wants to join the
      massenergize mailist
@@ -3158,7 +3160,7 @@ class Subscriber(models.Model):
         unique_together = [["email", "community"]]
 
 
-class EmailCategory(models.Model):
+class EmailCategory(models.Model, metaclass=CustomMeta):
     """
     A class tha represents an email preference that a user or subscriber can
     subscribe to.
@@ -3197,7 +3199,7 @@ class EmailCategory(models.Model):
         verbose_name_plural = "Email Categories"
 
 
-class SubscriberEmailPreference(models.Model):
+class SubscriberEmailPreference(models.Model, metaclass=CustomMeta):
     """
     Represents the email preferences of each subscriber.
     For a subscriber might want marketing emails but not promotion emails etc
@@ -3232,7 +3234,7 @@ class SubscriberEmailPreference(models.Model):
         db_table = "subscriber_email_preferences"
 
 
-class PageSettings(models.Model):
+class PageSettings(models.Model, metaclass=CustomMeta):
     """
     Represents the basic page settings.  This is a base class, which contains common attributes to most page settings.
 
@@ -3283,7 +3285,7 @@ class PageSettings(models.Model):
         abstract = True
 
 
-class ImageSequence(models.Model):
+class ImageSequence(models.Model, metaclass=CustomMeta):
     """
     A class used to record the arrangement of images, wherever there is a need.
     """
@@ -3295,7 +3297,7 @@ class ImageSequence(models.Model):
         return self.name or super().__str__()
 
 
-class HomePageSettings(models.Model):
+class HomePageSettings(models.Model, metaclass=CustomMeta):
     """
     Represents the community's Home page settings.
 
@@ -3409,7 +3411,7 @@ class HomePageSettings(models.Model):
         fields_to_translate = ["title", "sub_title", "description", "featured_stats_description", "featured_events_description", "featured_stats_subtitle", "featured_events_subtitle"]
 
 
-class ActionsPageSettings(models.Model):
+class ActionsPageSettings(models.Model, metaclass=CustomMeta):
     """
     Represents the community's Actions page settings.
 
@@ -3450,7 +3452,7 @@ class ActionsPageSettings(models.Model):
         fields_to_translate = ["title", "sub_title", "description"]
 
 
-class ContactUsPageSettings(models.Model):
+class ContactUsPageSettings(models.Model, metaclass=CustomMeta):
     """
     Represents the community's ContactUs page settings.
 
@@ -3491,7 +3493,7 @@ class ContactUsPageSettings(models.Model):
         fields_to_translate = ["title", "sub_title", "description"]
 
 
-class DonatePageSettings(models.Model):
+class DonatePageSettings(models.Model, metaclass=CustomMeta):
     """
     Represents the communities Donate page settings.
 
@@ -3536,7 +3538,7 @@ class DonatePageSettings(models.Model):
         fields_to_translate = ["title", "sub_title", "description"]
 
 
-class AboutUsPageSettings(models.Model):
+class AboutUsPageSettings(models.Model, metaclass=CustomMeta):
     """
     Represents the community's AboutUs page settings.
 
@@ -3579,7 +3581,7 @@ class AboutUsPageSettings(models.Model):
         fields_to_translate = ["title", "sub_title", "description"]
 
 
-class ImpactPageSettings(models.Model):
+class ImpactPageSettings(models.Model, metaclass=CustomMeta):
     """
     Represents the community's Impact page settings.
 
@@ -3728,7 +3730,7 @@ class SigninPageSettings(PageSettings):
         fields_to_translate = ["title", "sub_title", "description"]
 
 
-class Message(models.Model):
+class Message(models.Model, metaclass=CustomMeta):
     """
     A class used to represent a Message sent on the MassEnergize Platform
 
@@ -3792,7 +3794,7 @@ class Message(models.Model):
         fields_to_translate = ["title", "body"]
 
 
-class ActivityLog(models.Model):
+class ActivityLog(models.Model, metaclass=CustomMeta):
     """
     A class used to represent  Activity Log on the MassEnergize Platform
 
@@ -3828,7 +3830,7 @@ class ActivityLog(models.Model):
         db_table = "activity_logs"
 
 
-class Deployment(models.Model):
+class Deployment(models.Model, metaclass=CustomMeta):
     """
     A class used to represent  Activity Log on the MassEnergize Platform
 
@@ -3858,7 +3860,7 @@ class Deployment(models.Model):
         ordering = ("-version",)
 
 
-class FeatureFlag(models.Model):
+class FeatureFlag(models.Model, metaclass=CustomMeta):
     """
     A class used to represent Feature flags to turn on for
     communities and users
@@ -3984,10 +3986,10 @@ class FeatureFlag(models.Model):
     class Meta:
         db_table = "feature_flags"
         ordering = ("-name",)
-        fields = ["name", "scope", "audience", "user_audience", "notes"]
+        fields_to_translate = ["name", "scope", "audience", "user_audience", "notes"]
 
 
-class Footage(models.Model):
+class Footage(models.Model, metaclass=CustomMeta):
     """
     A class that is used to represent a record of an activity that a user has performed on any of of the ME platforms
 
@@ -4056,10 +4058,10 @@ class Footage(models.Model):
     class Meta:
         db_table = "footages"
         ordering = ("-id",)
-        fields = ["activity_type", "notes"]
+        fields_to_translate = ["activity_type", "notes"]
 
 
-class CommunityNotificationSetting(models.Model):
+class CommunityNotificationSetting(models.Model, metaclass=CustomMeta):
     
     COMMUNITY_NOTIFICATION_TYPES_CHOICES = [(item, item) for item in COMMUNITY_NOTIFICATION_TYPES]
 
@@ -4091,3 +4093,4 @@ class CommunityNotificationSetting(models.Model):
     
     class Meta:
         indexes = [ models.Index(fields=["community", "notification_type"]),]
+        fields_to_translate = ["notification_type"]
