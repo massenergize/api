@@ -39,22 +39,3 @@ class BaseModel(RootModel):
 
     class Meta:
         abstract = True
-
-
-class CustomMeta(models.base.ModelBase):
-    def __new__(cls, name, bases, attrs):
-        # Extract fields_to_translate from Meta and remove it
-        meta_attrs = attrs.get('Meta', None)
-        if hasattr(meta_attrs, 'fields_to_translate'):
-            translatable_fields = meta_attrs.fields_to_translate
-            delattr(meta_attrs, 'fields_to_translate')
-        else:
-            translatable_fields = []
-
-        # Create the new class without fields_to_translate in Meta
-        new_class = super().__new__(cls, name, bases, attrs)
-
-        # Inject fields_to_translate directly into the class
-        setattr(new_class, 'fields_to_translate', translatable_fields)
-
-        return new_class
