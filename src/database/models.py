@@ -4045,6 +4045,7 @@ class SupportedLanguage(BaseModel):
     code = models.CharField(max_length=LANG_CODE_STR_LEN, unique=True)
     name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
     is_rtl = models.BooleanField(default=False, blank=True) # not used now but maybe used in the future
+    is_disabled = models.BooleanField(default=False, blank=True)
 
 
     def __str__(self):
@@ -4098,6 +4099,7 @@ class TextHash(RootModel):
     text	: str
     """
 
+
     hash = models.CharField(primary_key=True, max_length=SHORT_STR_LEN, unique=True)
     text = models.TextField(max_length=LONG_STR_LEN)
 
@@ -4133,7 +4135,7 @@ class TranslationsCache(BaseModel):
     last_translated = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.hash
+        return f"{self.hash}: {self.translated_text}"
 
     def simple_json(self):
         return model_to_dict(self)
