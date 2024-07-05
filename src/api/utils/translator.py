@@ -15,7 +15,7 @@ class Translator:
   def __init__(self):
     pass
 
-  def translate (self, values, target_language, source_language='en'):
+  def translate (self, values: str or [str], target_language, source_language='en'):
     if PROVIDER == "google":
       return google_translate_client.translate(values, target_language=target_language, source_language=source_language)
     raise Exception("Invalid translation provider")
