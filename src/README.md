@@ -4,9 +4,9 @@ Welcome to the MassEnergize API! We're thrilled to have you here. Our mission is
 
 ### Technologies We Use 💻
 
-- **Language**: `Python`
-- **Framework**: `Django`
-- **Database**: `Postgres`
+- **Language**: `Python (v3.9)`
+- **Framework**: `Django (v4.2)`
+- **Database**: `Postgres (v15)`
 - **Auth**: `Firebase`
 - **Cloud Provider**: `AWS`
 - **File Storage**: `S3`
@@ -122,6 +122,29 @@ Two ways to run the API:
 
 ## Appendix
 
+### 0.0 Setting up environment specific to Windows
+
+For developers running Windows, the following additional steps are required to run a bash shell:
+
+1. From Microsoft Store, install the Terminal app and the Windows Subsystem for Linux (WSL).  This will allow you to run a Unix bash window rather than standard Windows command window.  In Terminal, you can create a bash window as a new tab.  
+
+In that window, the syntax for files and folders is different than for Windows.  For example to set the default to a folder which would be `C:\xxx\MassEnergize\api` you would use the command `cd /mnt/c/xxx/Massenergize/api`.
+
+2. Install Python 3.9 with the following commands:
+ ```sh
+ sudo apt update && sudo apt upgrade -y
+ sudo add apt-repository ppa:deadsnakes:ppa
+ sudo apt install python3.9
+ ```
+
+3. Install Miniconda (version of Anaconda):
+ ```sh
+ wget https://repo.anaconda.com/miniconda/Miniconda3-latest-linux-x86_64.sh
+ bash Miniconda3-latest-linux-x86_64.sh
+ echo 'export PATH="~/miniconda3/bin:$PATH' >> ~/.bashrc
+ source ~/.bashrc
+ ```
+
 ### 1.0 Setting up your host domains <a id="domain_hosts"></a>
 
 1. Open your terminal
@@ -181,7 +204,17 @@ Press `control(^) + x` to exit the file
 
 ### 1.1 Installing Postgres: <a id="setup_postgres"></a>
 
+#### for Mac/linux
+
 - Download the Postgres app from [here](https://postgresapp.com/downloads.html).
+
+#### for Windows
+- Install Postgresql with the following commands:
+
+  ```sh
+  sudo apt install postgresql
+  ```
+
 - Open the terminal and type `psql --version` to check if installation was successful
 - Install it and create a database:
 
