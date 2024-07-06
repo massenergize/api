@@ -1,10 +1,8 @@
-from datetime import datetime,timezone
-from turtle import update
 from _main_.utils.context import Context
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.utils import Console, run_in_background
 from api.store.utils import get_user_from_context
-from database.models import CommunityAdminGroup, Footage, UserProfile
+from database.models import Footage, UserProfile
 from django.db.models import Q
 
 LIMIT = 200
