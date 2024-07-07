@@ -342,3 +342,48 @@ def to_django_date(date):
         return None
     parsed_date = datetime.strptime(date, "%a %b %d %Y %H:%M:%S GMT%z")
     return parsed_date.date()
+
+
+def flatten_dict(d, parent_key='', sep='.'):
+    items = []
+    for k, v in d.items():
+        new_key = f"{parent_key}{sep}{k}" if parent_key else k
+        if isinstance(v, dict):
+            items.extend(flatten_dict(v, new_key, sep=sep).items())
+        elif k in {'text', 'title', 'description'}:
+            items.append((new_key, v))
+    return dict(items)
+
+
+def flatten_menu(menu_list, parent_key=''):
+    # Make sure that the input is a list or a dictionary
+    if not isinstance(menu_list, (list, dict)):
+        raise TypeError("`menu_list` should be a list or a dictionary.")
+    
+    def recurse(items, parent_key):
+        flat_dict = {}  # Create a local variable to store the result
+        for item in items:
+            item_key = f"{parent_key}.{item['id']}" if parent_key else item['id']
+            flat_dict[item_key] = item.get('name', '')
+            
+            if 'children' in item:
+                
+                flat_dict.update(recurse(item['children'], item_key))
+                
+            elif 'links' in item:
+                flat_dict.update(recurse(item['links'], item_key))
+                
+        return flat_dict
+    
+    flat_dict = {}
+    if isinstance(menu_list, list):
+        flat_dict.update(recurse(menu_list, parent_key))
+        
+    elif isinstance(menu_list, dict):
+        if 'links' in menu_list:
+            flat_dict.update(recurse(menu_list['links'], parent_key))
+            
+        if 'title' in menu_list:
+            flat_dict[f"{parent_key}.title"] = menu_list['title']
+    
+    return flat_dict
