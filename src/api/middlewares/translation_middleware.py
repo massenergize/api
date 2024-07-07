@@ -53,6 +53,9 @@ class TranslationMiddleware:
             response_to_dict = json.loads(original_content)
         
             language = request.POST.get('language', 'en')
+            
+            if language == 'en': #remove this when we start supporting data upload in other languages
+                return response
 
             translated_data = self.retrieve_translation_for_response_data(response_to_dict.get("data", {}), language)
             
