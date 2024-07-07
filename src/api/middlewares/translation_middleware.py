@@ -54,7 +54,7 @@ class TranslationMiddleware:
         
             language = request.POST.get('language', 'en')
 
-            translated_data = self.retrieve_translation_for_response_data(response_to_dict.get("data", {}), "pt")
+            translated_data = self.retrieve_translation_for_response_data(response_to_dict.get("data", {}), language)
             
             response_to_dict["data"] = translated_data
 
