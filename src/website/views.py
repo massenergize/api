@@ -4,6 +4,7 @@ from uuid import UUID
 import html2text, traceback
 from django.shortcuts import render, redirect
 from _main_.utils.common import serialize_all
+from _main_.utils.massenergize_errors import InvalidResourceError, ServerError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from django.http import Http404, JsonResponse
 from _main_.settings import IS_PROD, IS_CANARY, RUN_SERVER_LOCALLY, EnvConfig
@@ -958,50 +959,45 @@ def generate_sitemap_main(request):
 
 def handler400(request, exception):
     log.error(
-        exception=exception,
-        args={
-            'error_status_code': 400,
-            'error_type': "bad_request",
+        exception=str(exception),
+        extra={
+            'status_code': 400,
             'request_path': request.path
         }
     )
-    return MassenergizeResponse(error="bad_request")
+    return MassenergizeResponse(error=str(exception))
 
 
 def handler403(request, exception):
     log.error(
-        exception=exception,
+        exception=str(exception),
         extra={
-            'error_status_code': 403,
-            'error_type': "permission_denied",
+            'status_code': 403,
             'request_path': request.path
         }
     )
-    return MassenergizeResponse(error="permission_denied")
+    return MassenergizeResponse(error=str(exception.msg))
 
 
 def handler404(request, exception):
     log.error(
-        exception=exception,
+        exception=str(exception),
         extra={
-            'error_status_code': 404,
-            'error_type': "resource_not_found",
+            'status_code': InvalidResourceError().status_code,
             'request_path': request.path
         }
     )
 
-    if request.path.startswith("/v2"):
-        return MassenergizeResponse(error="resource_not_found")
-    return MassenergizeResponse(error="resource_not_found")
+    return MassenergizeResponse(error=str(exception))
 
 
 def handler500(request):
+    err = ServerError()
     log.error(
-        message=f"server_error",
+        message=err.msg,
         extra={
-            'error_status_code': 500,
-            'error_type': "server_error",
+            'status_code': err.status_code,
             'request_path': request.path
         }
     )
-    return MassenergizeResponse(error="server_error")
+    return MassenergizeResponse(error=err.msg)

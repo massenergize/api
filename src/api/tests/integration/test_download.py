@@ -94,21 +94,21 @@ class DownloadTestCase(TestCase):
     # first try for no user signed in
     signinAs(self.client, None)
     response = self.client.post('/api/downloads.users', urlencode({"team_id": self.TEAM1.id}), content_type="application/x-www-form-urlencoded")
-    self.assertEquals(type(response), MassenergizeResponse)
+    self.assertTrue(isinstance(response, MassenergizeResponse))
     response = response.toDict()
     self.assertFalse(response["success"])
 
     # next try for regular user signed in
     signinAs(self.client, self.USER)
     response = self.client.post('/api/downloads.users', urlencode({"team_id": self.TEAM1.id}), content_type="application/x-www-form-urlencoded")
-    self.assertEquals(type(response), MassenergizeResponse)
+    self.assertTrue(isinstance(response, MassenergizeResponse))
     response = response.toDict()
     self.assertFalse(response["success"])
 
     # next try for cadmin signed in
     signinAs(self.client, self.CADMIN)
     response = self.client.post('/api/downloads.users', urlencode({"team_id": self.TEAM1.id}), content_type="application/x-www-form-urlencoded")
-    self.assertEquals(type(response), MassenergizeResponse)
+    self.assertTrue(isinstance(response, MassenergizeResponse))
     self.assertTrue(response.toDict().get("success"))
 
 
@@ -147,41 +147,41 @@ class DownloadTestCase(TestCase):
     # first try for no user signed in
     signinAs(self.client, None)
     response = self.client.post('/api/downloads.actions', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded")
-    self.assertEquals(type(response), MassenergizeResponse)
+    self.assertTrue(isinstance(response, MassenergizeResponse))
     response = response.toDict()
     self.assertFalse(response["success"])
 
     # next try for regular user signed in
     signinAs(self.client, self.USER)
     response = self.client.post('/api/downloads.actions', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded")
-    self.assertEquals(type(response), MassenergizeResponse)
+    self.assertTrue(isinstance(response, MassenergizeResponse))
     response = response.toDict()
     self.assertFalse(response["success"])
 
     # next try for cadmin signed in
     signinAs(self.client, self.CADMIN)
     response = self.client.post('/api/downloads.actions', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded")
-    self.assertEquals(type(response), MassenergizeResponse)
+    self.assertTrue(isinstance(response, MassenergizeResponse))
     self.assertTrue(response.toDict()["success"])
 
     # next try for sadmin signed in
     signinAs(self.client, self.SADMIN)
     response = self.client.post('/api/downloads.actions', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded")
-    self.assertEquals(type(response), MassenergizeResponse)
+    self.assertTrue(isinstance(response, MassenergizeResponse))
     self.assertTrue(response.toDict()["success"])
 
     # don't specify community or team, cadmin signed in
     # now this will work, but "community" will be first column
     signinAs(self.client, self.CADMIN)
     response = self.client.post('/api/downloads.actions', urlencode({}), content_type="application/x-www-form-urlencoded")
-    self.assertEquals(type(response), MassenergizeResponse)
+    self.assertTrue(isinstance(response, MassenergizeResponse))
     self.assertTrue(response.toDict().get("success"))
 
 
     # don't specify community or team, sadmin signed in
     signinAs(self.client, self.SADMIN)
     response = self.client.post('/api/downloads.actions', urlencode({}), content_type="application/x-www-form-urlencoded")
-    self.assertEquals(type(response), MassenergizeResponse)
+    self.assertTrue(isinstance(response, MassenergizeResponse))
     self.assertTrue(response.toDict().get("success"))
 
 

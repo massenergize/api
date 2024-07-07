@@ -88,7 +88,7 @@ class CommunityService:
         obj[_id] = found
       return obj, None
     except Exception as e: 
-      e = log.error(e)
+      log.error(e)
       return None,CustomMassenergizeError(e)
     # sorted = sort_items(communities, context.get_params())
     # return paginate(sorted, context.get_pagination_data()), None
