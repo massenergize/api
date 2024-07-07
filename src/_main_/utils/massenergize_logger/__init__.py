@@ -14,11 +14,15 @@ class MassenergizeLogger:
     @run_in_background
     def _log(self, level, message, exception=None, extra={}):
 
+        if not EnvConfig.can_send_logs_to_cloudwatch():
+            return
+
         if exception:
             extra['exception'] = exception
 
         # log through the python django logger which goes to Cloudwatch
         if level >= logging.ERROR:
+            # send to cw
             self.logger.log(
                 level,
                 message, 
@@ -28,13 +32,22 @@ class MassenergizeLogger:
                 extra=extra
             )
 
-            logger.error(exception, scope_args=extra)
-
+            # send to sentry
+            if extra:
+                with sentry_sdk.push_scope() as sentry_scope:
+                    for k,v in extra.items():
+                        sentry_scope.set_extra(k, v)
+            sentry_sdk.capture_message(message, level)
         else:
+            # send to cw
             self.logger.log(level, message, extra=extra)
 
             # send log to sentry
-            sentry_sdk.capture_message(message, level, scope_args=extra)
+            if extra:
+                with sentry_sdk.push_scope() as sentry_scope:
+                    for k,v in extra.items():
+                        sentry_scope.set_extra(k, v)
+            sentry_sdk.capture_message(message, level)
             
 
     def info(self, message, extra={}):

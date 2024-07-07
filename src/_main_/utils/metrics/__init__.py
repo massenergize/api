@@ -4,6 +4,7 @@ import boto3
 import threading
 import random 
 from _main_.settings import EnvConfig
+from _main_.utils.massenergize_logger import logger
 
 DEFAULT_CAPTURE_RATE = .7 # for now we want to capture 50% of the logs.
 FUNCTION_LATENCY_NAMESPACE = "ApiService/FunctionPerformance"
@@ -67,7 +68,7 @@ def put_metric_data(name_space, metric_data):
         )
         print(f"Metric {metric_data[0]['MetricName']} sent to CloudWatch: {metric_data[0]['Value']} ms\n")
     except Exception as e:
-        print(e)
+        logger.error(message=str(e), exception=e)
 
 def timed_with_dimensions(dimensions=None, capture_rate=DEFAULT_CAPTURE_RATE):
     
