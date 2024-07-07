@@ -9,10 +9,9 @@ from _main_.utils.massenergize_errors import (
     InvalidResourceError,
     MassEnergizeAPIError,
 )
-from _main_.utils.utils import generate_text_hash
 from api.tests.common import createUsers
-from api.utils.api_utils import get_translation_from_cache, load_default_menus_from_json, \
-    remove_unpublished_items, unflatten_data, validate_menu_content
+from api.utils.api_utils import load_default_menus_from_json, \
+    remove_unpublished_items, validate_menu_content
 from database.models import Action, CarbonEquivalency, Community, CommunityAdminGroup, CommunityMember, Data, Event, \
     HomePageSettings, Location, Media, Menu, RealEstateUnit, Subdomain, TagCollection, Team, TeamMember, UserActionRel, \
     UserProfile, Vendor
