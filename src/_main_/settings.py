@@ -99,6 +99,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
     #custom middlewares
+    'api.middlewares.translation_middleware.TranslationMiddleware',
     'authentication.middleware.MassenergizeJWTAuthMiddleware',
     'django_hosts.middleware.HostsResponseMiddleware',
     '_main_.utils.metrics.middleware.MetricsMiddleware'
