@@ -9,14 +9,16 @@ from _main_.utils.massenergize_errors import (
     InvalidResourceError,
     MassEnergizeAPIError,
 )
+from _main_.utils.utils import generate_text_hash
 from api.tests.common import createUsers
-from api.utils.api_utils import load_default_menus_from_json, \
-    remove_unpublished_items, validate_menu_content
+from api.utils.api_utils import get_translation_from_cache, load_default_menus_from_json, \
+    remove_unpublished_items, unflatten_data, validate_menu_content
 from database.models import Action, CarbonEquivalency, Community, CommunityAdminGroup, CommunityMember, Data, Event, \
     HomePageSettings, Location, Media, Menu, RealEstateUnit, Subdomain, TagCollection, Team, TeamMember, UserActionRel, \
     UserProfile, Vendor
 from database.utils.common import json_loader
 from .utils import check_location, find_reu_community, get_community, split_location_string
+from ..constants import CAMPAIGN_USER_SITE_ID
 
 
 class MiscellaneousStore:
@@ -662,5 +664,22 @@ class MiscellaneousStore:
             menu.save()
             
             return menu, None
+        except Exception as e:
+            return None, CustomMassenergizeError(str(e))
+        
+    def get_site_static_texts(self, context, args):
+        try:
+            site_id = args.get("site_id", None)
+            
+            if not site_id:
+                return None, CustomMassenergizeError("site_id not provided")
+            
+            if site_id == CAMPAIGN_USER_SITE_ID:
+               data = json_loader("translation/raw_data/campaigns_site_static_texts.json")
+               
+            else:
+                data = json_loader("translation/raw_data/campaigns_site_static_texts.json") # update this with the correct json
+                
+            return data, None
         except Exception as e:
             return None, CustomMassenergizeError(str(e))

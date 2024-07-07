@@ -230,4 +230,17 @@ class MiscellaneousService:
             logging.error(f"GET_INTERNAL_LINKS_EXCEPTION_ERROR: {str(e)}")
             return None, CustomMassenergizeError(str(e))
         
+    def get_site_static_texts(self, context, args):
+        try:
+            res, err = self.store.get_site_static_texts(context, args)
+            
+            if err:
+                return None, CustomMassenergizeError(str(err))
+            
+            return res, None
+        
+        except Exception as e:
+            logging.error(f"GET_SITE_STATIC_TEXTS_EXCEPTION_ERROR: {str(e)}")
+            return None, CustomMassenergizeError(str(e))
+        
         
