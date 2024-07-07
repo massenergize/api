@@ -4,7 +4,7 @@ from typing import Tuple
 
 import zipcodes
 from django.db.models import Q
-from _main_.utils.massenergize_logger import logger
+from _main_.utils.massenergize_logger import log
 from _main_.settings import IS_PROD, SLACK_SUPER_ADMINS_WEBHOOK_URL
 from _main_.utils.constants import PUBLIC_EMAIL_DOMAINS, RESERVED_SUBDOMAIN_LIST
 from _main_.utils.context import Context
@@ -565,7 +565,7 @@ class CommunityStore:
 
             return community, None
         except Exception as e:
-            logger.error(e)
+            log.error(e)
             return None, CustomMassenergizeError(e)
 
     def join_community(
@@ -594,7 +594,7 @@ class CommunityStore:
 
             return user, None
         except Exception as e:
-            logger.error(e)
+            log.error(e)
             return None, CustomMassenergizeError(e)
 
     def leave_community(
@@ -623,7 +623,7 @@ class CommunityStore:
 
             return user, None
         except Exception as e:
-            logger.error(e)
+            log.error(e)
             return None, CustomMassenergizeError(e)
 
     def list_communities(
@@ -698,7 +698,7 @@ class CommunityStore:
 
             return communities, None
         except Exception as e:
-            logger.error(e)
+            log.error(e)
             return None, CustomMassenergizeError(e)
 
     def create_community(
@@ -903,7 +903,7 @@ class CommunityStore:
                 reserved = Subdomain.objects.filter(name=args.get("subdomain")).first()
                 if reserved:
                     reserved.delete()
-            logger.error(e)
+            log.error(e)
             return None, CustomMassenergizeError(e)
 
     def update_community(
@@ -1025,7 +1025,7 @@ class CommunityStore:
             return community, None
 
         except Exception as e:
-            logger.error(e)
+            log.error(e)
             return None, CustomMassenergizeError(e)
 
     def delete_community(self, args, context) -> Tuple[dict, MassEnergizeAPIError]:
@@ -1060,7 +1060,7 @@ class CommunityStore:
             # ----------------------------------------------------------------
             return communities, None
         except Exception as e:
-            logger.error(e)
+            log.error(e)
             return None, CustomMassenergizeError(e)
 
     def fetch_admins_of(
@@ -1102,7 +1102,7 @@ class CommunityStore:
                 return [], None
 
         except Exception as e:
-            logger.error(e)
+            log.error(e)
             return None, CustomMassenergizeError(e)
 
     def list_communities_for_super_admin(self, context, args={}):
@@ -1119,7 +1119,7 @@ class CommunityStore:
             communities = list(Community.objects.filter(is_deleted=False, *filter_params).order_by('name'))
             return communities, None
         except Exception as e:
-            logger.error(e)
+            log.error(e)
             return None, CustomMassenergizeError(e)
 
     def add_custom_website(self, context, args):
@@ -1147,7 +1147,7 @@ class CommunityStore:
 
             return community_website, None
         except Exception as e:
-            logger.error(e)
+            log.error(e)
             return None, CustomMassenergizeError(e)
 
     def get_graphs(self, context, community_id):
@@ -1157,7 +1157,7 @@ class CommunityStore:
             graphs = Graph.objects.filter(is_deleted=False, community__id=community_id)
             return graphs, None
         except Exception as e:
-            logger.error(e)
+            log.error(e)
             return None, CustomMassenergizeError(e)
 
     def list_actions_completed(
@@ -1209,7 +1209,7 @@ class CommunityStore:
 
             return actions_completed, None
         except Exception as e:
-            logger.error(message=str(e), exception=e)
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def list_community_features(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -1236,7 +1236,7 @@ class CommunityStore:
             return obj, None
         
         except Exception as e:
-            logger.error(message=str(e), exception=e)
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def request_feature_for_community(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -1273,7 +1273,7 @@ class CommunityStore:
             return {"key": feature_flag.key, "notes": feature_flag.notes, "is_enabled": should_enable, "name":feature_flag.name}, None
         
         except Exception as e:
-            logger.error(message=str(e), exception=e)
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def update_community_notification_settings(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -1327,7 +1327,7 @@ class CommunityStore:
             return {"feature_is_enabled": True, **notification_setting.simple_json()}, None
 
         except Exception as e:
-            logger.error(message=str(e), exception=e)
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def list_community_notification_settings(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:

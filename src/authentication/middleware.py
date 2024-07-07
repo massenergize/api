@@ -7,7 +7,7 @@ from _main_.utils.context import Context
 from _main_.settings import SECRET_KEY, RUN_SERVER_LOCALLY
 from firebase_admin import auth
 import jwt
-from _main_.utils.massenergize_logger import logger
+from _main_.utils.massenergize_logger import log
 from typing import Tuple
 
 from _main_.utils.utils import Console
@@ -40,7 +40,7 @@ class MassenergizeJWTAuthMiddleware:
     except jwt.InvalidTokenError:
       return None, CustomMassenergizeError('invalid_token')
     except Exception as e:
-      logger.error(message=str(e), exception=e)
+      log.exception(e)
       return None, CustomMassenergizeError('invalid_token')
 
 
@@ -91,7 +91,7 @@ class MassenergizeJWTAuthMiddleware:
       request.context = ctx
 
     except Exception as e:
-      logger.error(message=str(e), exception=e)
+      log.exception(e)
       return CustomMassenergizeError(e)
 
 

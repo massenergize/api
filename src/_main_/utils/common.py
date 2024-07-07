@@ -6,7 +6,7 @@ import pytz
 from django.utils import timezone
 from datetime import datetime, timedelta
 from dateutil import tz
-from _main_.utils.massenergize_logger import logger
+from _main_.utils.massenergize_logger import log
 import base64
 import pyshorteners
 from openpyxl import Workbook
@@ -48,7 +48,7 @@ def get_request_contents(request, **kwargs):
         return args
 
     except Exception as e:
-        logger.error(message=str(e), exception=e)
+        log.exception(e)
         return {}
 
 
@@ -67,14 +67,14 @@ def parse_list(d):
         return res
 
     except Exception as e:
-        logger.error(message=str(e), exception=e)
+        log.exception(e)
         return []
 
 def parse_dict(d: object) -> object:
     try:
         return json.loads(d)
     except Exception as e:
-        logger.error(message=str(e), exception=e)
+        log.exception(e)
         return dict()
 
 
@@ -85,7 +85,7 @@ def parse_str_list(d):
             return tmp
         return []
     except Exception as e:
-        logger.error(message=str(e), exception=e)
+        log.exception(e)
         return []
 
 
@@ -108,7 +108,7 @@ def parse_string(s):
             return None
         return s
     except Exception as e:
-        logger.error(message=str(e), exception=e)
+        log.exception(e)
         return None
 
 
@@ -116,7 +116,7 @@ def parse_string(s):
 #     try:
 #         return int(b)
 #     except Exception as e:
-#         logger.error(message=str(e), exception=e)
+#         log.exception(e)
 #         return 1
 
 def parse_int(b):
@@ -125,7 +125,7 @@ def parse_int(b):
     try:
         return int(b)
     except Exception as e:
-        logger.error(message=str(e), exception=e)
+        log.exception(e)
         return 1
 
 def parse_date(d):
@@ -138,7 +138,7 @@ def parse_date(d):
             return pytz.utc.localize(datetime.strptime(d, "%Y-%m-%d %H:%M"))
 
     except Exception as e:
-        logger.error(message=str(e), exception=e)
+        log.exception(e)
         return timezone.now()
 
 

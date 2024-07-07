@@ -7,7 +7,7 @@ from api.services.page_settings__home import HomePageSettingsService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from _main_.utils.validator import Validator
-from _main_.utils.massenergize_logger import logger
+from _main_.utils.massenergize_logger import log
 from api.decorators import admins_only, super_admins_only, login_required
 
 class HomePageSettingsHandler(RouteHandler):

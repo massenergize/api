@@ -1,7 +1,7 @@
 import threading
 import time
 from database.models import ActivityLog
-from _main_.utils.massenergize_logger import logger
+from _main_.utils.massenergize_logger import log
 
 class ActivityLogger:
 
@@ -40,7 +40,7 @@ class ActivityLogger:
       )
       activity_log.save()
     except Exception as e:
-      logger.error(message=str(e), exception=e)
+      log.exception(e)
     
     
   def log(self, params):

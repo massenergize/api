@@ -1,4 +1,4 @@
-from _main_.utils.massenergize_logger import logger
+from _main_.utils.massenergize_logger import log
 from _main_.utils.massenergize_errors import CustomMassenergizeError, MassEnergizeAPIError
 from _main_.utils.pagination import paginate
 from api.store.community import CommunityStore
@@ -88,7 +88,7 @@ class CommunityService:
         obj[_id] = found
       return obj, None
     except Exception as e: 
-      e = logger.error(e)
+      e = log.error(e)
       return None,CustomMassenergizeError(e)
     # sorted = sort_items(communities, context.get_params())
     # return paginate(sorted, context.get_pagination_data()), None

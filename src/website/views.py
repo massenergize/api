@@ -7,7 +7,7 @@ from _main_.utils.common import serialize_all
 from _main_.utils.massenergize_response import MassenergizeResponse
 from django.http import Http404, JsonResponse
 from _main_.settings import IS_PROD, IS_CANARY, RUN_SERVER_LOCALLY, EnvConfig
-from _main_.utils.massenergize_logger import logger
+from _main_.utils.massenergize_logger import log
 from api.decorators import x_frame_options_exempt
 from api.handlers.misc import MiscellaneousHandler
 from api.store.misc import MiscellaneousStore
@@ -32,7 +32,7 @@ from django.db.models import Q
 from django.template.loader import render_to_string
 from _main_.utils.metrics import timed
 import zipcodes
-from _main_.utils.massenergize_logger import logger
+from _main_.utils.massenergize_logger import log
 
 extract_text_from_html = html2text.HTML2Text()
 extract_text_from_html.ignore_links = True
@@ -957,7 +957,7 @@ def generate_sitemap_main(request):
 
 
 def handler400(request, exception):
-    logger.error(
+    log.error(
         exception=exception,
         args={
             'error_status_code': 400,
@@ -969,7 +969,7 @@ def handler400(request, exception):
 
 
 def handler403(request, exception):
-    logger.error(
+    log.error(
         exception=exception,
         extra={
             'error_status_code': 403,
@@ -981,7 +981,7 @@ def handler403(request, exception):
 
 
 def handler404(request, exception):
-    logger.error(
+    log.error(
         exception=exception,
         extra={
             'error_status_code': 404,
@@ -996,7 +996,7 @@ def handler404(request, exception):
 
 
 def handler500(request):
-    logger.error(
+    log.error(
         message=f"server_error",
         extra={
             'error_status_code': 500,

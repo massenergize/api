@@ -1,6 +1,6 @@
 from _main_.utils.massenergize_errors import CustomMassenergizeError
 from _main_.utils.common import parse_bool, parse_date, parse_list, parse_int, parse_string, parse_location, is_value, parse_str_list, parse_dict
-from _main_.utils.massenergize_logger import logger
+from _main_.utils.massenergize_logger import log
 
 
 class Validator:
@@ -119,5 +119,5 @@ class Validator:
       self.fields = {}
       self.rename_fields = set()
 
-      logger.error(message=str(e), exception=e)
+      log.exception(e)
       return None, CustomMassenergizeError(e)

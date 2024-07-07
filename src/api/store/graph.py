@@ -5,7 +5,7 @@ from _main_.utils.context import Context
 from django.db.models import Q, prefetch_related_objects
 from api.store.team import get_team_users
 from .utils import get_community_or_die, unique_media_filename
-from _main_.utils.massenergize_logger import logger
+from _main_.utils.massenergize_logger import log
 from typing import Tuple
 from api.services.utils import send_slack_message
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, RUN_SERVER_LOCALLY, IS_PROD, IS_CANARY
@@ -57,7 +57,7 @@ class GraphStore:
         return None, InvalidResourceError()
       return graph, None
     except Exception as e:
-      logger.error(message=str(e), exception=e)
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -79,7 +79,7 @@ class GraphStore:
 
       return graphs, None
     except Exception as e:
-      logger.error(message=str(e), exception=e)
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -123,7 +123,7 @@ class GraphStore:
       return res, None
       
     except Exception as e:
-      logger.error(message=str(e), exception=e)
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -170,7 +170,7 @@ class GraphStore:
       return res, None
         
     except Exception as e:
-      logger.error(message=str(e), exception=e)
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -200,7 +200,7 @@ class GraphStore:
         "data": res
       }, None
     except Exception as e:
-      logger.error(message=str(e), exception=e)
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -250,7 +250,7 @@ class GraphStore:
     
       return new_graph, None
     except Exception as e:
-      logger.error(message=str(e), exception=e)
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -302,7 +302,7 @@ class GraphStore:
 
       return None, None
     except Exception as e:
-      logger.error(message=str(e), exception=e)
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -331,7 +331,7 @@ class GraphStore:
     except Exception as e:
       if IS_PROD or IS_CANARY:
         send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL, {"text": str(e)+str(context)}) 
-      logger.error(message=str(e), exception=e)
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def delete_data(self, context:Context, data_id) -> Tuple[dict, MassEnergizeAPIError]:
@@ -339,7 +339,7 @@ class GraphStore:
       result = Data.objects.filter(pk=data_id).delete()
       return result, None
     except Exception as e:
-      logger.error(message=str(e), exception=e)
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -349,7 +349,7 @@ class GraphStore:
       graphs.update(is_deleted=True, is_published=False)
       return graphs.first(), None
     except Exception as e:
-      logger.error(message=str(e), exception=e)
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -382,7 +382,7 @@ class GraphStore:
       }, None
 
     except Exception as e:
-      logger.error(message=str(e), exception=e)
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -407,7 +407,7 @@ class GraphStore:
       }, None
 
     except Exception as e:
-      logger.error(message=str(e), exception=e)
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def debug_data_fix(self) -> None:

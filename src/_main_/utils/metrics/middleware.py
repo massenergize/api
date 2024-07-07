@@ -1,6 +1,6 @@
 import time
 import boto3
-from _main_.utils.massenergize_logger import logger
+from _main_.utils.massenergize_logger import log
 from django.utils.deprecation import MiddlewareMixin
 from _main_.utils.utils import run_in_background
 
@@ -22,7 +22,7 @@ class MetricsMiddleware(MiddlewareMixin):
             return
         latency = (time.time() - request.start_time) * 1000 # convert to milliseconds
         
-        logger.info(
+        log.info(
             f"Path: {request.path} Latency(ms): {latency}", 
             extra={"path": request.path, "latency": latency}
         )

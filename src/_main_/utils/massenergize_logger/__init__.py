@@ -56,5 +56,8 @@ class MassenergizeLogger:
     def error(self, message=None, exception=None, extra={}):
         self._log(logging.ERROR, message or str(exception), exception, extra)
 
+    def exception(self, exception):
+        self.error(str(exception), exception)
 
-logger = MassenergizeLogger()
+
+log = MassenergizeLogger()

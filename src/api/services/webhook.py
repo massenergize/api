@@ -1,7 +1,7 @@
 
 import logging
 
-from _main_.utils.massenergize_logger import logger
+from _main_.utils.massenergize_logger import log
 from _main_.utils.massenergize_errors import MassEnergizeAPIError
 from _main_.utils.context import Context
 from typing import Tuple
@@ -166,7 +166,7 @@ class WebhookService:
         return {"success": True}, None
         
     except Exception as e:
-        logger.error(message=str(e), exception=e)
+        log.exception(e)
         logging.error(f"INBOUND_PROCESSING_EXCEPTION: {str(e)}")
         return None, MassEnergizeAPIError(e)
 

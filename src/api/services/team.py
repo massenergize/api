@@ -11,7 +11,7 @@ from _main_.utils.constants import ADMIN_URL_ROOT
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY
 from .utils import send_slack_message
-from _main_.utils.massenergize_logger import logger
+from _main_.utils.massenergize_logger import log
 from typing import Tuple
 
 class TeamService:
@@ -160,7 +160,7 @@ class TeamService:
       return serialize(message), None
 
     except Exception as e:
-      logger.error(message=str(e), exception=e)
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 

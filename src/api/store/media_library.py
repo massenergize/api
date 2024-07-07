@@ -16,7 +16,7 @@ from api.store.common import (
     resolve_relations,
     summarize_duplicates_into_csv,
 )
-from _main_.utils.massenergize_logger import logger
+from _main_.utils.massenergize_logger import log
 from _main_.utils.context import Context
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
@@ -45,7 +45,7 @@ class MediaLibraryStore:
             string = read_image_from_s3(image.file.name)
             return string, None
         except Exception as e:
-            logger.error(message=str(e), exception=e)
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def print_duplicates(self, args, context: Context):
@@ -174,7 +174,7 @@ class MediaLibraryStore:
             return media, None
 
         except Exception as e:
-            logger.error(message=str(e), exception=e)
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def find_images(self, args, _):

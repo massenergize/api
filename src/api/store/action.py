@@ -12,7 +12,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.context import Context
 from .utils import get_new_title
 from django.db.models import Q
-from _main_.utils.massenergize_logger import logger
+from _main_.utils.massenergize_logger import log
 from typing import Tuple
 
 class ActionStore:
@@ -29,7 +29,7 @@ class ActionStore:
         return None, InvalidResourceError()
       return action, None
     except Exception as e:
-      logger.error(message=str(e), exception=e)
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   @timed
@@ -58,7 +58,7 @@ class ActionStore:
 
       return actions, None
     except Exception as e:
-      logger.error(message=str(e), exception=e)
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def add_tags(self, action, ccAction, tags = None):
@@ -159,7 +159,7 @@ class ActionStore:
       return new_action, None
 
     except Exception as e:
-      logger.error(message=str(e), exception=e)
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def copy_action(self, context: Context, args) -> Tuple[Action, MassEnergizeAPIError]:
@@ -219,7 +219,7 @@ class ActionStore:
       # ----------------------------------------------------------------
       return new_action, None
     except Exception as e:
-      logger.error(message=str(e), exception=e)
+      log.exception(e)
     
       return None, CustomMassenergizeError(e)
 
@@ -341,7 +341,7 @@ class ActionStore:
       # ----------------------------------------------------------------
       return action, None
     except Exception as e:
-      logger.error(message=str(e), exception=e)
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -363,7 +363,7 @@ class ActionStore:
       else:
         raise Exception("Action ID not provided to actions.rank")
     except Exception as e:
-      logger.error(message=str(e), exception=e)
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def delete_action(self, context: Context, args) -> Tuple[Action, MassEnergizeAPIError]:
@@ -387,7 +387,7 @@ class ActionStore:
       # ----------------------------------------------------------------
       return action_to_delete, None
     except Exception as e:
-      logger.error(message=str(e), exception=e)
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def list_actions_for_community_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
@@ -427,7 +427,7 @@ class ActionStore:
       return actions.distinct(), None
 
     except Exception as e:
-      logger.error(message=str(e), exception=e)
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -442,7 +442,7 @@ class ActionStore:
       actions = Action.objects.filter(*filter_params,is_deleted=False).select_related('image', 'community', 'calculator_action').prefetch_related('tags')
       return actions.distinct(), None
     except Exception as e:
-      logger.error(message=str(e), exception=e)
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 

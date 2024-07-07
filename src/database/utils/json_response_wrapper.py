@@ -7,7 +7,7 @@ errors to the caller of a particular route
 from django.http import JsonResponse
 # from .common import convert_to_json
 from collections.abc import Iterable
-from _main_.utils.massenergize_logger import logger
+from _main_.utils.massenergize_logger import log
 
 class Json(JsonResponse):
   def __init__(self, raw_data=None, errors=None, use_full_json=False, do_not_serialize=False):    
@@ -31,7 +31,7 @@ class Json(JsonResponse):
       else:
         cleaned_data['data'] =  data.full_json()
     except Exception as e:
-      logger.error(message=str(e), exception=e)
+      log.exception(e)
       cleaned_data['errors'] = [e]
     return cleaned_data
 
