@@ -15,6 +15,9 @@ class TranslationMiddleware:
     def retrieve_translation_for_json(self, data, target_language_code):
         excluded_keys_from_translation = ['key', 'id', 'url']
         
+        if not isinstance(data, dict):
+            return data
+        
         def translate_text(text: str, language: str) -> str:
             text_hash = generate_text_hash(text)
             translated_text = get_translation_from_cache(text_hash, language)
@@ -27,6 +30,8 @@ class TranslationMiddleware:
                 return [translate_item(elem) for elem in item]
             elif isinstance(item, dict):
                 return self.retrieve_translation_for_json(item, target_language_code)
+            elif isinstance(item, bool):
+                return item
         
         return {k: translate_item(v) if k not in excluded_keys_from_translation else v for k, v in data.items()}
     
@@ -42,19 +47,18 @@ class TranslationMiddleware:
             return data
     
     def __call__(self, request):
-        # Code to be executed for each request before the view (and later middleware) are called.
         response = self.get_response(request)
-        
-        # # Ensure we don't translate for non-JSON response
         if 'application/json' in response['Content-Type']:
-            response_to_dict = response.toDict()  # parse JSON response
-            
+            original_content = response.content.decode('utf-8')
+            response_to_dict = json.loads(original_content)
+        
             language = request.POST.get('language', 'en')
-            
-            translated_data = self.retrieve_translation_for_response_data(response_to_dict.get("data"), language)
 
-        #     # Update the response with translated data
-            response.content = json.dumps(translated_data)
+            translated_data = self.retrieve_translation_for_response_data(response_to_dict.get("data", {}), "pt")
             
+            response_to_dict["data"] = translated_data
+
+            response.content = json.dumps(response_to_dict).encode('utf-8')
+
         return response
     
