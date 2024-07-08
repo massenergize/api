@@ -738,10 +738,10 @@ class EventStore:
 
                 event.save()
                 exception = RecurringEventException.objects.filter(event=event).first()
-                exception.former_time = exception.former_time.replace(tzinfo=custom_timezone_info())
-                event.start_date_and_time = event.start_date_and_time.replace(tzinfo=custom_timezone_info())
+                exception_former_time = exception.former_time.replace(tzinfo=custom_timezone_info()) if exception else None
+                event_start_date_and_time = event.start_date_and_time.replace(tzinfo=custom_timezone_info())
                 
-                if exception and (exception.former_time < event.start_date_and_time):
+                if exception and (exception_former_time < event_start_date_and_time):
                     exception.delete()
 
             except Exception as e:
