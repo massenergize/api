@@ -1,6 +1,6 @@
 import datetime
 
-from _main_.utils.common import custom_timezone_info
+from _main_.utils.common import custom_timezone_info, tz_aware_utc_now
 from _main_.utils.footage.FootageConstants import FootageConstants
 from api.store.common import make_time_range_from_text
 from api.store.utils import get_user_from_context
@@ -40,7 +40,7 @@ class SummaryStore:
         start_time = args.get("start_time", None)
         end_time = args.get("end_time", None)
         communities = args.get("communities", [])
-        today = datetime.datetime.utcnow()
+        today = tz_aware_utc_now()
         email = context.user_email
         is_community_admin = (
              context.user_is_community_admin

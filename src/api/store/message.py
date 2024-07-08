@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from _main_.utils.common import tz_aware_utc_now
 from _main_.utils.constants import ME_LOGO_PNG
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
@@ -29,7 +30,7 @@ def get_schedule(schedule):
        formatted_date_string = timezone.make_aware(parsed_datetime)
        return formatted_date_string
 
-    return  datetime.utcnow() + timedelta(minutes=1)
+    return  tz_aware_utc_now() + timedelta(minutes=1)
 
 
 def get_logo(id):

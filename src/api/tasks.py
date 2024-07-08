@@ -8,6 +8,7 @@ from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.timezone import utc
 
+from _main_.utils.common import tz_aware_utc_now
 from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
 from api.constants import ACTIONS, CADMIN_REPORT, CAMPAIGN_INTERACTION_PERFORMANCE_REPORT, CAMPAIGN_PERFORMANCE_REPORT, \
@@ -25,6 +26,8 @@ from task_queue.nudges.cadmin_events_nudge import generate_event_list_for_commun
 from task_queue.nudges.user_event_nudge import prepare_user_events_nudge
 from django.core.cache import cache
 from _main_.celery.app import app
+
+
 def generate_csv_and_email(data, download_type, community_name=None, email=None,filename=None):
     response = HttpResponse(content_type="text/csv")
     now = datetime.datetime.now().strftime("%Y%m%d")
@@ -209,7 +212,7 @@ def download_data(self, args, download_type):
 
 @shared_task(bind=True)
 def generate_and_send_weekly_report(self):
-    today = datetime.datetime.utcnow().replace(tzinfo=utc)
+    today = tz_aware_utc_now().replace(tzinfo=utc)
     one_week_ago = today - timezone.timedelta(days=7)
     super_admins = UserProfile.objects.filter(is_super_admin=True, is_deleted=False).values_list("email", flat=True)
 

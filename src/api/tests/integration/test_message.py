@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from _main_.utils.common import tz_aware_utc_now
 from database.models import Community, Message
 from django.test import TestCase, Client
 from unittest.mock import patch
@@ -9,7 +10,7 @@ from _main_.utils.utils import Console
 
 
 def create_schedule(id=None):
-    in_5_days = datetime.utcnow() + timedelta(days=10 if id else 5)
+    in_5_days = tz_aware_utc_now() + timedelta(days=10 if id else 5)
     schedule = in_5_days.strftime("%a, %d %b %Y %H:%M:%S GMT")
 
     return schedule

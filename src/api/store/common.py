@@ -5,7 +5,7 @@ import io
 from typing import List
 from django.http import FileResponse
 from _main_.settings import AWS_S3_REGION_NAME, AWS_STORAGE_BUCKET_NAME, IS_LOCAL
-from _main_.utils.common import custom_timezone_info, serialize, serialize_all
+from _main_.utils.common import custom_timezone_info, serialize, serialize_all, tz_aware_utc_now
 from api.constants import CSV_FIELD_NAMES
 from carbon_calculator.models import Action
 from database.utils.common import calculate_hash_for_bucket_item, get_image_size_from_bucket
@@ -39,7 +39,7 @@ def js_datetime_to_python(datetext):
 
 
 def make_time_range_from_text(time_range):
-    today = datetime.datetime.utcnow()
+    today = tz_aware_utc_now()
     if time_range == LAST_WEEK:
         start_time = today - datetime.timedelta(days=7)
         end_time = today

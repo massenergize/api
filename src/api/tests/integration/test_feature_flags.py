@@ -4,7 +4,7 @@ This is the test file for feature flags
 from datetime import datetime, timedelta
 import time
 from django.test import TestCase, Client
-from _main_.utils.common import serialize
+from _main_.utils.common import serialize, tz_aware_utc_now
 from _main_.utils.feature_flags.FeatureFlagConstants import FeatureFlagConstants
 from _main_.utils.utils import Console
 from database.models import FeatureFlag, Community, CommunityAdminGroup
@@ -162,7 +162,7 @@ class FeatureFlagHandlerTest(TestCase):
             audience=FeatureFlagConstants.for_specific_audience(),
         )
         all_community_nudge_flag = makeFlag(name="all-community-nudge")
-        today = datetime.utcnow()
+        today = tz_aware_utc_now()
         last_week = today - timedelta(days=7)
 
         expired_flag = makeFlag(name="expired-flag",expires_on=last_week)

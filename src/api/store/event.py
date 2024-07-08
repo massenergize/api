@@ -3,7 +3,7 @@ import json
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from _main_.utils.utils import is_url_valid
-from _main_.utils.common import custom_timezone_info, local_time
+from _main_.utils.common import custom_timezone_info, local_time, tz_aware_utc_now
 from api.store.common import get_media_info, make_media_info
 from api.tests.common import RESET, makeUserUpload
 from api.utils.api_utils import is_admin_of_community
@@ -668,7 +668,7 @@ class EventStore:
         else:
             events = []
 
-        tod = datetime.datetime.utcnow()
+        tod = tz_aware_utc_now()
         today = tod.replace(tzinfo=custom_timezone_info())
 
         for event in events:
