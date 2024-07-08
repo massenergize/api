@@ -5,7 +5,7 @@ from database.models import HomePageSettings, ImageSequence, UserProfile, Media,
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 from typing import Tuple
 from _main_.utils.metrics import timed
 
@@ -23,7 +23,7 @@ class HomePageSettingsStore:
         return None, InvalidResourceError()
       return home_page_setting, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -153,7 +153,7 @@ class HomePageSettingsStore:
       home_page_setting.refresh_from_db()
       return home_page_setting, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -173,5 +173,5 @@ class HomePageSettingsStore:
       home_page_settings = HomePageSettings.objects.all()
       return home_page_settings, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)

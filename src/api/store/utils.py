@@ -10,7 +10,7 @@ from database.utils.constants import SHORT_STR_LEN
 import zipcodes
 import datetime
 from carbon_calculator.carbonCalculator import AverageImpact
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 
 
 def getCarbonScoreFromActionRel(actionRel): 
@@ -28,7 +28,7 @@ def get_community(community_id=None, subdomain=None):
     elif subdomain: 
       return Community.objects.filter(subdomain=subdomain).first(), None
   except Exception as e:
-    capture_message(str(e), level="error")
+    log.exception(e)
     return None, CustomMassenergizeError(e)
 
   return None, CustomMassenergizeError("Missing community_id or subdomain field")
@@ -41,7 +41,7 @@ def get_user(user_id, email=None):
       return UserProfile.objects.filter(pk=user_id).first(), None
     return None, CustomMassenergizeError("Missing user_id or email field")
   except Exception as e:
-    capture_message(str(e), level="error")
+    log.exception(e)
     return None, CustomMassenergizeError(e)
 
 @timed

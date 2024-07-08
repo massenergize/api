@@ -8,7 +8,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, NotAuthorized
 from _main_.utils.context import Context
 from .utils import get_community_or_die, get_admin_communities, get_new_title
 from _main_.utils.context import Context
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 from typing import Tuple
 from django.db.models import Q
 
@@ -30,7 +30,7 @@ class VendorStore:
 
       return vendor, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -59,7 +59,7 @@ class VendorStore:
 
       return vendors, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def create_vendor(self, context: Context, args, user_submitted) -> Tuple[Vendor, MassEnergizeAPIError]:
@@ -133,7 +133,7 @@ class VendorStore:
     # ---------------------------------------------------------------- 
       return new_vendor, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def update_vendor(self, context: Context, args, user_submitted) -> Tuple[dict, MassEnergizeAPIError]:
@@ -238,7 +238,7 @@ class VendorStore:
       return vendor, None
 
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def rank_vendor(self, args, context) -> Tuple[dict, MassEnergizeAPIError]:
@@ -257,7 +257,7 @@ class VendorStore:
       else:
         raise Exception("Rank and ID not provided to vendors.rank")
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -272,7 +272,7 @@ class VendorStore:
       # ----------------------------------------------------------------
       return vendor, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -330,7 +330,7 @@ class VendorStore:
       # ----------------------------------------------------------------
       return new_vendor, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -376,7 +376,7 @@ class VendorStore:
         vendors = vendors.exclude(more_info__icontains='"created_via_campaign": true').distinct()
       return vendors, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -387,5 +387,5 @@ class VendorStore:
       vendors = Vendor.objects.filter(is_deleted=False, *filter_params).select_related('logo').prefetch_related('communities', 'tags')
       return vendors.exclude(more_info__icontains='"created_via_campaign": true').distinct(), None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)

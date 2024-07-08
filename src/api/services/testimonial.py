@@ -8,7 +8,7 @@ from api.utils.api_utils import get_sender_email
 from api.utils.filter_functions import sort_items
 from .utils import send_slack_message
 from api.store.testimonial import TestimonialStore
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 from typing import Tuple
 
 class TestimonialService:
@@ -84,7 +84,7 @@ class TestimonialService:
 
       return serialize(testimonial), None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
