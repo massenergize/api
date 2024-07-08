@@ -21,13 +21,13 @@ from api.services.utils import send_slack_message
 from api.store.common import count_action_completed_and_todos
 from api.store.graph import GraphStore
 from api.tests.common import RESET
-from api.utils.api_utils import get_distance_between_coords, is_admin_of_community
+from api.utils.api_utils import get_distance_between_coords, is_admin_of_community, load_default_menus_from_json
 from api.utils.filter_functions import get_communities_filter_params
 from database.models import AboutUsPageSettings, Action, ActionsPageSettings, Community, CommunityAdminGroup, \
-	CommunityMember, CommunityNotificationSetting, ContactUsPageSettings, CustomCommunityWebsiteDomain, \
-	DonatePageSettings, EventsPageSettings, FeatureFlag, Goal, Graph, HomePageSettings, ImpactPageSettings, Location, \
-	Media, RealEstateUnit, RegisterPageSettings, SigninPageSettings, Subdomain, TeamsPageSettings, \
-	TestimonialsPageSettings, UserProfile, VendorsPageSettings
+    CommunityMember, CommunityNotificationSetting, ContactUsPageSettings, CustomCommunityWebsiteDomain, \
+    DonatePageSettings, EventsPageSettings, FeatureFlag, Goal, Graph, HomePageSettings, ImpactPageSettings, Location, \
+    Media, Menu, RealEstateUnit, RegisterPageSettings, SigninPageSettings, Subdomain, TeamsPageSettings, \
+    TestimonialsPageSettings, UserProfile, VendorsPageSettings
 from database.utils.common import json_loader
 from .utils import (get_community, get_community_or_die, get_new_title, get_user_from_context, is_reu_in_community)
 from ..constants import COMMUNITY_NOTIFICATION_TYPES
@@ -892,6 +892,18 @@ class CommunityStore:
                 num_copied += 1
                 if num_copied >= MAX_TEMPLATE_ACTIONS:
                     break
+                    
+            #     add a default menu
+            default_json = load_default_menus_from_json()
+            Menu.objects.create(
+                community=community,
+                name=f"Default Menu for {community.name}",
+                content=default_json.get("PortalMainNavLinks", {}),
+                footer_content=default_json.get("PortalFooterLinks", {}),
+                contact_info=default_json.get("ContactInfo", {}),
+                is_custom=False,
+                is_published=True
+            )
 
             # ----------------------------------------------------------------
             # Spy.create_community_footage(communities = [community], related_users=[owner,user], context = context, type = FootageConstants.create(),notes =f"Community ID({community.id})")
