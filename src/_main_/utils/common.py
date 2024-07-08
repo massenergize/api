@@ -2,7 +2,7 @@ import io
 import json
 from querystring_parser import parser
 from _main_.utils.massenergize_errors import CustomMassenergizeError
-import pytz
+from zoneinfo import ZoneInfo
 from django.utils import timezone
 from datetime import datetime, timedelta
 from dateutil import tz
@@ -13,9 +13,13 @@ from openpyxl import Workbook
 from better_profanity import profanity
 
 
+def custom_timezone_info(zone="UTC"):
+    return ZoneInfo(zone)
+
+
 def get_date_and_time_in_milliseconds(**kwargs):
     hours = kwargs.get("hours", None)
-    date = datetime.now(tz=pytz.UTC)
+    date = datetime.now(tz=custom_timezone_info())
     if hours:
         delta = timedelta(hours=hours)
         date = date + delta
@@ -133,9 +137,9 @@ def parse_date(d):
         if d == "undefined" or d == "null":  # providing date as 'null' should clear it
             return None
         if len(d) == 10:
-            return pytz.utc.localize(datetime.strptime(d, "%Y-%m-%d"))
+            return datetime.strptime(d, "%Y-%m-%d").replace(tzinfo=custom_timezone_info())
         else:
-            return pytz.utc.localize(datetime.strptime(d, "%Y-%m-%d %H:%M"))
+            return datetime.strptime(d, "%Y-%m-%d %H:%M").replace(tzinfo=custom_timezone_info())
 
     except Exception as e:
         capture_message(str(e), level="error")
@@ -290,7 +294,7 @@ def local_time():
 
 def utc_to_local(iso_str):
     local_zone = tz.tzlocal()
-    dt_utc = datetime.strptime(iso_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=pytz.UTC)
+    dt_utc = datetime.strptime(iso_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=custom_timezone_info())
     local_now = dt_utc.astimezone(local_zone)
     return local_now
 

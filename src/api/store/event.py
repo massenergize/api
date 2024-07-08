@@ -3,7 +3,7 @@ import json
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from _main_.utils.utils import is_url_valid
-from _main_.utils.common import local_time
+from _main_.utils.common import custom_timezone_info, local_time
 from api.store.common import get_media_info, make_media_info
 from api.tests.common import RESET, makeUserUpload
 from api.utils.api_utils import is_admin_of_community
@@ -21,7 +21,6 @@ from .utils import get_user_from_context, get_user_or_die, get_new_title
 import datetime
 from datetime import timedelta
 import calendar
-import pytz
 from typing import Tuple
 
 def _local_datetime(date_and_time):
@@ -670,7 +669,7 @@ class EventStore:
             events = []
 
         tod = datetime.datetime.utcnow()
-        today = pytz.utc.localize(tod)
+        today = tod.replace(tzinfo=custom_timezone_info())
 
         for event in events:
             # protect against recurring event with no recurring details saved
@@ -690,7 +689,7 @@ class EventStore:
             if final_date and final_date != 'None':
                 final_date = final_date + ' ' + starttime
                 final_date = datetime.datetime.strptime(final_date, "%Y-%m-%d %H:%M:%S+00:00")
-                final_date = pytz.utc.localize(final_date)
+                final_date = final_date.replace(tzinfo=custom_timezone_info())
                 if today > final_date:
                     continue
 
@@ -723,24 +722,26 @@ class EventStore:
                         for day in obj.itermonthdates(int(new_month.year), int(new_month.month)):
                             if int(day.day) >= 8:
                                 continue
-                            d1 = pytz.utc.localize(datetime.datetime(int(day.year), int(day.month), int(day.day)))
+                            d1 = datetime.datetime(int(day.year), int(day.month), int(day.day), tzinfo=custom_timezone_info())
                             if calendar.day_name[d1.weekday()] == event.recurring_details['day_of_week']:
                                 date_of_first_weekday = int(day.day)
                                 break
 
                         upcoming_date = date_of_first_weekday + (
                                 (converter[event.recurring_details['week_of_month']] - 1) * 7)
-
-                        start_date = pytz.utc.localize(
-                            datetime.datetime(new_month.year, new_month.month, upcoming_date, start_date.hour,
-                                              start_date.minute))
+                        
+                        start_date = datetime.datetime(new_month.year, new_month.month, upcoming_date, start_date.hour,
+                                              start_date.minute,
+                                              tzinfo=custom_timezone_info())
                     event.start_date_and_time = start_date
                     event.end_date_and_time = start_date + duration
 
                 event.save()
                 exception = RecurringEventException.objects.filter(event=event).first()
-                if exception and pytz.utc.localize(exception.former_time) < pytz.utc.localize(
-                    event.start_date_and_time):
+                exception.former_time = exception.former_time.replace(tzinfo=custom_timezone_info())
+                event.start_date_and_time = event.start_date_and_time.replace(tzinfo=custom_timezone_info())
+                
+                if exception and (exception.former_time < event.start_date_and_time):
                     exception.delete()
 
             except Exception as e:

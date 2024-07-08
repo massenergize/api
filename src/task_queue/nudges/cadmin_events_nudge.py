@@ -1,19 +1,18 @@
-from _main_.utils.common import encode_data_for_URL, serialize_all
-from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
-from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
-from _main_.utils.feature_flag_keys import COMMUNITY_ADMIN_WEEKLY_EVENTS_NUDGE_FF
-from api.utils.api_utils import get_sender_email
-from api.utils.constants import WEEKLY_EVENTS_NUDGE_TEMPLATE
-from database.utils.settings.model_constants.events import EventConstants
-from database.models import Community, FeatureFlag, UserProfile, Event, CommunityAdminGroup
-from database.utils.settings.admin_settings import AdminPortalSettings
-from database.utils.settings.user_settings import UserPortalSettings
-from django.utils import timezone
 import datetime
-import pytz
-from django.db.models import Q
-from dateutil.relativedelta import relativedelta
 
+from dateutil.relativedelta import relativedelta
+from django.db.models import Q
+from django.utils import timezone
+
+from _main_.utils.common import custom_timezone_info, encode_data_for_URL, serialize_all
+from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
+from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
+from _main_.utils.feature_flag_keys import COMMUNITY_ADMIN_WEEKLY_EVENTS_NUDGE_FF
+from api.utils.constants import WEEKLY_EVENTS_NUDGE_TEMPLATE
+from database.models import Community, CommunityAdminGroup, Event, FeatureFlag, UserProfile
+from database.utils.settings.admin_settings import AdminPortalSettings
+from database.utils.settings.model_constants.events import EventConstants
+from database.utils.settings.user_settings import UserPortalSettings
 from task_queue.helpers import get_event_location
 
 WEEKLY = "weekly"
@@ -21,7 +20,7 @@ BI_WEEKLY = "bi-weekly"
 MONTHLY = "monthly"
 
 #kludge - current communities are in Massachusetts, so for now all dates shown are eastern us time zone
-eastern_tz = pytz.timezone("US/Eastern")
+eastern_tz = custom_timezone_info("US/Eastern")
 
 default_pref = {
     "user_portal_settings": UserPortalSettings.Defaults,

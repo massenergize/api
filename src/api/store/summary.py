@@ -1,4 +1,6 @@
 import datetime
+
+from _main_.utils.common import custom_timezone_info
 from _main_.utils.footage.FootageConstants import FootageConstants
 from api.store.common import make_time_range_from_text
 from api.store.utils import get_user_from_context
@@ -22,7 +24,6 @@ from _main_.utils.context import Context
 from sentry_sdk import capture_message
 from typing import Tuple
 from django.db.models import Q
-import pytz
 
 CUSTOM = "custom"
 
@@ -45,8 +46,8 @@ class SummaryStore:
              context.user_is_community_admin
         )
         is_super_admin = context.user_is_super_admin
-
-        today = pytz.utc.localize(today)
+        
+        today =  today.replace(tzinfo=custom_timezone_info())
         if not time_range:
             return {}, CustomMassenergizeError(
                 "Please include an appropriate date/time range"
@@ -63,8 +64,8 @@ class SummaryStore:
             _format = "%Y-%m-%dT%H:%M:%SZ"
             start_time = datetime.datetime.strptime(start_time, _format)
             end_time = datetime.datetime.strptime(end_time, _format)
-            start_time = pytz.utc.localize(start_time)
-            end_time = pytz.utc.localize(end_time)
+            start_time = start_time.replace(tzinfo=custom_timezone_info())
+            end_time = end_time.replace(tzinfo=custom_timezone_info())
         else: [start_time, end_time] = make_time_range_from_text(time_range)
         # ------------------------------------------------------
 

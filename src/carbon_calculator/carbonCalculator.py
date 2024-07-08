@@ -2,30 +2,33 @@
 # Brad Hubbard-Nelson (bradhn@mindspring.com)
 # Updated April 3
 #imports
+import csv
 import os
-import pytz
-from _main_.settings import BASE_DIR, RUN_SERVER_LOCALLY
-from datetime import datetime, date
 import time
-from .models import Action, Question, CarbonCalculatorMedia, Version, Category, Subcategory
+from datetime import date, datetime
 from io import BytesIO
+
+import requests
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.utils.text import slugify
-import csv
-import requests
-from .CCConstants import YES,NO, VALID_QUERY, INVALID_QUERY
-from .CCDefaults import getDefault, getLocality, CCD
+
+from _main_.settings import BASE_DIR, RUN_SERVER_LOCALLY
+from _main_.utils.common import custom_timezone_info
+from .CCConstants import INVALID_QUERY, NO, VALID_QUERY, YES
+from .CCDefaults import CCD, getDefault, getLocality
+from .electricity import EvalColdWaterWash, EvalCommunitySolar, EvalElectricityMonitor, EvalEnergystarRefrigerator, \
+    EvalEnergystarWasher, EvalHeatPumpDryer, EvalInductionStove, EvalLEDLighting, EvalLineDry, EvalRefrigeratorPickup, \
+    EvalRenewableElectricity, EvalSmartPowerStrip
+from .foodWaste import EvalCompost, EvalLowCarbonDiet, EvalReduceWaste
+from .homeHeating import EvalAirSourceHeatPump, EvalEfficientBoilerFurnace, EvalEnergyAudit, EvalGroundSourceHeatPump, \
+    EvalHeatingSystemAssessment, EvalProgrammableThermostats, EvalWeatherization
+from .hotWater import EvalHeatPumpWaterHeater, EvalHotWaterAssessment, EvalSolarHW
+from .landscaping import EvalElectricMower, EvalRakeOrElecBlower, EvalReduceLawnCare, EvalReduceLawnSize
+from .models import Action, CarbonCalculatorMedia, Category, Question, Subcategory, Version
 from .queries import QuerySingleAction
-from .homeHeating import EvalEnergyAudit, EvalWeatherization, EvalProgrammableThermostats, EvalAirSourceHeatPump, \
-                        EvalGroundSourceHeatPump, EvalHeatingSystemAssessment, EvalEfficientBoilerFurnace
-from .electricity import EvalCommunitySolar, EvalRenewableElectricity, EvalLEDLighting, EvalEnergystarRefrigerator, \
-                        EvalEnergystarWasher, EvalInductionStove, EvalHeatPumpDryer, EvalColdWaterWash, EvalLineDry, \
-                        EvalRefrigeratorPickup, EvalSmartPowerStrip, EvalElectricityMonitor
 from .solar import EvalSolarAssessment, EvalSolarPV
-from .hotWater import EvalHotWaterAssessment, EvalHeatPumpWaterHeater, EvalSolarHW
-from .transportation import EvalReplaceCar, EvalReduceMilesDriven, EvalEliminateCar, EvalReduceFlights, EvalOffsetFlights
-from .foodWaste import EvalLowCarbonDiet, EvalReduceWaste, EvalCompost
-from .landscaping import EvalReduceLawnSize, EvalReduceLawnCare, EvalRakeOrElecBlower, EvalElectricMower
+from .transportation import EvalEliminateCar, EvalOffsetFlights, EvalReduceFlights, EvalReduceMilesDriven, \
+    EvalReplaceCar
 
 CALCULATOR_VERSION = "4.0.5"
 QUESTIONS_DATA = BASE_DIR + "/carbon_calculator/content/Questions.csv"
@@ -38,7 +41,7 @@ TOKEN_POINTS = 15
 def fileDateTime(path):
     # file modification
     timestamp = os.path.getmtime(path)
-    utc=pytz.UTC
+    utc=custom_timezone_info()
 
     # convert timestamp into DateTime object
     datestamp = datetime.fromtimestamp(timestamp).replace(tzinfo=utc)

@@ -1,6 +1,5 @@
 import datetime
-import pytz
-from _main_.utils.common import encode_data_for_URL, serialize_all
+from _main_.utils.common import custom_timezone_info, encode_data_for_URL, serialize_all
 from _main_.utils.constants import COMMUNITY_URL_ROOT
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
 from _main_.utils.feature_flag_keys import USER_EVENTS_NUDGES_FF
@@ -24,7 +23,7 @@ BI_WEEKLY = "biweekly"
 MONTHLY = "per_month"
 DAILY = "per_day"
 
-eastern_tz = pytz.timezone("US/Eastern")
+eastern_tz = custom_timezone_info("US/Eastern")
 
 LIMIT = 5
 
