@@ -29,7 +29,7 @@ class TranslationsIntegrationTests(TestCase):
 		Console.header("Testing get all languages endpoint: as super admin")
 		
 		signinAs(self.client, self.SADMIN)
-		response = self.make_request('translations.languages.get', {})
+		response = self.make_request('translations.languages.list', {})
 		self.assertTrue(response['success'])
 		self.assertIsInstance(response['data'], dict)
 		
@@ -37,7 +37,7 @@ class TranslationsIntegrationTests(TestCase):
 		Console.header("Testing get all languages endpoint: as community admin")
 		
 		signinAs(self.client, self.CADMIN)
-		response = self.make_request('translations.languages.get', {})
+		response = self.make_request('translations.languages.list', {})
 		self.assertTrue(response['success'])
 		self.assertIsInstance(response['data'], dict)
 		
@@ -45,7 +45,7 @@ class TranslationsIntegrationTests(TestCase):
 		Console.header("Testing get all languages endpoint: as user")
 		
 		signinAs(self.client, self.USER)
-		response = self.make_request('translations.languages.get', {})
+		response = self.make_request('translations.languages.list', {})
 		self.assertFalse(response['success'])
 		self.assertEquals(response['error'], "permission_denied")
 		
