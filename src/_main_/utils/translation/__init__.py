@@ -15,7 +15,7 @@ class JsonTranslator:
             parent_key, current = stack.pop()
             for k, v in current.items():
                 new_key = self.sep.join((parent_key, k)) if parent_key else k
-                if k in self.exclude_keys:
+                if self._should_exclude(k, v):
                     flattened_dict_for_keys_to_exclude[new_key] = v
                 else:
                     if isinstance(v, dict):
@@ -23,6 +23,13 @@ class JsonTranslator:
                     else:
                         flattened_dict_for_keys_to_include[new_key] = v
         return flattened_dict_for_keys_to_include, flattened_dict_for_keys_to_exclude
+
+    def _should_exclude(self, key, _value):
+        #TODO: 1. add more logic here to exclude keys called file, media, etc
+        #TODO: 2. we can also add logic to say if _value starts with https://s3.ama...... then return true
+        #      this sill ensure that files are always excluded
+
+        return key in self.exclude_keys
 
     def unflatten_dict(self, flattened: dict):
         all_flattened = flattened
