@@ -10,11 +10,11 @@ class TranslationsService:
 	def __init__(self):
 		self.store = TranslationsStore()
 	
-	def get_all_languages(self, context, args) -> (dict, Exception):
+	def list_all_languages(self, context, args) -> (dict, Exception):
 		"""
 		Get all the languages
 		"""
-		all_languages, err = self.store.get_all_languages(context, args)
+		all_languages, err = self.store.list_all_languages(context, args)
 		
 		if err:
 			return None, err

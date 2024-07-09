@@ -13,10 +13,10 @@ class TranslationsHandler(RouteHandler):
 		self.registerRoutes()
 	
 	def registerRoutes(self):
-		self.add("/translations.languages.get", self.get_all_languages)
+		self.add("/translations.languages.list", self.list_all_languages)
 	
 	@admins_only
-	def get_all_languages(self, request):
+	def list_all_languages(self, request):
 		context: Context = request.context
 		args: dict = context.args
 		
@@ -25,7 +25,7 @@ class TranslationsHandler(RouteHandler):
 		if err:
 			return err
 		
-		all_languages, err = self.service.get_all_languages(context, args)
+		all_languages, err = self.service.list_all_languages(context, args)
 		if err:
 			return err
 		return MassenergizeResponse(data=all_languages)

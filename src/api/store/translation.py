@@ -7,7 +7,7 @@ class TranslationsStore:
 	def __init__(self):
 		self.name = "Translations Store/DB"
 	
-	def get_all_languages(self, context, args) -> (dict, Exception):
+	def list_all_languages(self, context, args) -> (dict, Exception):
 		""" Get all the languages """
 		try:
 			all_languages = load_json("database/raw_data/other/languages.json")
