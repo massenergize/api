@@ -14,7 +14,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
     NotAuthorizedError
 from django.db.models import Q, F
 from _main_.utils.context import Context
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 
 from database.utils.settings.model_constants.events import EventConstants
 from .utils import get_user_from_context, get_user_or_die, get_new_title
@@ -97,7 +97,7 @@ class EventStore:
                 return None, InvalidResourceError()
             return event, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def copy_event(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -164,7 +164,7 @@ class EventStore:
             # ----------------------------------------------------------------
             return new_event, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def list_recurring_event_exceptions(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
@@ -206,7 +206,7 @@ class EventStore:
 
             return exceptions, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def list_events(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
@@ -375,7 +375,7 @@ class EventStore:
             # ----------------------------------------------------------------
             return new_event, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def update_event(self, context: Context, args, user_submitted) -> Tuple[dict, MassEnergizeAPIError]:
@@ -639,7 +639,7 @@ class EventStore:
             return event, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def update_recurring_event_date(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -767,7 +767,7 @@ class EventStore:
                 raise Exception("Rank and ID not provided to events.rank")
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def delete_event(self, context: Context, event_id) -> Tuple[dict, MassEnergizeAPIError]:
@@ -790,7 +790,7 @@ class EventStore:
             # ----------------------------------------------------------------
             return event, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def fetch_other_events_for_cadmin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
@@ -834,7 +834,7 @@ class EventStore:
                                                                             is_global=False)).distinct().order_by("-id")
             return events.filter(*filter_params).distinct(), None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def list_events_for_community_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
@@ -873,7 +873,7 @@ class EventStore:
                 'tags')
             return events, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def list_events_for_super_admin(self, context: Context):
@@ -886,7 +886,7 @@ class EventStore:
                 name__contains=" (rescheduled)").select_related('image', 'community').prefetch_related('tags')
             return events, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def get_rsvp_list(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
@@ -907,7 +907,7 @@ class EventStore:
                 return None, InvalidResourceError()
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def get_rsvp_status(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -925,7 +925,7 @@ class EventStore:
             else:
                 return None, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def rsvp_update(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -952,7 +952,7 @@ class EventStore:
             return event_attendee, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def rsvp_remove(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -973,7 +973,7 @@ class EventStore:
 
             return result, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def share_event(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -991,7 +991,7 @@ class EventStore:
 
             return event, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
     
     def create_event_reminder_settings(self, context: Context, args) -> Tuple[EventNudgeSetting, MassEnergizeAPIError]:
@@ -1037,7 +1037,7 @@ class EventStore:
         
         
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
 
@@ -1060,5 +1060,5 @@ class EventStore:
             return {"success": True}, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(str(e))

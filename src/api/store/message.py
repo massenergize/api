@@ -17,7 +17,7 @@ from _main_.utils.context import Context
 from .utils import get_admin_communities, get_user_from_context, unique_media_filename
 from _main_.utils.context import Context
 from .utils import get_community, get_user
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 from typing import Tuple
 from django.db.models import Q
 from celery.result import AsyncResult
@@ -73,7 +73,7 @@ class MessageStore:
             return message, None
         
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def reply_from_team_admin(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -89,7 +89,7 @@ class MessageStore:
 
             return message, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def message_admin(
@@ -154,7 +154,7 @@ class MessageStore:
             return new_message, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def message_team_admin(
@@ -192,7 +192,7 @@ class MessageStore:
             return new_message, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def update_message_to_team_admin(
@@ -231,7 +231,7 @@ class MessageStore:
             return message, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def reply_from_community_admin(
@@ -252,7 +252,7 @@ class MessageStore:
 
             return message, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def delete_message(self, message_id, context) -> Tuple[dict, MassEnergizeAPIError]:
@@ -281,7 +281,7 @@ class MessageStore:
             # ----------------------------------------------------------------
             return message, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def list_community_admin_messages(self, context: Context, args):
@@ -327,7 +327,7 @@ class MessageStore:
     
             return messages, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def list_team_admin_messages(self, context: Context, args):
@@ -358,7 +358,7 @@ class MessageStore:
                 messages = []
             return messages, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
         
 
@@ -434,5 +434,5 @@ class MessageStore:
                 return new_message, None
             
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)

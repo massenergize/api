@@ -1,7 +1,7 @@
 import csv
 import datetime
 from django.apps import apps
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
 #from _main_.utils.feature_flag_keys import UPDATE_HTML_CONTENT_FORMAT_FF
 from api.utils.constants import DATA_DOWNLOAD_TEMPLATE
@@ -107,7 +107,7 @@ def process_spacing_data(task=None):
         return True
     except Exception as e:
         print(str(e))
-        capture_message(str(e), level="error")
+        log.exception(e)
         return False
   
     

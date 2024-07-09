@@ -5,7 +5,7 @@ from api.store.message import MessageStore
 from api.store.team import TeamStore
 from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import send_massenergize_email
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 from typing import Tuple
 from api.utils.api_utils import get_sender_email
 
@@ -69,7 +69,7 @@ class MessageService:
       # return reply message
       return serialize(reply), None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def forward_to_team_admins(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -116,7 +116,7 @@ class MessageService:
 
       return serialize(message), None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def delete_message(self, message_id,context) -> Tuple[dict, MassEnergizeAPIError]:

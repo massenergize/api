@@ -10,7 +10,7 @@ from api.utils.api_utils import get_sender_email
 from api.utils.filter_functions import sort_items
 from .utils import send_slack_message
 from api.store.utils import get_user_or_die, get_community_or_die
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 from typing import Tuple
 
 class VendorService:
@@ -94,7 +94,7 @@ class VendorService:
       return serialize(vendor), None
 
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def update_vendor(self, context, args, user_submitted=False) -> Tuple[dict, MassEnergizeAPIError]:
