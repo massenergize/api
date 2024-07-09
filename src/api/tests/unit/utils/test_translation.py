@@ -6,20 +6,21 @@ class TestJsonTranslator(unittest.TestCase):
         self.nested_dict = {
             'a': {
                 'b': {
-                    'c': 1,
-                    'd': 2,
+                    'c': '1',
+                    'd': '2',
                     'id': 999
                 },
-                'e': 3
+                'e': '3'
             },
-            'f': 4,
-            'pk': 123
+            'f': '4',
+            'pk': 123,
+            'g': True
         }
         self.flat_dict = {
-            'a.b.c': 1,
-            'a.b.d': 2,
-            'a.e': 3,
-            'f': 4
+            'a.b.c': '1',
+            'a.b.d': '2',
+            'a.e': '3',
+            'f': '4'
         }
         self.exclude_keys = {'id', 'pk'}
 
@@ -33,7 +34,7 @@ class TestJsonTranslator(unittest.TestCase):
             ({'k1': {'sk1': 'v1', 'sk2': 'v2'}, 'k2': 'v3'}, {'k1.sk1': 'v1', 'k1.sk2': 'v2', 'k2': 'v3'}),
 
             # Dictionary with excluded keys 'id' and 'pk'
-            ({'id': 1, 'name': 'John', 'details': {'pk': 1001, 'age': 30}}, {'name': 'John', 'details.age': 30}),
+            ({'id': 1, 'name': 'John', 'details': {'pk': 1001, 'age': '30'}}, {'name': 'John', 'details.age': '30'}),
 
             # Complex nested dictionary
             ({'k1': {'sk1': {'ssk1': 'v1'}, 'sk2': 'v2'}, 'k2': {'sk3': 'v3'}}, {'k1.sk1.ssk1': 'v1', 'k1.sk2': 'v2', 'k2.sk3': 'v3'}),
@@ -42,20 +43,20 @@ class TestJsonTranslator(unittest.TestCase):
             ({}, {}),
 
             # Dictionary with a key having None value
-            ({'k': None}, {'k': None}),
+            ({'k': None}, {}),
 
             # Nested dictionary with a key having None value
-            ({'k': {'sk': None}}, {'k.sk': None}),
+            ({'k': {'sk': None}}, {}),
 
             # Nested dictionary with mixed types (None and string)
-            ({'k': {'sk1': {'ssk1': None}, 'sk2': 'v'}}, {'k.sk1.ssk1': None, 'k.sk2': 'v'}),
+            ({'k': {'sk1': {'ssk1': None}, 'sk2': 'v'}}, {'k.sk2': 'v'}),
 
             (self.nested_dict, self.flat_dict)
         ]
 
         for (d, expected_flattend) in flatten_test_cases:
             translator = JsonTranslator(d)
-            self.assertEqual(translator.get_flattened_dict(), expected_flattend)
+            self.assertEqual(expected_flattend, translator.get_flattened_dict())
 
     
     def test_unflatten(self):
@@ -64,8 +65,8 @@ class TestJsonTranslator(unittest.TestCase):
             # Simple dictionary with string values
             ({'k1': 'v1', 'k2': 'v2'}, {'k1': 'v1', 'k2': 'v2'}),
 
-            # Flattened dictionary with excluded keys 'id' and 'pk'
-            ({'name': 'John', 'details.age': 30}, {'name': 'John', 'details': {'age': 30}}),
+            # Flattened dictionary 
+            ({'name': 'John', 'details.age': '30'}, {'name': 'John', 'details': {'age': '30'}}),
 
             # Flattened complex nested dictionary
             ({'k1.sk1.ssk1': 'v1', 'k1.sk2': 'v2', 'k2.sk3': 'v3'}, {'k1': {'sk1': {'ssk1': 'v1'}, 'sk2': 'v2'}, 'k2': {'sk3': 'v3'}}),
@@ -85,7 +86,7 @@ class TestJsonTranslator(unittest.TestCase):
 
         for (d, expected_flattend) in unflatten_test_cases:
             translator = JsonTranslator({})
-            self.assertEqual(translator.unflatten_dict(d), expected_flattend)
+            self.assertEqual(expected_flattend, translator.unflatten_dict(d))
 
 
     def test_translate(self):

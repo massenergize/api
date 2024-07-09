@@ -1,7 +1,12 @@
 from _main_.utils.translation.google_translate import translate_json_with_google
 
+JSON_EXCLUDE_KEYS = {
+    'id', 'pk', 'file', 'media', 'date'
+}
+
+
 class JsonTranslator:
-    def __init__(self, dict_to_translate, exclude_keys={'id', 'pk'}):
+    def __init__(self, dict_to_translate, exclude_keys={}):
         self.exclude_keys = exclude_keys
         self.sep = '.'
         self._flattened, self._excluded = self.flatten_dict_for_translation(dict_to_translate)
@@ -28,8 +33,13 @@ class JsonTranslator:
         #TODO: 1. add more logic here to exclude keys called file, media, etc
         #TODO: 2. we can also add logic to say if _value starts with https://s3.ama...... then return true
         #      this sill ensure that files are always excluded
+        res = (
+            (key in self.exclude_keys) or 
+            (key in JSON_EXCLUDE_KEYS) or 
+            not (isinstance(_value, str) or isinstance(_value, dict))
+        )
+        return res
 
-        return key in self.exclude_keys
 
     def unflatten_dict(self, flattened: dict):
         all_flattened = flattened
