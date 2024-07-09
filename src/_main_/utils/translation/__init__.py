@@ -10,8 +10,6 @@ class JsonTranslator:
         stack = [((), dict_to_translate)]
         flattened_dict_for_keys_to_include = {}
         flattened_dict_for_keys_to_exclude = {}
-
-        parent_key = ''
         
         while stack:
             parent_key, current = stack.pop()
