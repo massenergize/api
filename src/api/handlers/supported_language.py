@@ -37,7 +37,7 @@ class SupportedLanguageHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=supported_language_info)
 
-    @super_admins_only
+    # @super_admins_only
     def create(self, request):
         context: Context = request.context
         args = context.get_request_body()

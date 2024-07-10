@@ -81,6 +81,9 @@ def is_null(val):
         return True
     return False
 
+def is_empty_or_space (s):
+    return s == '' or s.isspace()
+
 
 def get_sender_email(community_id):
     DEFAULT_SENDER = "no-reply@massenergize.org"
@@ -118,13 +121,13 @@ def generate_random_key(name, key_length=10):
     :param key_length: Length of the random key. Default is 10.
     :return: A string in the format 'name-key'.
     """
-    
+
     alphabet = string.ascii_letters + string.digits
     key = ''.join(secrets.choice(alphabet) for _ in range(key_length))
-    
+
     if not name:
         return key.lower()
-    
+
     return f"{name}-{key}".lower()
 
 # -------------------------- Menu Utils --------------------------
@@ -133,30 +136,30 @@ def generate_random_key(name, key_length=10):
 def has_no_custom_website(community, host):
     if host and host == COMMUNITY_URL_ROOT:
         return True
-    
+
     elif community.community_website and community.community_website.first() and community.community_website.first().website:
         return False
-    
+
     return True
 
 
 def prepend_prefix_to_links(menu_item, prefix):
-  
+
     if not menu_item:
         return None
     if "link" in menu_item:
         existing_link = menu_item["link"]
-        
+
         if existing_link.startswith("/"):
             existing_link = existing_link[1:]
         if not existing_link.startswith(("http", "https")):
             menu_item["link"] = f"{prefix}/{existing_link}"
-        
+
     if "children" in menu_item:
-        
+
         for child in menu_item["children"]:
             prepend_prefix_to_links(child, prefix)
-            
+
     return menu_item
 
 
@@ -166,10 +169,10 @@ def modify_menu_items_if_published(menu_items, page_settings):
         for item in items:
             if not item.get("children"):
                 name = item.get("link", "").strip("/")
-                
+
                 if name in page_settings:
                     active_menu_items.append({**item,"is_published": page_settings[name]})
-            
+
             else:
                 if item.get("name") == "Home":
                     active_menu_items.append(item)
@@ -177,14 +180,14 @@ def modify_menu_items_if_published(menu_items, page_settings):
                     item["children"] = process_items(item["children"])
                     if item["children"]:
                         active_menu_items.append(item)
-                        
+
         return active_menu_items
-    
+
     if not menu_items or not page_settings:
         return []
-    
+
     processed_menu_items = process_items(menu_items)
-    
+
     return processed_menu_items
 
 
@@ -202,7 +205,7 @@ def get_viable_menu_items(community):
     all_menu = load_json("database/raw_data/portal/menu.json")
 
     nav_menu = all_menu.get("PortalMainNavLinks")
-    
+
     portal_main_nav_links = modify_menu_items_if_published(nav_menu, {
         "impact": impact_page_settings.is_published if impact_page_settings else True,
         "aboutus": about_us_page_settings.is_published if about_us_page_settings else True,
@@ -214,7 +217,7 @@ def get_viable_menu_items(community):
         "events": events_page_settings.is_published if events_page_settings else True,
         "donate": donate_page_settings.is_published if donate_page_settings else True,
     })
-    
+
     footer_menu_content = all_menu.get('PortalFooterQuickLinks')
 
     portal_footer_contact_info = all_menu.get('PortalFooterContactInfo')
@@ -229,28 +232,28 @@ def get_viable_menu_items(community):
 def load_default_menus_from_json(json_file_path=None):
     if not json_file_path:
         json_file_path = "database/raw_data/portal/menu.json"
-        
+
     json = load_json(json_file_path)
-    
+
     return json
 
 
 def validate_menu_content(content):
-    
+
     if not content or not isinstance(content, list):
         return False
-    
+
     for item in content:
         if not item.get('name', None):
             return False
-        
+
         if not item.get('link', None) and not item.get('children', None):
             return False
-        
+
         if item.get('children', None):
-            
+
             if not validate_menu_content(item['children']):
-                
+
                 return False
     return True
 
@@ -260,11 +263,11 @@ def prepare_menu_items_for_portal(content, prefix):
             return None
 
         prepared_menu_items = []
-        
+
         for item in content:
             prepared_menu_item = prepend_prefix_to_links(item, prefix)
             prepared_menu_items.append(prepared_menu_item)
-            
+
         return prepared_menu_items
 
 def remove_unpublished_items(content):
@@ -272,7 +275,7 @@ def remove_unpublished_items(content):
         return None
 
     published_items = []
-    
+
     for item in content:
         if not item.get("children"):
             if item.get("is_published"):
@@ -283,7 +286,7 @@ def remove_unpublished_items(content):
             item["children"] = remove_unpublished_items(item["children"])
             if item["children"]:
                 published_items.append(item)
-            
+
     return published_items
 
 
@@ -300,8 +303,8 @@ def get_list_of_internal_links(is_footer=False):
             menu = menu.get("links", [])
         else:
             menu = default_menu.get("PortalMainNavLinks", [])
-           
-        
+
+
         internal_links = []
         for item in menu:
             if item.get("children"):
@@ -309,7 +312,7 @@ def get_list_of_internal_links(is_footer=False):
                     internal_links.append({"name": child.get("name"), "link": child.get("link")})
             else:
                 internal_links.append({"name": item.get("name"), "link": item.get("link")})
-        
+
         return internal_links, None
     except Exception as e:
         print(f"Error: {str(e)}")

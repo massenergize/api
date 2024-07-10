@@ -27,13 +27,12 @@ class TextHashStore:
 
     def create_text_hash (self, context, args) -> Tuple[ TextHash, None ]:
         try:
-            text_hash = TextHash.objects.create(hash = args.get('hash', None), text = args.get('text', None))
-            text_hash.save()
+            text_hash, _ = TextHash.objects.get_or_create(hash = args.get('hash', None), text = args.get('text', None))
 
             return text_hash, None
         except Exception as e:
             capture_message(str(e), level="error")
-            return None, CustomMassenergizeError(str(e))
+            return None, e
 
     def list_text_hashes (self, context, args) -> Tuple[ list, any ]:
         try:

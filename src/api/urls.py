@@ -39,6 +39,7 @@ from api.handlers.vendor import VendorHandler
 from api.handlers.page_settings__register import RegisterPageSettingsHandler
 from api.handlers.page_settings__signin import SigninPageSettingsHandler
 from api.handlers.webhook import WebhookHandler
+from api.handlers.supported_language import SupportedLanguageHandler
 
 from django.urls import path, include
 
@@ -84,7 +85,8 @@ ROUTE_HANDLERS = [
     SigninPageSettingsHandler(),
     TaskQueueHandler(),
     TechnologyHandler(),
-    WebhookHandler()
+    WebhookHandler(),
+    SupportedLanguageHandler()
 ]
 
 urlpatterns = [

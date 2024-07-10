@@ -90,9 +90,7 @@ class CampaignStore:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
 
-    def create_campaign(
-        self, context: Context, args
-    ) -> Tuple[dict, MassEnergizeAPIError]:
+    def create_campaign(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
         try:
             campaign_account_id = args.pop("campaign_account_id", None)
             primary_logo = args.pop("primary_logo", None)
@@ -820,7 +818,7 @@ class CampaignStore:
 
             if not event_ids:
                 return None, CustomMassenergizeError("event_ids is required!")
-            
+
             if not context.user_is_super_admin:
                 if context.user_email != campaign_tech.campaign.owner.email:
                     campaign_manager = CampaignManager.objects.filter(user__id=context.user_id,campaign__id=campaign_tech.campaign.id, is_deleted=False)
@@ -898,7 +896,7 @@ class CampaignStore:
 
             if not campaign_id:
                 return None, CustomMassenergizeError("Campaign id not found!")
-            
+
             if not community_id and not is_other:
                 return None, CustomMassenergizeError("Please select a community!")
 
@@ -1505,7 +1503,7 @@ class CampaignStore:
             campaign_technology_event = CampaignTechnologyEvent.objects.filter(pk=tech_event_id).first()
             if not campaign_technology_event:
                 return None, CustomMassenergizeError("Campaign Technology Event not found!")
-            
+
             if not context.user_is_super_admin:
                 if context.user_email != campaign_technology_event.campaign_technology.campaign.owner.email:
                     campaign_manager = CampaignManager.objects.filter(user__id=context.user_id,campaign__id=campaign_technology_event.campaign_technology.campaign.id, is_deleted=False)

@@ -5,28 +5,41 @@ from api.store.text_hash import TextHashStore
 
 
 class TextHashService:
-    def __init__(self, text: str):
+    def __init__ (self):
         self.store = TextHashStore()
 
-    def make_hash(self):
-        return hashlib.sha256(self.text.encode()).hexdigest()
+    @staticmethod
+    def make_hash (text: str):
+        return hashlib.sha256(text.encode()).hexdigest()
 
-    def create_text_hash(self, context, args):
-        hash = self.make_hash()
-        args['hash'] = hash
-        return self.store.create_text_hash(context, args)
+    def create_text_hash (self, context, args):
+        text = args.get('text', None)
 
-    def get_text_hash_info(self, context, args):
-        text_hash = self.store.get_text_hash_info(context, args)
+        if not text and not isinstance(text, str):
+            return None, CustomMassenergizeError("Please provide a valid text")
 
-        if text_hash:
-            return text_hash, None
-        return None, CustomMassenergizeError("Could not get text hash info")
+        hash = TextHashService.make_hash(text)
+        args[ 'hash' ] = hash
 
-    def list_text_hashes(self, context, args):
-        text_hashes = self.store.list_text_hashes(context, args)
+        text_hash, err = self.store.create_text_hash(context, args)
 
-        if text_hashes:
-            return text_hashes, None
+        if err:
+            print("CTxH ERR", err)
+            return None, err
 
-        return [], CustomMassenergizeError("Could not list text hashes")
+        return text_hash, None
+
+    def get_text_hash_info (self, context, args):
+        text_hash, err = self.store.get_text_hash_info(context, args)
+
+        if err:
+            return None, err
+        return text_hash, None
+
+    def list_text_hashes (self, context, args):
+        text_hashes, err = self.store.list_text_hashes(context, args)
+
+        if err:
+            return None, err
+
+        return text_hashes, None
