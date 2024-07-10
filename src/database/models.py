@@ -1818,7 +1818,7 @@ class CarbonEquivalency(models.Model):
         db_table = "carbon_equivalencies"
     
     class TranslationMeta:
-        fields_to_translate = ["name", "explanation"]
+        fields_to_translate = []
 
 
 class Vendor(models.Model):
@@ -2859,9 +2859,6 @@ class Graph(models.Model):
     class Meta:
         verbose_name_plural = "Graphs"
         ordering = ("title",)
-        
-    class TranslationMeta:
-        fields_to_translate = ["title"]
 
 
 class Button(models.Model):
@@ -4143,7 +4140,7 @@ class Footage(models.Model):
         ordering = ("-id",)
         
     class TranslationMeta:
-        fields_to_translate = ["activity_type", "notes"]
+        fields_to_translate = []
 
 
 class CommunityNotificationSetting(models.Model):
