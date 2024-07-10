@@ -91,3 +91,5 @@ INSPIRATIONAL_MESSAGES = [
     "Join the green revolution and make a difference."
 ]
 
+LANGUAGE_CODES_TO_NOT_SPLIT = { "en-GB", "zh-CN", "zh-TW", "mni-Mtei" }
+

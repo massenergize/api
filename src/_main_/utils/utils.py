@@ -5,7 +5,8 @@ import threading
 from django.db.models.fields.related import ManyToManyField, ForeignKey
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
-
+# from _main_.utils.constants import LANGUAGE_CODES_TO_NOT_SPLIT #FIXME revert code below to this import when circular import is resolved
+LANGUAGE_CODES_TO_NOT_SPLIT = { "en-GB", "zh-CN", "zh-TW", "mni-Mtei" }
 
 def load_json(path):
     """
@@ -154,3 +155,6 @@ def run_in_background(func):
         thread = threading.Thread(target=func, args=args, kwargs=kwargs)
         thread.start()
     return wrapper
+
+def to_third_party_lang_code(language_code: str) -> str:
+    return language_code.split("-")[ 0 ] if language_code not in LANGUAGE_CODES_TO_NOT_SPLIT else language_code
