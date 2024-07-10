@@ -2,7 +2,7 @@ from _main_.utils.massenergize_errors import CustomMassenergizeError, MassEnergi
 from _main_.utils.common import serialize, serialize_all
 from api.store.deviceprofile import DeviceStore
 from _main_.utils.context import Context
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 from typing import Tuple
 
 class DeviceService:

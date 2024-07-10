@@ -1,6 +1,6 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError
 from _main_.utils.context import Context
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 from typing import Tuple
 from database.models import UserProfile
 from task_queue.models import Task
@@ -19,7 +19,7 @@ class TaskQueueStore:
 
       return task, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -29,7 +29,7 @@ class TaskQueueStore:
         tasks = Task.objects.filter(is_archived=False, **filter_args)
         return tasks, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -51,7 +51,7 @@ class TaskQueueStore:
 
       return task, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(str(e))
 
   def update_task(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -70,7 +70,7 @@ class TaskQueueStore:
       task.create_task()
       return task, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
       
@@ -84,7 +84,7 @@ class TaskQueueStore:
       task.delete()
       return task, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -98,7 +98,7 @@ class TaskQueueStore:
       task.start()
       return task, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -113,6 +113,6 @@ class TaskQueueStore:
       task.stop()
       return task, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 

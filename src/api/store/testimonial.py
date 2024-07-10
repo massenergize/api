@@ -10,7 +10,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.context import Context
 from .utils import get_community, get_user, unique_media_filename
 from django.db.models import Q
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 from typing import Tuple
 
 class TestimonialStore:
@@ -24,7 +24,7 @@ class TestimonialStore:
         return None, InvalidResourceError()
       return testimonial, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
       
   def list_testimonials(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
@@ -64,7 +64,7 @@ class TestimonialStore:
 
       return  testimonials, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def create_testimonial(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -143,7 +143,7 @@ class TestimonialStore:
 
       return new_testimonial, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def update_testimonial(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -256,7 +256,7 @@ class TestimonialStore:
         # ---------------------------------------------------------------- 
       return testimonial, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def rank_testimonial(self, args,context) -> Tuple[dict, MassEnergizeAPIError]:
@@ -281,7 +281,7 @@ class TestimonialStore:
       else:
         raise Exception("Testimonial ID not provided to testimonials.rank")
     except Exception as e:
-        capture_message(str(e), level="error")
+        log.exception(e)
         return None, CustomMassenergizeError(e)
 
   def delete_testimonial(self, context: Context, testimonial_id) -> Tuple[dict, MassEnergizeAPIError]:
@@ -298,7 +298,7 @@ class TestimonialStore:
       # ----------------------------------------------------------------
       return testimonial, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def list_testimonials_for_community_admin(self,  context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
@@ -330,7 +330,7 @@ class TestimonialStore:
       testimonials = Testimonial.objects.filter(community__id=community_id, is_deleted=False,*filter_params).select_related('image', 'community').prefetch_related('tags')
       return testimonials.distinct(), None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def list_testimonials_for_super_admin(self, context: Context,args):
@@ -349,5 +349,5 @@ class TestimonialStore:
       return testimonials.distinct(), None
 
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)

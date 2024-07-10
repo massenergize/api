@@ -1,6 +1,6 @@
 from database.models import Tag
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 from typing import Tuple
 
 class TagStore:
@@ -56,5 +56,5 @@ class TagStore:
       tags = Tag.objects.all()
       return tags, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
