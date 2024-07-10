@@ -105,8 +105,6 @@ test:
 	touch test.sqlite3
 	DJANGO_ENV=test python3 manage.py migrate
 	DJANGO_ENV=test python3 -m coverage run --source='.' manage.py test $(package)
-	coverage report --precision=2
-
 .PHONY: test
 
 celery:
@@ -181,15 +179,3 @@ release:
 	git push origin main && \
 	git push origin --tags
 .PHONY: release
-
-tk:
-	 if [[ -f "test.sqlite3" ]]; \
-	 then \
-	  rm test.sqlite3; \
-	 fi
-	 touch test.sqlite3
-	 DJANGO_ENV=test python3 manage.py migrate
-	 DJANGO_ENV=test python manage.py test api.tests.unit.tasks.test_translate_contents
-
-	# coverage report --precision=2
-.PHONY: tk
