@@ -11,6 +11,21 @@ class TranslationMiddleware:
     
     def __init__(self, get_response):
         self.get_response = get_response
+
+    def translate_text(self, text: str, language: str) -> str:
+        text_hash = generate_text_hash(text)
+        translated_text = get_translation_from_cache(text_hash, language)
+        return translated_text if translated_text else text
+    
+    def translate_item(self, item, target_language_code):
+        if isinstance(item, str):
+            return self.translate_text(item, target_language_code)
+        elif isinstance(item, list):
+            return [self.translate_item(elem, target_language_code) for elem in item]
+        elif isinstance(item, dict):
+            return self.retrieve_translation_for_json(item, target_language_code)
+        else:
+            return item
     
     def retrieve_translation_for_json(self, data, target_language_code):
         excluded_keys_from_translation = ['key', 'id', 'url']
@@ -18,23 +33,12 @@ class TranslationMiddleware:
         if not isinstance(data, dict):
             return data
         
-        def translate_text(text: str, language: str) -> str:
-            text_hash = generate_text_hash(text)
-            translated_text = get_translation_from_cache(text_hash, language)
-            return translated_text if translated_text else text
+        translated_data = {
+            key: self.translate_item(value, target_language_code) if key not in excluded_keys_from_translation else value
+            for key, value in data.items()}
         
-        def translate_item(item):
-            if isinstance(item, str):
-                return translate_text(item, target_language_code)
-            elif isinstance(item, list):
-                return [translate_item(elem) for elem in item]
-            elif isinstance(item, dict):
-                return self.retrieve_translation_for_json(item, target_language_code)
-            elif isinstance(item, bool):
-                return item
+        return translated_data
         
-        return {k: translate_item(v) if k not in excluded_keys_from_translation else v for k, v in data.items()}
-    
     def retrieve_translation_for_response_data(self, data, language):
         
         if isinstance(data, dict):
@@ -52,7 +56,7 @@ class TranslationMiddleware:
             original_content = response.content.decode('utf-8')
             response_to_dict = json.loads(original_content)
         
-            language = request.POST.get('language', 'en')
+            language = request.POST.get('language', 'es')
             
             if language == 'en': #remove this when we start supporting data upload in other languages
                 return response

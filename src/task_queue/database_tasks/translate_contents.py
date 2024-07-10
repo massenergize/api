@@ -161,11 +161,13 @@ class TranslateDBContents:
                 
                 for instance in instances:
                     self.translate_model_instance(instance, model.TranslationMeta.fields_to_translate)
-                    
+                
             except Exception as ex:
                 logger.log(f"Error occurred while translating model {model.__name__}: {ex}")
+                return False
         
         logger.log("Finished translating all database contents")
+        return True
         
     def start_translations(self):
         logger.log("Starting translation process for {}".format(timezone.now()))
