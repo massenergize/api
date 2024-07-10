@@ -24,7 +24,7 @@ class JsonTranslator:
                     new_key = (parent_key + (k,)) if parent_key else (k,)
                     stack.append((new_key, v))
             elif isinstance(current, list):
-                for i, item in enumerate(v):
+                for i, item in enumerate(current):
                     nested_new_key = parent_key + (f"[{i}]",)
                     stack.append((nested_new_key, item))
             else:
