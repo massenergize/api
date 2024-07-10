@@ -1,4 +1,3 @@
-import logging
 from datetime import datetime
 
 from django.apps import apps
@@ -8,9 +7,9 @@ from translation.translator import Translator
 from _main_.utils.utils import generate_text_hash, load_json
 from database.models import SupportedLanguage, TextHash, TranslationsCache
 from django.db.models import JSONField
+from _main_.utils.activity_logger import log
 
 SOURCE_LANGUAGE_CODE = 'en'
-logger = logging.getLogger(__name__)
 
 
 class TranslationError(Exception):
@@ -25,125 +24,140 @@ class TranslateDBContents:
     
     def __init__(self):
         self.translator = Translator()
-        self.supported_languages = SupportedLanguage.objects.values_list('code', flat=True)
-    
+        self.supported_languages = SupportedLanguage.objects.values_list('code', flat=True) # fix this byg getting code
+
     def translate_text(self, text, target_language_code):
-        translated_text, err = self.translator.translate(text, target_language_code)
-        if err:
-            raise TranslationError(f"Error translating text: {err}")
-        return translated_text
+        try:
+            if not text:
+                return None
+            translated_text, err = self.translator.translate(text, target_language_code)
+            if err:
+                raise TranslationError(f"Error translating text: {err}")
+            return translated_text
+        except Exception as e:
+            log(f"Error occurred while translating text: {e}")
+            return None
     
     def cache_translation(self, _hash, source_language_code, target_language_code, translated_text):
-        translation_cache = TranslationsCache(
-            hash=_hash,
-            source_language_code=source_language_code,
-            target_language_code=target_language_code,
-            translated_text=translated_text,
-            last_translated=datetime.now()
-        )
-        translation_cache.save()
+        try:
+            translation_cache = TranslationsCache(
+                hash=_hash,
+                source_language_code=source_language_code,
+                target_language_code=target_language_code,
+                translated_text=translated_text,
+                last_translated=datetime.now()
+            )
+            translation_cache.save()
+            return translation_cache
+        except Exception as e:
+            log(f"Error occurred while caching translation: {e}")
+            return None
     
     def translate_field(self, text, source_language_code):
-        _hash = generate_text_hash(text)
-        text_hash, _ = TextHash.objects.get_or_create(hash=_hash, text=text)
-        print(f"Text hash: {text_hash}")
-        
-        for lang in self.supported_languages:
-            if lang == source_language_code:
-                continue
+        try:
+            _hash = generate_text_hash(text)
+            text_hash, _ = TextHash.objects.get_or_create(hash=_hash, text=text)
+            
+            for lang in self.supported_languages:
+                if lang == source_language_code:
+                    continue
                 
-            print(f"Translating text to language: {lang}")
-            
-            translation_cache = TranslationsCache.objects.filter(
-                hash=text_hash,
-                source_language_code=source_language_code,
-                target_language_code=lang
-            ).first()
-            
-            if not translation_cache:
-                try:
-                    translated_text = self.translate_text(text, lang)
-                    self.cache_translation(text_hash, source_language_code, lang, translated_text)
-                except TranslationError as e:
-                    print(f"Translation process encountered an error: {e}")
-            else:
-                print("Translation already exists in cache")
+                log(f"Translating {text} to language: {lang}")
+                
+                translation_cache = TranslationsCache.objects.filter(
+                    hash=text_hash,
+                    source_language_code=source_language_code,
+                    target_language_code=lang
+                ).first()
+                
+                if not translation_cache:
+                    try:
+                        translated_text = self.translate_text(text, lang)
+                        if not translated_text:
+                            return None
+                        translated_cache = self.cache_translation(text_hash, source_language_code, lang, translated_text)
+                        return translated_cache.translated_text
+                    
+                    except TranslationError as e:
+                        log(f"Translation process encountered an error: {e}")
+                        return None
+                
+                else:
+                    log("Translation already exists in cache")
+                    return translation_cache.translated_text
+        except Exception as e:
+            log(f"Error occurred while translating field: {e}")
+            return None
     
     def translate_model_instance(self, instance, fields_to_translate):
-        for field in fields_to_translate:
-            field_value = getattr(instance, field)
-            field_type = instance._meta.get_field(field)
-            
-            if isinstance(field_type, JSONField):
-                if isinstance(field_value, dict):
-                    for key, value in field_value.items():
-                        self.translate_field(value, SOURCE_LANGUAGE_CODE)
-                        
-            else:
-                self.translate_field(field_value, SOURCE_LANGUAGE_CODE)
+        try:
+            for field in fields_to_translate:
+                field_value = getattr(instance, field)
+                field_type = instance._meta.get_field(field)
+                
+                if isinstance(field_type, JSONField):
+                    if isinstance(field_value, dict):
+                        for key, value in field_value.items():
+                            self.translate_field(value, SOURCE_LANGUAGE_CODE)
+                else:
+                    self.translate_field(field_value, SOURCE_LANGUAGE_CODE)
+            return True
+        except Exception as e:
+            log(f"Error occurred while translating model instance: {e}")
+            return False
     
     def translate_menu_model(self, model):
-        instances = model.objects.all()
-        for instance in instances:
-            content = flatten_menu(instance.content)
-            footer_content = flatten_menu(instance.footer_content)
-            
-            print(f"Translating Nav contents for menu: {instance.name}")
-            for key, value in content.items():
-                self.translate_field(value, SOURCE_LANGUAGE_CODE)
+        try:
+            instances = model.objects.all()
+            for instance in instances:
+                content = flatten_menu(instance.content)
+                footer_content = flatten_menu(instance.footer_content)
                 
-            print(f"Translating Footer contents for menu: {instance.name}")
-            for key, value in footer_content.items():
-                self.translate_field(value, SOURCE_LANGUAGE_CODE)
+                log(f"Translating Nav contents for menu: {instance.name}")
+                for key, value in content.items():
+                    self.translate_field(value, SOURCE_LANGUAGE_CODE)
                 
+                log(f"Translating Footer contents for menu: {instance.name}")
+                for key, value in footer_content.items():
+                    self.translate_field(value, SOURCE_LANGUAGE_CODE)
+            return True
+        except Exception as e:
+            log(f"Error occurred while translating menu model: {e}")
+            return None
+    
     def load_db_contents_and_translate(self):
-        models = apps.get_models()
-        for model in models:
-            if model.__name__ == "Menu":
-                self.translate_menu_model(model)
+        try:
+            models = apps.get_models()
+            for model in models:
+                if model.__name__ == "Menu":
+                    self.translate_menu_model(model)
                 
-            else:
-                if hasattr(model, 'TranslationMeta') and model.TranslationMeta.fields_to_translate:
-                    print(f"Translating contents for model: {model.__name__}")
-                    instances = model.objects.filter(is_deleted=False) # events more than 6months old
-                    for instance in instances:
-                        self.translate_model_instance(instance, model.TranslationMeta.fields_to_translate)
-                        
-        print("Finished translating all database contents")
-    
-    def get_static_contents(self, json_file):
-        """
-        Load and return the static contents from a JSON file.
+                else:
+                    if hasattr(model, 'TranslationMeta') and model.TranslationMeta.fields_to_translate:
+                        log(f"\n\nTranslating contents for model: {model.__name__}\n\n")
+                        instances = model.objects.all()
+                        if hasattr(model, 'is_deleted'):
+                            instances = model.objects.filter(is_deleted=False)
+                        if hasattr(model, 'is_archived'):
+                            instances = model.objects.filter(is_archived=False)
+                        if hasattr(model, 'is_published'):
+                            instances = model.objects.filter(is_published=True)
+                        if hasattr(model, 'is_active'):
+                            instances = model.objects.filter(is_active=True)
 
-        :param json_file: The name of the JSON file to load the static contents from.
-        :return: The static contents loaded from the JSON file.
-        """
-        static_contents = load_json(f"translation/raw_data/{json_file}.json")
-        return static_contents
-    
-    def translate_campaigns_static_texts(self):
-        """
-        Translates the static texts for campaigns.
-        """
-        static_text_json = self.get_static_contents("campaigns_site_static_texts")
-        flatten_json = flatten_dict(static_text_json)
-        
-        for key, value in flatten_json.items():
-            self.translate_field(value, SOURCE_LANGUAGE_CODE)
+                        for instance in instances:
+                            self.translate_model_instance(instance, model.TranslationMeta.fields_to_translate)
+                            
+            log("Finished translating all database contents")
             
-    def translate_community_site_static_texts(self):
-        """
-        Translates the static texts for the community site.
-        """
-        static_text_json = self.get_static_contents("community_site_static_texts")
-        
+            return True
+        except Exception as e:
+            log(f"Error occurred while loading db contents and translating: {e}")
+            return None
+    
     def start_translations(self):
-        print("Starting translation process on {}".format(datetime.now()))
+        log("Starting translation process for {}".format(datetime.now()))
         self.load_db_contents_and_translate()
-        self.translate_campaigns_static_texts()
-        # self.translate_community_site_static_texts()
-        print("Finished translating all contents")
+        log("Finished translating all contents")
         return True
     
-# from task_queue.database_tasks.translate_contents import TranslateDBContents
-# TranslateDBContents().start_translations()
