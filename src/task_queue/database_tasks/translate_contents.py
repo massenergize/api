@@ -1,17 +1,19 @@
 from datetime import datetime
 
 from django.apps import apps
-
-from _main_.utils.common import flatten_dict, flatten_menu
-from translation.translator import Translator
-from _main_.utils.utils import generate_text_hash, load_json
-from database.models import SupportedLanguage, TextHash, TranslationsCache
 from django.db.models import JSONField
+from django.utils import timezone
+
 from _main_.utils.activity_logger import ActivityLogger
+from _main_.utils.translation import JsonTranslator
+from _main_.utils.utils import generate_text_hash
+from database.models import SupportedLanguage, TextHash, TranslationsCache
+from translation.translator import Translator
 
 SOURCE_LANGUAGE_CODE = 'en'
 
 logger = ActivityLogger()
+
 
 class TranslationError(Exception):
     """Raised when an error occurs during translation."""
@@ -110,9 +112,11 @@ class TranslateDBContents:
     def translate_menu_model(self, model):
         try:
             instances = model.objects.all()
+            exclude_fields = ["link", "is_published", "id", "is_link_external"]
             for instance in instances:
-                content = flatten_menu(instance.content)
-                footer_content = flatten_menu(instance.footer_content)
+                
+                content = JsonTranslator(instance.content, exclude_fields).get_flattened_dict()
+                footer_content = JsonTranslator(instance.footer_content, exclude_fields).get_flattened_dict()
                 
                 logger.log(f"Translating Nav contents for menu: {instance.name}")
                 for key, value in content.items():
@@ -121,44 +125,50 @@ class TranslateDBContents:
                 logger.log(f"Translating Footer contents for menu: {instance.name}")
                 for key, value in footer_content.items():
                     self.translate_field(value, SOURCE_LANGUAGE_CODE)
+                    
             return True
         except Exception as e:
             logger.log(f"Error occurred while translating menu model: {e}")
             return None
+        
+    def get_valid_instances(self, model):
+        query_params = {}
+        if hasattr(model, 'is_deleted'):
+            query_params['is_deleted'] = False
+        if hasattr(model, 'is_archived'):
+            query_params['is_archived'] = False
+        if hasattr(model, 'is_published'):
+            query_params['is_published'] = True
+        if hasattr(model, 'is_active'):
+            query_params['is_active'] = True
+        return model.objects.filter(**query_params)
     
     def load_db_contents_and_translate(self):
-        try:
-            models = apps.get_models()
-            for model in models:
+        models = apps.get_models()
+        for model in models:
+            try:
+                # Process Menu model separately
                 if model.__name__ == "Menu":
                     self.translate_menu_model(model)
+                    continue
                 
-                else:
-                    if hasattr(model, 'TranslationMeta') and model.TranslationMeta.fields_to_translate:
-                        logger.log(f"\n\nTranslating contents for model: {model.__name__}\n\n")
-                        instances = model.objects.all()
-                        if hasattr(model, 'is_deleted'):
-                            instances = model.objects.filter(is_deleted=False)
-                        if hasattr(model, 'is_archived'):
-                            instances = model.objects.filter(is_archived=False)
-                        if hasattr(model, 'is_published'):
-                            instances = model.objects.filter(is_published=True)
-                        if hasattr(model, 'is_active'):
-                            instances = model.objects.filter(is_active=True)
-
-                        for instance in instances:
-                            self.translate_model_instance(instance, model.TranslationMeta.fields_to_translate)
-                            
-            logger.log("Finished translating all database contents")
-            
-            return True
-        except Exception as e:
-            logger.log(f"Error occurred while loading db contents and translating: {e}")
-            return None
-    
+                if not (hasattr(model, 'TranslationMeta') and model.TranslationMeta.fields_to_translate):
+                    continue
+                
+                logger.info(f"\n\nTranslating contents for model: {model.__name__}\n\n")
+                
+                instances = self.get_valid_instances(model)
+                
+                for instance in instances:
+                    self.translate_model_instance(instance, model.TranslationMeta.fields_to_translate)
+                    
+            except Exception as ex:
+                logger.log(f"Error occurred while translating model {model.__name__}: {ex}")
+        
+        logger.log("Finished translating all database contents")
+        
     def start_translations(self):
-        logger.log("Starting translation process for {}".format(datetime.now()))
+        logger.log("Starting translation process for {}".format(timezone.now()))
         self.load_db_contents_and_translate()
         logger.log("Finished translating all contents")
         return True
-    
