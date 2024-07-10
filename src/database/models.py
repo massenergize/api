@@ -777,7 +777,7 @@ class Community(models.Model):
         }
 
     class TranslationMeta:
-        fields_to_translate = ["name", "about_community"]
+        fields_to_translate = ["about_community"]
         
     class Meta:
         verbose_name_plural = "Communities"
