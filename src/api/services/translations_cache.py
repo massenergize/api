@@ -2,7 +2,7 @@ from django.apps import apps
 from database.models import TranslationsCache
 from _main_.utils.context import Context
 from _main_.utils.massenergize_errors import CustomMassenergizeError
-from _main_.utils.utils import to_third_party_lang_code
+from _main_.utils.utils import to_third_party_lang_code, run_in_background
 
 from api.store.supported_language import SupportedLanguageStore
 from api.store.translations_cache import TranslationsCacheStore
@@ -49,7 +49,6 @@ class TranslationsCacheService:
                                                             source_language =  target_language_tuple[0],
                                                             target_language = source_language_code
                                                                  )
-                print("translated_text", translated_text, target_language_tuple, source_language_code, field_value)
                 translation, err = self.create_translation(context, {
                     "hash": text_hash,
                     "source_language": DEFAULT_SOURCE_LANGUAGE_CODE,
@@ -58,7 +57,6 @@ class TranslationsCacheService:
                 })
 
                 if err:
-                    print("translation err", translation, err)
                     return None, err
 
                 return translation, None
@@ -93,24 +91,23 @@ class TranslationsCacheService:
         try:
             model = args.get('model', None)
             target_language_code = args.get('target_language_code', None)
+
             if not model:
                 return None, CustomMassenergizeError("Please provide a valid model")
 
             translation_meta = getattr(model, "TranslationMeta", None)
+
             if not translation_meta:
                 return
 
             translatable_fields = getattr(translation_meta, "fields_to_translate", None)
-            print(translatable_fields)
 
             if len(translatable_fields) > 0:
                 records = model.objects.all()
                 for record in records:
                     for field in translatable_fields:
-                        print(field) #FIXME remove this
                         field_value = getattr(record, field)
 
-                        # print(field, type(field_value), isinstance(field_value, type(field_value))) #FIXME remove thiis
                         if isinstance(field_value, str):
                             self.translate_text_field(context, field_value, target_language_code[0])
                         elif isinstance(field_value, dict):
@@ -129,15 +126,15 @@ class TranslationsCacheService:
             return { "message": "Model translation successful", }, None
 
         except Exception as e:
-            print(e)
             return CustomMassenergizeError(str(e))
 
+    @run_in_background
     def translate_all_models (self, context: Context, code:str) -> Tuple[ dict or None, None ]:
         try:
             for model in apps.get_models():
                 if hasattr(model, "TranslationMeta"):
                     self.translate_model(context, { "model": model, "target_language_code": code})
 
-            return { "success": True, "message": "All models translation successful" }, None
+            return { "message": "All models translation successful" }, None
         except Exception as e:
             return CustomMassenergizeError(str(e)), None
