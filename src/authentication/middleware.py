@@ -57,7 +57,7 @@ class MassenergizeJWTAuthMiddleware:
       ctx = Context()
 
       #set request body
-      ctx.set_request_body(request,filter_out =["__token"])
+      ctx.set_request_body(request,filter_out =["__token", "language"])
 
       # path = self._get_clean_path(request)
 
