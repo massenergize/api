@@ -6,8 +6,8 @@ class MicrosoftTranslator:
     def __init__(self):
         self.__name__ = "MicrosoftTranslator"
         self.__api_key = os.getenv('MICROSOFT_TRANSLATOR_KEY')
-        self.__endpoint = "https://api.cognitive.microsofttranslator.com/translate"
         self.region = os.getenv('MICROSOFT_TRANSLATOR_REGION')
+        self.__endpoint = "https://api.cognitive.microsofttranslator.com/translate"
 
         if not self.__api_key:
             raise Exception("MICROSOFT_TRANSLATOR_KEY not found in environment variables")
