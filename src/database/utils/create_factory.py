@@ -7,7 +7,7 @@ from _main_.utils.utils import get_models_and_field_types
 from database import models
 from _main_.utils.constants import CREATE_ERROR_MSG
 from collections.abc import Iterable
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 
 MODELS_AND_FIELDS = get_models_and_field_types(models)
 
@@ -63,7 +63,7 @@ class CreateFactory:
       new_object.save()
 
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       errors =  [CREATE_ERROR_MSG, str(e)]
     return new_object, errors
 
@@ -103,7 +103,7 @@ class CreateFactory:
      
 
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       obj, errors =  None, [CREATE_ERROR_MSG, str(e)]
       
     return obj, errors

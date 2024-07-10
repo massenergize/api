@@ -9,7 +9,7 @@ from _main_.utils.emailer.send_email import send_massenergize_rich_email
 from api.utils.filter_functions import sort_items
 from .utils import send_slack_message
 from api.store.utils import get_user_or_die
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 from typing import Tuple
 
 class ActionService:
@@ -88,7 +88,7 @@ class ActionService:
       return serialize(action), None
 
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def update_action(self, context: Context, args, user_submitted=False) -> Tuple[dict, MassEnergizeAPIError]:

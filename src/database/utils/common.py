@@ -10,7 +10,7 @@ from django.core import serializers
 from django.forms.models import model_to_dict
 from collections.abc import Iterable
 from _main_.settings import AWS_S3_REGION_NAME, AWS_STORAGE_BUCKET_NAME
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 
 from _main_.utils.utils import Console
 import boto3
@@ -38,7 +38,7 @@ def json_loader(file) -> dict:
       data = my_file.read()
     return json.loads(data)
   except Exception as e:
-    capture_message(str(e), level="error")
+    log.exception(e)
     
     return error_msg("The JSON file you specified does not exist")
 
@@ -126,7 +126,7 @@ def get_summary_info(obj) -> dict:
       return obj.info()
     return None
   except Exception as e:
-    capture_message(str(e), level="error")
+    log.exception(e)
     
     return {'id': obj.pk}
 
@@ -164,7 +164,7 @@ def get_request_contents(request):
     try:
       return json.loads(request.body.decode('utf-8'))
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return {}
 
 
