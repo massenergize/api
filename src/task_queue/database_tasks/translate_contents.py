@@ -7,10 +7,11 @@ from translation.translator import Translator
 from _main_.utils.utils import generate_text_hash, load_json
 from database.models import SupportedLanguage, TextHash, TranslationsCache
 from django.db.models import JSONField
-from _main_.utils.activity_logger import log
+from _main_.utils.activity_logger import ActivityLogger
 
 SOURCE_LANGUAGE_CODE = 'en'
 
+logger = ActivityLogger()
 
 class TranslationError(Exception):
     """Raised when an error occurs during translation."""
@@ -35,7 +36,7 @@ class TranslateDBContents:
                 raise TranslationError(f"Error translating text: {err}")
             return translated_text
         except Exception as e:
-            log(f"Error occurred while translating text: {e}")
+            logger.log(f"Error occurred while translating text: {e}")
             return None
     
     def cache_translation(self, _hash, source_language_code, target_language_code, translated_text):
@@ -50,7 +51,7 @@ class TranslateDBContents:
             translation_cache.save()
             return translation_cache
         except Exception as e:
-            log(f"Error occurred while caching translation: {e}")
+            logger.log(f"Error occurred while caching translation: {e}")
             return None
     
     def translate_field(self, text, source_language_code):
@@ -62,7 +63,7 @@ class TranslateDBContents:
                 if lang == source_language_code:
                     continue
                 
-                log(f"Translating {text} to language: {lang}")
+                logger.log(f"Translating {text} to language: {lang}")
                 
                 translation_cache = TranslationsCache.objects.filter(
                     hash=text_hash,
@@ -79,14 +80,14 @@ class TranslateDBContents:
                         return translated_cache.translated_text
                     
                     except TranslationError as e:
-                        log(f"Translation process encountered an error: {e}")
+                        logger.log(f"Translation process encountered an error: {e}")
                         return None
                 
                 else:
-                    log("Translation already exists in cache")
+                    logger.log("Translation already exists in cache")
                     return translation_cache.translated_text
         except Exception as e:
-            log(f"Error occurred while translating field: {e}")
+            logger.log(f"Error occurred while translating field: {e}")
             return None
     
     def translate_model_instance(self, instance, fields_to_translate):
@@ -103,7 +104,7 @@ class TranslateDBContents:
                     self.translate_field(field_value, SOURCE_LANGUAGE_CODE)
             return True
         except Exception as e:
-            log(f"Error occurred while translating model instance: {e}")
+            logger.log(f"Error occurred while translating model instance: {e}")
             return False
     
     def translate_menu_model(self, model):
@@ -113,16 +114,16 @@ class TranslateDBContents:
                 content = flatten_menu(instance.content)
                 footer_content = flatten_menu(instance.footer_content)
                 
-                log(f"Translating Nav contents for menu: {instance.name}")
+                logger.log(f"Translating Nav contents for menu: {instance.name}")
                 for key, value in content.items():
                     self.translate_field(value, SOURCE_LANGUAGE_CODE)
                 
-                log(f"Translating Footer contents for menu: {instance.name}")
+                logger.log(f"Translating Footer contents for menu: {instance.name}")
                 for key, value in footer_content.items():
                     self.translate_field(value, SOURCE_LANGUAGE_CODE)
             return True
         except Exception as e:
-            log(f"Error occurred while translating menu model: {e}")
+            logger.log(f"Error occurred while translating menu model: {e}")
             return None
     
     def load_db_contents_and_translate(self):
@@ -134,7 +135,7 @@ class TranslateDBContents:
                 
                 else:
                     if hasattr(model, 'TranslationMeta') and model.TranslationMeta.fields_to_translate:
-                        log(f"\n\nTranslating contents for model: {model.__name__}\n\n")
+                        logger.log(f"\n\nTranslating contents for model: {model.__name__}\n\n")
                         instances = model.objects.all()
                         if hasattr(model, 'is_deleted'):
                             instances = model.objects.filter(is_deleted=False)
@@ -148,16 +149,16 @@ class TranslateDBContents:
                         for instance in instances:
                             self.translate_model_instance(instance, model.TranslationMeta.fields_to_translate)
                             
-            log("Finished translating all database contents")
+            logger.log("Finished translating all database contents")
             
             return True
         except Exception as e:
-            log(f"Error occurred while loading db contents and translating: {e}")
+            logger.log(f"Error occurred while loading db contents and translating: {e}")
             return None
     
     def start_translations(self):
-        log("Starting translation process for {}".format(datetime.now()))
+        logger.log("Starting translation process for {}".format(datetime.now()))
         self.load_db_contents_and_translate()
-        log("Finished translating all contents")
+        logger.log("Finished translating all contents")
         return True
     
