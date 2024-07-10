@@ -167,7 +167,7 @@ class Location(models.Model):
 
     def full_json(self):
         return self.simple_json()
-    
+
     class TranslationMeta:
         fields_to_translate = []
 
@@ -202,15 +202,15 @@ class TagCollection(models.Model):
 
     def full_json(self):
         return self.simple_json()
-    
+
     class TranslationMeta:
         fields_to_translate = ["name"]
 
     class Meta:
         ordering = ("name",)
         db_table = "tag_collections"
-   
-    
+
+
 class Tag(models.Model):
     """
     A class used to represent an Tag.  It is essentially a string that can be
@@ -251,7 +251,7 @@ class Tag(models.Model):
         data = self.simple_json()
         data["tag_collection"] = get_json_if_not_none(self.tag_collection)
         return data
-    
+
     class TranslationMeta:
         fields_to_translate = ["name"]
 
@@ -391,7 +391,7 @@ class Policy(models.Model):
         if community:
             res["community"] = get_json_if_not_none(community)
         return res
-    
+
     class TranslationMeta:
         fields_to_translate = ["name", "description"]
 
@@ -469,7 +469,7 @@ class Goal(models.Model):
 
     def full_json(self):
         return self.simple_json()
-    
+
     class TranslationMeta:
         fields_to_translate = ["name", "description"]
 
@@ -778,7 +778,7 @@ class Community(models.Model):
 
     class TranslationMeta:
         fields_to_translate = ["name", "about_community"]
-        
+
     class Meta:
         verbose_name_plural = "Communities"
         db_table = "communities"
@@ -839,7 +839,7 @@ class CommunitySnapshot(models.Model):
 
     class TranslationMeta:
         fields_to_translate = []
-        
+
     class Meta:
         db_table = "community_snapshots"
 
@@ -897,10 +897,10 @@ class RealEstateUnit(models.Model):
 
     class Meta:
         db_table = "real_estate_units"
-        
+
     class TranslationMeta:
         fields_to_translate = []
-        
+
 
 class Role(models.Model):
     """
@@ -1188,7 +1188,7 @@ class UserProfile(models.Model):
     class Meta:
         db_table = "user_profiles"
         ordering = ("-created_at",)
-        
+
     class TranslationMeta:
         fields_to_translate = []
 
@@ -1240,7 +1240,7 @@ class PolicyAcceptanceRecords(models.Model):
 
     class Meta:
         ordering = ("-id",)
-    
+
     class TranslationMeta:
         fields_to_translate = []
 
@@ -1321,7 +1321,7 @@ class UserMediaUpload(models.Model):
 
     def full_json(self):
         return self.simple_json()
-    
+
     class TranslationMeta:
         fields_to_translate = []
 
@@ -1430,7 +1430,7 @@ class DeviceProfile(models.Model):
 
     def full_json(self):
         return self.simple_json()
-    
+
     class TranslationMeta:
         fields_to_translate = []
 
@@ -1460,7 +1460,7 @@ class CommunityMember(models.Model):
         db_table = "community_members_and_admins"
         unique_together = [["community", "user"]]
         ordering = ("-created_at",)
-        
+
     class TranslationMeta:
         fields_to_translate = []
 
@@ -1491,7 +1491,7 @@ class Subdomain(models.Model):
 
     class Meta:
         db_table = "subdomains"
-        
+
     class TranslationMeta:
         fields_to_translate = []
 
@@ -1521,7 +1521,7 @@ class CustomCommunityWebsiteDomain(models.Model):
 
     class Meta:
         db_table = "custom_community_website_domain"
-    
+
     class TranslationMeta:
         fields_to_translate = []
 
@@ -1650,7 +1650,7 @@ class Team(models.Model):
         ordering = ("name",)
         db_table = "teams"
         unique_together = [["primary_community", "name"]]
-        
+
     class TranslationMeta:
         fields_to_translate = ["name", "tagline", "description"]
 
@@ -1679,7 +1679,7 @@ class TeamMember(models.Model):
     class Meta:
         db_table = "team_members_and_admins"
         unique_together = [["team", "user"]]
-        
+
     class TranslationMeta:
         fields_to_translate = []
 
@@ -1732,7 +1732,7 @@ class Service(models.Model):
 
     class Meta:
         db_table = "services"
-        
+
     class TranslationMeta:
         fields_to_translate = ["description", "name"]
 
@@ -1766,7 +1766,7 @@ class ActionProperty(models.Model):
         verbose_name_plural = "Properties"
         ordering = ("id",)
         db_table = "action_properties"
-        
+
     class TranslationMeta:
         fields_to_translate = ["name", "short_description"]
 
@@ -1816,7 +1816,7 @@ class CarbonEquivalency(models.Model):
         verbose_name_plural = "CarbonEquivalencies"
         ordering = ("id",)
         db_table = "carbon_equivalencies"
-    
+
     class TranslationMeta:
         fields_to_translate = ["name", "explanation"]
 
@@ -1977,7 +1977,7 @@ class Vendor(models.Model):
 
     class Meta:
         db_table = "vendors"
-        
+
     class TranslationMeta:
         fields_to_translate = ["description", "name"]
 
@@ -2132,7 +2132,7 @@ class Action(models.Model):
     class Meta:
         ordering = ["rank", "title"]
         db_table = "actions"
-        
+
     class TranslationMeta:
         fields_to_translate = ["title", "about", "steps_to_take", "deep_dive", "featured_summary"]
 
@@ -2288,7 +2288,7 @@ class Event(models.Model):
             "-start_date_and_time",
         )
         db_table = "events"
-    
+
     class TranslationMeta:
         fields_to_translate = ["name", "description", "featured_summary", "rsvp_message", "external_link_type", "event_type"]
 
@@ -2333,7 +2333,7 @@ class EventNudgeSetting(models.Model):
         res = self.simple_json()
         res["event"] = self.event.info()
         return res
-    
+
     class TranslationMeta:
         fields_to_translate = []
 
@@ -2347,7 +2347,7 @@ class PastEvent(models.Model):
     description = models.TextField(max_length=LONG_STR_LEN)
     start_date_and_time = models.DateTimeField()
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
-    
+
     class TranslationMeta:
         fields_to_translate = []
 
@@ -2392,7 +2392,7 @@ class RecurringEventException(models.Model):
         data["rescheduled_start_time"] = str(self.rescheduled_event.start_date_and_time)
         data["rescheduled_end_time"] = str(self.rescheduled_event.end_date_and_time)
         return data
-    
+
     class TranslationMeta:
         fields_to_translate = []
 
@@ -2436,7 +2436,7 @@ class EventAttendee(models.Model):
         verbose_name_plural = "Event Attendees"
         db_table = "event_attendees"
         unique_together = [["user", "event"]]
-    
+
     class TranslationMeta:
         fields_to_translate = []
 
@@ -2475,7 +2475,7 @@ class Permission(models.Model):
     class Meta:
         ordering = ("name",)
         db_table = "permissions"
-        
+
     class TranslationMeta:
         fields_to_translate = ["description", "name"]
 
@@ -2513,7 +2513,7 @@ class UserPermissions(models.Model):
     class Meta:
         ordering = ("who",)
         db_table = "user_permissions"
-        
+
     class TranslationMeta:
         fields_to_translate = []
 
@@ -2603,7 +2603,7 @@ class Testimonial(models.Model):
     class Meta:
         ordering = ("rank",)
         db_table = "testimonials"
-        
+
     class TranslationMeta:
         fields_to_translate = ["title", "body"]
 
@@ -2678,7 +2678,7 @@ class UserActionRel(models.Model):
     class Meta:
         ordering = ("-id", "status", "user", "action")
         unique_together = [["user", "action", "real_estate_unit"]]
-        
+
     class TranslationMeta:
         fields_to_translate = []
 
@@ -2719,7 +2719,7 @@ class CommunityAdminGroup(models.Model):
     class Meta:
         ordering = ["-id"]
         db_table = "community_admin_group"
-        
+
     class TranslationMeta:
         fields_to_translate = ["description", "name"]
 
@@ -2763,7 +2763,7 @@ class UserGroup(models.Model):
     class Meta:
         ordering = ("name",)
         db_table = "user_groups"
-        
+
     class TranslationMeta:
         fields_to_translate = ["description", "name"]
 
@@ -2815,7 +2815,7 @@ class Data(models.Model):
         verbose_name_plural = "Data"
         ordering = ("name", "value")
         db_table = "data"
-        
+
     class TranslationMeta:
         fields_to_translate = ["name"]
 
@@ -2859,7 +2859,7 @@ class Graph(models.Model):
     class Meta:
         verbose_name_plural = "Graphs"
         ordering = ("title",)
-        
+
     class TranslationMeta:
         fields_to_translate = ["title"]
 
@@ -3004,7 +3004,7 @@ class Menu(models.Model):
 
     class Meta:
         ordering = ("name",)
-        
+
     class TranslationMeta:
         fields_to_translate = ["name"]
 
@@ -3464,7 +3464,7 @@ class HomePageSettings(models.Model):
     class Meta:
         db_table = "home_page_settings"
         verbose_name_plural = "HomePageSettings"
-        
+
     class TranslationMeta:
         fields_to_translate = ["title", "sub_title", "description", "featured_stats_description", "featured_events_description", "featured_stats_subtitle", "featured_events_subtitle"]
 
@@ -3507,7 +3507,7 @@ class ActionsPageSettings(models.Model):
     class Meta:
         db_table = "actions_page_settings"
         verbose_name_plural = "ActionsPageSettings"
-        
+
     class TranslationMeta:
         fields_to_translate = ["title", "sub_title", "description"]
 
@@ -3550,7 +3550,7 @@ class ContactUsPageSettings(models.Model):
     class Meta:
         db_table = "contact_us_page_settings"
         verbose_name_plural = "ContactUsPageSettings"
-        
+
     class TranslationMeta:
         fields_to_translate = ["title", "sub_title", "description"]
 
@@ -3597,7 +3597,7 @@ class DonatePageSettings(models.Model):
     class Meta:
         db_table = "donate_page_settings"
         verbose_name_plural = "DonatePageSettings"
-        
+
     class TranslationMeta:
         fields_to_translate = ["title", "sub_title", "description"]
 
@@ -3684,7 +3684,7 @@ class ImpactPageSettings(models.Model):
     class Meta:
         db_table = "impact_page_settings"
         verbose_name_plural = "ImpactPageSettings"
-        
+
     class TranslationMeta:
         fields_to_translate = ["title", "sub_title", "description"]
 
@@ -3704,7 +3704,7 @@ class TeamsPageSettings(PageSettings):
     class Meta:
         db_table = "teams_page_settings"
         verbose_name_plural = "TeamsPageSettings"
-        
+
     class TranslationMeta:
         fields_to_translate = ["title", "sub_title", "description"]
 
@@ -3724,7 +3724,7 @@ class VendorsPageSettings(PageSettings):
     class Meta:
         db_table = "vendors_page_settings"
         verbose_name_plural = "VendorsPageSettings"
-        
+
     class TranslationMeta:
         fields_to_translate = ["title", "sub_title", "description"]
 
@@ -3744,7 +3744,7 @@ class EventsPageSettings(PageSettings):
     class Meta:
         db_table = "events_page_settings"
         verbose_name_plural = "EventsPageSettings"
-        
+
     class TranslationMeta:
         fields_to_translate = ["title", "sub_title", "description"]
 
@@ -3764,7 +3764,7 @@ class TestimonialsPageSettings(PageSettings):
     class Meta:
         db_table = "testimonials_page_settings"
         verbose_name_plural = "TestimonialsPageSettings"
-        
+
     class TranslationMeta:
         fields_to_translate = ["title", "sub_title", "description"]
 
@@ -3784,7 +3784,7 @@ class RegisterPageSettings(PageSettings):
     class Meta:
         db_table = "register_page_settings"
         verbose_name_plural = "RegisterPageSettings"
-        
+
     class TranslationMeta:
         fields_to_translate = ["title", "sub_title", "description"]
 
@@ -3804,7 +3804,7 @@ class SigninPageSettings(PageSettings):
     class Meta:
         db_table = "signin_page_settings"
         verbose_name_plural = "SigninPageSettings"
-    
+
     class TranslationMeta:
         fields_to_translate = ["title", "sub_title", "description"]
 
@@ -3870,7 +3870,7 @@ class Message(models.Model):
     class Meta:
         ordering = ("title",)
         db_table = "messages"
-    
+
     class TranslationMeta:
         fields_to_translate = ["title", "body"]
 
@@ -4067,7 +4067,7 @@ class FeatureFlag(models.Model):
     class Meta:
         db_table = "feature_flags"
         ordering = ("-name",)
-        
+
     # class TranslationMeta:
     #     fields_to_translate = ["name", "scope", "audience", "user_audience", "notes"]
 
@@ -4141,13 +4141,13 @@ class Footage(models.Model):
     class Meta:
         db_table = "footages"
         ordering = ("-id",)
-        
+
     class TranslationMeta:
         fields_to_translate = ["activity_type", "notes"]
 
 
 class CommunityNotificationSetting(models.Model):
-    
+
     COMMUNITY_NOTIFICATION_TYPES_CHOICES = [(item, item) for item in COMMUNITY_NOTIFICATION_TYPES]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -4181,8 +4181,8 @@ class CommunityNotificationSetting(models.Model):
 
     class TranslationMeta:
         fields_to_translate = ["notification_type"]
-        
-        
+
+
 # localisation
 class SupportedLanguage(BaseModel):
     """
@@ -4199,8 +4199,6 @@ class SupportedLanguage(BaseModel):
     code = models.CharField(max_length=LANG_CODE_STR_LEN, unique=True)
     name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
     is_rtl = models.BooleanField(default=False, blank=True) # not used now but maybe used in the future
-    is_disabled = models.BooleanField(default=False, blank=True)
-
 
     def __str__(self):
         return self.name
