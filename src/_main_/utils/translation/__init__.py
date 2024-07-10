@@ -4,41 +4,51 @@ JSON_EXCLUDE_KEYS = {
     'id', 'pk', 'file', 'media', 'date'
 }
 
-
 class JsonTranslator:
-    def __init__(self, dict_to_translate, exclude_keys={}):
-        self.exclude_keys = exclude_keys
+    def __init__(self, dict_to_translate, exclude_keys=None):
+        self.exclude_keys = set(exclude_keys) if exclude_keys else set()
         self.sep = '.'
         self._flattened, self._excluded = self.flatten_dict_for_translation(dict_to_translate)
 
-    def flatten_dict_for_translation(self, dict_to_translate):
-        stack = [((), dict_to_translate)]
+    def flatten_dict_for_translation(self, json_to_translate):
+        assert (json_to_translate is not None) and (isinstance(json_to_translate, dict) or isinstance(json_to_translate, list))
+
+        stack = [((), json_to_translate)]
         flattened_dict_for_keys_to_include = {}
         flattened_dict_for_keys_to_exclude = {}
-        
+
         while stack:
             parent_key, current = stack.pop()
-            for k, v in current.items():
-                new_key = self.sep.join((parent_key, k)) if parent_key else k
-                if self._should_exclude(k, v):
-                    flattened_dict_for_keys_to_exclude[new_key] = v
+            if isinstance(current, dict):
+                for k, v in current.items():
+                    new_key = (parent_key + (k,)) if parent_key else (k,)
+                    stack.append((new_key, v))
+            elif isinstance(current, list):
+                for i, item in enumerate(v):
+                    nested_new_key = parent_key + (f"[{i}]",)
+                    stack.append((nested_new_key, item))
+            else:
+                flattened_key = self.sep.join(parent_key)
+                if self._should_exclude(parent_key[-1], current):
+                    flattened_dict_for_keys_to_exclude[flattened_key] = current
                 else:
-                    if isinstance(v, dict):
-                        stack.append((new_key, v))
-                    else:
-                        flattened_dict_for_keys_to_include[new_key] = v
+                    flattened_dict_for_keys_to_include[flattened_key] = current
+
         return flattened_dict_for_keys_to_include, flattened_dict_for_keys_to_exclude
 
     def _should_exclude(self, key, _value):
-        #TODO: 1. add more logic here to exclude keys called file, media, etc
-        #TODO: 2. we can also add logic to say if _value starts with https://s3.ama...... then return true
-        #      this sill ensure that files are always excluded
-        res = (
-            (key in self.exclude_keys) or 
-            (key in JSON_EXCLUDE_KEYS) or 
-            not (isinstance(_value, str) or isinstance(_value, dict))
-        )
-        return res
+        # add more checks here
+
+        # Check if key is in exclude_keys or JSON_EXCLUDE_KEYS
+        if key in self.exclude_keys or key in JSON_EXCLUDE_KEYS:
+            return True
+        
+        # Check if value is not a string.  For eg. we want to exclude types like bool, int etc
+        if not isinstance(_value, str) :
+            return True
+        
+        # Default: include the key-value pair
+        return False
 
 
     def unflatten_dict(self, flattened: dict):
@@ -49,15 +59,40 @@ class JsonTranslator:
 
         nested_dict = {}
         for flat_key, value in all_flattened.items():
-            keys = flat_key.split(self.sep)
+            keys = self._parse_key(flat_key)
             current = nested_dict
-            for key in keys[:-1]:
-                if key not in current:
-                    current[key] = {}
-                current = current[key]
-            current[keys[-1]] = value
-        
+            for i, key in enumerate(keys):
+                if i == len(keys) - 1:
+                    current[key] = value
+                else:
+                    next_key = keys[i + 1]
+                    if isinstance(next_key, int):
+                        if key not in current:
+                            current[key] = []
+                        current[key] = self._ensure_list_size(current[key], next_key + 1)
+                        current = current[key]
+                    else:
+                        if key not in current:
+                            current[key] = {}
+                        current = current[key]
+
         return nested_dict
+
+    def _parse_key(self, key: str):
+        parts = key.split(self.sep)
+        keys = []
+        for part in parts:
+            if part.startswith('[') and part.endswith(']'):
+                keys.append(int(part[1:-1]))
+            else:
+                keys.append(part)
+        return keys
+
+    def _ensure_list_size(self, lst, size, padding=None):
+        if len(lst) < size:
+            lst.extend([padding] * (size - len(lst)))
+        return lst
+
 
     def get_flattened_dict(self):
         return self._flattened
