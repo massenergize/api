@@ -10,9 +10,9 @@ class JsonTranslator(Translator):
     def __init__(self, dict_to_translate: Union[dict, list], exclude_keys=None):
         self.exclude_keys = set(exclude_keys) if exclude_keys else set()
         self.sep = '.'
-        self._flattened, self._excluded = self.flatten_dict_for_translation(dict_to_translate)
+        self._flattened, self._excluded = self.flatten_json_for_translation(dict_to_translate)
 
-    def flatten_dict_for_translation(self, json_to_translate):
+    def flatten_json_for_translation(self, json_to_translate: Union[dict, list]):
         assert (json_to_translate is not None) and (isinstance(json_to_translate, dict) or isinstance(json_to_translate, list))
 
         stack = [((), json_to_translate)]
