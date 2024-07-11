@@ -136,6 +136,11 @@ class JsonTranslator(Translator):
     def convert_to_text_blocks(self, text_list, max_block_size=MAX_TEXT_SIZE, magic_text=MAGIC_TEXT):
         """
         Convert a list of text entries into blocks that do not exceed the MAX_TEXT_SIZE limit.
+        We use MAGIC_TEXT to separate text items or sentences within a block during translation, allowing us to split them back afterward.
+        Translation APIs, like Google Translate, have a maximum text length they can handle. The idea of a block here
+        represents a text blob that does not exceed that maximum length. 
+        If we have many text elements or sentences to translate, we combine them into blocks, ensuring each block 
+        does not exceed the maximum length. Each block contains several of these sentences separated by MAGIC_TEXT.
 
         Args:
             text_list (list): List of text entries to be translated.
