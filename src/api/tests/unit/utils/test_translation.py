@@ -5,14 +5,7 @@ from _main_.utils.translation import JsonTranslator
 class TestJsonTranslator(unittest.TestCase):
     def setUp(self):
         self.nested_dict = {
-            "a": {
-                "b": {
-                    "c": "1", 
-                    "d": "2", 
-                    "id": 999
-                }, 
-                "e": "3"
-            },
+            "a": {"b": {"c": "1", "d": "2", "id": 999}, "e": "3"},
             "f": "4",
             "pk": 123,
             "g": True,
