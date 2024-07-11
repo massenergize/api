@@ -1,3 +1,4 @@
+from typing import Union
 from _main_.utils.translation.translator import Translator, MAX_TEXT_SIZE, MAGIC_TEXT
 
 JSON_EXCLUDE_KEYS = {
@@ -6,7 +7,7 @@ JSON_EXCLUDE_KEYS = {
 
 
 class JsonTranslator(Translator):
-    def __init__(self, dict_to_translate, exclude_keys=None):
+    def __init__(self, dict_to_translate: Union[dict, list], exclude_keys=None):
         self.exclude_keys = set(exclude_keys) if exclude_keys else set()
         self.sep = '.'
         self._flattened, self._excluded = self.flatten_dict_for_translation(dict_to_translate)
@@ -15,6 +16,7 @@ class JsonTranslator(Translator):
         assert (json_to_translate is not None) and (isinstance(json_to_translate, dict) or isinstance(json_to_translate, list))
 
         stack = [((), json_to_translate)]
+
         flattened_dict_for_keys_to_include = {}
         flattened_dict_for_keys_to_exclude = {}
 
@@ -25,7 +27,7 @@ class JsonTranslator(Translator):
                     new_key = (parent_key + (k,)) if parent_key else (k,)
                     stack.append((new_key, v))
             elif isinstance(current, list):
-                for i, item in enumerate(v):
+                for i, item in enumerate(current):
                     nested_new_key = parent_key + (f"[{i}]",)
                     stack.append((nested_new_key, item))
             else:
@@ -76,6 +78,10 @@ class JsonTranslator(Translator):
                         if key not in current:
                             current[key] = {}
                         current = current[key]
+
+        if nested_dict and all(isinstance(k, int) for k in nested_dict.keys()):
+            nested_list = [nested_dict[k] for k in sorted(nested_dict.keys())]
+            return nested_list
 
         return nested_dict
 
