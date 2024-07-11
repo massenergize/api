@@ -2,18 +2,16 @@ import os
 from google.cloud import translate_v2 as translate
 from google.oauth2 import service_account
 
+from _main_.utils.stage import MassEnergizeApiEnvConfig
+
+
 class GoogleTranslate:
     MAX_CHAR_LIMIT = 5000
 
     def __init__(self):
-        self.__google_translate_key_file_path = os.getenv('GOOGLE_TRANSLATE_KEY_FILE_PATH')
-        if not self.__google_translate_key_file_path:
-            raise Exception("GOOGLE_TRANSLATE_KEY_FILE_PATH not found in environment variables")
-        self.__google_translate_key_file_name = os.getenv('GOOGLE_TRANSLATE_KEY_FILE_NAME')
-        if not self.__google_translate_key_file_name:
-            raise Exception("GOOGLE_TRANSLATE_KEY_FILE_NAME not found in environment variables")
-
-        self.__google_translate_key_file = f"{self.__google_translate_key_file_path}/{self.__google_translate_key_file_name}"
+        self.__google_translate_key_file = MassEnergizeApiEnvConfig().get_google_translate_key_file()
+        if not self.__google_translate_key_file:
+            raise Exception("GOOGLE_TRANSLATE_KEY_FILE not found in environment variables")
 
         self.__name__ = "GoogleTranslate"
         self.__credentials = service_account.Credentials.from_service_account_file(
