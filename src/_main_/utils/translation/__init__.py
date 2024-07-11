@@ -1,10 +1,11 @@
-from _main_.utils.translation.google_translate import translate_json_with_google
+from _main_.utils.translation.translator import Translator, MAX_TEXT_SIZE, MAGIC_TEXT
 
 JSON_EXCLUDE_KEYS = {
     'id', 'pk', 'file', 'media', 'date'
 }
 
-class JsonTranslator:
+
+class JsonTranslator(Translator):
     def __init__(self, dict_to_translate, exclude_keys=None):
         self.exclude_keys = set(exclude_keys) if exclude_keys else set()
         self.sep = '.'
@@ -99,8 +100,100 @@ class JsonTranslator:
 
     def get_flattened_dict_for_excluded_keys(self):
         return self._excluded
+    
 
     def translate(self, source_language: str, destination_language: str):
-        translated_json = translate_json_with_google(self._flattened, source_language, destination_language)
+        """
+        Translate the flattened dictionary values from source_language to destination_language.
+
+        Returns:
+            dict: The translated dictionary in its original nested structure.
+        """
+        # Flattened dictionary keys and values
+        keys = []
+        untranslated_text_entries = []
+        for key,value in self._flattened.items():
+            keys.append(key)
+            untranslated_text_entries.append(value)
+        
+        
+        # Convert values to text blocks
+        text_blocks = self._convert_to_text_blocks(untranslated_text_entries)
+        # Translate text blocks
+        translated_blocks = self._translate_text_blocks(text_blocks, source_language, destination_language)
+        # Unwind translated blocks back to individual translations
+        translated_text_entries = self._unwind_translated_blocks(translated_blocks)
+
+        # Ensure the translation count matches the original count
+        assert len(untranslated_text_entries) == len(translated_text_entries), "Mismatch between original and translated text entries"
+
+        # Reconstruct the translated JSON
+        translated_json = {keys[i]: translated_text_entries[i] for i in range(len(keys))}
         translated_json.update(self._excluded)
+
         return self.unflatten_dict(translated_json)
+
+    def _convert_to_text_blocks(self, text_list):
+        """
+        Convert a list of text entries into blocks that do not exceed the MAX_TEXT_SIZE limit.
+
+        Args:
+            text_list (list): List of text entries to be translated.
+
+        Returns:
+            list: List of text blocks.
+        """
+        blocks = []
+        current_block = ""
+
+        for text in text_list:
+            if len(current_block) + len(MAGIC_TEXT) + len(text) > MAX_TEXT_SIZE:
+                blocks.append(current_block)
+                current_block = text
+            else:
+                if current_block:
+                    current_block += (MAGIC_TEXT + text)
+                else:
+                    current_block = text
+
+
+        if current_block:
+            blocks.append(current_block.strip())
+
+        return blocks
+
+    def _translate_text_blocks(self, text_blocks, source_language, destination_language):
+        """
+        Translate a list of text blocks from source_language to destination_language.
+
+        Args:
+            text_blocks (list): List of text blocks to be translated.
+            source_language (str): Source language code.
+            destination_language (str): Destination language code.
+
+        Returns:
+            list: List of translated text blocks.
+        """
+        translated_blocks = []
+        for block in text_blocks:
+            translated = self.translate_text(block, source_language, destination_language)
+            translated_blocks.append(translated)
+        
+        return translated_blocks
+
+    def _unwind_translated_blocks(self, translated_blocks):
+        """
+        Split translated text blocks back into individual translations.
+
+        Args:
+            translated_blocks (list): List of translated text blocks.
+
+        Returns:
+            list: List of individual translated text entries.
+        """
+        translations = []
+        for block in translated_blocks:
+            translations.extend(block.split(MAGIC_TEXT))
+        
+        return translations
+        
