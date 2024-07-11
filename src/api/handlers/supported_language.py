@@ -4,7 +4,6 @@ from _main_.utils.context import Context
 from api.decorators import super_admins_only
 from api.services.supported_language import SupportedLanguageService
 
-
 class SupportedLanguageHandler(RouteHandler):
 
     def __init__(self):
@@ -17,8 +16,6 @@ class SupportedLanguageHandler(RouteHandler):
         self.add("/supported_languages.create", self.create)
         self.add("/supported_languages.add", self.create)
         self.add("/supported_languages.list", self.list)
-        self.add("/supported_languages.disable", self.disable)
-        self.add("/supported_languages.enable", self.enable)
 
     def info(self, request):
         context: Context = request.context
@@ -32,6 +29,9 @@ class SupportedLanguageHandler(RouteHandler):
         supported_language_info, err = self.service.get_supported_language_info(context, args)
         if err:
             return err
+
+        if not supported_language_info:
+            return MassenergizeResponse(error="No supported language found with the provided code")
         return MassenergizeResponse(data=supported_language_info)
 
     @super_admins_only
@@ -46,7 +46,7 @@ class SupportedLanguageHandler(RouteHandler):
         args, err = self.validator.verify(args)
 
         if err:
-            return err
+            return MassenergizeResponse(error="Please provide a valid language code and name")
 
         supported_language, err = self.service.create_supported_language(context, args)
         return err if err else MassenergizeResponse(data=supported_language)
@@ -58,30 +58,3 @@ class SupportedLanguageHandler(RouteHandler):
         supported_languages, err = self.service.list_supported_languages(context, args)
         return err if err else MassenergizeResponse(data=supported_languages)
 
-    @super_admins_only
-    def disable(self, request):
-        context: Context = request.context
-        args = context.get_request_body()
-
-        self.validator.expect("code", str, is_required=True)
-        args, err = self.validator.verify(args)
-
-        if err:
-            return err
-
-        disabled_language, err = self.service.disable_supported_language(context, args['code'])
-        return err if err else MassenergizeResponse(data=disabled_language)
-
-    @super_admins_only
-    def enable(self, request):
-        context: Context = request.context
-        args = context.get_request_body()
-
-        self.validator.expect("code", str, is_required=True)
-        args, err = self.validator.verify(args)
-
-        if err:
-            return err
-
-        enabled_language, err = self.service.enable_supported_language(context, args['code'])
-        return err if err else MassenergizeResponse(data=enabled_language)
