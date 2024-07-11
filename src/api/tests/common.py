@@ -26,6 +26,7 @@ from database.models import (
     UserActionRel,
     UserMediaUpload,
     UserProfile,
+    SupportedLanguage
 )
 from carbon_calculator.models import CalcDefault
 import requests
@@ -41,9 +42,9 @@ RESET = "reset"
 ME_DEFAULT_TEST_IMAGE = "https://www.whitehouse.gov/wp-content/uploads/2021/04/P20210303AS-1901-cropped.jpg"
 
 def makeFootage(**kwargs):
-    communities = kwargs.pop("communities",None)    
+    communities = kwargs.pop("communities",None)
     f =  Footage.objects.create(**{**kwargs})
-    if communities: 
+    if communities:
         f.communities.set(communities)
     return f
 
@@ -112,9 +113,9 @@ def makeMedia(**kwargs):
     name = kwargs.get("name") or "New Media"
     file = kwargs.get("file") or kwargs.get("image") or createImage()
     file.name = unique_media_filename(file)
-    tags = kwargs.pop("tags", None) 
+    tags = kwargs.pop("tags", None)
     media = Media.objects.create(**{**kwargs, "name": name, "file": file})
-    if tags: 
+    if tags:
         media.tags.set(tags)
     return media
 
@@ -348,7 +349,7 @@ def createImage(picURL=None):
     return image_file
 
 
-def image_url_to_base64(image_url = None): 
+def image_url_to_base64(image_url = None):
     image_url = image_url or ME_DEFAULT_TEST_IMAGE
     response = requests.get(image_url)
 
@@ -361,7 +362,6 @@ def image_url_to_base64(image_url = None):
     return None
 
 
-
 def make_technology(**kwargs):
     tech = Technology.objects.create(**{
         **kwargs,
@@ -370,6 +370,7 @@ def make_technology(**kwargs):
     })
 
     return tech
+
 
 def make_vendor(**kwargs):
     vendor = Vendor.objects.create(**{
@@ -380,6 +381,7 @@ def make_vendor(**kwargs):
 
     return vendor
 
+
 def make_feature_flag(**kwargs):
     flag = FeatureFlag.objects.create(**{
         **kwargs,
@@ -389,3 +391,8 @@ def make_feature_flag(**kwargs):
     })
 
     return flag
+
+
+def make_supported_language(code=f"en-US-{datetime.now().timestamp()}", name="English (US)"):
+    lang = SupportedLanguage.objects.create(code=code, name=name)
+    return lang
