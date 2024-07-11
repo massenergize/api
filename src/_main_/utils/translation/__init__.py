@@ -118,7 +118,7 @@ class JsonTranslator(Translator):
         
         
         # Convert values to text blocks
-        text_blocks = self._convert_to_text_blocks(untranslated_text_entries)
+        text_blocks = self.convert_to_text_blocks(untranslated_text_entries)
         # Translate text blocks
         translated_blocks = self._translate_text_blocks(text_blocks, source_language, destination_language)
         # Unwind translated blocks back to individual translations
@@ -133,7 +133,7 @@ class JsonTranslator(Translator):
 
         return self.unflatten_dict(translated_json)
 
-    def _convert_to_text_blocks(self, text_list):
+    def convert_to_text_blocks(self, text_list, max_block_size=MAX_TEXT_SIZE, magic_text=MAGIC_TEXT):
         """
         Convert a list of text entries into blocks that do not exceed the MAX_TEXT_SIZE limit.
 
@@ -147,18 +147,18 @@ class JsonTranslator(Translator):
         current_block = ""
 
         for text in text_list:
-            if len(current_block) + len(MAGIC_TEXT) + len(text) > MAX_TEXT_SIZE:
+            if len(current_block) + len(magic_text) + len(text) > max_block_size:
                 blocks.append(current_block)
                 current_block = text
             else:
                 if current_block:
-                    current_block += (MAGIC_TEXT + text)
+                    current_block += (magic_text + text)
                 else:
                     current_block = text
 
 
         if current_block:
-            blocks.append(current_block.strip())
+            blocks.append(current_block)
 
         return blocks
 

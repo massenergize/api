@@ -5,7 +5,7 @@ from _main_.utils.massenergize_logger import log
 MAX_TEXT_SIZE = 100
 
 # We will use this to seperate text blocks during translation so we can spit them back again
-MAGIC_TEXT = "**************************"
+MAGIC_TEXT = "|||"
 
 class Translator:
     def translate_text(self, text, source_language, target_language):
