@@ -1,4 +1,5 @@
 from _main_.settings import google_translate_client
+from _main_.utils.massenergize_logger import log
 
 
 class Translator:
@@ -16,7 +17,7 @@ class Translator:
             return translated_text, None
         
         except Exception as e:
-            print(f"Error translating text: {str(e)} ")
+            log.exception(f"Error translating text: {e} ")
             return None, str(e)
     
     def translate_json(self, json_data, target_language, source_language="en"):
@@ -38,7 +39,7 @@ class Translator:
                     continue
             return json_data, None
         except Exception as e:
-            print(f"Error translating json: {str(e)} ")
+            log.exception(f"Error translating json: {str(e)} ")
             return None, str(e)
         
     def translate(self, text, target_language_code, source_language_code="en"):
