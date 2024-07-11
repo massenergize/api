@@ -5,7 +5,8 @@ import threading
 from django.db.models.fields.related import ManyToManyField, ForeignKey
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
-# from _main_.utils.constants import LANGUAGE_CODES_TO_NOT_SPLIT #FIXME revert code below to this import when circular import is resolved
+
+# we're not splitting these language codes because they are supported by third party API providers
 LANGUAGE_CODES_TO_NOT_SPLIT = { "en-GB", "zh-CN", "zh-TW", "mni-Mtei" }
 
 def load_json(path):
