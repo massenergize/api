@@ -6,8 +6,8 @@ from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse
 from _main_.utils.context import Context
 from functools import wraps
-from django.views.decorators.http import require_http_methods
-
+from _main_.utils.massenergize_errors import NotAuthorizedError
+from _main_.utils.massenergize_logger import log
 
 def x_frame_options_exempt(view_func):
     @wraps(view_func)
@@ -17,6 +17,8 @@ def x_frame_options_exempt(view_func):
             response['X-Frame-Options'] = 'ALLOWALL'
         return response
     return wrapped_view
+
+
 def login_required(function):
   """
   This decorator enforces that a user is logged in before a view can run
@@ -27,7 +29,8 @@ def login_required(function):
     if context.user_is_logged_in:
       return function(handler, request, *args, **kwargs)
     else:
-      raise PermissionDenied
+      log.exception(PermissionDenied)
+      return NotAuthorizedError()
 
   wrap.__doc__ = function.__doc__
   wrap.__name__ = function.__name__
@@ -44,7 +47,9 @@ def admins_only(function):
     if context.user_is_logged_in and context.user_is_admin():
       return function(handler, request, *args, **kwargs)
     else:
-      raise PermissionDenied
+      log.exception(PermissionDenied)
+      return NotAuthorizedError()
+
   wrap.__doc__ = function.__doc__
   wrap.__name__ = function.__name__
   return wrap
@@ -59,7 +64,8 @@ def community_admins_only(function):
     if context.user_is_logged_in and context.user_is_community_admin:
       return function(handler, request, *args, **kwargs)
     else:
-      raise PermissionDenied
+      log.exception(PermissionDenied)
+      return NotAuthorizedError()
   wrap.__doc__ = function.__doc__
   wrap.__name__ = function.__name__
   return wrap
@@ -74,7 +80,8 @@ def super_admins_only(function):
     if context.user_is_logged_in and context.user_is_super_admin:
       return function(handler, request, *args, **kwargs)
     else:
-      raise PermissionDenied
+      log.exception(PermissionDenied)
+      return NotAuthorizedError()
 
   wrap.__doc__ = function.__doc__
   wrap.__name__ = function.__name__

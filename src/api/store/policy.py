@@ -3,7 +3,7 @@ from database.models import Policy, UserProfile, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, NotAuthorizedError, CustomMassenergizeError
 from _main_.utils.context import Context
 from django.db.models import Q
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 from typing import Tuple
 
 class PolicyStore:
@@ -17,7 +17,7 @@ class PolicyStore:
         return None, InvalidResourceError()
       return policy, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def list_policies(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
@@ -25,7 +25,7 @@ class PolicyStore:
       policies = Policy.objects.filter(is_deleted=False)
       return policies, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -43,7 +43,7 @@ class PolicyStore:
         community.save()
       return new_policy, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -70,7 +70,7 @@ class PolicyStore:
           community.save()
       return policy, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -89,7 +89,7 @@ class PolicyStore:
       policies_to_delete.update(is_deleted=True)
       return policies_to_delete.first(), None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def copy_policy(self, policy_id) -> Tuple[Policy, MassEnergizeAPIError]:
@@ -105,7 +105,7 @@ class PolicyStore:
       new_policy.save()
       return new_policy, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -122,7 +122,7 @@ class PolicyStore:
       return policies, None
       
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
     
   def list_policies_for_community_admin_old(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
@@ -152,7 +152,7 @@ class PolicyStore:
       return policies, None
  
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -161,5 +161,5 @@ class PolicyStore:
       policies = Policy.objects.filter(is_deleted=False)
       return policies, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)

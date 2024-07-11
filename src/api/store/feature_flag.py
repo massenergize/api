@@ -15,7 +15,7 @@ from .utils import (
     get_community,
     get_user,
 )
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 from typing import Tuple
 
 
@@ -32,7 +32,7 @@ class FeatureFlagStore:
                 return None, InvalidResourceError()
             return ff, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def add_feature_flag(self, ctx: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -50,7 +50,7 @@ class FeatureFlagStore:
             return flag, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def update_feature_flag(
@@ -81,7 +81,7 @@ class FeatureFlagStore:
             return flag, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def get_feature_flags(
@@ -152,7 +152,7 @@ class FeatureFlagStore:
             print("== ff ===",ff)
             return ff, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def listForSuperAdmins(
@@ -164,7 +164,7 @@ class FeatureFlagStore:
 
             return ff, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def delete_feature_flag(
@@ -175,5 +175,5 @@ class FeatureFlagStore:
             ff = FeatureFlag.objects.filter(id=id).first().delete()
             return id, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)

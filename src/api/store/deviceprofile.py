@@ -3,7 +3,7 @@ from database.models import UserProfile, DeviceProfile, Location, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError
 from _main_.utils.context import Context
 from _main_.settings import DEBUG
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 from typing import Tuple
 
 class DeviceStore:
@@ -19,7 +19,7 @@ class DeviceStore:
       return device, None
 
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
   
   def __device_attr_handler(self, new_device, args):
@@ -53,7 +53,7 @@ class DeviceStore:
       return new_device, None
 
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
   
   def log_device(self, context: Context, args, location) -> Tuple[dict, MassEnergizeAPIError]:
@@ -151,7 +151,7 @@ class DeviceStore:
       if device:
         device.delete()
       # print(e)
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def metric_anonymous_users(self) -> Tuple[dict, MassEnergizeAPIError]:
@@ -162,7 +162,7 @@ class DeviceStore:
       return metric, None
 
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
   
   def metric_anonymous_community_users(self, community_id) -> Tuple[dict, MassEnergizeAPIError]:
@@ -173,7 +173,7 @@ class DeviceStore:
       return metric, None
 
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def metric_user_profiles(self) -> Tuple[dict, MassEnergizeAPIError]:
@@ -184,7 +184,7 @@ class DeviceStore:
       return metric, None
 
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
     
   def metric_community_profiles(self, community_id) -> Tuple[dict, MassEnergizeAPIError]:
@@ -195,7 +195,7 @@ class DeviceStore:
       return metric, None
 
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   # def monthly_profiles(self, community_id, start_date, end_date, delta):
@@ -240,7 +240,7 @@ class DeviceStore:
       return data, None
 
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
       
   def update_device(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -259,7 +259,7 @@ class DeviceStore:
       return new_device, None
 
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
   
   def delete_device(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -270,5 +270,5 @@ class DeviceStore:
       return devices.first(), None
 
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
