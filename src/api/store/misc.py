@@ -673,12 +673,7 @@ class MiscellaneousStore:
             if not site_id:
                 return None, CustomMassenergizeError("site_id not provided")
             
-            if site_id == CAMPAIGN_USER_SITE_ID:
-               data = json_loader("translation/raw_data/campaigns_site_static_texts.json")
-               
-            else:
-                data = json_loader("translation/raw_data/campaigns_site_static_texts.json") # update this with the correct json
                 
-            return data, None
+            return {}, None
         except Exception as e:
             return None, CustomMassenergizeError(str(e))
