@@ -29,10 +29,10 @@ class SupportedLanguageService:
 
         return serialize(language), None
 
-    def disable_supported_language (self, context, language_code) -> Tuple[ SupportedLanguage, any ]:
+    def disable_supported_language (self, context, language_code) -> Tuple[ SupportedLanguage or None, any ]:
         language, err = self.store.disable_supported_language(context, language_code)
-        return serialize(language) if language else None, None
+        return None if err else serialize(language), err
 
     def enable_supported_language (self, context, language_code) -> Tuple[ SupportedLanguage, any ]:
         language, err = self.store.enable_supported_language(context, language_code)
-        return serialize(language) if language else None, None
+        return None if err else serialize(language), err
