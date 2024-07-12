@@ -126,21 +126,23 @@ Two ways to run the API:
 
 For developers running Windows, the following additional steps are required to run a bash shell:
 
-1. From Microsoft Store, install the Terminal app and the Windows Subsystem for Linux (WSL).  This will allow you to run a Unix bash window rather than standard Windows command window.  In Terminal, you can create a bash window as a new tab.  
+1. From Microsoft Store, install the Terminal app and the Windows Subsystem for Linux (WSL).  This will allow you to run a Unix bash window rather than standard Windows command window.  In Terminal, you can create a Ubuntu window as a new tab.  
+
+You may need to enable the WSL, using "Turn Windows Features On or Off" in the start menu, check that the Windows Subsystem for Linux is checked, and restart your PC if requested.
 
 In that window, the syntax for files and folders is different than for Windows.  For example to set the default to a folder which would be `C:\xxx\MassEnergize\api` you would use the command `cd /mnt/c/xxx/Massenergize/api`.
 
 2. Install Python 3.9 with the following commands:
  ```sh
  sudo apt update && sudo apt upgrade -y
- sudo add apt-repository ppa:deadsnakes:ppa
+ sudo add apt-repository ppa:deadsnakes/ppa
  sudo apt install python3.9
  ```
 
 3. Install Miniconda (version of Anaconda):
  ```sh
- wget https://repo.anaconda.com/miniconda/Miniconda3-latest-linux-x86_64.sh
- bash Miniconda3-latest-linux-x86_64.sh
+ wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+ bash Miniconda3-latest-Linux-x86_64.sh
  echo 'export PATH="~/miniconda3/bin:$PATH' >> ~/.bashrc
  source ~/.bashrc
  ```
@@ -209,9 +211,12 @@ Press `control(^) + x` to exit the file
 - Download the Postgres app from [here](https://postgresapp.com/downloads.html).
 
 #### for Windows
-- Install Postgresql with the following commands:
+- Install Postgresql with the following commands.  The first two are necessary currently because the Postgresql version from the default repository is 14, where we require 15 or later:
 
   ```sh
+  sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+  sudo apt update
+  wget -qO- https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo tee /etc/apt/trusted.gpg.d/pgdg.asc &>/dev/null
   sudo apt install postgresql
   ```
 
