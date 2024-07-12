@@ -1,3 +1,4 @@
+import threading
 from typing import Tuple
 from api.services.translations_cache import TranslationsCacheService
 from _main_.utils.common import serialize, serialize_all
@@ -25,7 +26,9 @@ class SupportedLanguageService:
             return None, err
 
         translationsCacheService = TranslationsCacheService()
-        translationsCacheService.translate_all_models(context, args.get('code', None))
+        thread = threading.Thread(target = translationsCacheService.translate_all_models,
+                                  args = (context, args.get('code', None)))
+        thread.start()
 
         return serialize(language), None
 
