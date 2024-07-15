@@ -2,7 +2,7 @@
 
 from typing import Tuple
 
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 from _main_.utils.context import Context
 from _main_.utils.massenergize_errors import CustomMassenergizeError, InvalidResourceError, MassEnergizeAPIError
 from api.utils.api_utils import create_media_file
@@ -22,7 +22,7 @@ class PartnerStore:
             
             return partner, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
         
 
@@ -31,7 +31,7 @@ class PartnerStore:
             partners = Partner.objects.filter(is_deleted=False)
             return partners, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
         
     
@@ -44,7 +44,7 @@ class PartnerStore:
             partner.save()
             return partner, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
         
 
@@ -62,7 +62,7 @@ class PartnerStore:
             else:
                 return None, InvalidResourceError()
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
         
 
@@ -77,7 +77,7 @@ class PartnerStore:
             partner.update(is_deleted=True)
             return partner.first(), None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
         
 
@@ -86,6 +86,6 @@ class PartnerStore:
             partners = Partner.objects.filter(is_deleted=False)
             return partners, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
         

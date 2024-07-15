@@ -9,7 +9,7 @@ from _main_.utils.common import get_request_contents
 from database.models import UserProfile
 from _main_.settings import SECRET_KEY
 import json, jwt
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 
 def login(request):
   # This does the same work as verify
@@ -44,7 +44,7 @@ def who_am_i(request):
     return MassenergizeResponse(user.full_json())
 
   except Exception as e:
-    capture_message(str(e), level="error")
+    log.exception(e)
     return CustomMassenergizeError(e)
 
 
@@ -78,5 +78,5 @@ def verify(request):
       return CustomMassenergizeError("Invalid Auth")
 
   except Exception as e:
-    capture_message(str(e), level="error")
+    log.exception(e)
     return CustomMassenergizeError(e)

@@ -11,7 +11,7 @@ from api.utils.filter_functions import sort_items
 from .utils import send_slack_message
 from api.store.utils import get_user_or_die
 from typing import Tuple
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 from django.utils.safestring import mark_safe
 from database.models import HomePageSettings
 #import datetime
@@ -116,7 +116,7 @@ class EventService:
 
       return serialize(event_attendee), None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def rsvp_remove(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -211,7 +211,7 @@ class EventService:
 
       return serialize(event), None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 

@@ -8,7 +8,7 @@ from _main_.utils.emailer.send_email import send_massenergize_rich_email
 from _main_.utils.constants import COMMUNITY_URL_ROOT,  ME_LOGO_PNG
 import os, csv
 import re
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 from typing import Tuple
 from api.utils.api_utils import get_sender_email
 
@@ -241,7 +241,7 @@ class UserService:
       user = serialize(user, full=True)
       return {**user, "is_new":True }, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -338,7 +338,7 @@ class UserService:
         return None, err
       return {'invalidEmails': invalid_emails}, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def import_from_list(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -381,7 +381,7 @@ class UserService:
           return None, CustomMassenergizeError(e)
       return {'invalidEmails': invalid_emails}, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
     
 
