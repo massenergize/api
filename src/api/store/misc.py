@@ -65,19 +65,16 @@ class MiscellaneousStore:
             return None, CustomMassenergizeError(e)
 
     def actions_report(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
-        print("Actions report!")
         total = 0
         total_wo_ccaction = 0
         for c in Community.objects.filter(is_published=True):
-            print(c)
             actions = Action.objects.filter(community__id=c.id, is_published=True, is_deleted=False)
             total += actions.count()
             for action in actions:
                 if action.calculator_action == None:
                     total_wo_ccaction += 1
-                    print(action.title + " has no corresponding CCAction")
-        print("Total actions = "+str(total) + ", no CCAction ="+str(total_wo_ccaction))
-        return None, None
+        log.info(f"Total actions = {str(total)}, no CCAction ={str(total_wo_ccaction)}")
+        return {"total": total, "total_wo_ccaction": total_wo_ccaction}, None
 
     def backfill(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
         return self.backfill_graph_default_data(context, args), None
@@ -87,7 +84,7 @@ class MiscellaneousStore:
             try:
                 Subdomain(name=c.subdomain, in_use=True, community=c).save()
             except Exception as e:
-                print(e)
+                log.exception(e, f"could not backfill subdomain: {c.subdomain}")
 
     def backfill_teams(
         self, context: Context, args
@@ -193,7 +190,7 @@ class MiscellaneousStore:
 
                         d.value = val
                         d.save()
-                        print(
+                        log.info(
                             "Backfill: Community: "
                             + community.name
                             + ", Category: "
@@ -217,12 +214,12 @@ class MiscellaneousStore:
             # This defines what geographic community, if any gets credit
             # For now, check for zip code
             reu_all = RealEstateUnit.objects.all()
-            print("Number of real estate units:" + str(reu_all.count()))
+            log.info("Number of real estate units:" + str(reu_all.count()))
 
             userProfiles = UserProfile.objects.prefetch_related(
                 "real_estate_units"
             ).filter(is_deleted=False)
-            print("number of user profiles:" + str(userProfiles.count()))
+            log.info("number of user profiles:" + str(userProfiles.count()))
 
             # loop over profiles and realEstateUnits associated with them
             for userProfile in userProfiles:
@@ -234,8 +231,6 @@ class MiscellaneousStore:
                     reus.count(),
                     userProfile.created_at.strftime("%Y-%m-%d"),
                 )
-                print(msg)
-
                 for reu in reus:
                     street = unit_number = city = county = state = zip = ""
                     loc = reu.location  # a JSON field
@@ -244,7 +239,7 @@ class MiscellaneousStore:
                     if loc:
                         # if not isinstance(loc,str):
                         #  # one odd case in dev DB, looked like a Dict
-                        #  print("REU location not a string: "+str(loc)+" Type="+str(type(loc)))
+                        #  log.info("REU location not a string: "+str(loc)+" Type="+str(type(loc)))
                         #  loc = loc["street"]
 
                         loc_parts = split_location_string(loc)
@@ -259,9 +254,6 @@ class MiscellaneousStore:
                                 state = loc_parts[2].upper()
                                 zip = loc_parts[3].strip()
                                 if not zip or (len(zip) != 5 and len(zip) != 10):
-                                    print(
-                                        "Invalid zipcode: " + zip + ", setting to 00000"
-                                    )
                                     zip = "00000"
                                 elif len(zip) == 10:
                                     zip = zip[0:5]
@@ -275,14 +267,13 @@ class MiscellaneousStore:
                                     city = ZIPCODE_FIXES[entry]["city"]
                                     state = ZIPCODE_FIXES[entry].get("state", "MA")
 
-                            print("Zipcode assigned " + zip)
 
                         # create the Location for the RealEstateUnit
                         location_type, valid = check_location(
                             street, unit_number, city, state, zip
                         )
                         if not valid:
-                            print("check_location returns: " + location_type)
+                            log.info("check_location returns: " + location_type)
                             continue
 
                         # newloc, created = Location.objects.get_or_create(
@@ -305,10 +296,10 @@ class MiscellaneousStore:
                                 county=county,
                                 state=state,
                             )
-                            print("Zipcode " + zip + " created for town " + city)
+                            log.info("Zipcode " + zip + " created for town " + city)
                         else:
                             newloc = newloc.first()
-                            print("Zipcode " + zip + " found for town " + city)
+                            log.info("Zipcode " + zip + " found for town " + city)
 
                         reu.address = newloc
                         reu.save()
@@ -332,7 +323,7 @@ class MiscellaneousStore:
 
                         # no location was stored?
                         if zip == "00000":
-                            print("No location found for RealEstateUnit " + str(reu))
+                            log.info("No location found for RealEstateUnit " + str(reu))
 
                         location_type = "ZIP_CODE_ONLY"
                         newloc, created = Location.objects.get_or_create(
@@ -345,16 +336,16 @@ class MiscellaneousStore:
                             state=state,
                         )
                         if created:
-                            print("Location with zipcode " + zip + " created")
+                            log.info("Location with zipcode " + zip + " created")
                         else:
-                            print("Location with zipcode " + zip + " found")
+                            log.info("Location with zipcode " + zip + " found")
                         reu.address = newloc
                         reu.save()
 
                     # determine which, if any, community this household is actually in
                     community = find_reu_community(reu)
                     if community:
-                        print(
+                        log.info(
                             "Adding the REU with zipcode "
                             + zip
                             + " to the community "
@@ -363,7 +354,7 @@ class MiscellaneousStore:
                         reu.community = community
 
                     elif reu.community:
-                        print(
+                        log.info(
                             "REU not located in any community, but was labeled as belonging to the community "
                             + reu.community.name
                         )
@@ -477,7 +468,7 @@ class MiscellaneousStore:
 
         sorted_keys = sorted(common_icons, key=common_icons.get, reverse=True)
         for key in sorted_keys:
-            print(str(key) + ": " + str(common_icons[key]))
+            log.info(str(key) + ": " + str(common_icons[key]))
 
     def load_menu_items(self, context, args):
         try:

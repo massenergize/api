@@ -7,10 +7,8 @@ from database.models import AboutUsPageSettings, ActionsPageSettings, Community,
     ContactUsPageSettings, DonatePageSettings, EventsPageSettings, ImpactPageSettings, Media, Menu, \
     TeamsPageSettings, TestimonialsPageSettings, UserProfile, \
     VendorsPageSettings
-import pyshorteners
-
 from _main_.utils.constants import COMMUNITY_URL_ROOT
-
+from _main_.utils.massenergize_logger import log
 
 def is_admin_of_community(context, community_id):
     # super admins are admins of any community
@@ -312,5 +310,5 @@ def get_list_of_internal_links(is_footer=False):
         
         return internal_links, None
     except Exception as e:
-        print(f"Error: {str(e)}")
+        log.exception(e)
         return None, str(e)

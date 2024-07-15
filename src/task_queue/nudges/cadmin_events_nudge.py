@@ -13,7 +13,7 @@ import datetime
 import pytz
 from django.db.models import Q
 from dateutil.relativedelta import relativedelta
-
+from _main_.utils.massenergize_logger import log 
 from task_queue.helpers import get_event_location
 
 WEEKLY = "weekly"
@@ -117,7 +117,7 @@ def get_email_list(admins):
         name = admin.get("name")
         email = admin.get("email")
         if not name or not email:
-            print("Missing name or email for admin: " + str(admin))
+            log.info("Missing name or email for admin: " + str(admin))
             continue
 
         # BHN - fixed crash on this next line if communication_prefs didn't exist
@@ -198,13 +198,13 @@ def send_events_nudge(task=None):
                 for name, email in email_list.items():
                     stat = send_events_report(name, email, event_list)
                     if not stat:
-                        print("send_events_report error return")
+                        log.error("send_events_report error return")
                         return False
                     admins_emailed.append(email)
         update_last_notification_dates(admins_emailed)
         return True
     except Exception as e:
-        print("Community admin nudge exception: " + str(e))
+        log.exception(e)
         return False
 
 
@@ -224,5 +224,5 @@ def send_events_report(name, email, event_list):
         send_massenergize_email_with_attachments(WEEKLY_EVENTS_NUDGE_TEMPLATE, data, [email], None, None, None)
         return True
     except Exception as e:
-        print("send_events_report exception: " + str(e))
+        log.exception(e)
         return False

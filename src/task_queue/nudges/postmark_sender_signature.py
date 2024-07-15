@@ -4,6 +4,7 @@ from _main_.utils.emailer.send_email import (
     get_sender_signature_info,
     resend_signature_confirmation,
 )
+from _main_.utils.massenergize_logger import log 
 #from _main_.utils.feature_flag_keys import POSTMARK_COMMUNITY_EMAIL_SENDER_SIGNATURE_FF
 #from database.models import Community, FeatureFlag
 from database.models import Community
@@ -44,9 +45,9 @@ def collect_and_create_signatures(task=None):
                             "nudge_count": postmark_info.get("nudge_count", 0) + 1,
                         }
                     else:
-                        print(f"ERROR Resending Confirmation to {community.name}: ", res.json())
+                        log.error(f"ERROR Resending Confirmation to {community.name}: ", extra={'data': str(response.json())})
             else:
-                print(f"ERROR getting Contact Info of {community.name}: ", response.json())
+                log.error(f"ERROR getting Contact Info of {community.name}: ", extra={'data': str(response.json())})
         else:
             response = add_sender_signature(email, alias, community.owner_name, community.name)
             if response.status_code == 200:
@@ -62,5 +63,5 @@ def collect_and_create_signatures(task=None):
             
                 community.save()
             else:
-                print(f"ERROR adding signature for {community.name}: ", response.json())
+                log.error(f"ERROR adding signature for {community.name}: ", extra={'data': str(response.json())})
     return True

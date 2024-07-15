@@ -332,7 +332,7 @@ class UserService:
               invalid_emails.append({"line":line, "email":email}) 
 
         except Exception as e:
-          print("Error string: " + str(e))
+          log.exception(e)
           return None, CustomMassenergizeError(e)
       if err:
         return None, err
@@ -377,7 +377,6 @@ class UserService:
             invalid_emails.append({"line":ix, "first_name":first_name, "last_name": last_name, "email":email}) 
 
         except Exception as e:
-          print(str(e))
           return None, CustomMassenergizeError(e)
       return {'invalidEmails': invalid_emails}, None
     except Exception as e:

@@ -106,7 +106,6 @@ def process_spacing_data(task=None):
     
         return True
     except Exception as e:
-        print(str(e))
         log.exception(e)
         return False
   

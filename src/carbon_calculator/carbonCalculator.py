@@ -5,6 +5,7 @@
 import os
 import pytz
 from _main_.settings import BASE_DIR, RUN_SERVER_LOCALLY
+from _main_.utils.massenergize_logger import log
 from datetime import datetime, date
 import time
 from .models import Action, Question, CarbonCalculatorMedia, Version, Category, Subcategory
@@ -196,7 +197,7 @@ class CarbonCalculator:
                 print("Carbon Calculator initialization time: "+str(end - start)+" seconds")
 
         except Exception as e:
-            print(str(e))
+            log.exception(e)
             print("Calculator initialization skipped")
 
     # query actions
@@ -405,7 +406,7 @@ class CarbonCalculator:
                     csvfile.close()
                     return True
         except Exception as e:
-            print(str(e))
+            log.exception(e)
             return False
 
     
@@ -491,8 +492,7 @@ class CarbonCalculator:
                 csvfile.close()
             return True
         except Exception as e:
-            print(str(e))
-            print('Error importing Carbon Calculator questions')
+            log.exception(e, message='Error importing Carbon Calculator questions')
             return False
         
     def ImportActions(self, actionsFile):
@@ -543,8 +543,7 @@ class CarbonCalculator:
                 csvfile.close()
             return True
         except Exception as e:
-            print(str(e))
-            print('Error importing Carbon Calculator actions')
+            log.exception(e, 'Error importing Carbon Calculator actions')
             return False
 
 

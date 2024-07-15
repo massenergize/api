@@ -443,7 +443,7 @@ class GraphStore:
               d.value = val
               d.save()
               if RUN_SERVER_LOCALLY:
-                print("WARNING - data_fix: Community: " + community.name
+                log.info("WARNING - data_fix: Community: " + community.name
                   + ", Category: " + tag.name
                   + ", Old: "  + str(oldval)
                   + ", New: "  + str(val))

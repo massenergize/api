@@ -234,17 +234,18 @@ LOGGING = EnvConfig.get_logging_settings()
 ### End Logger settings ###
 
 # Sentry Logging Initialization
-sentry_dsn = os.environ.get('SENTRY_DSN')
-if sentry_dsn:
-  sentry_sdk.init(
-    dsn=sentry_dsn,
-    integrations=[DjangoIntegration(
-            transaction_style='url',
-            middleware_spans=True,
-        ),
-           CeleryIntegration(),
-    ],
-    traces_sample_rate=1.0,
+if EnvConfig.can_send_logs_to_external_watchers():
+    sentry_dsn = os.environ.get('SENTRY_DSN')
+    if sentry_dsn:
+        sentry_sdk.init(
+            dsn=sentry_dsn,
+            integrations=[DjangoIntegration(
+                    transaction_style='url',
+                    middleware_spans=True,
+                ),
+                CeleryIntegration(),
+            ],
+            traces_sample_rate=1.0,
 
 
     # If you wish to associate users to errors (assuming you are using

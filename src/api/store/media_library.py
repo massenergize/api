@@ -110,7 +110,6 @@ class MediaLibraryStore:
 
         end = time.time()
         msg = f"Generated hashes for {generated} items in {end - start} seconds"
-        print(msg)
 
         return msg, None
 

@@ -35,7 +35,6 @@ class GeoIP:
     # iPhone's user agent string
     #ua_string = 'Mozilla/5.0 (iPhone; CPU iPhone OS 5_1 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/5.1 Mobile/9B179 Safari/7534.48.3'
     user_agent = parse(ua_string)
-    #print(user_agent)
 
     client = {}
     # Accessing user agent's browser attributes
@@ -70,7 +69,7 @@ class GeoIP:
         ip = request.META.get('REMOTE_ADDR')
 
     if not ip_valid(ip):
-      print("GeoIP: IP address is NOT valid")
+      log.error("GeoIP: IP address is NOT valid")
       return None
 
     return ip
@@ -99,5 +98,5 @@ class GeoIP:
 
     #self.reader.close()
     except Exception as e:
-      # print(e)
+      log.exception(e)
       return e

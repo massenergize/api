@@ -78,9 +78,9 @@ def _get_or_create_reu_location(args, user=None):
   )
   
   if created:
-    print("Location with zipcode " , zipcode , " created for user " , user.preferred_name)
+    log.info(f"Location with zipcode, {zipcode} , created for user, {user.preferred_name}")
   else:
-    print("Location with zipcode " , zipcode , " found for user " , user.preferred_name)
+    log.info(f"Location with zipcode, {zipcode} , found for user, {user.preferred_name}")
   return reuloc
 
 def _update_action_data_totals(action, household, delta): 
@@ -443,7 +443,6 @@ class UserStore:
       return reu, None
     
     except Exception as e:
-      print("=== error from add_household ===", e)
       log.exception(e)
       return None, CustomMassenergizeError(e)
   
@@ -468,7 +467,8 @@ class UserStore:
       verbose = DEBUG
       community = find_reu_community(reu, verbose)
       if community:
-        if verbose: print("Updating the REU with zipcode " + reu.address.zipcode + " to the community " + community.name)
+        if verbose: 
+          log.info("Updating the REU with zipcode " + reu.address.zipcode + " to the community " + community.name)
         reu.community = community
       
       reu.save()
@@ -490,7 +490,6 @@ class UserStore:
     community, err = get_community(community_id)
     
     if not community:
-      print(err)
       return [], None
     
     if not is_admin_of_community(context, community_id):
@@ -501,7 +500,6 @@ class UserStore:
     community_id = args.pop('community_id', None)
     community, err = get_community(community_id)    
     if not community:
-      print(err)
       return [], None
 
     LEADERBOARD_MINIMUM = 100
@@ -849,7 +847,6 @@ class UserStore:
         
         return users.distinct(), None
       elif not community:
-        print(err)
         return [], None
       
       if not is_admin_of_community(context, community_id):

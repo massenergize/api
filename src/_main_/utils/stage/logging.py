@@ -7,6 +7,7 @@ from logging.handlers import TimedRotatingFileHandler
 BASE_DIR = os.getcwd()
 LOG_DIR = os.path.join(BASE_DIR, '.logs')
 LOG_FILE_NAME = "api.log"
+TESTING_LOG_FILE_NAME = "api.testing.log"
 
 # Ensure the log directory exists
 if not os.path.exists(LOG_DIR):
@@ -31,7 +32,7 @@ def get_default_logging_settings(stage):
         },
         'handlers': {
             'external': {
-                'level': 'DEBUG',  
+                'level': 'INFO',  
                 'class': 'watchtower.CloudWatchLogHandler',
                 'log_group': f"/api/{stage}",
                 'stream_name': get_host_identifier(),
@@ -42,7 +43,7 @@ def get_default_logging_settings(stage):
                 'filters': ['cid'], 
             },
             'file': {
-                'level': 'DEBUG',
+                'level': 'INFO',
                 'class': 'logging.handlers.TimedRotatingFileHandler',
                 'filename': os.path.join(LOG_DIR, LOG_FILE_NAME),
                 'when': 'midnight',  # Rotate logs at midnight
@@ -107,18 +108,59 @@ def get_local_logging_settings():
         },
         "root": {
             "handlers": ["console", "file"],
-            "level": "WARNING",
+            "level": "INFO",
         },
         'loggers': {
             get_logger_name(): {
                 'handlers': ['console', 'file'],
+                'level': 'INFO',
+                'propagate': False,
+            }
+        }
+    }
+
+def get_testing_logging_settings():
+    return {
+        "version": 1,
+        "disable_existing_loggers": False,
+        'filters': {
+            'cid': {
+                '()': 'cid.log.CidContextFilter'
+            },
+        },
+        'formatters': {
+            'detailed': {
+                'format': '[request_id=%(cid)s] %(asctime)s %(levelname)s %(name)s %(message)s'
+            },
+        },
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
+            },
+            'file': {
+                'level': 'WARNING',
+                'class': 'logging.handlers.TimedRotatingFileHandler',
+                'filename': os.path.join(LOG_DIR, TESTING_LOG_FILE_NAME),
+                'when': 'midnight',  # Rotate logs at midnight
+                'interval': 1,
+                'backupCount': 7,  # Keep last 7 days of logs
+                'filters': ['cid'], 
+            },
+        },
+        "root": {
+            "handlers": ["file"],
+            "level": "WARNING",
+        },
+        'loggers': {
+            get_logger_name(): {
+                'handlers': ['file'],
                 'level': 'DEBUG',
                 'propagate': False,
             }
         }
     }
 
-
+    
 def get_host_identifier():
     try:
         ec2 = boto3.resource('ec2')
