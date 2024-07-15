@@ -34,6 +34,7 @@ from api.handlers.team import TeamHandler
 from api.handlers.page_settings__teams import TeamsPageSettingsHandler
 from api.handlers.technology import TechnologyHandler
 from api.handlers.testimonial import TestimonialHandler
+from api.handlers.translation import TranslationsHandler
 from api.handlers.userprofile import UserHandler
 from api.handlers.vendor import VendorHandler
 from api.handlers.page_settings__register import RegisterPageSettingsHandler
@@ -76,6 +77,7 @@ ROUTE_HANDLERS = [
     TeamsPageSettingsHandler(),
     TestimonialHandler(),
     TestimonialsPageSettingsHandler(),
+    TranslationsHandler(),
     UserHandler(),
     VendorHandler(),
     VendorsPageSettingsHandler(),
