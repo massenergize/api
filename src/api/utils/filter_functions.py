@@ -80,7 +80,7 @@ def get_actions_filter_params(params):
       status = None
 
       if search_text:
-        search= reduce(operator.or_, 
+        search= reduce(operator.or_,
         (Q(title__icontains= search_text),
         Q(tags__name__icontains= search_text),
         Q(community__name__icontains= search_text),
@@ -311,7 +311,7 @@ def get_users_filter_params(params):
         search= reduce(
         operator.or_, (
         Q(full_name__icontains= search_text),
-        Q(Q(id__in=users)),# 
+        Q(Q(id__in=users)),#
         Q(email__icontains= search_text),
         ))
         query.append(search)
@@ -377,7 +377,7 @@ def get_sort_params(params):
     sort =""
     if sort_params:
       sort+= sort_params.get("name")
-      if sort_params.get("direction") == "asc":
+      if sort_params.get("direction") == "desc":
         sort = "-"+sort
       return sort.lower()
     
