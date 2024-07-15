@@ -1511,7 +1511,6 @@ class DownloadStore:
             else:
                 return EMPTY_DOWNLOAD, NotAuthorizedError()
         except Exception as e:
-            print(str(e))
             log.exception(e)
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
         

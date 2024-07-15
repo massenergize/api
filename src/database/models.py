@@ -30,6 +30,7 @@ from api.constants import COMMUNITY_NOTIFICATION_TYPES, STANDARD_USER, GUEST_USE
 from django.forms.models import model_to_dict
 from carbon_calculator.models import Action as CCAction
 from carbon_calculator.carbonCalculator import AverageImpact
+from _main_.utils.massenergize_logger import log 
 
 CHOICES = json_loader("./database/raw_data/other/databaseFieldChoices.json")
 ZIP_CODE_AND_STATES = json_loader("./database/raw_data/other/states.json")
@@ -1108,7 +1109,7 @@ class UserProfile(models.Model):
                 else:
                     self.visit_log.append(date)
         except Exception as e:
-            print(e)
+            log.exception(e)
             return None, e
 
     def full_json(self):
@@ -1372,7 +1373,7 @@ class DeviceProfile(models.Model):
                     self.visit_log.append(date)
 
         except Exception as e:
-            print(e)
+            log.exception(e)
             return None, e
 
     def simple_json(self):

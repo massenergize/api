@@ -25,7 +25,7 @@ from apps__campaigns.models import (
     TechnologyVendor,
 )
 from database.models import Community, Event, Media, Testimonial, UserProfile, Vendor
-
+from _main_.utils.massenergize_logger import log
 
 TEMPLATE_TITLE = "Template Campaign"
 
@@ -38,7 +38,7 @@ def create_media(image_path):
             media.name = f"Test media for {image_path}"
         return media
     except Exception as e:
-        print(f"Error creating media: {str(e)}")
+        log.exception(e, message="Error creating media")
         return None
 
 
@@ -85,7 +85,7 @@ def get_3_communities():
             comm.append(community)
         return comm
     except Exception as e:
-        print(f"Error creating communities: {str(e)}")
+        log.exception(e, "Error creating communities")
         return []
 
 
@@ -118,7 +118,7 @@ def create_campaign_technology_overview(technology_id):
             campaign_technology_overview.image = item["image"]
             campaign_technology_overview.save()
     except Exception as e:
-        print(f"Error creating campaign technology overview: {str(e)}")
+        log.exception(e, message=f"Error creating campaign technology overview")
 
 
 def create_technology_coaches(technology_id):
@@ -154,7 +154,7 @@ def create_technology_coaches(technology_id):
             coach.image = item["image"]
             coach.save()
     except Exception as e:
-        print(f"Error creating technology coaches: {str(e)}")
+        log.exception(e, message="Error creating technology coaches: {str(e)}")
 
 
 def create_technology_vendors(technology_id):
@@ -168,7 +168,7 @@ def create_technology_vendors(technology_id):
             tech_vendor.vendor = vendor
             tech_vendor.save()
     except Exception as e:
-        print(f"Error creating technology vendors: {str(e)}")
+        log.exception(e, message="Error creating technology vendors")
 
 
 def create_technology_events(campaign):
@@ -222,7 +222,7 @@ def create_technology_events(campaign):
                 campaign_event.campaign_technology = tech
                 campaign_event.save()
     except Exception as e:
-        print(f"Error creating Campaign events: {str(e)}")
+        log.exception(e, message=f"Error creating Campaign events: {str(e)}")
 
 
 
@@ -245,7 +245,7 @@ def create_technology(name, image=None, description=None):
 
         return technology
     except Exception as e:
-        print(f"Error creating technology: {str(e)}")
+        log.exception(e, message="Error creating technology")
 
 
 def create_campaign_technology_testimonial(campaign_technology_id):
@@ -309,7 +309,7 @@ def create_campaign_technology_testimonial(campaign_technology_id):
 
             campaign_technology_view.save()
     except Exception as e:
-        print(f"An error occurred while creating testimonials: {str(e)}")
+        log.exception(e, message="An error occurred while creating testimonials")
 
 
 def create_campaign_partners(campaign):
@@ -382,7 +382,7 @@ def create_campaign_Managers(campaign):
             campaign_manager.contact = user["contact"]
             campaign_manager.save()
     except Exception as e:
-        print(f"An error occurred while creating campaign managers: {str(e)}")
+        log.exception(e, message="An error occurred while creating campaign managers")
 
 
 def create_campaign_configuration(campaign):
@@ -429,7 +429,7 @@ def create_campaign_events(campaign):
                 campaign_event.campaign_technology = tech
                 campaign_event.save()
     except Exception as e:
-        print(f"An error occurred while creating events: {str(e)}")
+        log.exception(e, message="An error occurred while creating events")
 
 
 
@@ -470,7 +470,7 @@ def create_template_campaign():
 
         return campaign
     except Exception as e:
-        print(f"An error occurred while creating template campaign: {str(e)}")
+        log.exception(e, message="An error occurred while creating template campaign")
         return None
 
 
@@ -505,7 +505,7 @@ def create_template_campaign_technology(campaign_id):
 
             create_campaign_technology_testimonial(campaign_technology.id)
     except Exception as e:
-        print(f"An error occurred while creating template campaign technologies: {str(e)}")
+        log.exception(e, message="An error occurred while creating template campaign technologies")
 
 
 
@@ -524,4 +524,4 @@ def run():
         print("Template Campaign Created Successfully !!!")
         return
     except Exception as e:
-        print(f"An error occurred while creating the template campaign: {str(e)}")
+        log.exception(e, message="An error occurred while creating the template campaign")

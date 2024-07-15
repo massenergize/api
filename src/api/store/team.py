@@ -381,7 +381,6 @@ class TeamStore:
         # ----------------------------------------------------------------
       return team, None
     except Exception as e:
-      print(str(e))
       log.exception(e)
       return None, CustomMassenergizeError(e)
     

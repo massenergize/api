@@ -89,7 +89,6 @@ class MiscellaneousHandler(RouteHandler):
     def actions_report(self, request):
         context: Context = request.context
         args: dict = context.args
-        print("Got here")
         goal_info, err = self.service.actions_report(context, args)
         if err:
             return err

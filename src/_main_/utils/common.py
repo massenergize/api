@@ -273,11 +273,9 @@ def get_cookie(request, key):
 
 
 def set_cookie(response, key, value):  # TODO
-    print(f"----- set_cookie: {response}")
     # set cookie on response before sending
     # cookie expiration set to 1yr
     MAX_AGE = 31536000
-
     response.set_cookie(key, value, MAX_AGE, samesite="Strict")
 
 

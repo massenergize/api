@@ -3,7 +3,7 @@ import os
 from celery import Celery
 from celery import shared_task
 from _main_.celery.config import CeleryConfig
-from celery.schedules import crontab
+from _main_.utils.massenergize_logger import log 
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "_main_.settings")
 app = Celery('massenergize_celeryapp')
@@ -23,4 +23,4 @@ app.conf.beat_schedule = {
 
 @shared_task(bind=True)
 def debug_task(self):
-    print('Request: {0!r}'.format(self.request))
+    log.info('Request: {0!r}'.format(self.request))

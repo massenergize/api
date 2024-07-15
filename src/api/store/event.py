@@ -744,7 +744,7 @@ class EventStore:
                     exception.delete()
 
             except Exception as e:
-                print(str(e))
+                log.exception(e)
                 return CustomMassenergizeError(e)
         return None, None
 

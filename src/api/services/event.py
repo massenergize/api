@@ -134,7 +134,6 @@ class EventService:
   def list_recurring_event_exceptions(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
     exceptions, err = self.store.list_recurring_event_exceptions(context, args)
     if err:
-      print(err)
       return None, err
     return exceptions, None
 

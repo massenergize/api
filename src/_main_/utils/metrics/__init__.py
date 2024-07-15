@@ -57,7 +57,7 @@ def send_metric(func, execution_time, name_space=FUNCTION_LATENCY_NAMESPACE, ext
 
 
 def put_metric_data(name_space, metric_data):
-    if not EnvConfig.can_send_logs_to_cloudwatch():
+    if not EnvConfig.can_send_logs_to_external_watchers():
         return 
 
     try:

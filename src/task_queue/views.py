@@ -17,6 +17,7 @@ from django.db.models import Count
 from django.db.models import Q
 from django.core.exceptions import ObjectDoesNotExist
 from carbon_calculator.carbonCalculator import AverageImpact
+from _main_.utils.massenergize_logger import log 
 
 today = datetime.datetime.utcnow().replace(tzinfo=utc)
 one_week_ago = today - timezone.timedelta(days=7)
@@ -379,7 +380,7 @@ def create_snapshots(task=None):
         return "Success"
 
     except Exception as e: 
-        print("Community snapshot exception: " + str(e))
+        log.exception(e)
         return "Failure"
 
 def send_mou_email(email, name):
@@ -439,7 +440,7 @@ def send_admin_mou_notification(task=None):
                 needs_to_sign_mou = last_record.signed_at <= a_year_ago
             else:
                 if not IS_PROD:
-                    print(admin_name + " has no MOU acceptance recorded")
+                    log.info(admin_name + " has no MOU acceptance recorded")
                 needs_to_sign_mou = True
 
             # If it's time to notify the admin again, then add a new notification timestamp to their policy record
@@ -456,7 +457,7 @@ def send_admin_mou_notification(task=None):
                     not last_date_of_notification
                 ):  # If for some reason notification date has never been recorded
                     if not IS_PROD:
-                        print("Sending first MOU notification")
+                        log.info("Sending first MOU notification")
                     send_mou_email(admin.email, admin_name)
                     update_records(last=last_record, notices=notices)
                     
@@ -467,16 +468,17 @@ def send_admin_mou_notification(task=None):
                     
                     if not_notified_recently: #only notify if its been more than a month of notifying
                         if not IS_PROD:
-                            print("Overdue: Sending another notification")
+                            log.info("Overdue: Sending another notification")
                         send_mou_email(admin.email, admin_name)
                         update_records(last=last_record, notices=notices)
                         
        
                         
-        except ObjectDoesNotExist:
+        except ObjectDoesNotExist as e:
+            log.exception(e)
             # If no MOU record exists for the admin, this means the first time they need to sign the MOU
             if not IS_PROD:
-                print("Except: Sending first admin MOU notificaiton to " + admin_name)
+                log.info("Except: Sending first admin MOU notificaiton to " + admin_name)
             send_mou_email(admin.email, admin_name)
 
             # Record the current notification timestamp

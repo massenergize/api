@@ -81,11 +81,10 @@ class AuthService:
       else:
         return None, None, CustomMassenergizeError("invalid_auth")
     except PermissionError:
-      log.error("not_an_admin", level="error")
+      log.error("not_an_admin", exception=PermissionError)
       return None, None, CustomMassenergizeError('not_an_admin')
     except Exception as e:
-      print(e)
-      log.error("Authentication Error", level="error")
+      log.exception(e)
       return None, None, CustomMassenergizeError(e)
 
 

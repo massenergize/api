@@ -18,6 +18,7 @@ from database.utils.settings.model_constants.events import EventConstants
 from django.utils import timezone
 
 from task_queue.helpers import get_event_location
+from _main_.utils.massenergize_logger import log 
 
 WEEKLY = "per_week"
 BI_WEEKLY = "biweekly"
@@ -147,7 +148,7 @@ def is_event_eligible(event, community_id, task=None):
         
         return False
     except Exception as e:
-        print(f"is_event_eligible exception - (event:{event.name}|| community:{community_id}): " + str(e))
+        log.exception(e, exta={"event_name": event.name, "community": community_id})
         return False
 
 
@@ -218,7 +219,7 @@ def prepare_events_email_data(events):
     return data
 
 
-def community_has_altered_flow(community, feature_flag_key) -> bool:
+def community_has_altered_flow(community: Community, feature_flag_key) -> bool:
     try:
         today = timezone.now().today().date()
         community_nudge_settings = CommunityNotificationSetting.objects.filter(community=community,
@@ -244,7 +245,7 @@ def community_has_altered_flow(community, feature_flag_key) -> bool:
             return False
         return True
     except Exception as e:
-        print(f"community_has_altered_flow exception - ({community.name}): " + str(e))
+        log.exception(e, message="community_has_altered_flow", extra={"community": community.subdomain})
         return False
 
 
@@ -266,10 +267,10 @@ def send_events_report_email(name, email, event_list, comm, login_method=""):
         data["community"] = comm.name
         from_email = get_sender_email(comm.id)
         send_massenergize_email_with_attachments(USER_EVENTS_NUDGE_TEMPLATE, data, [email], None, None, from_email)
-        print("Email sent to " + email)
+        log.info("Email sent to " + email)
         return True
     except Exception as e:
-        print("send_events_report exception: " + str(e))
+        log.exception(e, extra={"name": name, "email": email, "evenet_list": event_list})
         return False
 
 
@@ -279,15 +280,15 @@ def send_automated_nudge(events, user, community):
         email = user.email
         login_method = (user.user_info or {}).get("login_method") or ""
         if not name or not email:
-            print("Missing name or email for user: " + str(user))
+            log.info("Missing name or email for user: " + str(user))
             return False
         user_is_ready_for_nudge = should_user_get_nudged(user)
 
         if user_is_ready_for_nudge:
-            print("sending nudge to " + email)
+            log.info("sending nudge to " + email)
             is_sent = send_events_report_email(name, email, events, community, login_method)
             if not is_sent:
-                print(f"**** Failed to send email to {name} for community {community.name} ****")
+                log.error(f"**** Failed to send email to {name} for community {community.name} ****")
                 return False
             update_last_notification_dates(email)
     return True
@@ -300,7 +301,7 @@ def send_user_requested_nudge(events, user, community):
         login_method = (user.user_info or {}).get("login_method") or ""
         is_sent = send_events_report_email(name, email, events, community, login_method)
         if not is_sent:
-            print(f"**** Failed to send email to {name} for community {community.name} ****")
+            log.error(f"Failed to send email to {name} for community {community.name}")
             return False
     return True
 
@@ -362,5 +363,5 @@ def prepare_user_events_nudge(task=None, email=None, community_id=None):
 
         return True
     except Exception as e:
-        print("Community member nudge exception: " + str(e))
+        log.exception(e,message="Community member nudge exception")
         return False

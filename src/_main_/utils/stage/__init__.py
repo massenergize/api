@@ -95,13 +95,15 @@ class MassEnergizeApiEnvConfig:
     def is_test(self):
         return self.name == "test"
 
-    def can_send_logs_to_cloudwatch(self):
+    def can_send_logs_to_external_watchers(self):
         return not (self.is_local() or self.is_test())
 
 
     def get_logging_settings(self):
-        if self.is_local() or self.is_test():
+        if self.is_local():
             return get_local_logging_settings()
+        elif self.is_test():
+            return get_testing_logging_settings()
         return get_default_logging_settings(self.name)
 
 
@@ -151,13 +153,13 @@ class MassEnergizeApiEnvConfig:
         is_docker_mode = False
 
         current_run_file_path = Path('.') / '.massenergize'/ 'current_run_info.json'
-        if current_run_file_path.exists():
+        if not name and current_run_file_path.exists():
             _current_run_info = load_json(current_run_file_path)
             name = _current_run_info.get('django_env', name)
             is_docker_mode = _current_run_info.get('is_docker_mode', is_docker_mode)
         else:
             load_dotenv()
-            name = os.getenv("DJANGO_ENV", "dev")
+            name = name or "dev" # use this value if name is None
             is_docker_mode = "DOCKER_CONTAINER" in os.environ
         
         name = name.lower()

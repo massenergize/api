@@ -3,6 +3,7 @@ from .models import CalcDefault
 from datetime import datetime
 from django.utils import timezone
 import csv
+from _main_.utils.massenergize_logger import log
 
 current_tz = timezone.get_current_timezone()
 
@@ -87,8 +88,7 @@ class CCD():
                         self.DefaultsByLocality[c.locality][c.variable]["values"].append(c.value)
 
         except Exception as e:
-            print(str(e))
-            print("CalcDefault initialization skipped")
+            log.exception(e, "CalcDefault initialization skipped")
 
     def getDefault(self, locality, variable, date, default=None):
         # load default values if they haven't yet been loaded

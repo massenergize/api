@@ -264,7 +264,7 @@ def _get_is_sandbox(request):
             ps = par.split("=")
             if ps[0].lower() == "sandbox":
                 if len(ps) < 2 or ps[1].lower() == "true":
-                    print("it is the sandbox")
+                    log.info("it is the sandbox")
                     return True
                 return False  # sandbox=false
         return False  # sandbox not specified

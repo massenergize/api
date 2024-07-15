@@ -108,7 +108,7 @@ def update_actions_content(task=None):
                                         # set calculator_action,
                                         ccAction = ccActions.filter(name=ccActionName)
                                         if not ccAction:
-                                            print("Carbon calculator action '"+ccActionName+"' does not exist")
+                                            log.info(f"Carbon calculator action {ccActionName} does not exist")
                                             continue
                                         action.calculator_action = ccAction.first()
                                     action.save()
@@ -122,7 +122,6 @@ def update_actions_content(task=None):
     
         return True
     except Exception as e:
-        print(str(e))
         log.exception(e)
         return False
   
