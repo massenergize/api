@@ -383,12 +383,20 @@ def make_vendor(**kwargs):
 
 
 def make_feature_flag(**kwargs):
+    communities = kwargs.pop("communities", [])
+    users = kwargs.pop("users", [])
     flag = FeatureFlag.objects.create(**{
         **kwargs,
         "name": kwargs.get("name") or f"New Flag-{datetime.now().timestamp()}",
-        "key": kwargs.get("key") or f"New Flag-{datetime.now().timestamp()}",
+        "key": kwargs.get("key") or f"New Flag-{datetime.now().timestamp()}-feature-flag",
         "notes": kwargs.get("description") or "New Flag Description",
     })
+    
+    if communities:
+        flag.communities.set(communities)
+    if users:
+        flag.users.set(users)
+    flag.save()
 
     return flag
 
