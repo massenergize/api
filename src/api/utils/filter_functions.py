@@ -369,21 +369,18 @@ def get_super_admins_filter_params(params):
       return []
 
 
-
-
 def get_sort_params(params):
   try:
     sort_params = params.get("sort_params", None)
     sort =""
     if sort_params:
       sort+= sort_params.get("name")
-      if sort_params.get("direction") == "desc":
+      if sort_params.get("direction") == "asc":
         sort = "-"+sort
       return sort.lower()
     
     return "-id"
-
-
+  
   except Exception as e:
     return '-id'
 

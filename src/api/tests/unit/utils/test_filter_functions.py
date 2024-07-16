@@ -20,12 +20,12 @@ class FiltersFunctionTests(unittest.TestCase):
 	def test_get_sort_params_sort_name_asc(self):
 		params = {'sort_params': {'name': 'name', 'direction': 'asc'}}
 		result = filter_functions.get_sort_params(params)
-		self.assertEqual(result, "name")
+		self.assertEqual(result, "-name")
 	
 	def test_get_sort_params_sort_name_desc(self):
 		params = {'sort_params': {'name': 'name', 'direction': 'desc'}}
 		result = filter_functions.get_sort_params(params)
-		self.assertEqual(result, "-name")
+		self.assertEqual(result, "name")
 	
 	def test_get_sort_params_none(self):
 		params = {}
@@ -47,7 +47,7 @@ class FiltersFunctionTests(unittest.TestCase):
 		"""
 		Test sort_items function with queryset as a list
 		"""
-		queryset = self.qs.order_by("name")
+		queryset = self.qs.order_by("-name")
 		params = {'sort_params': {"direction":"asc", "name":"name"}}
 		result = filter_functions.sort_items(queryset, params)
 		self.assertEqual(result.first(), queryset.first(), "Result should be same as input queryset")
