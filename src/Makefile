@@ -179,3 +179,15 @@ release:
 	git push origin main && \
 	git push origin --tags
 .PHONY: release
+
+tk:
+	 if [[ -f "test.sqlite3" ]]; \
+	 then \
+	  rm test.sqlite3; \
+	 fi
+	 touch test.sqlite3
+	 DJANGO_ENV=test python3 manage.py migrate
+	 DJANGO_ENV=test python manage.py test api.tests.unit.utils.test_filter_functions
+
+	# coverage report --precision=2
+.PHONY: tk
