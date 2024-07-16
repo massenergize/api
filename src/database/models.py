@@ -568,7 +568,7 @@ class Community(models.Model):
         return str(self.id) + " - " + self.name
 
     def info(self):
-       res = model_to_dict(self, ["id", "name", "subdomain"])
+       res = model_to_dict(self, ["id", "name", "subdomain", "is_geographically_focused"])
        res["logo"] = get_json_if_not_none(self.logo)
        return res
     
