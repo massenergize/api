@@ -1,4 +1,4 @@
-from _main_.utils.common import serialize, tz_aware_utc_now
+from _main_.utils.common import parse_datetime_to_aware, serialize
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from api.constants import LOOSED_USER, STANDARD_USER,GUEST_USER
@@ -268,7 +268,7 @@ class UserStore:
 
       accepted = args.get("accept", False)
       key = args.get("policy_key",None)
-      current_timestamp = datetime.now()
+      current_timestamp = parse_datetime_to_aware()
       current_timestamp_str = current_timestamp.strftime('%Y-%m-%d')
       current_timestamp_str = current_timestamp_str.split(".")[0]
       username = user.full_name
@@ -292,7 +292,7 @@ class UserStore:
                                                   "salutation":"Dear Support Team,", 
                                                   "community_name":community_names or "..."},
                                                   ME_SUPPORT_TEAM_EMAIL,pdf,filename)
-        record = PolicyAcceptanceRecords(user = user, policy=policy, signed_at = tz_aware_utc_now())
+        record = PolicyAcceptanceRecords(user = user, policy=policy, signed_at = parse_datetime_to_aware())
         record.save()
         user.refresh_from_db()
         # ----------------------------------------------------------------

@@ -15,10 +15,34 @@ import datetime
 
 
 def custom_timezone_info(zone="UTC"):
+    if not zone:
+        zone = "UTC"
     return ZoneInfo(zone)
 
-def tz_aware_utc_now():
-    return datetime.datetime.now(datetime.timezone.utc)
+
+def parse_datetime_to_aware(datetime_str=None, timezone_str='UTC'):
+    """
+    :param datetime_str: The string representing the datetime to parse. If not provided, the current date and time will be used.
+    :param timezone_str: The string representing the timezone to apply to the parsed datetime. Defaults to 'UTC'.
+    :return: An aware datetime object.
+    
+    """
+    if not datetime_str:
+        datetime_str = datetime.datetime.now()
+    
+    if isinstance(datetime_str, datetime.datetime):
+        datetime_str = datetime_str.strftime('%Y-%m-%d %H:%M:%S')
+    try:
+        naive_datetime = datetime.datetime.strptime(datetime_str, '%Y-%m-%d %H:%M:%S.%f')
+    except ValueError:
+        naive_datetime = datetime.datetime.strptime(datetime_str, '%Y-%m-%d %H:%M:%S')
+    
+    try:
+        aware_datetime = timezone.make_aware(naive_datetime, custom_timezone_info(timezone_str))
+        return aware_datetime
+    except Exception as e:
+        log.exception(e)
+        return None
 
 
 def get_date_and_time_in_milliseconds(**kwargs):
@@ -291,7 +315,7 @@ def set_cookie(response, key, value):  # TODO
 
 def local_time():
     local_zone = tz.tzlocal()
-    dt_utc = tz_aware_utc_now()
+    dt_utc = parse_datetime_to_aware()
     local_now = dt_utc.astimezone(local_zone)
     return local_now
 
