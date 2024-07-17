@@ -1395,7 +1395,7 @@ class CommunityStore:
                 Q(audience=FeatureFlagConstants().for_everyone()) |
                 Q(audience=FeatureFlagConstants().for_specific_audience(), communities__id__in=communities) |
                 (Q(audience=FeatureFlagConstants().for_all_except()) & ~Q(communities__id__in=communities))
-            ).exclude(expires_on__lt=datetime.now()).prefetch_related('communities')
+            ).exclude(expires_on__lt=datetime.now(timezone.utc)).prefetch_related('communities')
             
             ff = []
             for flag in feature_flags:

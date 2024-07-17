@@ -1,6 +1,8 @@
 import datetime
 
-from _main_.utils.common import custom_timezone_info, tz_aware_utc_now
+from django.utils import timezone
+
+from _main_.utils.common import custom_timezone_info, parse_datetime_to_aware
 from _main_.utils.footage.FootageConstants import FootageConstants
 from api.store.common import make_time_range_from_text
 from api.store.utils import get_user_from_context
@@ -40,7 +42,7 @@ class SummaryStore:
         start_time = args.get("start_time", None)
         end_time = args.get("end_time", None)
         communities = args.get("communities", [])
-        today = tz_aware_utc_now()
+        today = timezone.now()
         email = context.user_email
         is_community_admin = (
              context.user_is_community_admin
@@ -48,6 +50,7 @@ class SummaryStore:
         is_super_admin = context.user_is_super_admin
         
         today =  today.replace(tzinfo=custom_timezone_info())
+        
         if not time_range:
             return {}, CustomMassenergizeError(
                 "Please include an appropriate date/time range"
@@ -66,9 +69,13 @@ class SummaryStore:
             end_time = datetime.datetime.strptime(end_time, _format)
             start_time = start_time.replace(tzinfo=custom_timezone_info())
             end_time = end_time.replace(tzinfo=custom_timezone_info())
-        else: [start_time, end_time] = make_time_range_from_text(time_range)
+        else:
+            [start_time, end_time] = make_time_range_from_text(time_range)
         # ------------------------------------------------------
-
+        
+        start_time = timezone.make_aware(start_time)
+        end_time = timezone.make_aware(end_time)
+        
         if is_community_admin or (is_super_admin and not wants_all_communities):
             testimonial_query = Q(
                 is_deleted=False,
@@ -203,7 +210,7 @@ class SummaryStore:
             primary_community__in=communities, is_published=False, is_deleted=False
         )
 
-        today = datetime.date.today()
+        today = parse_datetime_to_aware()
 
         # get the footage item for admin's last visit that isnt today
         last_visit = (
@@ -252,8 +259,7 @@ class SummaryStore:
             is_published=False, is_deleted=False
         )
 
-
-        today = datetime.date.today()
+        today = parse_datetime_to_aware()
 
         # get the footage item for admin's last visit that isnt today
         last_visit = (

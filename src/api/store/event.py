@@ -1,9 +1,11 @@
 import json
 
+from django.utils import timezone
+
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from _main_.utils.utils import is_url_valid
-from _main_.utils.common import custom_timezone_info, local_time, tz_aware_utc_now
+from _main_.utils.common import custom_timezone_info, local_time, parse_datetime_to_aware
 from api.store.common import get_media_info, make_media_info
 from api.tests.common import RESET, makeUserUpload
 from api.utils.api_utils import is_admin_of_community
@@ -22,22 +24,34 @@ import datetime
 from datetime import timedelta
 import calendar
 from typing import Tuple
+from zoneinfo import ZoneInfo
 
 def _local_datetime(date_and_time):
-    # the local date (in Massachusetts) is different than the UTC date
-    # need to also save the location (as a Location) and get the time zone from that.
-    # KLUGE: assume Massachusetts for now
+    """
+    Converts a UTC datetime string to local datetime in Massachusetts time zone.
+    """
+    # Parse the datetime string to a datetime object
     dt = datetime.datetime.strptime(str(date_and_time), '%Y-%m-%dT%H:%M:%SZ')
-    local_datetime = dt - timedelta(hours=4)
+
+    # Specify the Massachusetts time zone
+    massachusetts_zone = ZoneInfo('America/New_York')
+
+    # Convert time zone from UTC to Massachusetts time zone
+    local_datetime = dt.replace(tzinfo=ZoneInfo('UTC')).astimezone(massachusetts_zone)
     return local_datetime
 
-
 def _UTC_datetime(date_and_time):
-    # the local date (in Massachusetts) is different than the UTC date
-    # need to also save the location (as a Location) and get the time zone from that.
-    # KLUGE: assume Massachusetts for now
+    """
+    Converts a local Massachusetts datetime string to UTC datetime.
+    """
+    # Parse the datetime string to a datetime object
     dt = datetime.datetime.strptime(str(date_and_time), '%Y-%m-%d %H:%M:%S')
-    UTC_datetime = dt + timedelta(hours=4)
+
+    # Specify the Massachusetts time zone
+    massachusetts_zone = ZoneInfo('America/New_York')
+
+    # Convert time zone from Massachusetts to UTC
+    UTC_datetime = dt.replace(tzinfo=massachusetts_zone).astimezone(ZoneInfo('UTC'))
     return UTC_datetime
 
 
@@ -215,7 +229,7 @@ class EventStore:
         user_id = args.pop("user_id", None)
         shared = []
 
-        today = datetime.datetime.now()
+        today = parse_datetime_to_aware()
         shared_months = 2
         hosted_months = 6
         earliest_shared = today - timedelta(weeks=4*shared_months)
@@ -289,9 +303,9 @@ class EventStore:
 
                 # if specified a different end date from start date, fix this
                 if local_start.date() != local_end.date():
-                    # fix the end_date_and_time to have same date as start
-                    end_datetime = datetime.datetime.combine(local_start.date(), local_end.time())
-                    end_date_and_time = _UTC_datetime(end_datetime).strftime('%Y-%m-%dT%H:%M:%SZ')
+                    end_datetime = datetime.datetime.combine(local_start.date(), local_end.timetz())
+                    end_datetime = end_datetime.replace(tzinfo=local_end.tzinfo)
+                    end_date_and_time = end_datetime.astimezone(timezone.utc)
 
             if separation_count:
                 separation_count = int(separation_count)
@@ -432,7 +446,7 @@ class EventStore:
             is_published = args.pop('is_published', None)
 
             if is_published:
-                args['published_at'] = datetime.datetime.now()
+                args['published_at'] = parse_datetime_to_aware()
             else:
                 args['published_at'] = None
 
@@ -668,8 +682,7 @@ class EventStore:
         else:
             events = []
 
-        tod = tz_aware_utc_now()
-        today = tod.replace(tzinfo=custom_timezone_info())
+        today =  parse_datetime_to_aware()
 
         for event in events:
             # protect against recurring event with no recurring details saved
@@ -810,7 +823,7 @@ class EventStore:
             filter_params = get_events_filter_params(context.get_params())
 
             user = UserProfile.objects.filter(email=context.user_email).first()
-            today = datetime.datetime.today()
+            today = parse_datetime_to_aware()
             if user:
                 admin_of = [g.community.id for g in user.communityadmingroup_set.all()]
 

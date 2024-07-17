@@ -8,7 +8,7 @@ from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.timezone import utc
 
-from _main_.utils.common import tz_aware_utc_now
+from _main_.utils.common import parse_datetime_to_aware
 from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
 from api.constants import ACTIONS, CADMIN_REPORT, CAMPAIGN_INTERACTION_PERFORMANCE_REPORT, CAMPAIGN_PERFORMANCE_REPORT, \
@@ -212,7 +212,7 @@ def download_data(self, args, download_type):
 
 @shared_task(bind=True)
 def generate_and_send_weekly_report(self):
-    today = tz_aware_utc_now().replace(tzinfo=utc)
+    today = parse_datetime_to_aware()
     one_week_ago = today - timezone.timedelta(days=7)
     super_admins = UserProfile.objects.filter(is_super_admin=True, is_deleted=False).values_list("email", flat=True)
 
