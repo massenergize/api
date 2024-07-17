@@ -3,6 +3,7 @@ import json
 import operator
 from functools import reduce
 from django.db.models import Q
+from django.utils import timezone
 
 from database.models import CommunityMember
 
@@ -171,7 +172,7 @@ def get_messages_filter_params(params):
 
 
       if is_scheduled:
-        query.append(Q(scheduled_at__isnull=False) & Q(scheduled_at__gt=datetime.datetime.now()))
+        query.append(Q(scheduled_at__isnull=False) & Q(scheduled_at__gt=timezone.now()))
 
       if communities:
         query.append(Q(community__name__in=communities))

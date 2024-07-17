@@ -1,5 +1,9 @@
 from django.test import TestCase, Client
 from urllib.parse import urlencode
+
+from django.utils import timezone
+
+from _main_.utils.common import parse_datetime_to_aware
 from database.models import Event, EventAttendee, Community, CommunityAdminGroup, UserProfile
 from api.tests.common import signinAs, createUsers
 from datetime import datetime
@@ -34,8 +38,8 @@ class EventsTestCase(TestCase):
         self.COMMUNITY_ADMIN_GROUP = CommunityAdminGroup.objects.create(name=admin_group_name, community=self.COMMUNITY)
         self.COMMUNITY_ADMIN_GROUP.members.add(self.CADMIN)
 
-        self.startTime = datetime.now()
-        self.endTime = datetime.now()
+        self.startTime = parse_datetime_to_aware()
+        self.endTime = parse_datetime_to_aware()
         self.EVENT1 = Event.objects.create(community=self.COMMUNITY, name="event1", start_date_and_time=self.startTime, end_date_and_time=self.endTime, is_published=False)
         self.EVENT2 = Event.objects.create(community=self.COMMUNITY, name="event2", start_date_and_time=self.startTime, end_date_and_time=self.endTime, is_published=True)
         self.EVENT3 = Event.objects.create(community=self.COMMUNITY, name="event3", start_date_and_time=self.startTime, end_date_and_time=self.endTime, is_published=True)
