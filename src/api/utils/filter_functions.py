@@ -80,7 +80,7 @@ def get_actions_filter_params(params):
       status = None
 
       if search_text:
-        search= reduce(operator.or_, 
+        search= reduce(operator.or_,
         (Q(title__icontains= search_text),
         Q(tags__name__icontains= search_text),
         Q(community__name__icontains= search_text),
@@ -311,7 +311,7 @@ def get_users_filter_params(params):
         search= reduce(
         operator.or_, (
         Q(full_name__icontains= search_text),
-        Q(Q(id__in=users)),# 
+        Q(Q(id__in=users)),#
         Q(email__icontains= search_text),
         ))
         query.append(search)
@@ -369,21 +369,18 @@ def get_super_admins_filter_params(params):
       return []
 
 
-
-
 def get_sort_params(params):
   try:
     sort_params = params.get("sort_params", None)
     sort =""
     if sort_params:
       sort+= sort_params.get("name")
-      if sort_params.get("direction") == "desc":
+      if sort_params.get("direction") == "asc":
         sort = "-"+sort
       return sort.lower()
     
     return "-id"
-
-
+  
   except Exception as e:
     return '-id'
 
@@ -391,10 +388,17 @@ def get_sort_params(params):
 
 
 def sort_items(queryset, params):
-  if not queryset:
-    return []
-  if isinstance(queryset, list):
+  try:
+    if not queryset:
+      return []
+    
+    if isinstance(queryset, list):
+      return queryset
+    
+    sort_params = get_sort_params(params)
+    sorted =  queryset.order_by(sort_params)
+    
+    return sorted
+  
+  except Exception as e:
     return queryset
-
-  sort_params = get_sort_params(params)
-  return queryset.order_by(sort_params)
