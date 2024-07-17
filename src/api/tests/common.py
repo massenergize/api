@@ -1,10 +1,13 @@
 import base64
 import time
+from zoneinfo import ZoneInfo
+
 import jwt
 from http.cookies import SimpleCookie
 from datetime import datetime, timedelta
 from django.utils import timezone
 
+from _main_.utils.common import parse_datetime_to_aware
 from _main_.utils.utils import load_json
 from ..store.utils import unique_media_filename
 from _main_.settings import SECRET_KEY
@@ -129,11 +132,14 @@ def makeEvent(**kwargs):
     community = kwargs.get("community")
     name = kwargs.get("name") or "Event default Name"
     pub_coms = kwargs.pop("communities_under_publicity", [])
+    start_date = parse_datetime_to_aware(datetime.now()+ timezone.timedelta(days=1))
+    end_date = parse_datetime_to_aware(datetime.now() + timezone.timedelta(days=2))
+    
     event = Event.objects.create(
         **{
             "is_published": True,
-            "start_date_and_time": timezone.now()+ timezone.timedelta(days=1),
-            "end_date_and_time": timezone.now() + timezone.timedelta(days=2),
+            "start_date_and_time": start_date,
+            "end_date_and_time": end_date,
             **kwargs,
             "community": community,
             "name": name,
@@ -385,8 +391,8 @@ def make_feature_flag(**kwargs):
     users = kwargs.pop("users", [])
     flag = FeatureFlag.objects.create(**{
         **kwargs,
-        "name": kwargs.get("name") or f"New Flag-{datetime.now().timestamp()}",
-        "key": kwargs.get("key") or f"New Flag-{datetime.now().timestamp()}-feature-flag",
+        "name": kwargs.get("name") or f"New Flag-{timezone.now().timestamp()}",
+        "key": kwargs.get("key") or f"New Flag-{timezone.now().timestamp()}-feature-flag",
         "notes": kwargs.get("description") or "New Flag Description",
     })
     
