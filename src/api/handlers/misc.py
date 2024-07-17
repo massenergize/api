@@ -1,13 +1,16 @@
 """Handler file for all routes pertaining to goals"""
+import os
 
 from _main_.utils.route_handler import RouteHandler
 from api.services.misc import MiscellaneousService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
-from api.decorators import admins_only, super_admins_only
+from api.decorators import admins_only, super_admins_only, x_frame_options_exempt
 from database.utils.settings.admin_settings import AdminPortalSettings
 from database.utils.settings.user_settings import UserPortalSettings
 from django.http import JsonResponse
+from django.shortcuts import render
+
 
 
 class MiscellaneousHandler(RouteHandler):
@@ -36,6 +39,7 @@ class MiscellaneousHandler(RouteHandler):
         self.add("/settings.list", self.fetch_available_preferences)
         self.add("/what.happened", self.fetch_footages)
         self.add("/actions.report", self.actions_report)
+        self.add("/rewiring_america", self.get_rewiring_america_data)
         
         self.add("/menus.create", self.create_menu)
         self.add("/menus.update", self.update_menu)
@@ -44,8 +48,6 @@ class MiscellaneousHandler(RouteHandler):
         self.add("/menus.reset", self.reset_menu)
         self.add("/menus.listForAdmins", self.get_menus_for_admin)
         self.add("/links.internal.get", self.get_internal_links)
-        
-        self.add("/site.static.texts.get", self.get_site_static_texts)
 
     @admins_only
     def fetch_footages(self, request):
@@ -363,22 +365,9 @@ class MiscellaneousHandler(RouteHandler):
         
         except Exception as e:
             return MassenergizeResponse(error=str(e))
+    
+    @x_frame_options_exempt
+    def get_rewiring_america_data(self, request):
+        args = {"rewiring_america": os.environ.get('REWIRING_AMERICA_API_KEY') }
+        return render(request, "rewiring_america.html", args)
         
-    def get_site_static_texts(self, request):
-        try:
-            context: Context = request.context
-            args: dict = context.args
-            
-            self.validator.expect("site_id", str, is_required=True)
-            
-            args, err = self.validator.verify(args, strict=True)
-            if err:
-                return err
-            
-            data, err = self.service.get_site_static_texts(context, args)
-            if err:
-                return err
-            return MassenergizeResponse(data=data)
-        
-        except Exception as e:
-            return MassenergizeResponse(error=str(e))
