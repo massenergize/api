@@ -298,7 +298,7 @@ class MessageStore:
             if message_ids:
                 with_ids = Q(id__in=message_ids)
             if is_scheduled:
-                scheduled = Q(scheduled_at__isnull=False) & Q(scheduled_at__gt=datetime.now())
+                scheduled = Q(scheduled_at__isnull=False) & Q(scheduled_at__gt=timezone.now())
 
             if context.user_is_super_admin:
                 messages = Message.objects.filter(
