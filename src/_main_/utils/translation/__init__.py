@@ -119,8 +119,9 @@ class JsonTranslator(Translator):
         keys = []
         untranslated_text_entries = []
         for key,value in self._flattened.items():
-            keys.append(key)
-            untranslated_text_entries.append(value)
+            if value:
+                keys.append(key)
+                untranslated_text_entries.append(value)
         
         
         # Convert values to text blocks
