@@ -303,6 +303,31 @@ def get_vendor_filter_params(params):
       return []
 
 
+def get_organization_filter_params(params):
+    try:
+      query = []
+      search_text = params.get("search_text", None)
+
+      if search_text:
+        search= reduce(
+        operator.or_, (
+        Q(name__icontains= search_text),
+        Q(communities__name__icontains= search_text),
+        Q(email__icontains= search_text),
+        Q(service_area__icontains= search_text),
+        ))
+        query.append(search)
+  
+      communities = params.get("communities serviced", None)
+
+      if communities:
+        query.append(Q(communities__name__icontains=communities[0]))
+
+      return query
+    except Exception as e:
+      return []
+
+
 def get_users_filter_params(params):
     try:
       query = []
