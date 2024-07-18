@@ -10,7 +10,7 @@ from _main_.utils.massenergize_logger import log
 # does not exceed the maximum length. Each block contains several of these sentences separated by MAGIC_TEXT.
 
 MAGIC_TEXT = "|||"
-MAX_TEXT_SIZE = 100
+MAX_TEXT_SIZE = 30000
 
 class Translator:
     def translate_text(self, text, source_language, target_language):
