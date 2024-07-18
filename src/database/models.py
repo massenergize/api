@@ -3003,7 +3003,7 @@ class Menu(models.Model):
         ordering = ("name",)
         
     class TranslationMeta:
-        fields_to_translate = ["name"]
+        fields_to_translate = ["name", "content", "footer_content"]
 
 
 class Card(models.Model):
