@@ -56,12 +56,18 @@ class TranslateDBContents:
                 self.translator(data).translate("en", lang)
                 
             log.info("Task: Finished translating all contents")
+            return True
         except Exception as e:
             log.exception(f"An error occurred: {e}")
+            raise TranslationError(f"An error occurred: {e}")
         
     def start_translations(self):
-        log.info("Starting translation process for {}".format(timezone.now()))
-        self.load_db_contents_and_translate()
-        log.info("Finished translating all contents")
-        return True
+        try:
+            log.info("Starting translation process for {}".format(timezone.now()))
+            self.load_db_contents_and_translate()
+            log.info("Finished translating all contents")
+            return True
+        except Exception as e:
+            log.exception(f"An error occurred during translation: {e}")
+            return False
     
