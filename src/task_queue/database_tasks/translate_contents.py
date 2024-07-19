@@ -1,9 +1,10 @@
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 from django.apps import apps
 from django.forms import model_to_dict
 from django.utils import timezone
-from _main_.utils.massenergize_logger import log
 from _main_.utils.translation import JsonTranslator
-from database.models import SupportedLanguage
+from database.models import SupportedLanguage, TranslationsCache
 
 SOURCE_LANGUAGE_CODE = 'en'
 
@@ -22,7 +23,24 @@ class TranslateDBContents:
         self.translator = JsonTranslator
         self.supported_languages = SupportedLanguage.objects.values_list('code', flat=True) # fix this byg getting code
         
-    def get_valid_instances(self, model):
+    def cache_translations(self, hashes, translated_text_list, language) -> bool:
+        try:
+            caches = []
+            for _hash, translated_text in zip(hashes, translated_text_list):
+                cache = TranslationsCache(
+                    hash=_hash,
+                    target_language_code=language,
+                    source_language_code=SOURCE_LANGUAGE_CODE,
+                    translated_text=translated_text
+                )
+                caches.append(cache)
+            TranslationsCache.objects.bulk_create(caches)
+            return True
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return False
+        
+    def get_valid_instances(self, model) -> list:
         query_params = {}
         if hasattr(model, 'is_deleted'):
             query_params['is_deleted'] = False
@@ -34,7 +52,7 @@ class TranslateDBContents:
             query_params['is_active'] = True
         return model.objects.filter(**query_params)
 
-    def load_db_contents_and_translate(self):
+    def load_db_contents_and_translate(self) -> bool:
         try:
             models = apps.get_models()
             data = []
@@ -52,22 +70,26 @@ class TranslateDBContents:
                         data.append(to_dict)
             
             for lang in self.supported_languages:
-                log.info(f"Task: Translating DB contents to {lang}")
-                self.translator(data).translate("en", lang)
+                print(f"Task: Translating DB contents to {lang}")
+                _json, hashes, translated_text_list = self.translator(data).translate("en", lang)
+                self.cache_translations(hashes, translated_text_list, lang)
                 
-            log.info("Task: Finished translating all contents")
+            print("Task: Finished translating all contents")
             return True
         except Exception as e:
-            log.exception(f"An error occurred: {e}")
+            print(f"An error occurred: {e}")
             raise TranslationError(f"An error occurred: {e}")
         
-    def start_translations(self):
+
+    def start_translations(self) -> bool:
         try:
-            log.info("Starting translation process for {}".format(timezone.now()))
+            start_time = timezone.now()
+            print("Starting translation process for {}".format(timezone.now()))
             self.load_db_contents_and_translate()
-            log.info("Finished translating all contents")
+            print("Finished translating all contents")
+            print("Translation process took: {}".format(timezone.now() - start_time))
             return True
         except Exception as e:
-            log.exception(f"An error occurred during translation: {e}")
+            print(f"An error occurred during translation: {e}")
             return False
     

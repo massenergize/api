@@ -1,5 +1,7 @@
 from typing import Union
 from _main_.utils.translation.translator import Translator, MAX_TEXT_SIZE, MAGIC_TEXT
+from _main_.utils.utils import generate_text_hash
+from database.models import TextHash
 
 JSON_EXCLUDE_KEYS = {
     'id', 'pk', 'file', 'media', 'date'
@@ -118,8 +120,13 @@ class JsonTranslator(Translator):
         # Flattened dictionary keys and values
         keys = []
         untranslated_text_entries = []
+        hashes = []
         for key,value in self._flattened.items():
             if value:
+                _hash, created = TextHash.objects.get_or_create(text=value,hash=generate_text_hash(value))
+                if not created:
+                    continue
+                hashes.append(_hash)
                 keys.append(key)
                 untranslated_text_entries.append(value)
         
@@ -138,7 +145,7 @@ class JsonTranslator(Translator):
         translated_json = {keys[i]: translated_text_entries[i] for i in range(len(keys))}
         translated_json.update(self._excluded)
 
-        return self.unflatten_dict(translated_json)
+        return self.unflatten_dict(translated_json), hashes, translated_text_entries
 
     def convert_to_text_blocks(self, text_list, max_block_size=MAX_TEXT_SIZE, magic_text=MAGIC_TEXT):
         """
@@ -208,4 +215,6 @@ class JsonTranslator(Translator):
             translations.extend(block.split(MAGIC_TEXT))
         
         return translations
+    
+#     a function to retrieve translations for a json object
         
