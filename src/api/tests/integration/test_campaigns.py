@@ -729,13 +729,13 @@ class CampaignsIntegrationTestCase(TestCase):
 
         Console.header("Testing the campaigns.follow endpoint as a community admin.")
         signinAs(self.client, self.CADMIN)
-        response = self.make_request("campaigns.follow", payload)
+        response = self.make_request("campaigns.follow", {**payload, "email": "admin@me.com"})
         self.assertEqual(response['success'], True)
 
 
         Console.header("Testing the campaigns.follow endpoint as a user.")
         signinAs(self.client, self.USER)
-        response = self.make_request("campaigns.follow", payload)
+        response = self.make_request("campaigns.follow", {**payload, "email": "new.user@gamil.com"})
         self.assertEqual(response['success'], True)
 
 
