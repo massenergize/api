@@ -243,4 +243,15 @@ class MiscellaneousService:
             logging.error(f"GET_SITE_STATIC_TEXTS_EXCEPTION_ERROR: {str(e)}")
             return None, CustomMassenergizeError(str(e))
         
+    def list_all_languages(self, context, args) -> (dict, Exception):
+        """
+        Get all the languages
+        """
+        all_languages, err = self.store.list_all_languages(context, args)
+        
+        if err:
+            return None, err
+        
+        return all_languages, None
+        
         
