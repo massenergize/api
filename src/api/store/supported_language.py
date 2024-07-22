@@ -14,12 +14,12 @@ class SupportedLanguageStore:
 
     def get_supported_language_info (self, context, args) -> Tuple[ dict or None, any ]:
         try:
-            code = args.get('code', None)
+            language_code = args.get('language_code', None)
 
-            if not code:
+            if not language_code:
                 return None, CustomMassenergizeError("Please provide a valid id or code")
 
-            language = SupportedLanguage.objects.filter(code = code).first()
+            language = SupportedLanguage.objects.filter(code = language_code).first()
 
             return language, None
         except Exception as e:
@@ -48,9 +48,9 @@ class SupportedLanguageStore:
             log(e)
             return None, CustomMassenergizeError(str(e))
 
-    def disable_supported_language (self, context, language_id) -> Tuple[ SupportedLanguage or None, any ]:
+    def disable_supported_language (self, context, language_code) -> Tuple[ SupportedLanguage or None, any ]:
         try:
-            language = SupportedLanguage.objects.filter(code = language_id).first()
+            language = SupportedLanguage.objects.filter(code = language_code).first()
 
             if not language:
                 return None, CustomMassenergizeError("Invalid language code")
@@ -63,9 +63,9 @@ class SupportedLanguageStore:
             log(e)
             return None, CustomMassenergizeError(str(e))
 
-    def enable_supported_language (self, context, language_id) -> Tuple[ SupportedLanguage or None, any ]:
+    def enable_supported_language (self, context, language_code) -> Tuple[ SupportedLanguage or None, any ]:
         try:
-            language = SupportedLanguage.objects.filter(code = language_id).first()
+            language = SupportedLanguage.objects.filter(code = language_code).first()
 
             if not language:
                 return None, CustomMassenergizeError("Invalid language code")
