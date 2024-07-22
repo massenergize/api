@@ -6,7 +6,7 @@ from _main_.utils.stage import MassEnergizeApiEnvConfig
 
 
 class GoogleTranslate:
-    MAX_CHAR_LIMIT = 5000
+    MAX_TEXT_SIZE = 5000
 
     def __init__(self):
         self.__google_translate_key_file = MassEnergizeApiEnvConfig().get_google_translate_key_file()

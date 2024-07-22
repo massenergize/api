@@ -1,25 +1,35 @@
+"""
+This file contains utility functions for interacting with google translate
+"""
 import re
 import fnmatch
 from typing import List
+from _main_.utils.massenergize_logger import log
 
-from translation.translator.providers.google_translate import GoogleTranslate
-from translation.translator.providers.microsoft_translator import MicrosoftTranslator
+from _main_.utils.translation.translator.providers.google_translate import GoogleTranslate
+from _main_.utils.translation.translator.providers.microsoft_translator import MicrosoftTranslator
 
-TRANSLATION_PROVIDER = "google"
+# We use MAGIC_TEXT to separate text items or sentences within a block during translation, allowing us to split them back afterward.
+# Translation APIs, like Google Translate, have a maximum text length they can handle. The idea of a block here
+# represents a text blob that does not exceed that maximum length.
+# If we have many text elements or sentences to translate, we combine them into blocks, ensuring each block
+# does not exceed the maximum length. Each block contains several of these sentences separated by MAGIC_TEXT.
+
+MAX_TEXT_SIZE = 100
 BATCH_LIMIT = 100
+MAGIC_TEXT = "|||"  # This is used to separate text items or sentences within a block during translation
+TRANSLATION_PROVIDER = "google"
 
 class Translator:
     def __init__ (self, provider = None, use_fallback = True):
-        self.name = "Translator"
         self.__providers_config = {
             "google": GoogleTranslate,
             "microsoft": MicrosoftTranslator,
         }
         self.__default_provider = "google"
         self.__init_provider(provider, use_fallback)
-        self.MAX_CHAR_LIMIT = self.provider.MAX_CHAR_LIMIT
+        self.MAX_TEXT_SIZE = self.provider.MAX_TEXT_SIZE
         self.BATCH_LIMIT = BATCH_LIMIT
-
 
     def __init_provider (self, provider = None, use_fallback = True):
         provider = provider or TRANSLATION_PROVIDER
@@ -46,6 +56,7 @@ class Translator:
         :param source_language: The language in which the text is written, defaults to 'en'
         :return: The translated text
         """
+        log.info(f"translating from {source_language} to {target_language}")
         return self.provider.translate(value, target_language, source_language)
 
     def translate_text (self, text: str, target_language: str, source_language:str = 'en') -> str:
@@ -68,9 +79,10 @@ class Translator:
         except Exception as e:
             raise RuntimeError(f"Failed to translate batch: {str(e)}")
 
-    def translate_json (self, json_dict: dict, target_language: str, ignore_keys = None, ignore_patterns = None,
-                        batch_size = BATCH_LIMIT):
-        pass
+    def translate_json (self, json_dict: dict, source_language: str, target_language: str, ignore_keys = None,):
+        # TODO: do actual implementation.  For now this is a no-op
+        log.info(f"translating from {source_language} to {target_language}")
+        return json_dict
 
     def translate_json_and_return_json (self, json_dict: dict, target_language: str, ignore_keys = None,
                                         ignore_patterns = None, batch_size = BATCH_LIMIT):
@@ -151,3 +163,5 @@ class Translator:
                         item_to_replace[ keys[ -1 ] ] = translated_text
 
         return json_dict
+
+__name__ = "Translator"
