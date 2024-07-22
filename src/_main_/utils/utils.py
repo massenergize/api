@@ -157,5 +157,9 @@ def run_in_background(func):
         thread.start()
     return wrapper
 
+# This function is needed because some third-party APIs don't support the full language code
 def to_third_party_lang_code(language_code: str) -> str:
-    return language_code.split("-")[ 0 ] if language_code not in LANGUAGE_CODES_TO_NOT_SPLIT else language_code
+    if language_code not in LANGUAGE_CODES_TO_NOT_SPLIT: # we're more likely to get a match for codes to split
+        codes = language_code.split("-")
+        return codes[0] if len(codes) > 1 else language_code
+    return language_code
