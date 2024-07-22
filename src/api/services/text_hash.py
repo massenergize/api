@@ -12,7 +12,7 @@ class TextHashService:
     def make_hash (text: str):
         return hashlib.sha256(text.encode()).hexdigest()
 
-    def create_text_hash (self, context, args):
+    def create_text_hash (self, args):
         text = args.get('text', None)
 
         if not text and not isinstance(text, str):
@@ -21,7 +21,7 @@ class TextHashService:
         hash = TextHashService.make_hash(text)
         args[ 'hash' ] = hash
 
-        text_hash, err = self.store.create_text_hash(context, args)
+        text_hash, err = self.store.create_text_hash(args)
 
         if err:
             print("CTxH ERR", err)
@@ -30,7 +30,7 @@ class TextHashService:
         return text_hash, None
 
     def get_text_hash_info (self, context, args):
-        text_hash, err = self.store.get_text_hash_info(context, args)
+        text_hash, err = self.store.get_text_hash_info(args)
 
         if err:
             return None, err
