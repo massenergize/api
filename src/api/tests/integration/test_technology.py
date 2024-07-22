@@ -2,7 +2,7 @@ import datetime
 import json
 
 from django.test import TestCase, Client
-from api.tests.common import signinAs, setupCC, createUsers, makeCommunity, makeUser, make_technology, createImage, \
+from api.tests.common import signinAs, createUsers, makeCommunity, makeUser, make_technology, createImage, \
     make_vendor
 from _main_.utils.utils import Console
 from apps__campaigns.models import Campaign, CampaignAccount, TechnologyVendor, TechnologyCoach, TechnologyOverview, TechnologyDeal
@@ -19,7 +19,7 @@ class TechnologiesIntegrationTestCase(TestCase):
         self.client = Client()
         self.USER, self.CADMIN, self.SADMIN = createUsers()
         signinAs(self.client, self.SADMIN)
-        setupCC(self.client)
+        # setupCC(self.client)
         self.user = makeUser()
         self.IMAGE = createImage("https://www.whitehouse.gov/wp-content/uploads/2021/04/P20210303AS-1901-cropped.jpg")
 

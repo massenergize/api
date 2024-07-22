@@ -1,37 +1,22 @@
+from typing import Tuple
+
+from _main_.utils.massenergize_logger import log
+
+from _main_.utils.context import Context
 from _main_.utils.footage.spy import Spy
-from api.tests.common import createUsers
-from database.models import (
-    Action,
-    Vendor,
-    Subdomain,
-    Event,
-    Community,
-    Menu,
-    Team,
-    TeamMember,
-    CommunityMember,
-    RealEstateUnit,
-    CommunityAdminGroup,
-    UserProfile,
-    Data,
-    TagCollection,
-    UserActionRel,
-    Data,
-    Location,
-    HomePageSettings,
-)
 from _main_.utils.massenergize_errors import (
     CustomMassenergizeError,
     InvalidResourceError,
     MassEnergizeAPIError,
 )
-from _main_.utils.context import Context
+from api.tests.common import createUsers
+from api.utils.api_utils import load_default_menus_from_json, \
+    remove_unpublished_items, validate_menu_content
+from database.models import Action, CarbonEquivalency, Community, CommunityAdminGroup, CommunityMember, Data, Event, \
+    HomePageSettings, Location, Media, Menu, RealEstateUnit, Subdomain, TagCollection, Team, TeamMember, UserActionRel, \
+    UserProfile, Vendor
 from database.utils.common import json_loader
-from database.models import CarbonEquivalency
-from .utils import find_reu_community, split_location_string, check_location,get_community
-from sentry_sdk import capture_message
-from typing import Tuple
-from api.utils.api_utils import get_viable_menu_items
+from .utils import check_location, find_reu_community, get_community, split_location_string
 
 
 class MiscellaneousStore:
@@ -76,7 +61,7 @@ class MiscellaneousStore:
             main_menu = Menu.objects.all()
             return main_menu, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def actions_report(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
@@ -138,7 +123,7 @@ class MiscellaneousStore:
 
             return {"teams_member_backfill": "done"}, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def backfill_community_members(
@@ -177,7 +162,7 @@ class MiscellaneousStore:
 
             return {"name": "community_member_backfill", "status": "done"}, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def backfill_graph_default_data(self, context: Context, args):
@@ -221,7 +206,7 @@ class MiscellaneousStore:
             return {"graph_default_data": "done"}, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def backfill_real_estate_units(self, context: Context, args):
@@ -388,7 +373,7 @@ class MiscellaneousStore:
             return {"backfill_real_estate_units": "done"}, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def create_carbon_equivalency(self, args):
@@ -397,7 +382,7 @@ class MiscellaneousStore:
             return new_carbon_equivalency, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def update_carbon_equivalency(self, args):
@@ -415,7 +400,7 @@ class MiscellaneousStore:
             return carbon_equivalency, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def get_carbon_equivalencies(self, args):
@@ -505,9 +490,177 @@ class MiscellaneousStore:
             community, _ = get_community(community_id=community_id, subdomain=subdomain)
             if not community:
                 return None, CustomMassenergizeError("Community not found")
-
-            menu = get_viable_menu_items(community)
-
+            
+            menus = Menu.objects.filter(community=community, is_published=True)
+            if not menus:
+                return None, CustomMassenergizeError("No menus found for this community")
+            
+            menu = menus.first()
+            
+            portal_main_nav_links = remove_unpublished_items(menu.content)
+            portal_footer_quick_links = remove_unpublished_items(menu.footer_content.get("links", []))
+            
+            return [
+                {"name": "PortalMainNavLinks", "content": portal_main_nav_links},
+                {"name": menu.footer_content.get("name", "Quick Links"), "content": {"links": portal_footer_quick_links}},
+                menu.contact_info
+            
+            ], None
+        
+        except Exception as e:
+            return None, CustomMassenergizeError(str(e))
+        
+        
+    def create_menu(self, context, args):
+        try:
+            community_id = args.pop('community_id', None)
+            subdomain = args.pop('subdomain', None)
+            
+            if not community_id and not subdomain:
+                return None, CustomMassenergizeError("community_id or subdomain not provided")
+            
+            community, error = get_community(community_id=community_id, subdomain=subdomain)
+            
+            if error:
+                return None, error
+            
+            default_menus = load_default_menus_from_json()
+            
+            name = f"{community.subdomain} Main Menu"
+            args["name"] = name
+            args["community"] = community
+            args["is_custom"] = True
+            args["content"] = default_menus["PortalMainNavLinks"]
+            args["footer_content"] = default_menus["PortalFooterQuickLinks"]
+            args["contact_info"] = default_menus["PortalFooterContactInfo"]
+            
+            menu = Menu.objects.create(**args)
+            
             return menu, None
         except Exception as e:
-            return None, CustomMassenergizeError(e)
+            return None, CustomMassenergizeError(str(e))
+        
+    def update_menu(self, context, args):
+        try:
+            menu_id = args.pop('id', None)
+            content = args.pop('content', None)
+            footer_content = args.pop('footer_content', None)
+            contact_info = args.pop('contact_info', None)
+            
+            if not menu_id:
+                return None, CustomMassenergizeError("id not provided")
+            
+            community_logo_id = args.pop('community_logo_id', None)
+            
+            menu = Menu.objects.filter(id=menu_id)
+            
+            if not menu:
+                return None, CustomMassenergizeError("Menu not found")
+            
+            args["is_custom"] = True
+            
+            menu.update(**args)
+            
+            if content:
+            
+                is_content_valid = validate_menu_content(content)
+                
+                if not is_content_valid:
+                    return None, CustomMassenergizeError("Invalid menu content")
+                menu.update(content=content)
+
+            if footer_content:
+                is_footer_content_valid = validate_menu_content(footer_content.get('links', []))
+                
+                if not is_footer_content_valid:
+                    return None, CustomMassenergizeError("Invalid footer content")
+                
+                menu.update(footer_content=footer_content)
+                
+            if contact_info:
+                menu.update(contact_info=contact_info)
+                
+            if community_logo_id:
+                community = menu.first().community
+                community.logo = Media.objects.get(id=community_logo_id)
+                community.save()
+
+            return menu.first(), None
+        except Exception as e:
+            return None, CustomMassenergizeError(str(e))
+            
+    def delete_menu(self, context, args):
+        try:
+            menu_id = args.pop('id', None)
+            menu = Menu.objects.filter(id=menu_id)
+            
+            if not menu:
+                return None, CustomMassenergizeError("Menu not found")
+            
+            menu = menu.first()
+            if not menu.is_custom:
+                return None, CustomMassenergizeError("Cannot delete default menu. Try resetting it instead")
+            
+            menu.delete()
+            return True, None
+        except Exception as e:
+            return None, CustomMassenergizeError(str(e))
+        
+        
+    def get_menu(self, context, args):
+        try:
+            menu_id = args.pop('id', None)
+            menu = Menu.objects.filter(id=menu_id)
+            
+            if not menu:
+                return None, CustomMassenergizeError("Menu not found")
+                
+            return menu.first(), None
+        except Exception as e:
+            return None, CustomMassenergizeError(str(e))
+        
+    def get_menus_for_admin(self, context, args):
+        try:
+            community_id = args.pop('community_id', None)
+            subdomain = args.pop('subdomain', None)
+            
+            if not community_id and not subdomain:
+                return None, CustomMassenergizeError("community_id or subdomain not provided")
+            
+            community, error = get_community(community_id=community_id, subdomain=subdomain)
+            
+            if error:
+                return None, error
+            
+            menus = Menu.objects.filter(community=community)
+            
+            return menus, None
+        except Exception as e:
+            return None, CustomMassenergizeError(str(e))
+        
+        
+    def reset_menu(self, context, args):
+        try:
+            menu_id = args.pop('id', None)
+            
+            if not menu_id:
+                return None, CustomMassenergizeError("id not provided!!")
+            
+            menu = Menu.objects.filter(id=menu_id)
+            
+            if not menu:
+                return None, CustomMassenergizeError("Menu not found")
+            
+            menu = menu.first()
+            
+            default_menus = load_default_menus_from_json()
+            
+            menu.content = default_menus["PortalMainNavLinks"]
+            # menu.footer_content = default_menus["PortalFooterQuickLinks"]
+            # menu.contact_info = default_menus["PortalFooterContactInfo"]
+            menu.is_custom = False
+            menu.save()
+            
+            return menu, None
+        except Exception as e:
+            return None, CustomMassenergizeError(str(e))

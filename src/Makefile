@@ -25,19 +25,19 @@ startd: essential-folders
 	sudo docker-compose up
 .PHONY: startd
 
-local: 
+local:
 	DJANGO_ENV="local" make start
 .PHONY: local
 
-dev: 
+dev:
 	DJANGO_ENV="dev" make start
 .PHONY: dev
 
-canary: 
+canary:
 	DJANGO_ENV="canary" make start
 .PHONY: canary
 
-prod: 
+prod:
 	DJANGO_ENV="prod" make start
 .PHONY: prod
 
@@ -45,15 +45,15 @@ local-docker: install_redis_and_run
 	DJANGO_ENV="local" make startd
 .PHONY: local-docker
 
-dev-docker: 
+dev-docker:
 	DJANGO_ENV="dev" make startd
 .PHONY: dev-docker
 
-canary-docker: 
+canary-docker:
 	DJANGO_ENV="canary" make startd
 .PHONY: canary-docker
 
-prod-docker: 
+prod-docker:
 	DJANGO_ENV="prod" make startd
 .PHONY: prod-docker
 
@@ -98,14 +98,13 @@ export TEST_OUTPUTS=$(outfile)
 export GENERATE_INPUTS=$(generate_inputs)
 
 test:
-	 if [[ -f "test.sqlite3" ]]; \
-	 then \
-	  rm test.sqlite3; \
-	 fi
-	 touch test.sqlite3
-	 DJANGO_ENV=test python3 manage.py migrate
-	 DJANGO_ENV=test python3 -m coverage run --source='.' manage.py test $(package)
-	 python3 -m coverage report
+	if [[ -f "test.sqlite3" ]]; \
+	then \
+	rm test.sqlite3; \
+	fi
+	touch test.sqlite3
+	DJANGO_ENV=test python3 manage.py migrate
+	DJANGO_ENV=test python3 -m coverage run --source='.' manage.py test $(package)
 .PHONY: test
 
 celery:
@@ -152,9 +151,21 @@ migrate-local:
 	DJANGO_ENV=local make migrate
 .PHONY: migrate-local
 
-create-cache-table-local:
-	DJANGO_ENV=local python manage.py createcachetable
+back-fill-menu-local:
+	DJANGO_ENV=local python manage.py back-fill-menu
+.PHONY: back-fill-menu-local
 
+back-fill-menu-dev:
+	DJANGO_ENV=dev python manage.py back-fill-menu
+.PHONY: back-fill-menu-dev
+
+back-fill-menu-prod:
+	DJANGO_ENV=prod python manage.py back-fill-menu
+.PHONY: back-fill-menu-prod
+
+back-fill-menu-canary:
+	DJANGO_ENV=canary python manage.py back-fill-menu
+.PHONY: back-fill-menu-canary
 
 release:
 	@echo "Running release script..."
@@ -168,3 +179,15 @@ release:
 	git push origin main && \
 	git push origin --tags
 .PHONY: release
+
+tk:
+	 if [[ -f "test.sqlite3" ]]; \
+	 then \
+	  rm test.sqlite3; \
+	 fi
+	 touch test.sqlite3
+	 DJANGO_ENV=test python3 manage.py migrate
+	 DJANGO_ENV=test python manage.py test api.tests.unit.utils.test_filter_functions
+
+	# coverage report --precision=2
+.PHONY: tk

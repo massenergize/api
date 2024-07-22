@@ -2,7 +2,7 @@ from api.utils.filter_functions import get_tag_collections_filter_params
 from database.models import TagCollection, Tag
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError
 from _main_.utils.context import Context
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 from typing import Tuple
 
 class TagCollectionStore:
@@ -19,7 +19,7 @@ class TagCollectionStore:
         return None, InvalidResourceError()
       return tag_collection, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -28,7 +28,7 @@ class TagCollectionStore:
       tag_collections = TagCollection.objects.filter(is_deleted=False)
       return tag_collections, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -47,7 +47,7 @@ class TagCollectionStore:
 
       return new_tag_collection, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -75,6 +75,7 @@ class TagCollectionStore:
             if not tag.name.strip():
               tag.delete()
               continue
+
             tag.name = v.strip()
             tag.save()
         elif k.startswith('tag_') and k.endswith('_rank'):
@@ -96,7 +97,6 @@ class TagCollectionStore:
           tag = Tag.objects.create(name=t.strip().title(), tag_collection=tag_collection, rank=len(tags)+i+1)
           tag.save()
 
-
       tags_to_delete = args.pop('tags_to_delete', '')
       if tags_to_delete: 
         tags_to_delete = [t.strip() for t in tags_to_delete.split(',')]
@@ -106,7 +106,7 @@ class TagCollectionStore:
       tag_collection.save()
       return tag_collection, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -118,7 +118,7 @@ class TagCollectionStore:
       tag_collections.delete()
       return {}, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -134,5 +134,5 @@ class TagCollectionStore:
       tag_collections = TagCollection.objects.filter(*filter_params,is_deleted=False )
       return tag_collections, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)

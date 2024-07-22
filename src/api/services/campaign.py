@@ -4,7 +4,7 @@ from _main_.utils.pagination import paginate
 from _main_.utils.context import Context
 from api.store.campaign import CampaignStore
 from api.utils.filter_functions import sort_items
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 from typing import Tuple
 
 from apps__campaigns.helpers import generate_analytics_data, get_campaign_details, get_campaign_technology_details
@@ -61,7 +61,7 @@ class CampaignService:
             return serialize(campaign), None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def create_campaign_from_template(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -75,7 +75,7 @@ class CampaignService:
 
             return result, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def update_campaign(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:

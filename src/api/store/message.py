@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from _main_.utils.common import parse_datetime_to_aware
 from _main_.utils.constants import ME_LOGO_PNG
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
@@ -16,7 +17,7 @@ from _main_.utils.context import Context
 from .utils import get_admin_communities, get_user_from_context, unique_media_filename
 from _main_.utils.context import Context
 from .utils import get_community, get_user
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 from typing import Tuple
 from django.db.models import Q
 from celery.result import AsyncResult
@@ -29,7 +30,7 @@ def get_schedule(schedule):
        formatted_date_string = timezone.make_aware(parsed_datetime)
        return formatted_date_string
 
-    return  datetime.utcnow() + timedelta(minutes=1)
+    return  parse_datetime_to_aware() + timedelta(minutes=1)
 
 
 def get_logo(id):
@@ -56,8 +57,10 @@ class MessageStore:
         try:
             message_id = args.pop("message_id", None) or args.pop("id", None)
             is_inbound = args.get("is_inbound", False)
+            
             if not message_id:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError(f"MESSAGE_ID:({message_id}) not valid. Please provide a valid message_id.")
+            
             message = Message.objects.filter(pk=message_id).first()
             community_id = message.community.id if message.community else None
          
@@ -65,12 +68,12 @@ class MessageStore:
                 return None, NotAuthorizedError()
 
             if not message:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError(f"Message with ID({message_id}) not found")
         
-
             return message, None
+        
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def reply_from_team_admin(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -86,7 +89,7 @@ class MessageStore:
 
             return message, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def message_admin(
@@ -151,7 +154,7 @@ class MessageStore:
             return new_message, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def message_team_admin(
@@ -189,7 +192,7 @@ class MessageStore:
             return new_message, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def update_message_to_team_admin(
@@ -228,7 +231,7 @@ class MessageStore:
             return message, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def reply_from_community_admin(
@@ -249,7 +252,7 @@ class MessageStore:
 
             return message, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def delete_message(self, message_id, context) -> Tuple[dict, MassEnergizeAPIError]:
@@ -278,7 +281,7 @@ class MessageStore:
             # ----------------------------------------------------------------
             return message, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def list_community_admin_messages(self, context: Context, args):
@@ -295,7 +298,7 @@ class MessageStore:
             if message_ids:
                 with_ids = Q(id__in=message_ids)
             if is_scheduled:
-                scheduled = Q(scheduled_at__isnull=False) & Q(scheduled_at__gt=datetime.now())
+                scheduled = Q(scheduled_at__isnull=False) & Q(scheduled_at__gt=timezone.now())
 
             if context.user_is_super_admin:
                 messages = Message.objects.filter(
@@ -324,7 +327,7 @@ class MessageStore:
     
             return messages, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def list_team_admin_messages(self, context: Context, args):
@@ -355,7 +358,7 @@ class MessageStore:
                 messages = []
             return messages, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
         
 
@@ -431,5 +434,5 @@ class MessageStore:
                 return new_message, None
             
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)

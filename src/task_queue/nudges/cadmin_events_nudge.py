@@ -1,26 +1,26 @@
-from _main_.utils.common import encode_data_for_URL, serialize_all
-from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
-from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
-from _main_.utils.feature_flag_keys import COMMUNITY_ADMIN_WEEKLY_EVENTS_NUDGE_FF
-from api.utils.api_utils import get_sender_email
-from api.utils.constants import WEEKLY_EVENTS_NUDGE_TEMPLATE
-from database.utils.settings.model_constants.events import EventConstants
-from database.models import Community, FeatureFlag, UserProfile, Event, CommunityAdminGroup
-from database.utils.settings.admin_settings import AdminPortalSettings
-from database.utils.settings.user_settings import UserPortalSettings
-from django.utils import timezone
 import datetime
-import pytz
-from django.db.models import Q
-from dateutil.relativedelta import relativedelta
 
+from dateutil.relativedelta import relativedelta
+from django.db.models import Q
+from django.utils import timezone
+
+from _main_.utils.common import custom_timezone_info, encode_data_for_URL, serialize_all
+from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
+from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
+from _main_.utils.feature_flag_keys import COMMUNITY_ADMIN_WEEKLY_EVENTS_NUDGE_FF
+from api.utils.constants import WEEKLY_EVENTS_NUDGE_TEMPLATE
+from database.models import Community, CommunityAdminGroup, Event, FeatureFlag, UserProfile
+from database.utils.settings.admin_settings import AdminPortalSettings
+from database.utils.settings.model_constants.events import EventConstants
+from database.utils.settings.user_settings import UserPortalSettings
+from task_queue.helpers import get_event_location
 
 WEEKLY = "weekly"
 BI_WEEKLY = "bi-weekly"
 MONTHLY = "monthly"
 
 #kludge - current communities are in Massachusetts, so for now all dates shown are eastern us time zone
-eastern_tz = pytz.timezone("US/Eastern")
+eastern_tz = custom_timezone_info("US/Eastern")
 
 default_pref = {
     "user_portal_settings": UserPortalSettings.Defaults,
@@ -47,7 +47,7 @@ def generate_event_list_for_community(com):
         community__is_published=True,
         is_published=True,
         is_deleted=False
-    ).exclude(community=com).exclude(shared_to__id=com.id).distinct().order_by("start_date_and_time")
+    ).exclude(shared_to__id=com.id).distinct().order_by("start_date_and_time")
     
     return {
         "events": prepare_events_email_data(events),
@@ -165,7 +165,7 @@ def prepare_events_email_data(events):
             "title": event.get("name"),
             "community": event.get("community", {}).get("name") if event.get("community") else "N/A",
             "date": human_readable_date(event.get("start_date_and_time")),
-            "location": "In person" if event.get("location") else "Online",
+            "location": get_event_location(event),
             "share_link": generate_redirect_url("SHARING", event.get("id")),
             "view_link": generate_redirect_url("VIEW", event.get("id"), event.get("community")),
             } for event in events]

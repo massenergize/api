@@ -568,9 +568,15 @@ class Community(models.Model):
         return str(self.id) + " - " + self.name
 
     def info(self):
-       res = model_to_dict(self, ["id", "name", "subdomain"])
+       res = model_to_dict(self, ["id", "name", "subdomain", "is_geographically_focused"])
        res["logo"] = get_json_if_not_none(self.logo)
        return res
+    
+    def get_logo_link_from_menu(self):
+        menu = Menu.objects.filter(community=self, is_published=True)
+        if menu:
+            return menu.first().community_logo_link
+        return None
 
     def simple_json(self):
         res = model_to_dict(
@@ -593,7 +599,7 @@ class Community(models.Model):
         )
         res["logo"] = get_json_if_not_none(self.logo)
         res["favicon"] = get_json_if_not_none(self.favicon)
-        # this will not slow it down measurably
+        res["community_logo_link"] = self.get_logo_link_from_menu()
         res["feature_flags"] = get_enabled_flags(self)
         return res
 
@@ -659,7 +665,7 @@ class Community(models.Model):
         if impact_page_settings:
             display_prefs = impact_page_settings.more_info or {}
         else:
-            # capture_message("Impact Page Settings not found", level="error")
+            # log.error("Impact Page Settings not found", level="error")
             display_prefs = {}  # not usual - show nothing
 
         value = 0
@@ -751,6 +757,7 @@ class Community(models.Model):
             "feature_flags": get_enabled_flags(self),
             "is_demo": self.is_demo,
             "contact_sender_alias": self.contact_sender_alias,
+            "community_logo_link": self.get_logo_link_from_menu(),
         }
 
     class Meta:
@@ -1979,7 +1986,6 @@ class Action(models.Model):
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=False, blank=True)
     is_approved = models.BooleanField(default=False, blank=True)
-    # is_user_submitted = models.BooleanField(default=False, blank=True, null=True)
 
     def __str__(self):
         return f"{str(self.id)} - {self.title}"
@@ -2009,6 +2015,9 @@ class Action(models.Model):
         )
         data["image"] = get_summary_info(self.image)
         data["calculator_action"] = get_summary_info(self.calculator_action)
+        if self.calculator_action:
+            data["category"] =  self.calculator_action.category.simple_json() if self.calculator_action.category else None
+            data["subcategory"] = self.calculator_action.sub_category.simple_json() if self.calculator_action.sub_category else None
         data["tags"] = [t.simple_json() for t in self.tags.all()]
         data["community"] = get_summary_info(self.community)
         data["created_at"] = self.created_at
@@ -2868,12 +2877,21 @@ class Menu(models.Model):
     content = models.JSONField(blank=True, null=True)
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=False, blank=True)
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, null=True, blank=True)
+    community_logo_link = models.CharField(max_length=LONG_STR_LEN, blank=True, null=True)
+    is_custom = models.BooleanField(default=False, blank=True)
+    footer_content = models.JSONField(blank=True, null=True)
+    contact_info = models.JSONField(blank=True, null=True)
+    
+    
 
     def __str__(self):
         return self.name
 
     def simple_json(self):
-        return model_to_dict(self)
+        res =  model_to_dict(self)
+        res["community"] = get_summary_info(self.community)
+        return res
 
     def full_json(self):
         return self.simple_json()
@@ -3888,7 +3906,7 @@ class FeatureFlag(models.Model):
         elif self.audience == "ALL_EXCEPT":
             return communities_in.exclude(id__in=community_ids)
         
-        return None
+        return []
 
     def enabled_users(self, users_in: QuerySet):
         if self.user_audience == "EVERYONE":

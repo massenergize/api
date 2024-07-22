@@ -1,7 +1,7 @@
 import datetime
 
 from django.test import TestCase, Client
-from api.tests.common import signinAs, setupCC, createUsers, makeCommunity, makeUser, make_technology, createImage, \
+from api.tests.common import signinAs, createUsers, makeCommunity, makeUser, make_technology, createImage, \
     makeTestimonial, makeEvent
 from _main_.utils.utils import Console
 from apps__campaigns.models import Campaign, CampaignAccount, CampaignManager, CampaignCommunity, CampaignTechnology, CampaignTechnologyEvent, \
@@ -19,7 +19,7 @@ class CampaignsIntegrationTestCase(TestCase):
         self.client = Client()
         self.USER, self.CADMIN, self.SADMIN = createUsers()
         signinAs(self.client, self.SADMIN)
-        setupCC(self.client)
+        # setupCC(self.client)
         self.user = makeUser()
         self.IMAGE = createImage("https://www.whitehouse.gov/wp-content/uploads/2021/04/P20210303AS-1901-cropped.jpg")
         self.COMMUNITY_1 = makeCommunity()
@@ -925,6 +925,8 @@ class CampaignsIntegrationTestCase(TestCase):
         response = self.make_request("campaigns.communities.vendors.list", payload)
         self.assertEqual(response['success'], False)
         self.assertEqual(response['error'], "permission_denied")
+        
+        
 
     @classmethod
     def tearDownClass(cls):

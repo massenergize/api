@@ -2,7 +2,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from api.tests.common import RESET
 from api.utils.api_utils import is_admin_of_community
 from .utils import get_community
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 from database.models import Media
 from typing import Tuple
 
@@ -30,7 +30,7 @@ class PageSettingsStore:
         page = page.first()
       return page, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
   
   def list_page_settings(self,context, community_id) -> Tuple[list, MassEnergizeAPIError]:
@@ -102,5 +102,5 @@ class PageSettingsStore:
       page_settings = self.pageSettingsModel.objects.all()
       return page_settings, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)

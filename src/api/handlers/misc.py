@@ -1,13 +1,16 @@
 """Handler file for all routes pertaining to goals"""
+import os
 
 from _main_.utils.route_handler import RouteHandler
 from api.services.misc import MiscellaneousService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
-from api.decorators import admins_only, super_admins_only
+from api.decorators import admins_only, super_admins_only, x_frame_options_exempt
 from database.utils.settings.admin_settings import AdminPortalSettings
 from database.utils.settings.user_settings import UserPortalSettings
 from django.http import JsonResponse
+from django.shortcuts import render
+
 
 
 class MiscellaneousHandler(RouteHandler):
@@ -36,6 +39,15 @@ class MiscellaneousHandler(RouteHandler):
         self.add("/settings.list", self.fetch_available_preferences)
         self.add("/what.happened", self.fetch_footages)
         self.add("/actions.report", self.actions_report)
+        self.add("/rewiring_america", self.get_rewiring_america_data)
+        
+        self.add("/menus.create", self.create_menu)
+        self.add("/menus.update", self.update_menu)
+        self.add("/menus.delete", self.delete_menu)
+        self.add("/menus.get", self.get_menu)
+        self.add("/menus.reset", self.reset_menu)
+        self.add("/menus.listForAdmins", self.get_menus_for_admin)
+        self.add("/links.internal.get", self.get_internal_links)
 
     @admins_only
     def fetch_footages(self, request):
@@ -187,8 +199,175 @@ class MiscellaneousHandler(RouteHandler):
         args, err = self.validator.verify(args, strict=True)
         if err:
             return MassenergizeResponse(error=err)
-
+        
         data, err = self.service.load_menu_items(context, args)
         if err:
             return err
         return MassenergizeResponse(data=data)
+    
+    
+    @admins_only
+    def create_menu(self, request):
+        try:
+            context: Context = request.context
+            args: dict = context.args
+            
+            self.validator.expect("community_id", int, is_required=False)
+            self.validator.expect("subdomain", str, is_required=False)
+            
+            args, err = self.validator.verify(args, strict=True)
+            if err:
+                return err
+
+            menu, err = self.service.create_menu(context, args)
+            
+            if err:
+                return err
+            
+            return MassenergizeResponse(data=menu)
+        
+        except Exception as e:
+            return MassenergizeResponse(error=str(e))
+        
+    @admins_only
+    def update_menu(self, request):
+        try:
+            context: Context = request.context
+            args: dict = context.args
+            
+            self.validator.expect("id", int, is_required=True)
+            self.validator.expect("content", dict, is_required=False)
+            self.validator.expect("name", str, is_required=False)
+            self.validator.expect("is_published", bool, is_required=False)
+            self.validator.expect("community_logo_link", str, is_required=False)
+            self.validator.expect("footer_content", dict, is_required=False)
+            self.validator.expect("contact_info", dict, is_required=False)
+            self.validator.expect("community_logo_id", int, is_required=False)
+            
+            args, err = self.validator.verify(args, strict=True)
+            
+            if err:
+                return err
+
+            menu, err = self.service.update_menu(context, args)
+            
+            if err:
+                return err
+            
+            return MassenergizeResponse(data=menu)
+        
+        except Exception as e:
+            return MassenergizeResponse(error=str(e))
+        
+    @admins_only
+    def delete_menu(self, request):
+        try:
+            context: Context = request.context
+            args: dict = context.args
+            
+            self.validator.expect("id", int, is_required=True)
+            
+            args, err = self.validator.verify(args, strict=True)
+            if err:
+                return err
+            
+            menu, err = self.service.delete_menu(context, args)
+            
+            if err:
+                return err
+            
+            return MassenergizeResponse(data=menu)
+        
+        except Exception as e:
+            return MassenergizeResponse(error=str(e))
+        
+    @admins_only
+    def get_menu(self, request):
+        try:
+            context: Context = request.context
+            args: dict = context.args
+            
+            self.validator.expect("id", int, is_required=True)
+            
+            args, err = self.validator.verify(args, strict=True)
+            if err:
+                return err
+            
+            menu, err = self.service.get_menu(context, args)
+            
+            if err:
+                return err
+            
+            return MassenergizeResponse(data=menu)
+        
+        except Exception as e:
+            return MassenergizeResponse(error=str(e))
+        
+        
+    @admins_only
+    def reset_menu(self, request):
+        try:
+            context: Context = request.context
+            args: dict = context.args
+            
+            self.validator.expect("id", int, is_required=True)
+            
+            args, err = self.validator.verify(args, strict=True)
+            if err:
+                return err
+            
+            menu, err = self.service.reset_menu(context, args)
+            
+            if err:
+                return err
+            
+            return MassenergizeResponse(data=menu)
+        
+        except Exception as e:
+            return MassenergizeResponse(error=str(e))
+    
+    @admins_only
+    def get_menus_for_admin(self, request):
+        try:
+            context: Context = request.context
+            args: dict = context.args
+            
+            self.validator.expect("community_id", int, is_required=False)
+            self.validator.expect("subdomain", str, is_required=False)
+            
+            args, err = self.validator.verify(args, strict=True)
+            if err:
+                return err
+                
+            data, err = self.service.get_menus_for_admin(context, args)
+            if err:
+                return err
+            return MassenergizeResponse(data=data)
+        
+        except Exception as e:
+            return MassenergizeResponse(error=str(e))
+    
+    def get_internal_links(self, request):
+        try:
+            context: Context = request.context
+            args: dict = context.args
+            
+            self.validator.expect("is_footer", bool, is_required=False)
+            
+            args, err = self.validator.verify(args, strict=True)
+            if err:
+                return err
+            
+            data, err = self.service.get_internal_links(context, args)
+            if err:
+                return err
+            return MassenergizeResponse(data=data)
+        
+        except Exception as e:
+            return MassenergizeResponse(error=str(e))
+    
+    @x_frame_options_exempt
+    def get_rewiring_america_data(self, request):
+        args = {"rewiring_america": os.environ.get('REWIRING_AMERICA_API_KEY') }
+        return render(request, "rewiring_america.html", args)
+        

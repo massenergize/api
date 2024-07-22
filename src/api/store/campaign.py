@@ -39,7 +39,7 @@ from _main_.utils.massenergize_errors import (
 from _main_.utils.context import Context
 from .utils import get_user_from_context
 from django.db.models import Q
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 from typing import Tuple
 from django.db import transaction
 
@@ -69,7 +69,7 @@ class CampaignStore:
             return campaign, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def list_campaigns(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
@@ -87,7 +87,7 @@ class CampaignStore:
 
             return campaigns.distinct().order_by("-created_at"), None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def create_campaign(
@@ -156,7 +156,7 @@ class CampaignStore:
             return new_campaign, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def update_campaigns(
@@ -197,7 +197,7 @@ class CampaignStore:
 
             return campaigns.first(), None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def delete_campaign(
@@ -222,7 +222,7 @@ class CampaignStore:
 
             return campaign_to_delete, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def list_campaigns_for_admins(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
@@ -248,7 +248,7 @@ class CampaignStore:
             return campaigns.distinct().order_by("-created_at"), None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def list_campaigns_for_super_admin(self, context: Context):
@@ -256,7 +256,7 @@ class CampaignStore:
             campaigns = Campaign.objects.filter(is_deleted=False)
             return campaigns.order_by("-created_at"), None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def add_campaign_manager(self, context: Context, args):
@@ -289,7 +289,7 @@ class CampaignStore:
                 return None, CustomMassenergizeError("campaign manager already exists!")
             return manager, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def remove_campaign_manager(self, context: Context, args):
@@ -308,7 +308,7 @@ class CampaignStore:
 
             return campaign_manager, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
 
@@ -332,7 +332,7 @@ class CampaignStore:
 
             return campaign_manager.first(), None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def add_campaign_community(self, context: Context, args):
@@ -368,7 +368,7 @@ class CampaignStore:
             campaign_communities.sort(key=lambda x: x["alias"] or x["community"]["name"])
             return campaign_communities, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def remove_campaign_community(self, context: Context, args):
@@ -393,7 +393,7 @@ class CampaignStore:
             campaign_community.delete()
             return campaign_community, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def update_campaign_community(self, context: Context, args):
@@ -420,7 +420,7 @@ class CampaignStore:
 
             return campaign_community.first(), None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def add_campaign_technology(self, context: Context, args):
@@ -455,7 +455,7 @@ class CampaignStore:
             return CampaignTechnology.objects.filter(campaign=campaign, is_deleted=False), None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def update_campaign_technology(self, context: Context, args):
@@ -472,7 +472,7 @@ class CampaignStore:
 
             return campaign_technology.first(), None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def remove_campaign_technology(self, context: Context, args):
@@ -497,7 +497,7 @@ class CampaignStore:
 
             return campaign_technology, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def create_campaign_technology_testimonial(self, context: Context, args):
@@ -554,7 +554,7 @@ class CampaignStore:
 
             return campaign_testimonial, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def update_campaign_technology_testimonial(self, context: Context, args):
@@ -596,7 +596,7 @@ class CampaignStore:
 
             return campaign_technology_testimonial, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def create_campaign_technology_comment(self, context: Context, args):
@@ -636,7 +636,7 @@ class CampaignStore:
             latest_comments = Comment.objects.filter(campaign_technology__id=campaign_technology_id, is_deleted=False).order_by("-created_at")
             return latest_comments[:20], None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def update_campaign_technology_comment(self, context: Context, args):
@@ -653,7 +653,7 @@ class CampaignStore:
 
             return comment.first(), None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
 
@@ -666,7 +666,7 @@ class CampaignStore:
 
             return comments, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def list_campaign_technology_testimonials(self, context: Context, args):
@@ -678,7 +678,7 @@ class CampaignStore:
 
             return testimonials.order_by("-created_at"), None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def delete_campaign_technology_testimonial(self, context: Context, args):
@@ -702,7 +702,7 @@ class CampaignStore:
 
             return campaign_technology_testimonial, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def list_campaign_technologies(self, context: Context, args):
@@ -714,7 +714,7 @@ class CampaignStore:
 
             return technologies, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def list_campaign_communities(self, context: Context, args):
@@ -725,7 +725,7 @@ class CampaignStore:
             communities = CampaignCommunity.objects.filter(campaign__id=campaign_id, is_deleted=False)
             return communities, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def list_campaign_managers(self, context: Context, args):
@@ -737,7 +737,7 @@ class CampaignStore:
 
             return managers, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def add_campaign_partners(self, context: Context, args):
@@ -768,7 +768,7 @@ class CampaignStore:
             return created_list, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def remove_campaign_partners(self, context: Context, args):
@@ -788,7 +788,7 @@ class CampaignStore:
 
             return campaign_partner, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def list_campaign_partners(self, context: Context, args):
@@ -802,7 +802,7 @@ class CampaignStore:
 
             return partners, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def add_campaign_technology_event(self, context: Context, args):
@@ -835,7 +835,7 @@ class CampaignStore:
 
             return created_list, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def generate_campaign_link(self, context: Context, args):
@@ -870,7 +870,7 @@ class CampaignStore:
             generated_link = f"{url}?utm_source={utm_source}&utm_medium={utm_medium}&link_id={campaign_link.id}"
             return {"link": generated_link}, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def campaign_link_visits_count(self, context, args):
@@ -885,7 +885,7 @@ class CampaignStore:
 
             return campaign_link, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def add_campaign_follower(self, context, args):
@@ -927,7 +927,7 @@ class CampaignStore:
 
             return follower, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
 
@@ -965,7 +965,7 @@ class CampaignStore:
 
             return follower, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
 
@@ -988,7 +988,7 @@ class CampaignStore:
 
             return campaign_tech, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def add_campaign_technology_view(self, context, args):
@@ -1017,7 +1017,7 @@ class CampaignStore:
                 view.increase_count()
             return view, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def list_campaign_technology_event(self, context: Context, args):
@@ -1029,7 +1029,7 @@ class CampaignStore:
 
             return events, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def get_campaign_analytics(self, context: Context, args):
@@ -1068,7 +1068,7 @@ class CampaignStore:
             }
             return stats, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
 
@@ -1086,7 +1086,7 @@ class CampaignStore:
 
             return like, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def transfer_ownership(self, context: Context, args):
@@ -1115,7 +1115,7 @@ class CampaignStore:
 
             return campaign, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def get_campaign_technology_info(
@@ -1131,7 +1131,7 @@ class CampaignStore:
             return campaign_technology, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def get_campaign_technology_testimonial(
@@ -1147,7 +1147,7 @@ class CampaignStore:
             return campaign_technology_testimonial, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def create_campaign_config(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -1164,7 +1164,7 @@ class CampaignStore:
             return config, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def update_campaign_config(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -1181,7 +1181,7 @@ class CampaignStore:
             return campaign_config, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def get_campaign_config(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -1197,7 +1197,7 @@ class CampaignStore:
             return campaign_config, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def create_campaign_navigation(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -1249,7 +1249,7 @@ class CampaignStore:
             return new_campaign, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def track_activity(self, context: Context, args: dict):
@@ -1267,7 +1267,7 @@ class CampaignStore:
             return activity, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
 
@@ -1302,7 +1302,7 @@ class CampaignStore:
                 view.increase_count()
             return view, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
 
@@ -1325,7 +1325,7 @@ class CampaignStore:
 
             return comment[:20], None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
 
@@ -1378,7 +1378,7 @@ class CampaignStore:
 
             return campaign_technology, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
 
@@ -1408,7 +1408,7 @@ class CampaignStore:
 
             return to_return, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(str(e))
 
 
@@ -1446,7 +1446,7 @@ class CampaignStore:
             return to_return, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(str(e))
 
 
@@ -1456,7 +1456,7 @@ class CampaignStore:
             vendors = Vendor.objects.filter(is_deleted=False, is_published=True)
             return vendors, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
 
@@ -1494,7 +1494,7 @@ class CampaignStore:
 
             return testimonials, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
 
@@ -1518,7 +1518,7 @@ class CampaignStore:
 
             return campaign_technology_event, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
 
@@ -1555,5 +1555,5 @@ class CampaignStore:
 
             return campaign_managers.order_by("-created_at"), None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)

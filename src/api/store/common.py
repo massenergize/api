@@ -1,26 +1,21 @@
 import csv
 import datetime
-from functools import reduce
 import io
+from functools import reduce
 from typing import List
-from django.http import FileResponse
-from _main_.settings import AWS_S3_REGION_NAME, AWS_STORAGE_BUCKET_NAME, IS_LOCAL
-from _main_.utils.common import serialize, serialize_all
-from api.constants import CSV_FIELD_NAMES
-from carbon_calculator.models import Action
-from database.utils.common import calculate_hash_for_bucket_item, get_image_size_from_bucket
-from xhtml2pdf import pisa
-import pytz
-from _main_.utils.utils import Console
-from api.store.utils import getCarbonScoreFromActionRel
-from database.models import Community, CommunityAdminGroup, Event, Media, Team, UserActionRel
-from django.db.models import Q, Model
-from django.utils import timezone
-import boto3
-import hashlib
-from django.db.models import Count, QuerySet
-from django.http import HttpResponse
 
+import boto3
+from django.db.models import Count, Model, Q
+from django.http import FileResponse
+from xhtml2pdf import pisa
+
+from _main_.settings import AWS_S3_REGION_NAME
+from _main_.utils.common import custom_timezone_info, serialize, serialize_all
+from api.constants import CSV_FIELD_NAMES
+from api.store.utils import getCarbonScoreFromActionRel
+from carbon_calculator.models import Action
+from database.models import Community, CommunityAdminGroup, Event, Media, Team, UserActionRel
+from database.utils.common import calculate_hash_for_bucket_item, get_image_size_from_bucket
 
 s3 = boto3.client("s3", region_name=AWS_S3_REGION_NAME)
 
@@ -35,11 +30,12 @@ NON_EXISTENT_IMAGE = "NON_EXISTENT_IMAGE"
 def js_datetime_to_python(datetext):
     _format = "%Y-%m-%dT%H:%M:%SZ"
     _date = datetime.datetime.strptime(datetext, _format)
-    return pytz.utc.localize(_date)
+    _date = _date.replace(tzinfo=custom_timezone_info())
+    return _date
 
 
 def make_time_range_from_text(time_range):
-    today = datetime.datetime.utcnow()
+    today = datetime.datetime.now()
     if time_range == LAST_WEEK:
         start_time = today - datetime.timedelta(days=7)
         end_time = today
@@ -50,7 +46,7 @@ def make_time_range_from_text(time_range):
     elif time_range == LAST_YEAR:
         start_time = today - datetime.timedelta(days=365)
         end_time = today
-    return [pytz.utc.localize(start_time), pytz.utc.localize(end_time)]
+    return [start_time, end_time]
 
 
 def count_action_completed_and_todos(**kwargs):

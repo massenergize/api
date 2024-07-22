@@ -1,7 +1,7 @@
 import threading
 import time
 from database.models import ActivityLog
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 
 class ActivityLogger:
 
@@ -40,7 +40,7 @@ class ActivityLogger:
       )
       activity_log.save()
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
     
     
   def log(self, params):

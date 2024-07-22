@@ -1,4 +1,4 @@
-from sentry_sdk import capture_exception
+from _main_.utils.massenergize_logger import log
 from _main_.utils.massenergize_errors import CustomMassenergizeError, MassEnergizeAPIError
 from _main_.utils.pagination import paginate
 from api.store.community import CommunityStore
@@ -88,7 +88,7 @@ class CommunityService:
         obj[_id] = found
       return obj, None
     except Exception as e: 
-      e = capture_exception(e)
+      log.error(e)
       return None,CustomMassenergizeError(e)
     # sorted = sort_items(communities, context.get_params())
     # return paginate(sorted, context.get_pagination_data()), None
@@ -161,6 +161,6 @@ class CommunityService:
     feature_flags, err = self.store.list_communities_feature_flags(context, args)
     if err:
       return None, err
-    return serialize_all(feature_flags, info=True), None
+    return feature_flags, None
 
 
