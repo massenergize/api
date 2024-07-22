@@ -40,3 +40,5 @@ django-cid==2.3
 watchtower==3.1.0
 coverage==7.5.0
 google-cloud-translate==3.15.3
+python-bidi==0.4.2
+
