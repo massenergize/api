@@ -1,4 +1,3 @@
-import threading
 from typing import Tuple
 from api.services.translations_cache import TranslationsCacheService
 from _main_.utils.common import serialize, serialize_all
@@ -12,23 +11,51 @@ class SupportedLanguageService:
         self.store = SupportedLanguageStore()
 
     def get_supported_language_info (self, context, args) -> Tuple[ dict, any ]:
+        """
+        Get the supported language info
+
+        Args:
+        - context: Context
+        - args: dict with the following
+            - code: str
+
+        Returns:
+        - language: dict
+        """
         language, err = self.store.get_supported_language_info(context, args)
         return serialize(language) if language else None, err
 
     def list_supported_languages (self, context, args) -> Tuple[ list, any ]:
+        """
+        List all supported languages
+
+        Args:
+        - context: Context
+        - args: dict
+
+        Returns:
+        - languages: list
+        """
         languages, err = self.store.list_supported_languages(context, args)
         return serialize_all(languages) if languages else [], err
 
     def create_supported_language (self, context, args) -> Tuple[ SupportedLanguage or None, any ]:
+        """
+        Create a new supported language
+
+        Args:
+        - context: Context
+        - args: dict with the following
+            - langauge_code: str
+            - name: str
+        """
         language, err = self.store.create_supported_language(context, args)
 
         if err:
             return None, err
 
         translationsCacheService = TranslationsCacheService()
-        thread = threading.Thread(target = translationsCacheService.translate_all_models,
-                                  args = (context, args.get('code', None)))
-        thread.start()
+        translationsCacheService.translate_all_models(context, args.get('langauge_code', None))
 
         return serialize(language), None
 
