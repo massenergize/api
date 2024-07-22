@@ -2,7 +2,8 @@ from django.test import TestCase
 from unittest.mock import patch, MagicMock
 
 import datetime
-from pytz import timezone
+
+from _main_.utils.common import custom_timezone_info
 from _main_.utils.policy.PolicyConstants import PolicyConstants
 from _main_.utils.utils import Console
 
@@ -25,7 +26,7 @@ class SendAdminMOUNotificationTests:
         )
 
         # Set up the current time with the UTC timezone
-        utc = timezone("UTC")
+        utc = custom_timezone_info()
         now = datetime.datetime.now(utc)
 
         # Create an admin who should receive a notification (last notified more than a month ago)

@@ -4,7 +4,7 @@ from django.test import Client, TestCase
 
 from _main_.utils.feature_flag_keys import USER_EVENTS_NUDGES_FF
 from _main_.utils.utils import Console
-from api.tests.common import createUsers, make_feature_flag, signinAs
+from api.tests.common import createUsers, make_feature_flag, makeFlag, signinAs
 from database.models import Community, CommunityAdminGroup, CommunityMember, CommunityNotificationSetting, Goal, \
   Subdomain, UserProfile
 

@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from _main_.utils.common import parse_datetime_to_aware
 from _main_.utils.constants import ME_LOGO_PNG
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
@@ -29,7 +30,7 @@ def get_schedule(schedule):
        formatted_date_string = timezone.make_aware(parsed_datetime)
        return formatted_date_string
 
-    return  datetime.utcnow() + timedelta(minutes=1)
+    return  parse_datetime_to_aware() + timedelta(minutes=1)
 
 
 def get_logo(id):
@@ -297,7 +298,7 @@ class MessageStore:
             if message_ids:
                 with_ids = Q(id__in=message_ids)
             if is_scheduled:
-                scheduled = Q(scheduled_at__isnull=False) & Q(scheduled_at__gt=datetime.now())
+                scheduled = Q(scheduled_at__isnull=False) & Q(scheduled_at__gt=timezone.now())
 
             if context.user_is_super_admin:
                 messages = Message.objects.filter(

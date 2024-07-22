@@ -1,9 +1,11 @@
 import json
 
+from django.utils import timezone
+
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from _main_.utils.utils import is_url_valid
-from _main_.utils.common import local_time
+from _main_.utils.common import custom_timezone_info, local_time, parse_datetime_to_aware
 from api.store.common import get_media_info, make_media_info
 from api.tests.common import RESET, makeUserUpload
 from api.utils.api_utils import is_admin_of_community
@@ -21,24 +23,35 @@ from .utils import get_user_from_context, get_user_or_die, get_new_title
 import datetime
 from datetime import timedelta
 import calendar
-import pytz
 from typing import Tuple
+from zoneinfo import ZoneInfo
 
 def _local_datetime(date_and_time):
-    # the local date (in Massachusetts) is different than the UTC date
-    # need to also save the location (as a Location) and get the time zone from that.
-    # KLUGE: assume Massachusetts for now
+    """
+    Converts a UTC datetime string to local datetime in Massachusetts time zone.
+    """
+    # Parse the datetime string to a datetime object
     dt = datetime.datetime.strptime(str(date_and_time), '%Y-%m-%dT%H:%M:%SZ')
-    local_datetime = dt - timedelta(hours=4)
+
+    # Specify the Massachusetts time zone
+    massachusetts_zone = ZoneInfo('America/New_York')
+
+    # Convert time zone from UTC to Massachusetts time zone
+    local_datetime = dt.replace(tzinfo=ZoneInfo('UTC')).astimezone(massachusetts_zone)
     return local_datetime
 
-
 def _UTC_datetime(date_and_time):
-    # the local date (in Massachusetts) is different than the UTC date
-    # need to also save the location (as a Location) and get the time zone from that.
-    # KLUGE: assume Massachusetts for now
+    """
+    Converts a local Massachusetts datetime string to UTC datetime.
+    """
+    # Parse the datetime string to a datetime object
     dt = datetime.datetime.strptime(str(date_and_time), '%Y-%m-%d %H:%M:%S')
-    UTC_datetime = dt + timedelta(hours=4)
+
+    # Specify the Massachusetts time zone
+    massachusetts_zone = ZoneInfo('America/New_York')
+
+    # Convert time zone from Massachusetts to UTC
+    UTC_datetime = dt.replace(tzinfo=massachusetts_zone).astimezone(ZoneInfo('UTC'))
     return UTC_datetime
 
 
@@ -216,7 +229,7 @@ class EventStore:
         user_id = args.pop("user_id", None)
         shared = []
 
-        today = datetime.datetime.now()
+        today = parse_datetime_to_aware()
         shared_months = 2
         hosted_months = 6
         earliest_shared = today - timedelta(weeks=4*shared_months)
@@ -290,9 +303,9 @@ class EventStore:
 
                 # if specified a different end date from start date, fix this
                 if local_start.date() != local_end.date():
-                    # fix the end_date_and_time to have same date as start
-                    end_datetime = datetime.datetime.combine(local_start.date(), local_end.time())
-                    end_date_and_time = _UTC_datetime(end_datetime).strftime('%Y-%m-%dT%H:%M:%SZ')
+                    end_datetime = datetime.datetime.combine(local_start.date(), local_end.timetz())
+                    end_datetime = end_datetime.replace(tzinfo=local_end.tzinfo)
+                    end_date_and_time = end_datetime.astimezone(timezone.utc)
 
             if separation_count:
                 separation_count = int(separation_count)
@@ -433,7 +446,7 @@ class EventStore:
             is_published = args.pop('is_published', None)
 
             if is_published:
-                args['published_at'] = datetime.datetime.now()
+                args['published_at'] = parse_datetime_to_aware()
             else:
                 args['published_at'] = None
 
@@ -669,8 +682,7 @@ class EventStore:
         else:
             events = []
 
-        tod = datetime.datetime.utcnow()
-        today = pytz.utc.localize(tod)
+        today =  parse_datetime_to_aware()
 
         for event in events:
             # protect against recurring event with no recurring details saved
@@ -690,7 +702,7 @@ class EventStore:
             if final_date and final_date != 'None':
                 final_date = final_date + ' ' + starttime
                 final_date = datetime.datetime.strptime(final_date, "%Y-%m-%d %H:%M:%S+00:00")
-                final_date = pytz.utc.localize(final_date)
+                final_date = final_date.replace(tzinfo=custom_timezone_info())
                 if today > final_date:
                     continue
 
@@ -723,24 +735,26 @@ class EventStore:
                         for day in obj.itermonthdates(int(new_month.year), int(new_month.month)):
                             if int(day.day) >= 8:
                                 continue
-                            d1 = pytz.utc.localize(datetime.datetime(int(day.year), int(day.month), int(day.day)))
+                            d1 = datetime.datetime(int(day.year), int(day.month), int(day.day), tzinfo=custom_timezone_info())
                             if calendar.day_name[d1.weekday()] == event.recurring_details['day_of_week']:
                                 date_of_first_weekday = int(day.day)
                                 break
 
                         upcoming_date = date_of_first_weekday + (
                                 (converter[event.recurring_details['week_of_month']] - 1) * 7)
-
-                        start_date = pytz.utc.localize(
-                            datetime.datetime(new_month.year, new_month.month, upcoming_date, start_date.hour,
-                                              start_date.minute))
+                        
+                        start_date = datetime.datetime(new_month.year, new_month.month, upcoming_date, start_date.hour,
+                                              start_date.minute,
+                                              tzinfo=custom_timezone_info())
                     event.start_date_and_time = start_date
                     event.end_date_and_time = start_date + duration
 
                 event.save()
                 exception = RecurringEventException.objects.filter(event=event).first()
-                if exception and pytz.utc.localize(exception.former_time) < pytz.utc.localize(
-                    event.start_date_and_time):
+                exception_former_time = exception.former_time.replace(tzinfo=custom_timezone_info()) if exception else None
+                event_start_date_and_time = event.start_date_and_time.replace(tzinfo=custom_timezone_info())
+                
+                if exception and (exception_former_time < event_start_date_and_time):
                     exception.delete()
 
             except Exception as e:
@@ -809,7 +823,7 @@ class EventStore:
             filter_params = get_events_filter_params(context.get_params())
 
             user = UserProfile.objects.filter(email=context.user_email).first()
-            today = datetime.datetime.today()
+            today = parse_datetime_to_aware()
             if user:
                 admin_of = [g.community.id for g in user.communityadmingroup_set.all()]
 
