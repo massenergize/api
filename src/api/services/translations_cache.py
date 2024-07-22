@@ -1,5 +1,9 @@
 from django.apps import apps
+from django.forms.models import model_to_dict
 from database.models import TranslationsCache
+from _main_.utils.massenergize_logger import log
+from _main_.utils.translation.translator.json_translator import JsonTranslator
+from _main_.utils.translation.translator import Translator
 from _main_.utils.context import Context
 from _main_.utils.massenergize_errors import CustomMassenergizeError
 from _main_.utils.utils import to_third_party_lang_code, run_in_background
@@ -7,8 +11,8 @@ from _main_.utils.utils import to_third_party_lang_code, run_in_background
 from api.store.supported_language import SupportedLanguageStore
 from api.store.translations_cache import TranslationsCacheStore
 from api.services.text_hash import TextHashService
-from translation.translator.translator import Translator
 from typing import Tuple, Set
+
 
 DEFAULT_SOURCE_LANGUAGE_CODE = "en-US"
 
@@ -21,6 +25,20 @@ class TranslationsCacheService:
         self.textHashService = TextHashService()
 
     def create_translation (self, context: Context, args: dict) -> Tuple[ TranslationsCache or None, None ]:
+        """
+        This function creates a translation in the database
+
+        Args:
+        - context: Context
+        - args: dict with the following
+            - hash: str
+            - source_language: str
+            - target_language: str
+            - translated_text: str
+
+        Returns:
+        - translation: TranslationsCache
+        """
         translation, err = self.store.create_translation(context, args)
         return translation if translation else None, err
 
@@ -29,12 +47,23 @@ class TranslationsCacheService:
         return translation if translation else None, err
 
     def get_target_languages (self, context: Context, target_language_code) -> Tuple[ list, None ]:
+        """
+        This function returns the target languages for translation except the source (default) language
+
+        Args:
+        - context: Context
+        - target_language_code: str
+
+        Returns:
+        - target_languages: list
+        """
         supported_languages, err = SupportedLanguageStore().list_supported_languages(context, { })
         return [ (to_third_party_lang_code(language.code), language.code) for language in supported_languages if
                  language.code != DEFAULT_SOURCE_LANGUAGE_CODE ] if supported_languages else None, err
 
-    def translate_text_field (self, context: Context, field_value: str, target_language_code) -> Tuple[ dict or None, None ]:
-        text_hash, err = self.textHashService.create_text_hash(context, { "text": field_value })
+    def translate_text_field (self, context: Context, field_value: str, target_language_code) -> Tuple[dict or None, None ]:
+
+        text_hash, err = self.textHashService.create_text_hash({ "text": field_value })
         target_language, err = self.get_target_languages(context, target_language_code)
         source_language_code = to_third_party_lang_code(DEFAULT_SOURCE_LANGUAGE_CODE)
 
@@ -46,8 +75,8 @@ class TranslationsCacheService:
         if hash:
             for target_language_tuple in target_language:
                 translated_text = self.translator.translate_text(text = field_value,
-                                                            source_language =  target_language_tuple[0],
-                                                            target_language = source_language_code
+                                                                 source_language = target_language_tuple[ 0 ],
+                                                                 target_language = source_language_code
                                                                  )
                 translation, err = self.create_translation(context, {
                     "hash": text_hash,
@@ -61,7 +90,8 @@ class TranslationsCacheService:
 
                 return translation, None
 
-    def translate_json_field (self, context: Context, value: dict, target_language_code, ignoredKeys: Set) -> Tuple[ dict or None, None ]:
+    def translate_json_field (self, context: Context, value: dict, target_language_code, ignoredKeys: Set) -> Tuple[
+        dict or None, None ]:
         for key, field_value in value.items():
             if isinstance(field_value, str):
                 return self.translate_text_field(context, field_value, target_language_code)
@@ -78,7 +108,8 @@ class TranslationsCacheService:
             else:
                 continue
 
-    def translate_list_field (self, context: Context, value: list, target_language_code, ignoredKeys: Set) -> Tuple[ dict or None, None ]:
+    def translate_list_field (self, context: Context, value: list, target_language_code, ignoredKeys: Set) -> Tuple[
+        dict or None, None ]:
         for item in value:
             if isinstance(item, dict):
                 return self.translate_json_field(context, item, target_language_code, ignoredKeys)
@@ -126,15 +157,59 @@ class TranslationsCacheService:
             return { "message": "Model translation successful", }, None
 
         except Exception as e:
+            log.exception(e)
             return CustomMassenergizeError(str(e))
 
-    @run_in_background
-    def translate_all_models (self, context: Context, code:str) -> Tuple[ dict or None, None ]:
-        try:
-            for model in apps.get_models():
-                if hasattr(model, "TranslationMeta"):
-                    self.translate_model(context, { "model": model, "target_language_code": code})
+    def create_list_of_all_records_to_translate (self, models):
+        """
+        This function creates a list of all records to translate
 
-            return { "message": "All models translation successful" }, None
+        Args:
+        - models: list
+
+        Returns:
+        - records: list
+        """
+
+        all_records = [ ]
+        for model in models:
+
+            translation_meta = getattr(model, "TranslationMeta", None)
+            if not translation_meta:
+                continue
+
+            translatable_fields = getattr(translation_meta, "fields_to_translate", None)
+            if len(translatable_fields) > 0:
+                all_records.extend([ model_to_dict(r, fields = translatable_fields) for r in model.objects.all() ])
+
+        return all_records
+
+    def translate_all_models (self, context: Context, language_code: str) -> Tuple[ dict or None, None ]:
+        try:
+            # Go through all the records of all models and return a list of all records [{:dict}] to translate
+            all_records= self.create_list_of_all_records_to_translate(apps.get_models())
+
+            source_langauge = to_third_party_lang_code(DEFAULT_SOURCE_LANGUAGE_CODE)
+            target_language = to_third_party_lang_code(language_code)
+
+            json_translator = JsonTranslator(all_records)
+            _, translated_text_entries, text_hashes = json_translator.translate(source_langauge, target_language)
+
+            for i in range(0, len(translated_text_entries)):
+                translation, err = self.create_translation(context, {
+                    "hash": text_hashes[i],
+                    "source_language": DEFAULT_SOURCE_LANGUAGE_CODE,
+                    "target_language": language_code,
+                    "translated_text": translated_text_entries[i]
+                })
+
+                if err:
+                    log.error(f"Error caching translation for {text_hashes[i]}: {err}")
+                    return None, err
+
+
+            return { "message": "All models translation successful", }, None
+
         except Exception as e:
+            log.exception(e)
             return CustomMassenergizeError(str(e)), None
