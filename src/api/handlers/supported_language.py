@@ -21,7 +21,7 @@ class SupportedLanguageHandler(RouteHandler):
         context: Context = request.context
         args: dict = context.args
 
-        code = args.get('code', None)
+        code = args.get('language_code', None)
 
         if not code:
             return MassenergizeResponse(error="Please provide a valid language code")
@@ -40,7 +40,7 @@ class SupportedLanguageHandler(RouteHandler):
         args = context.get_request_body()
 
         (self.validator
-         .expect("code", str, is_required=True)
+         .expect("language_code", str, is_required=True)
          .expect("name", str, is_required=True)
          )
         args, err = self.validator.verify(args)
