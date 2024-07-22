@@ -36,6 +36,23 @@ class TextHashService:
             return None, err
         return text_hash, None
 
+    def text_hash_exists (self, text):
+        """
+        Check if a text hash exists in the database
+
+        :param context: The request context
+        :param args: a dictionary containing the text to be hashed
+            :key text: The text to be hashed
+
+        :return: A tuple containing a boolean indicating if the text hash exists and an error message
+        """
+        exists, err = self.store.text_hash_exists(hash=TextHashService.make_hash(text))
+
+        if err:
+            return False, err
+
+        return exists, None
+
     def list_text_hashes (self, context, args):
         text_hashes, err = self.store.list_text_hashes(context, args)
 
