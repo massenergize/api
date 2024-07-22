@@ -13,8 +13,6 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 import os
 import firebase_admin
 from firebase_admin import credentials
-from google.oauth2 import service_account
-from google.cloud import translate_v2 as translate
 from dotenv import load_dotenv
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
@@ -211,16 +209,6 @@ if FIREBASE_CREDENTIALS:
     )
 else:
     print("ERROR: You most likely cannot perform authentication.  It seems we could not initialize firebase.")
-    
-    
-GOOGLE_TRANSLATE_CREDENTIALS = EnvConfig.get_google_translate_credentials()
-if GOOGLE_TRANSLATE_CREDENTIALS:
-    loaded_credentials = service_account.Credentials.from_service_account_info(GOOGLE_TRANSLATE_CREDENTIALS)
-    google_translate_client = translate.Client(credentials=loaded_credentials)
-    
-else:
-    print("ERROR: You most likely cannot perform translation.  It seems we could not initialize google translate.")
-    google_translate_client = None
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
