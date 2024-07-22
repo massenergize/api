@@ -39,3 +39,4 @@ better-profanity==0.7.0
 django-cid==2.3
 watchtower==3.1.0
 coverage==7.5.0
+python-bidi==0.4.2
