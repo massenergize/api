@@ -1,18 +1,15 @@
-from datetime import datetime
-
-from django.test import TestCase, Client
-from django.conf import settings as django_settings
 from urllib.parse import urlencode
-from _main_.settings import BASE_DIR
+
+from django.test import Client, TestCase
+
 from _main_.utils.feature_flag_keys import USER_EVENTS_NUDGES_FF
-from _main_.utils.massenergize_response import MassenergizeResponse
-from database.models import CommunityNotificationSetting, Team, Community, UserProfile, Goal, TeamMember, \
-  CommunityMember, RealEstateUnit, CommunityAdminGroup, Subdomain
-from _main_.utils.utils import Console, load_json
-from api.tests.common import make_feature_flag, signinAs, createUsers
+from _main_.utils.utils import Console
+from api.tests.common import createUsers, make_feature_flag, makeFlag, signinAs
+from database.models import Community, CommunityAdminGroup, CommunityMember, CommunityNotificationSetting, Goal, \
+  Subdomain, UserProfile
+
 
 class CommunitiesTestCase(TestCase):
-
 
   @classmethod
   def setUpClass(self):
@@ -33,6 +30,13 @@ class CommunitiesTestCase(TestCase):
       'is_published': True,
       'is_approved': True
     })
+    
+    self.TEST_COMMUNTITY = Community.objects.create(**{
+        'subdomain': "test_community-unique",
+        'name': "test_community_unique",
+        'accepted_terms_and_conditions': True,
+        'is_approved': True
+        })
 
     # also reserve the subdomain
     Subdomain.objects.create(name=self.COMMUNITY.subdomain.lower(), community=self.COMMUNITY, in_use=True)
@@ -100,6 +104,9 @@ class CommunitiesTestCase(TestCase):
     self.community_notification_setting = CommunityNotificationSetting.objects.create(community=self.COMMUNITY, is_active=False,
                                                                notification_type=USER_EVENTS_NUDGES_FF)
     self.ff = make_feature_flag(key=f"test_{USER_EVENTS_NUDGES_FF}")
+    self.ff1 = make_feature_flag(audience="SPECIFIC", communities=[self.COMMUNITY])
+    self.ff2 = make_feature_flag(audience="ALL_EXCEPT", communities=[self.COMMUNITY, self.TEST_COMMUNTITY], key="test_all_except", name="Test All Except")
+    self.ff3 = make_feature_flag(audience="EVERYONE", key="test_everyone", name="Test Everyone")
     
   @classmethod
   def tearDownClass(self):
@@ -489,16 +496,21 @@ class CommunitiesTestCase(TestCase):
     # test list community feature flags not logged in
     Console.header("Integration: list_communities_feature_flags")
     url = "/api/communities.features.flags.list"
-    args = {"community_id": self.COMMUNITY.id}
+    args = {"community_id": self.COMMUNITY2.id}
     
     signinAs(self.client, None)
     list_response = self.client.post(url, urlencode(args), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(list_response["success"])
+    self.assertIn({ "id":self.ff3.id,"name": "Test Everyone",  "key": "test_everyone"}, list_response["data"])
+    self.assertIn({"id":self.ff2.id,  "name": "Test All Except", "key": "test_all_except"}, list_response["data"])
     
     # test list community feature flags logged as user
     signinAs(self.client, self.USER)
-    list_response = self.client.post(url, urlencode(args), content_type="application/x-www-form-urlencoded").toDict()
+    list_response = self.client.post(url, urlencode({"community_id":self.TEST_COMMUNTITY.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(list_response["success"])
+    self.assertIsInstance(list_response["data"], list)
+    self.assertIn({ "id":self.ff3.id,"name": "Test Everyone",  "key": "test_everyone"}, list_response["data"])
+    self.assertNotIn({"id":self.ff2.id,  "name": "Test All Except", "key": "test_all_except"}, list_response["data"])
     
     # test list community feature flags logged as user with invalid subdomain
     signinAs(self.client, self.USER)
@@ -509,6 +521,7 @@ class CommunitiesTestCase(TestCase):
     signinAs(self.client, self.CADMIN)
     list_response = self.client.post(url, urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(list_response["success"])
+    self.assertIsInstance(list_response["data"], list)
     
     # test list community feature flags logged as sadmin
     signinAs(self.client, self.SADMIN)
@@ -548,7 +561,6 @@ class CommunitiesTestCase(TestCase):
     # test list community features logged as sadmin
     signinAs(self.client, self.SADMIN)
     list_response = self.client.post(url, urlencode(args), content_type="application/x-www-form-urlencoded").toDict()
-    print("====> ", list_response)
     self.assertTrue(list_response["success"])
     self.assertIsInstance(list_response["data"], dict)
     

@@ -2,20 +2,52 @@ import io
 import json
 from querystring_parser import parser
 from _main_.utils.massenergize_errors import CustomMassenergizeError
-import pytz
+from zoneinfo import ZoneInfo
 from django.utils import timezone
-from datetime import datetime, timedelta
+from datetime import timedelta
 from dateutil import tz
 from _main_.utils.massenergize_logger import log
 import base64
 import pyshorteners
 from openpyxl import Workbook
 from better_profanity import profanity
+import datetime
+
+
+def custom_timezone_info(zone="UTC"):
+    if not zone:
+        zone = "UTC"
+    return ZoneInfo(zone)
+
+
+def parse_datetime_to_aware(datetime_str=None, timezone_str='UTC'):
+    """
+    :param datetime_str: The string representing the datetime to parse. If not provided, the current date and time will be used.
+    :param timezone_str: The string representing the timezone to apply to the parsed datetime. Defaults to 'UTC'.
+    :return: An aware datetime object.
+    
+    """
+    if not datetime_str:
+        datetime_str = datetime.datetime.now()
+    
+    if isinstance(datetime_str, datetime.datetime):
+        datetime_str = datetime_str.strftime('%Y-%m-%d %H:%M:%S')
+    try:
+        naive_datetime = datetime.datetime.strptime(datetime_str, '%Y-%m-%d %H:%M:%S.%f')
+    except ValueError:
+        naive_datetime = datetime.datetime.strptime(datetime_str, '%Y-%m-%d %H:%M:%S')
+    
+    try:
+        aware_datetime = timezone.make_aware(naive_datetime, custom_timezone_info(timezone_str))
+        return aware_datetime
+    except Exception as e:
+        log.exception(e)
+        return None
 
 
 def get_date_and_time_in_milliseconds(**kwargs):
     hours = kwargs.get("hours", None)
-    date = datetime.now(tz=pytz.UTC)
+    date = datetime.datetime.now(tz=custom_timezone_info())
     if hours:
         delta = timedelta(hours=hours)
         date = date + delta
@@ -133,9 +165,9 @@ def parse_date(d):
         if d == "undefined" or d == "null":  # providing date as 'null' should clear it
             return None
         if len(d) == 10:
-            return pytz.utc.localize(datetime.strptime(d, "%Y-%m-%d"))
+            return datetime.datetime.strptime(d, "%Y-%m-%d").replace(tzinfo=custom_timezone_info())
         else:
-            return pytz.utc.localize(datetime.strptime(d, "%Y-%m-%d %H:%M"))
+            return datetime.datetime.strptime(d, "%Y-%m-%d %H:%M").replace(tzinfo=custom_timezone_info())
 
     except Exception as e:
         log.exception(e)
@@ -283,14 +315,14 @@ def set_cookie(response, key, value):  # TODO
 
 def local_time():
     local_zone = tz.tzlocal()
-    dt_utc = datetime.utcnow()
+    dt_utc = parse_datetime_to_aware()
     local_now = dt_utc.astimezone(local_zone)
     return local_now
 
 
 def utc_to_local(iso_str):
     local_zone = tz.tzlocal()
-    dt_utc = datetime.strptime(iso_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=pytz.UTC)
+    dt_utc = datetime.datetime.strptime(iso_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=custom_timezone_info())
     local_now = dt_utc.astimezone(local_zone)
     return local_now
 
@@ -340,5 +372,5 @@ def contains_profane_words(text):
 def to_django_date(date):
     if not date:
         return None
-    parsed_date = datetime.strptime(date, "%a %b %d %Y %H:%M:%S GMT%z")
+    parsed_date = datetime.datetime.strptime(date, "%a %b %d %Y %H:%M:%S GMT%z")
     return parsed_date.date()

@@ -55,6 +55,9 @@ class TestJsonTranslator(unittest.TestCase):
                 {"a": "1", "b.[0].b0": "b0a", "b.[1].b1": "b1a", "b.[2].b2.[0].k": "0"},
                 {},
             ),
+            # list jsons
+            ([], {}, {}),
+            ([{"k1": "v1"}, {"k2": "v2"}], {"[0].k1": "v1", "[1].k2": "v2"}, {}),
         ]
 
         for (d, expected_flattend, expected_excluded_flattened) in flatten_test_cases:
@@ -91,11 +94,14 @@ class TestJsonTranslator(unittest.TestCase):
                 {"k.sk1.ssk1": None, "k.sk2": "v"},
                 {"k": {"sk1": {"ssk1": None}, "sk2": "v"}},
             ),
-
             # nested with lists
             (
                 {"a": "1", "b.[0].b0": "b0a", "b.[1].b1": "b1a", "b.[2].b2.[0].k": "0"},
                 {"a": "1", "b": [{"b0": "b0a"}, {"b1": "b1a"}, {"b2": [{"k": "0"}]}]},
+            ),
+            (
+                {"[0].k1": "v1", "[1].k2": "v2"},
+                [{"k1": "v1"}, {"k2": "v2"}],
             ),
         ]
 
@@ -119,6 +125,90 @@ class TestJsonTranslator(unittest.TestCase):
         translated_dict_round_trip = translator_round_trip.translate("fr", "en")
 
         self.assertEqual(translated_dict_round_trip, self.nested_dict)
+
+    def test_convert_to_text_blocks(self):
+        magic_text = "|||"
+        translator = JsonTranslator({})
+
+        test_cases = [
+            {
+                "name": "Empty List",
+                "text_list": [],
+                "max_block_size": 1,
+                "expected": [],
+            },
+            {
+                "name": "Single Entry",
+                "text_list": ["one"],
+                "max_block_size": 10,
+                "expected": ["one"],
+            },
+            {
+                "name": "Multiple Entries",
+                "text_list": ["one", "two", "three"],
+                "max_block_size": 10,
+                "expected": ["one|||two", "three"],
+            },
+            {
+                "name": "Exact Block Size",
+                "text_list": ["one", "two"],
+                "max_block_size": 9,
+                "expected": ["one|||two"],
+            },
+            {
+                "name": "Exceed Block Size",
+                "text_list": ["one", "two", "three", "four"],
+                "max_block_size": 10,
+                "expected": ["one|||two", "three", "four"],
+            },
+            {
+                "name": "Large Max Size",
+                "text_list": [
+                    "one",
+                    "two",
+                    "three",
+                    "four",
+                    "five",
+                    "six",
+                    "seven",
+                    "eight",
+                    "nine",
+                    "ten",
+                ],
+                "max_block_size": 100,
+                "expected": [
+                    "one|||two|||three|||four|||five|||six|||seven|||eight|||nine|||ten"
+                ],
+            },
+            {
+                "name": "Leading and Trailing Whitespace",
+                "text_list": [" one ", " two ", " three "],
+                "max_block_size": 15,
+                "expected": [" one ||| two ", " three "],
+            },
+            {
+                "name": "Varied Lengths",
+                "text_list": [
+                    "short",
+                    "a bit longer",
+                    "this is a much longer text entry",
+                ],
+                "max_block_size": 30,
+                "expected": [
+                    "short|||a bit longer",
+                    "this is a much longer text entry",
+                ],
+            },
+        ]
+
+        for case in test_cases:
+            with self.subTest(case["name"]):
+                result = translator.convert_to_text_blocks(
+                    case["text_list"], case["max_block_size"], magic_text
+                )
+                self.assertEqual(
+                    result, case["expected"], msg=f"Failed on {case['name']}"
+                )
 
 
 if __name__ == "__main__":

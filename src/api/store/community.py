@@ -23,10 +23,11 @@ from api.tests.common import RESET
 from api.utils.api_utils import get_distance_between_coords, is_admin_of_community
 from api.utils.filter_functions import get_communities_filter_params
 from database.models import AboutUsPageSettings, Action, ActionsPageSettings, Community, CommunityAdminGroup, \
-	CommunityMember, CommunityNotificationSetting, ContactUsPageSettings, CustomCommunityWebsiteDomain, \
-	DonatePageSettings, EventsPageSettings, FeatureFlag, Goal, Graph, HomePageSettings, ImpactPageSettings, Location, \
-	Media, RealEstateUnit, RegisterPageSettings, SigninPageSettings, Subdomain, TeamsPageSettings, \
-	TestimonialsPageSettings, UserProfile, VendorsPageSettings
+    CommunityMember, CommunityNotificationSetting, ContactUsPageSettings, CustomCommunityWebsiteDomain, \
+    DonatePageSettings, EventsPageSettings, FeatureFlag, get_enabled_flags, Goal, Graph, HomePageSettings, \
+    ImpactPageSettings, Location, \
+    Media, Menu, RealEstateUnit, RegisterPageSettings, SigninPageSettings, Subdomain, TeamsPageSettings, \
+    TestimonialsPageSettings, UserProfile, VendorsPageSettings
 from database.utils.common import json_loader
 from .utils import (get_community, get_community_or_die, get_new_title, get_user_from_context, is_reu_in_community)
 from ..constants import COMMUNITY_NOTIFICATION_TYPES
@@ -102,6 +103,23 @@ def check_community_membership(feature_flag, should_enable, community):
         else:
             feature_flag.communities.add(community)
         feature_flag.save()
+        
+        
+def create_default_menu(community):
+    if not community: return None
+#     load the default menu json
+    default_menu_json = json_loader("database/raw_data/portal/menu.json")
+    menu = Menu(
+        community=community,
+        name="{} - Default Menu".format(community.subdomain),
+        is_custom=True,
+        is_published=True,
+        content=default_menu_json.get("PortalMainNavLinks", []),
+        footer_content=default_menu_json.get("PortalFooterLinks", {}),
+        contact_info=default_menu_json.get("PortalFooterContactInfo", {}),
+    )
+    menu.save()
+    
 
 
 class CommunityStore:
@@ -759,6 +777,7 @@ class CommunityStore:
 
             # clone everything for this community
             homePage = HomePageSettings.objects.filter(is_template=True).first()
+            create_default_menu(community)
             images = homePage.images.all()
             # TODO: make a copy of the images instead, then in the home page, you wont have to create new files everytime
             if homePage:
@@ -1381,7 +1400,7 @@ class CommunityStore:
                 if not community:
                     return None, CustomMassenergizeError("Community not found")
                 
-                communities = [community.id]
+                return get_enabled_flags(community), None
             else:
                 # check if user is a community admin, get all communities they are admin of
                 user = get_user_from_context(context)
@@ -1392,9 +1411,9 @@ class CommunityStore:
             
             feature_flags = FeatureFlag.objects.filter(
                 Q(audience=FeatureFlagConstants().for_everyone()) |
-                Q(audience=FeatureFlagConstants().for_specific_audience(), communities__in=communities) |
-                (Q(audience=FeatureFlagConstants().for_all_except()) & ~Q(communities__in=communities))
-            ).exclude(expires_on__lt=datetime.now()).prefetch_related('communities')
+                Q(audience=FeatureFlagConstants().for_specific_audience(), communities__id__in=communities) |
+                (Q(audience=FeatureFlagConstants().for_all_except()) & ~Q(communities__id__in=communities))
+            ).exclude(expires_on__lt=datetime.now(timezone.utc)).prefetch_related('communities')
             
             ff = []
             for flag in feature_flags:
