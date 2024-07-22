@@ -3,6 +3,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from django.apps import apps
 from django.forms import model_to_dict
 from django.utils import timezone
+
+from _main_.utils.massenergize_logger import log
 from _main_.utils.translation import JsonTranslator
 from database.models import SupportedLanguage, TranslationsCache
 
@@ -71,14 +73,15 @@ class TranslateDBContents:
             
             for lang in self.supported_languages:
                 print(f"Task: Translating DB contents to {lang}")
-                _json, hashes, translated_text_list = self.translator(data).translate("en", lang)
+                # self.translator(data).translate("en", lang)
+                _json, translated_text_list,hashes = self.translator(data).translate("en", lang)
                 self.cache_translations(hashes, translated_text_list, lang)
                 
             print("Task: Finished translating all contents")
             return True
         except Exception as e:
-            print(f"An error occurred: {e}")
-            raise TranslationError(f"An error occurred: {e}")
+            log.exception(e, extra={'MESSAGE_ID': 'TRANSLATION_ERROR'})
+            return False
         
 
     def start_translations(self) -> bool:

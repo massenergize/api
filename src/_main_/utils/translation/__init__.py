@@ -110,22 +110,26 @@ class JsonTranslator(Translator):
         return self._excluded
     
 
-    def translate(self, source_language: str, destination_language: str):
+    def translate(self, source_language: str, destination_language: str) -> tuple:
         """
         Translate the flattened dictionary values from source_language to destination_language.
 
         Returns:
-            dict: The translated dictionary in its original nested structure.
+            tuple: Tuple containing the translated JSON, translated text entries, and hashes of the text entries.
         """
         # Flattened dictionary keys and values
         keys = []
         untranslated_text_entries = []
         hashes = []
+        existing_translations = []
         for key,value in self._flattened.items():
             if value:
                 _hash, created = TextHash.objects.get_or_create(text=value,hash=generate_text_hash(value))
                 if not created:
-                    continue
+                    translated_text = _hash.translations.filter(source_language_code=source_language, target_language_code=destination_language).first()
+                    if translated_text:
+                        existing_translations.append((key,translated_text.translated_text))
+                        continue
                 hashes.append(_hash)
                 keys.append(key)
                 untranslated_text_entries.append(value)
@@ -144,8 +148,11 @@ class JsonTranslator(Translator):
         # Reconstruct the translated JSON
         translated_json = {keys[i]: translated_text_entries[i] for i in range(len(keys))}
         translated_json.update(self._excluded)
+        
+        for key, value in existing_translations:
+            translated_json[key] = value
 
-        return self.unflatten_dict(translated_json)
+        return self.unflatten_dict(translated_json), translated_text_entries, hashes
 
     def convert_to_text_blocks(self, text_list, max_block_size=MAX_TEXT_SIZE, magic_text=MAGIC_TEXT):
         """

@@ -4282,7 +4282,7 @@ class TranslationsCache(BaseModel):
     last_translated	: DateTime
     """
 
-    hash = models.ForeignKey(TextHash, on_delete=models.CASCADE, db_index=True)
+    hash = models.ForeignKey(TextHash, on_delete=models.CASCADE, db_index=True, related_name="translations")
     source_language_code = models.CharField(max_length=LANG_CODE_STR_LEN)
     target_language_code = models.CharField(max_length=LANG_CODE_STR_LEN)
     translated_text = models.TextField(max_length=LONG_STR_LEN)
