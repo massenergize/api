@@ -22,7 +22,7 @@ class SupportedLanguageService:
         Returns:
         - language: dict
         """
-        language, err = self.store.get_supported_language_info(context, args)
+        language, err = self.store.get_supported_language_info(args)
         return serialize(language) if language else None, err
 
     def list_supported_languages (self, context, args) -> Tuple[ list, any ]:
@@ -40,7 +40,7 @@ class SupportedLanguageService:
         languages, err = self.store.list_supported_languages(context, args)
         return serialize_all(languages) if languages else [], err
 
-    def create_supported_language (self, context, args) -> Tuple[ SupportedLanguage or None, any ]:
+    def create_supported_language (self, args) -> Tuple[ SupportedLanguage or None, any ]:
         """
         Creates a new supported language and schedules a background task that translates all model into the new language
 
@@ -52,7 +52,7 @@ class SupportedLanguageService:
         """
         try:
             language_code = args.get('language_code', None)
-            language, err = self.store.create_supported_language(context, args)
+            language, err = self.store.create_supported_language(args)
 
             if err:
                 return None, err

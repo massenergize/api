@@ -1,7 +1,5 @@
 from database.models import SupportedLanguage
-from _main_.utils.context import Context
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, NotAuthorizedError, \
-    CustomMassenergizeError
+from _main_.utils.massenergize_errors import CustomMassenergizeError
 from _main_.utils.activity_logger import log
 from typing import Tuple
 from django.db import IntegrityError
@@ -12,7 +10,7 @@ class SupportedLanguageStore:
     def __init__ (self):
         self.name = "Supported Language Store/DB"
 
-    def get_supported_language_info (self, context, args) -> Tuple[ dict or None, any ]:
+    def get_supported_language_info (self, args) -> Tuple[ dict or None, any ]:
         try:
             language_code = args.get('language_code', None)
 
@@ -34,15 +32,15 @@ class SupportedLanguageStore:
             log(e)
             return None, CustomMassenergizeError(str(e))
 
-    def create_supported_language (self, context, args) -> Tuple[ SupportedLanguage or None, None or CustomMassenergizeError ]:
+    def create_supported_language (self, args) -> Tuple[ SupportedLanguage or None, None or CustomMassenergizeError ]:
         try:
-            language = SupportedLanguage.objects.create(code = args.get('code', None), name = args.get('name', None))
+            language = SupportedLanguage.objects.create(code = args.get('language_code', None), name = args.get('name', None))
             return language, None
 
         except IntegrityError as e:
             log(e)
             return None, CustomMassenergizeError(
-                f"A Supported Language with code: '{args.get('code', None)}' already exists")
+                f"A Supported Language with code: '{args.get('language_code', None)}' already exists")
 
         except Exception as e:
             log(e)
