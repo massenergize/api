@@ -1,5 +1,5 @@
 from typing import Tuple
-from api.services.translations_cache import TranslationsCacheService
+from api.tasks import translate_all_models_into_target_language
 from _main_.utils.common import serialize, serialize_all
 from api.store.supported_language import SupportedLanguageStore
 from database.models import SupportedLanguage
@@ -27,7 +27,8 @@ class SupportedLanguageService:
 
     def list_supported_languages (self, context, args) -> Tuple[ list, any ]:
         """
-        List all supported languages
+        This function is a wrapper function for the SupportedLanguageStore.list_supported_languages method.
+        It passes the context and args to the store's list_supported_languages method, which retrieves all supported languages from the SupportedLanguage table.
 
         Args:
         - context: Context
@@ -41,7 +42,7 @@ class SupportedLanguageService:
 
     def create_supported_language (self, context, args) -> Tuple[ SupportedLanguage or None, any ]:
         """
-        Create a new supported language
+        Creates a new supported language and schedules a background task that translates all model into the new language
 
         Args:
         - context: Context
@@ -49,15 +50,18 @@ class SupportedLanguageService:
             - langauge_code: str
             - name: str
         """
-        language, err = self.store.create_supported_language(context, args)
+        try:
+            language_code = args.get('language_code', None)
+            language, err = self.store.create_supported_language(context, args)
 
-        if err:
-            return None, err
+            if err:
+                return None, err
 
-        translationsCacheService = TranslationsCacheService()
-        translationsCacheService.translate_all_models(context, args.get('langauge_code', None))
-
-        return serialize(language), None
+            translate_all_models_into_target_language.apply_async(args=[language_code], countdown=10, retry=False)
+            return serialize(language), None
+        except Exception as e:
+            print(e)
+            return None, str(e)
 
     def disable_supported_language (self, context, language_code) -> Tuple[ SupportedLanguage or None, any ]:
         language, err = self.store.disable_supported_language(context, language_code)
