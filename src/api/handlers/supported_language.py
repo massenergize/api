@@ -48,7 +48,7 @@ class SupportedLanguageHandler(RouteHandler):
         if err:
             return MassenergizeResponse(error="Please provide a valid language code and name")
 
-        supported_language, err = self.service.create_supported_language(context, args)
+        supported_language, err = self.service.create_supported_language(args)
         return err if err else MassenergizeResponse(data=supported_language)
 
     def list(self, request):
