@@ -1,11 +1,10 @@
 """
 The following is a test suite for the supported languages endpoints
 """
-from datetime import datetime, timedelta
+from datetime import datetime
 from django.test import TestCase, Client
 from unittest.mock import patch
-from api.tests.common import signinAs, createUsers, createImage, createUsers, make_supported_language, makeCommunity, makeMenu
-from urllib.parse import urlencode
+from api.tests.common import signinAs, createUsers, make_supported_language, makeCommunity, makeMenu
 from _main_.utils.utils import Console
 
 class SupppoertedLanguagesTest(TestCase):
@@ -42,9 +41,9 @@ class SupppoertedLanguagesTest(TestCase):
         mock_translations_cache_service.return_value.translate_all_models.return_value = ({ "message": "All models translation successful" }, None)
         signinAs(self.client, self.SADMIN)
 
-        code = f"en-ER-{datetime.now().timestamp()}"
+        language_code = f"en-ER-{datetime.now().timestamp()}"
         data = {
-            "code": code,
+            "language_code": language_code,
             "name": self.test_lang_name
         }
 
@@ -53,7 +52,7 @@ class SupppoertedLanguagesTest(TestCase):
         print(response)
 
         self.assertEqual(response["success"], True)
-        self.assertEqual(response["data"]["code"], code)
+        self.assertEqual(response["data"]["code"], language_code)
         self.assertEqual(response["data"]["name"], self.test_lang_name)
 
     def test_supported_languages_create_as_community_admin(self):
@@ -61,7 +60,7 @@ class SupppoertedLanguagesTest(TestCase):
         signinAs(self.client, self.CADMIN)
 
         data = {
-            "code": self.test_lang_code,
+            "language_code": self.test_lang_code,
             "name": self.test_lang_name
         }
 
@@ -73,7 +72,7 @@ class SupppoertedLanguagesTest(TestCase):
         signinAs(self.client, self.USER)
 
         data = {
-            "code": self.test_lang_code,
+            "language_code": self.test_lang_code,
             "name": self.test_lang_name
         }
 
@@ -85,7 +84,7 @@ class SupppoertedLanguagesTest(TestCase):
     def test_supported_languages_info(self):
         Console.header("Testing fetch supported language info")
         self.supported_language = make_supported_language(self.test_lang_code, self.test_lang_name)
-        response = self.make_request(self.info_path, {"code": self.test_lang_code})
+        response = self.make_request(self.info_path, {"language_code": self.test_lang_code})
 
         self.assertEqual(response["success"], True)
         self.assertEqual(response["data"]["code"], self.test_lang_code)
@@ -102,7 +101,7 @@ class SupppoertedLanguagesTest(TestCase):
     def test_supported_languages_info_invalid_code(self):
         Console.header("Testing fetch supported language info with invalid code")
         signinAs(self.client, self.SADMIN)
-        response = self.make_request(self.info_path, {"code": "invalid"})
+        response = self.make_request(self.info_path, {"language_code": "invalid"})
 
         self.assertEqual(response["success"], False)
         self.assertEqual(response["error"], "No supported language found with the provided code")
