@@ -1,6 +1,6 @@
 from database.models import TranslationsCache
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, NotAuthorizedError, CustomMassenergizeError
-from typing import Tuple
+from typing import Tuple, Union
 from sentry_sdk import capture_message
 
 class TranslationsCacheStore: #kinda tautology but we move
@@ -8,7 +8,7 @@ class TranslationsCacheStore: #kinda tautology but we move
     def __init__(self):
         self.name = "Translations Cache /DB"
 
-    def create_translation(self, context, args) -> Tuple[TranslationsCache, None]:
+    def create_translation(self, args) -> Tuple[Union[TranslationsCache, None], Union[None, CustomMassenergizeError]]:
         try:
             hash = args.get("hash", None)
             target_language = args.get("target_language", None)
