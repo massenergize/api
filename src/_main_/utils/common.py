@@ -374,3 +374,15 @@ def to_django_date(date):
         return None
     parsed_date = datetime.datetime.strptime(date, "%a %b %d %Y %H:%M:%S GMT%z")
     return parsed_date.date()
+
+
+def item_is_empty(item):
+    if item is None or item in ["null", "undefined", ""]:
+        return True
+    if isinstance(item, str) and item.strip() == "":
+        return True
+    if isinstance(item, dict) and len(item) == 0:
+        return True
+    if isinstance(item, list) and len(item) == 0:
+        return True
+    return False
