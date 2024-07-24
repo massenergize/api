@@ -1,11 +1,5 @@
-from collections import deque
-from typing import Tuple, Union, Dict
-
 from django.apps import apps
 from django.forms.models import model_to_dict
-
-from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL
-from api.services.utils import send_slack_message
 from database.models import TranslationsCache
 from _main_.utils.massenergize_logger import log
 from _main_.utils.translation import JsonTranslator
@@ -16,8 +10,9 @@ from _main_.utils.utils import to_third_party_lang_code
 from api.store.supported_language import SupportedLanguageStore
 from api.store.translations_cache import TranslationsCacheStore
 from api.services.text_hash import TextHashService
+from typing import Tuple, Union
 
-SOME_TRANSLATIONS_CREATED_ERR_MSG = "Translations saved successfully, but some translations failed, check logs for more details"
+
 DEFAULT_SOURCE_LANGUAGE_CODE = "en-US"
 
 class TranslationsCacheService:
@@ -103,8 +98,7 @@ class TranslationsCacheService:
 
         return all_records
 
-    def translate_all_db_table_contents (self, language_code: str) -> Union[
-        tuple[None, str], tuple[dict[str, str], None], tuple[Exception, None]]:
+    def translate_all_models (self, language_code: str) -> Tuple[ dict or None, None ]:
         try:
             # Go through all the records of all models and return a list of all records (the translatable fields for each) [{:dict}] to translate
             all_records= self.create_list_of_all_records_to_translate(apps.get_models())
@@ -115,82 +109,19 @@ class TranslationsCacheService:
             json_translator = JsonTranslator(all_records)
             _, translations, hashes = json_translator.translate(source_language,target_language)
 
-            translations = deque(translations)
-            hashes = deque(hashes)
-
-            #we need this to track how many times we have tried to translate a text;
-            # if we try 3 times, we will stop trying
-            translations_with_errors = {}
-            # a pseudo dead letter queue of tuples for translations that failed and their corresponding hashes
-            unsuccessful_translations = []
-
-            SIZE_OF_TRANSLATIONS = len(translations)
-
-            # TODO: To make this process async, in future,
-            #  we're looking to use an SQS queue to handle the translations.
-            #  This will eliminate the blocking nature of this process
-            #  For now, we will just loop through the translations and hashes
-            while SIZE_OF_TRANSLATIONS > 0:
-                hash = hashes[0]
-                translated_text = translations[0]
-
-                translation, err = self.create_translation({
-                    "hash": hash,
+            for i in range(0, len(translations)):
+                translation, err = self.create_translation( {
+                    "hash": hashes[i],
                     "source_language": DEFAULT_SOURCE_LANGUAGE_CODE,
                     "target_language": language_code,
-                    "translated_text": translated_text
+                    "translated_text": translations[i]
                 })
 
                 if err:
-                    # if there is an error,
-                    # let's push the translation and it's corresponding hash to the back of the queue so we can try again later
-                    if hash not in translations_with_errors:
-                        translations.rotate(-1)
-                        hashes.rotate(-1)
+                    log.error(f"Error caching translation for {hashes[i]}: {err}")
+                    return None, err
 
-                        translations_with_errors[hash] = 1
-                        continue
-                    else:
-                        if translations_with_errors[hash] < 3:
-                            translations.rotate(-1)
-                            hashes.rotate(-1)
-
-                            translations_with_errors[hash] += 1
-                            continue
-                        else:
-                            # if we have tried to translate this text 3 times,
-                            # we won't try again lest we get stuck, potentially, in an infinite loop
-                            translations_with_errors.pop(hash)
-                            unsuccessful_translations.append((hash, translated_text))
-                            translations.popleft()
-                            hashes.popleft()
-
-                            log.error(f"Error translating text with hash {hash} 3 times. Skipping translation")
-                            continue
-
-                translations.popleft()
-                hashes.popleft()
-
-                if hash in translations_with_errors:
-                    translations_with_errors.pop(hash)
-
-
-            SIZE_OF_UNSUCCESSFUL_TRANSLATIONS = len(unsuccessful_translations)
-            some_failed = SIZE_OF_UNSUCCESSFUL_TRANSLATIONS > 0
-            response_message = "Translation of all database table contents successful"
-            ZERO_TRANSLATIONS_CREATED_ERR_MSG = f"Failure: 0 of {SIZE_OF_TRANSLATIONS} translations created, check logs for more details"
-
-            if some_failed > 0:
-                log.error(f"Saving the following ({SIZE_OF_UNSUCCESSFUL_TRANSLATIONS}) translations failed:\n{unsuccessful_translations}")
-
-                if SIZE_OF_UNSUCCESSFUL_TRANSLATIONS == SIZE_OF_TRANSLATIONS:
-                    send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL, {"text": ZERO_TRANSLATIONS_CREATED_ERR_MSG})
-                    return None, ZERO_TRANSLATIONS_CREATED_ERR_MSG
-                else:
-                    response_message = SOME_TRANSLATIONS_CREATED_ERR_MSG
-
-            send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL, { "text": response_message})
-            return { "message": response_message }, None
+            return { "message": "All models translation successful", }, None
 
         except Exception as e:
             log.exception(e)
