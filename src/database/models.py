@@ -2,6 +2,8 @@ import datetime
 from datetime import timezone, timedelta
 import json
 import uuid
+
+from _main_.utils.common import item_is_empty
 from _main_.utils.policy.PolicyConstants import PolicyConstants
 from apps__campaigns.helpers import get_user_accounts
 from database.utils.settings.model_constants.events import EventConstants
@@ -3717,10 +3719,36 @@ class Message(models.Model):
         ]
         res["created_at"] = self.created_at.strftime("%Y-%m-%d %H:%M")
         return res
+    
+    def get_scheduled_message_info(self):
+        scheduled_info = self.schedule_info or {}
+        recipients = scheduled_info.get("recipients", {})
+        audience = recipients.get("audience", None)
+        audience_type = recipients.get("audience_type", None)
+        community_ids = recipients.get("community_ids", None)
+        
+        real_audience = audience
+        if audience and not audience == "all":
+            if audience_type == "COMMUNITY_CONTACTS":
+                real_audience = [c.info() for c in Community.objects.filter(id__in=audience.split(","))]
+            else:
+                real_audience= [u.info() for u in UserProfile.objects.filter(id__in=audience.split(","))]
+        if not item_is_empty(community_ids):
+            community_ids = [c.info() for c in Community.objects.filter(id__in=community_ids.split(","))]
+        else:
+            community_ids = []
+        
+        scheduled_info["recipients"]["audience"] = real_audience
+        scheduled_info["recipients"]["community_ids"] = community_ids
+        
+        return scheduled_info
+        
 
     def full_json(self):
         res = self.simple_json()
         res["uploaded_file"] = get_json_if_not_none(self.uploaded_file)
+        if self.schedule_info:
+            res["schedule_info"] = self.get_scheduled_message_info()
         return res
 
     class Meta:
