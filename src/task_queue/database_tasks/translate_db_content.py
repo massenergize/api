@@ -34,7 +34,7 @@ class TranslateDBContents:
 					translated_text=translated_text
 				)
 				caches.append(cache)
-			TranslationsCache.objects.bulk_create(caches)
+			TranslationsCache.objects.bulk_create(caches, batch_size=500)
 			return True
 		except Exception as e:
 			log.exception(e, extra={'MESSAGE_ID': 'TRANSLATION_ERROR'})
