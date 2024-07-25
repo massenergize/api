@@ -1,3 +1,4 @@
+import hashlib
 import json, os
 import django.db.models.base as Base
 import inspect
@@ -154,3 +155,8 @@ def run_in_background(func):
         thread = threading.Thread(target=func, args=args, kwargs=kwargs)
         thread.start()
     return wrapper
+
+def generate_text_hash(text):
+    sha256_hash = hashlib.sha256()
+    sha256_hash.update(text.encode('utf-8'))
+    return sha256_hash.hexdigest()
