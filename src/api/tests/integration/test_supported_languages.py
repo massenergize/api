@@ -6,7 +6,7 @@ from django.test import TestCase, Client
 from unittest.mock import patch
 
 from _main_.utils.constants import INVALID_LANGUAGE_CODE_ERR_MSG
-from api.tests.common import signinAs, createUsers, make_supported_language, makeCommunity, makeMenu
+from api.tests.common import signinAs, createUsers, make_supported_language, makeCommunity
 from _main_.utils.utils import Console
 
 class SuppportedLanguagesTest(TestCase):

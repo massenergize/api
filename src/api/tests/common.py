@@ -29,6 +29,7 @@ from database.models import (
     UserActionRel,
     UserMediaUpload,
     UserProfile,
+    SupportedLanguage
 )
 from carbon_calculator.models import CalcDefault
 import requests
@@ -44,9 +45,9 @@ RESET = "reset"
 ME_DEFAULT_TEST_IMAGE = "https://www.whitehouse.gov/wp-content/uploads/2021/04/P20210303AS-1901-cropped.jpg"
 
 def makeFootage(**kwargs):
-    communities = kwargs.pop("communities",None)    
+    communities = kwargs.pop("communities",None)
     f =  Footage.objects.create(**{**kwargs})
-    if communities: 
+    if communities:
         f.communities.set(communities)
     return f
 
@@ -115,9 +116,9 @@ def makeMedia(**kwargs):
     name = kwargs.get("name") or "New Media"
     file = kwargs.get("file") or kwargs.get("image") or createImage()
     file.name = unique_media_filename(file)
-    tags = kwargs.pop("tags", None) 
+    tags = kwargs.pop("tags", None)
     media = Media.objects.create(**{**kwargs, "name": name, "file": file})
-    if tags: 
+    if tags:
         media.tags.set(tags)
     return media
 
@@ -134,7 +135,7 @@ def makeEvent(**kwargs):
     pub_coms = kwargs.pop("communities_under_publicity", [])
     start_date = parse_datetime_to_aware(datetime.now()+ timezone.timedelta(days=1))
     end_date = parse_datetime_to_aware(datetime.now() + timezone.timedelta(days=2))
-    
+
     event = Event.objects.create(
         **{
             "is_published": True,
@@ -354,7 +355,7 @@ def createImage(picURL=None):
     return image_file
 
 
-def image_url_to_base64(image_url = None): 
+def image_url_to_base64(image_url = None):
     image_url = image_url or ME_DEFAULT_TEST_IMAGE
     response = requests.get(image_url)
 
@@ -395,7 +396,7 @@ def make_feature_flag(**kwargs):
         "key": kwargs.get("key") or f"New Flag-{timezone.now().timestamp()}-feature-flag",
         "notes": kwargs.get("description") or "New Flag Description",
     })
-    
+
     if communities:
         flag.communities.set(communities)
     if users:
@@ -403,3 +404,8 @@ def make_feature_flag(**kwargs):
     flag.save()
 
     return flag
+
+
+def make_supported_language(code=f"en-US-{datetime.now().timestamp()}", name="English (US)"):
+    lang = SupportedLanguage.objects.create(code=code, name=name)
+    return lang
