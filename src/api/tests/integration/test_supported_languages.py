@@ -4,6 +4,8 @@ The following is a test suite for the supported languages endpoints
 from datetime import datetime
 from django.test import TestCase, Client
 from unittest.mock import patch
+
+from _main_.utils.constants import INVALID_LANGUAGE_CODE_ERR_MSG
 from api.tests.common import signinAs, createUsers, make_supported_language, makeCommunity, makeMenu
 from _main_.utils.utils import Console
 
@@ -96,7 +98,7 @@ class SuppportedLanguagesTest(TestCase):
         response = self.make_request(self.info_path)
 
         self.assertEqual(response["success"], False)
-        self.assertEqual(response["error"], "Please provide a valid language code")
+        self.assertEqual(response["error"], f"{INVALID_LANGUAGE_CODE_ERR_MSG}: None")
 
     def test_supported_languages_info_invalid_code(self):
         Console.header("Testing fetch supported language info with invalid code")

@@ -1,8 +1,10 @@
+from _main_.utils.constants import INVALID_LANGUAGE_CODE_ERR_MSG
 from _main_.utils.route_handler import RouteHandler
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from api.decorators import super_admins_only
 from api.services.supported_language import SupportedLanguageService
+
 
 class SupportedLanguageHandler(RouteHandler):
 
@@ -24,7 +26,7 @@ class SupportedLanguageHandler(RouteHandler):
         code = args.get('language_code', None)
 
         if not code:
-            return MassenergizeResponse(error="Please provide a valid language code")
+            return MassenergizeResponse(error= INVALID_LANGUAGE_CODE_ERR_MSG)
 
         supported_language_info, err = self.service.get_supported_language_info(context, args)
         if err:

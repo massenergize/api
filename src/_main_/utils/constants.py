@@ -91,3 +91,4 @@ INSPIRATIONAL_MESSAGES = [
     "Join the green revolution and make a difference."
 ]
 
+INVALID_LANGUAGE_CODE_ERR_MSG = "Invalid language code"

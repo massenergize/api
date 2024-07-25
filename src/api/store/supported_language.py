@@ -3,8 +3,8 @@ from _main_.utils.massenergize_errors import CustomMassenergizeError
 from _main_.utils.activity_logger import log
 from typing import Tuple
 from django.db import IntegrityError
+from _main_.utils.constants import INVALID_LANGUAGE_CODE_ERR_MSG
 
-log = log.exception
 
 class SupportedLanguageStore:
     def __init__ (self):
@@ -15,13 +15,13 @@ class SupportedLanguageStore:
             language_code = args.get('language_code', None)
 
             if not language_code:
-                return None, CustomMassenergizeError("Please provide a valid id or code")
+                return None, CustomMassenergizeError(f"{INVALID_LANGUAGE_CODE_ERR_MSG}: {language_code}")
 
             language = SupportedLanguage.objects.filter(code = language_code).first()
 
             return language, None
         except Exception as e:
-            log(e)
+            log.exception(e)
             return None, CustomMassenergizeError(str(e))
 
     def list_supported_languages (self, context, args) -> Tuple[ list or None, any ]:
@@ -29,7 +29,7 @@ class SupportedLanguageStore:
             languages = SupportedLanguage.objects.all()
             return languages, None
         except Exception as e:
-            log(e)
+            log.exception(e)
             return None, CustomMassenergizeError(str(e))
 
     def create_supported_language (self, args) -> Tuple[ SupportedLanguage or None, None or CustomMassenergizeError ]:
@@ -38,7 +38,7 @@ class SupportedLanguageStore:
             return language, None
 
         except IntegrityError as e:
-            log(e)
+            log.exception(e)
             return None, CustomMassenergizeError(
                 f"A Supported Language with code: '{args.get('language_code', None)}' already exists")
 
@@ -51,14 +51,14 @@ class SupportedLanguageStore:
             language = SupportedLanguage.objects.filter(code = language_code).first()
 
             if not language:
-                return None, CustomMassenergizeError("Invalid language code")
+                return None, CustomMassenergizeError(f"{INVALID_LANGUAGE_CODE_ERR_MSG}: {language_code}")
 
             language.is_disabled = True
             language.save()
 
             return language, None
         except Exception as e:
-            log(e)
+            log.exception(e)
             return None, CustomMassenergizeError(str(e))
 
     def enable_supported_language (self, context, language_code) -> Tuple[ SupportedLanguage or None, any ]:
@@ -66,12 +66,12 @@ class SupportedLanguageStore:
             language = SupportedLanguage.objects.filter(code = language_code).first()
 
             if not language:
-                return None, CustomMassenergizeError("Invalid language code")
+                return None, CustomMassenergizeError(f"{INVALID_LANGUAGE_CODE_ERR_MSG}: {language_code}")
 
             language.is_disabled = False
             language.save()
 
             return language, None
         except Exception as e:
-            log(e)
+            log.exception(e)
             return None, CustomMassenergizeError(str(e))
