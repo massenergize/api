@@ -4068,9 +4068,6 @@ class FeatureFlag(models.Model):
         db_table = "feature_flags"
         ordering = ("-name",)
 
-    # class TranslationMeta:
-    #     fields_to_translate = ["name", "scope", "audience", "user_audience", "notes"]
-
 
 class Footage(models.Model):
     """
@@ -4198,7 +4195,7 @@ class SupportedLanguage(BaseModel):
 
     code = models.CharField(max_length=LANG_CODE_STR_LEN, unique=True)
     name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
-    is_rtl = models.BooleanField(default=False, blank=True) # not used now but maybe used in the future
+    is_right_to_left = models.BooleanField(default=False, blank=True) # not used now but maybe used in the future
 
     def __str__(self):
         return self.name
