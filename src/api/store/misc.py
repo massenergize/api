@@ -675,4 +675,4 @@ class MiscellaneousStore:
             return all_languages, None
         except Exception as e:
             log.exception(e)
-            return None, str(e)
+            return None, CustomMassenergizeError(str(e))
