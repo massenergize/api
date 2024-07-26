@@ -39,7 +39,7 @@ class TranslateDBContents:
 			TranslationsCache.objects.bulk_create(caches, batch_size=500)
 			return True
 		except Exception as e:
-			log.exception(e, extra={'MESSAGE_ID': 'TRANSLATION_ERROR'})
+			log.exception(e)
 			return False
 	
 	def load_db_contents_and_translate(self) -> bool:
@@ -54,7 +54,7 @@ class TranslateDBContents:
 			log.info("Task: Finished translating all DB contents")
 			return True
 		except Exception as e:
-			log.exception(e, extra={'MESSAGE_ID': 'TRANSLATION_ERROR'})
+			log.exception(e)
 			return False
 	
 	@timed
@@ -65,5 +65,5 @@ class TranslateDBContents:
 			self.load_db_contents_and_translate()
 			return True
 		except Exception as e:
-			log.exception(e, extra={'MESSAGE_ID': 'TRANSLATION_ERROR'})
+			log.exception(e)
 			return False
