@@ -2,6 +2,7 @@ from django.apps import apps
 from django.forms import model_to_dict
 from django.utils import timezone
 from _main_.utils.massenergize_logger import log
+from _main_.utils.metrics import timed
 from _main_.utils.translation import JsonTranslator
 from _main_.utils.utils import create_list_of_all_records_to_translate, filter_active_records
 from database.models import SupportedLanguage, TranslationsCache
@@ -23,6 +24,7 @@ class TranslateDBContents:
 		self.translator = JsonTranslator
 		self.supported_languages = SupportedLanguage.objects.values_list('code', flat=True)  #TODO: Use George's unitils to get supported codes
 	
+	@timed
 	def cache_translations(self, hashes, translated_text_list, language) -> bool:
 		try:
 			caches = []
@@ -55,12 +57,12 @@ class TranslateDBContents:
 			log.exception(e, extra={'MESSAGE_ID': 'TRANSLATION_ERROR'})
 			return False
 	
+	@timed
 	def start_translations(self) -> bool:
 		try:
 			start_time = timezone.now()
 			log.info("Starting translation process for {}".format(start_time))
 			self.load_db_contents_and_translate()
-			log.info("Translation process took: {}".format(timezone.now() - start_time))
 			return True
 		except Exception as e:
 			log.exception(e, extra={'MESSAGE_ID': 'TRANSLATION_ERROR'})
