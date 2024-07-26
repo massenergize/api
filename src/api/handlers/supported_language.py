@@ -5,6 +5,9 @@ from _main_.utils.context import Context
 from api.decorators import super_admins_only
 from api.services.supported_language import SupportedLanguageService
 
+NO_SUPPORTED_LANGUAGE_FOUND_ERR_MSG = "No supported language found with the provided code"
+VALID_LANGUAGE_CODE_AND_NAME_ERR_MSG = "Please provide a valid language code and name"
+
 
 class SupportedLanguageHandler(RouteHandler):
 
@@ -33,7 +36,7 @@ class SupportedLanguageHandler(RouteHandler):
             return err
 
         if not supported_language_info:
-            return MassenergizeResponse(error="No supported language found with the provided code")
+            return MassenergizeResponse(error= NO_SUPPORTED_LANGUAGE_FOUND_ERR_MSG)
         return MassenergizeResponse(data=supported_language_info)
 
     @super_admins_only
@@ -48,7 +51,7 @@ class SupportedLanguageHandler(RouteHandler):
         args, err = self.validator.verify(args)
 
         if err:
-            return MassenergizeResponse(error="Please provide a valid language code and name")
+            return MassenergizeResponse(error= VALID_LANGUAGE_CODE_AND_NAME_ERR_MSG)
 
         supported_language, err = self.service.create_supported_language(args)
         return err if err else MassenergizeResponse(data=supported_language)
