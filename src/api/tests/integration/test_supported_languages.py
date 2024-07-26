@@ -51,8 +51,6 @@ class SuppportedLanguagesTest(TestCase):
 
         response = self.make_request(self.create_path, data)
 
-        print(response)
-
         self.assertEqual(response["success"], True)
         self.assertEqual(response["data"]["code"], language_code)
         self.assertEqual(response["data"]["name"], self.test_lang_name)
