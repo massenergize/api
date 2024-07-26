@@ -17,6 +17,7 @@ JSON_EXCLUDE_VALUES = {
     "null",
     "false",
     "true",
+    ""
     # let's add some common JSON string values that should not be translated
 }
 
