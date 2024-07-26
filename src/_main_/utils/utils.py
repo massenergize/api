@@ -6,6 +6,7 @@ import threading
 from django.db.models.fields.related import ManyToManyField, ForeignKey
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
+from django.forms import model_to_dict
 
 
 def load_json(path):
@@ -160,3 +161,50 @@ def generate_text_hash(text):
     sha256_hash = hashlib.sha256()
     sha256_hash.update(text.encode('utf-8'))
     return sha256_hash.hexdigest()
+
+
+def filter_active_records(model) -> list:
+    """Return a list of active instances of a model."""
+    if not model:
+        return []
+    
+    # Initialize query parameters
+    query_params = {
+        attr: True
+        for attr in ["is_active", "is_published"]
+        if hasattr(model, attr)
+    }
+    
+    # Add attributes that should be 'False' to the query parameters
+    query_params.update({
+        attr: False
+        for attr in ["is_deleted", "is_archived"]
+        if hasattr(model, attr)
+    })
+    
+    return model.objects.filter(**query_params)
+
+
+def create_list_of_all_records_to_translate(models):
+    """
+    Create a list of all records to translate.
+
+    :param models: A list of models to process
+    :return: A list of records to translate
+
+    """
+    if not models:
+        return []
+
+    all_records = []
+    for model in models:
+
+        translation_meta = getattr(model, "TranslationMeta", None)
+        if not translation_meta:
+            continue
+
+        translatable_fields = getattr(translation_meta, "fields_to_translate", None)
+        if len(translatable_fields) > 0:
+            all_records.extend([model_to_dict(r, fields=translatable_fields) for r in filter_active_records(model)])
+
+    return all_records

@@ -48,6 +48,9 @@ class MiscellaneousHandler(RouteHandler):
         self.add("/menus.reset", self.reset_menu)
         self.add("/menus.listForAdmins", self.get_menus_for_admin)
         self.add("/links.internal.get", self.get_internal_links)
+        
+        self.add("/translations.languages.list", self.list_all_languages)
+
 
     @admins_only
     def fetch_footages(self, request):
@@ -370,4 +373,19 @@ class MiscellaneousHandler(RouteHandler):
     def get_rewiring_america_data(self, request):
         args = {"rewiring_america": os.environ.get('REWIRING_AMERICA_API_KEY') }
         return render(request, "rewiring_america.html", args)
+    
+    @admins_only
+    def list_all_languages(self, request):
+        context: Context = request.context
+        args: dict = context.args
+        
+        args, err = self.validator.verify(args)
+        
+        if err:
+            return err
+        
+        all_languages, err = self.service.list_all_languages(context, args)
+        if err:
+            return err
+        return MassenergizeResponse(data=all_languages)
         
