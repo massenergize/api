@@ -60,8 +60,7 @@ class SupportedLanguageService:
             translate_all_models_into_target_language.apply_async(args=[language_code], countdown=10, retry=False)
             return serialize(language), None
         except Exception as e:
-            print(e)
-            return None, str(e)
+            return None, e
 
     def disable_supported_language (self, context, language_code) -> Tuple[ SupportedLanguage or None, any ]:
         language, err = self.store.disable_supported_language(context, language_code)
