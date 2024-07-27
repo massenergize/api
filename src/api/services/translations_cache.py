@@ -115,6 +115,7 @@ class TranslationsCacheService:
             json_translator = JsonTranslator(all_records)
             _, translations, hashes = json_translator.translate(source_language,target_language)
 
+            # TODO make the json_translator.translate method return deque objects instead of lists
             translations = deque(translations)
             hashes = deque(hashes)
 
