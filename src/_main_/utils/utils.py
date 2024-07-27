@@ -160,10 +160,13 @@ def run_in_background(func):
 
 # This function is needed because some third-party APIs don't support the full language code
 def to_third_party_lang_code(language_code: str) -> str:
-    if language_code not in LANGUAGE_CODES_TO_NOT_SPLIT: # we're more likely to get a match for codes to split
-        codes = language_code.split("-")
-        return codes[0] if len(codes) > 1 else language_code
-    return language_code
+    assert language_code is not None  and len(language_code) > 0
+
+    if language_code in LANGUAGE_CODES_TO_NOT_SPLIT:
+         raise Exception("UnsupportedLanguageCode")
+
+    codes = language_code.split("-")
+    return codes[0] if len(codes) > 1 else language_code
 
 
 def filter_active_records(model) -> list:
