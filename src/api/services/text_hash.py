@@ -1,10 +1,15 @@
 import hashlib
+import logging
 
 from _main_.utils.massenergize_errors import CustomMassenergizeError
 from api.store.text_hash import TextHashStore
 
 
 class TextHashService:
+    """
+    DEPRECATED (DO NOT USE):
+    This class is deprecated and marked for removal
+    """
     def __init__ (self):
         self.store = TextHashStore()
 
@@ -24,7 +29,7 @@ class TextHashService:
         text_hash, err = self.store.create_text_hash(args)
 
         if err:
-            print("CTxH ERR", err)
+            logging.error("Error creating text hash: %s", err)
             return None, err
 
         return text_hash, None
@@ -52,11 +57,3 @@ class TextHashService:
             return False, err
 
         return exists, None
-
-    def list_text_hashes (self, context, args):
-        text_hashes, err = self.store.list_text_hashes(context, args)
-
-        if err:
-            return None, err
-
-        return text_hashes, None
