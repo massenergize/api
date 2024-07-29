@@ -22,11 +22,11 @@ JSON_EXCLUDE_VALUES = {
 }
 
 EXCLUDED_JSON_VALUE_PATTERNS = [
-    "[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+",                   #EMAIL_REGEX
-    "(https?://)?\w+(\.\w+)+",                                          #URL_REGEX
-    "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",     #UUID_REGEX
-    "'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z",                     #DATE_REGEX
-    "\d{4}-\d{2}-\d{2}"                                                 #SHORT_DATE_REGEX
+    re.compile("[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+"),                   #  EMAIL_REGEX
+    re.compile("(https?://)?\w+(\.\w+)+"),                                          #  URL_REGEX
+    re.compile("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"),     #  UUID_REGEX
+    re.compile("'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z"),                     #  DATE_REGEX
+    re.compile("\d{4}-\d{2}-\d{2}")                                                 #  SHORT_DATE_REGEX
 ]
 
 
@@ -66,6 +66,9 @@ class JsonTranslator(Translator):
 
         return flattened_dict_for_keys_to_include, flattened_dict_for_keys_to_exclude
 
+    def _is_excluded_pattern(self, value:str):
+        return any(pattern.search(value) for pattern in EXCLUDED_JSON_VALUE_PATTERNS)
+
     def _should_exclude(self, key, _value):
         # add more checks here
 
@@ -78,7 +81,7 @@ class JsonTranslator(Translator):
             return True
 
         # Check if value is in JSON_EXCLUDE_VALUES
-        if _value in JSON_EXCLUDE_VALUES or any(re.fullmatch(pattern, _value) for pattern in EXCLUDED_JSON_VALUE_PATTERNS):
+        if _value in JSON_EXCLUDE_VALUES or self._is_excluded_pattern(_value):
             return True
 
         # Default: include the key-value pair
