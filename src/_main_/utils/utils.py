@@ -214,3 +214,7 @@ def create_list_of_all_records_to_translate(models):
             all_records.extend([model_to_dict(r, fields=translatable_fields) for r in filter_active_records(model)])
 
     return all_records
+
+
+def split_list_into_sublists (list_split, max_sublist_size = 10):
+    return [list_split[i:i + max_sublist_size] for i in range(0, len(list_split), max_sublist_size)]
