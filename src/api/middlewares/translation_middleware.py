@@ -1,5 +1,6 @@
 import json
 
+from _main_.utils.translation import JsonTranslator
 from _main_.utils.utils import generate_text_hash
 from api.utils.api_utils import get_translation_from_cache
 
@@ -68,10 +69,10 @@ class TranslationMiddleware:
 			
 			language = request.POST.get('language', 'en')
 			
-			if language == 'en':  # remove this when we start supporting data upload in other languages
+			if language == 'en':  #TODO remove this when we start supporting data upload in other languages
 				return response
 			
-			translated_data = self.retrieve_translation_for_response_data(response_to_dict.get("data", {}), language)
+			translated_data = JsonTranslator(response_to_dict.get("data", {})).translate('en', language)
 			
 			response_to_dict["data"] = translated_data
 			

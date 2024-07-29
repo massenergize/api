@@ -5,7 +5,7 @@ from math import atan2, cos, radians, sin, sqrt
 from _main_.utils.utils import load_json
 from database.models import AboutUsPageSettings, ActionsPageSettings, Community, CommunityAdminGroup, \
     ContactUsPageSettings, DonatePageSettings, EventsPageSettings, ImpactPageSettings, Media, Menu, \
-    TeamsPageSettings, TestimonialsPageSettings, UserProfile, \
+    TeamsPageSettings, TestimonialsPageSettings, TranslationsCache, UserProfile, \
     VendorsPageSettings
 import pyshorteners
 
