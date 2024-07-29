@@ -1,7 +1,9 @@
 from database.models import TranslationsCache
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, NotAuthorizedError, CustomMassenergizeError
-from typing import Tuple, Union
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_errors import InvalidResourceError, CustomMassenergizeError
+from typing import Tuple, Union, List, Any
+from _main_.utils.constants import DJANGO_BULK_CREATE_LIMIT
+from _main_.utils.massenergize_logger import log
+
 
 class TranslationsCacheStore: #kinda tautology but we move
 
@@ -24,10 +26,19 @@ class TranslationsCacheStore: #kinda tautology but we move
             return translation, None
 
         except Exception as e:
-            capture_message(str(e), level='error')
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
-    def get_translation(self, context, args) -> Tuple[TranslationsCache, None]:
+    def bulk_create_translations(self, translations: List[TranslationsCache]) -> Tuple[Union[TranslationsCache, None], Union[None, CustomMassenergizeError]]:
+        try:
+            translations = TranslationsCache.objects.bulk_create(translations, batch_size= DJANGO_BULK_CREATE_LIMIT)
+            return translations, None
+
+        except Exception as e:
+            log.exception(e)
+            return None, CustomMassenergizeError(e)
+
+    def get_translation(self, context, args) -> Union[tuple[Any, None], tuple[None, CustomMassenergizeError]]:
         try:
             hash = args.get("hash", None)
             translation = TranslationsCache.objects.get(hash=hash)
@@ -38,7 +49,7 @@ class TranslationsCacheStore: #kinda tautology but we move
             return translation, None
 
         except Exception as e:
-            capture_message(str(e), level='error')
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def list_translations(self, context, args) -> Tuple[list or None, None or CustomMassenergizeError]:
@@ -47,5 +58,5 @@ class TranslationsCacheStore: #kinda tautology but we move
             return translations, None
 
         except Exception as e:
-            capture_message(str(e), level='error')
+            log.exception(e)
             return None, CustomMassenergizeError(e)
