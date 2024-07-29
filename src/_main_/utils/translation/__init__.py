@@ -67,7 +67,7 @@ class JsonTranslator(Translator):
         return flattened_dict_for_keys_to_include, flattened_dict_for_keys_to_exclude
 
     def _is_excluded_pattern(self, value:str):
-        return any(pattern.search(value) for pattern in EXCLUDED_JSON_VALUE_PATTERNS)
+        return any(pattern.fullmatch(value) for pattern in EXCLUDED_JSON_VALUE_PATTERNS)
 
     def _should_exclude(self, key, _value):
         # add more checks here
