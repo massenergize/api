@@ -147,35 +147,21 @@ class JsonTranslator(Translator):
         Translate the flattened dictionary values from source_language to destination_language.
 
         Returns:
-            dict: The translated dictionary in its original nested structure.
+            tuple: The translated dictionary in its original nested structure.
         """
 
         keys = [] # Flattened dictionary keys and values
         untranslated_text_entries = [] # texts to be translated
-        text_hashes = [] # text hashes to be translated
 
+        # TODO: We should parallelize this
+        #  We can plit the list into chunks of maybe 10 and
+        #  have the job of the translation done in several threads and the results combined.
         for key, value in self._flattened.items():
             if not value:
                 continue
 
-            # Check if the value should be excluded from translation
-            text_hash_exists, err = self.textHasService.text_hash_exists(value)
-            if err:
-                log.error("Error checking if text hash exists for", value, ":", err)
-                continue
-
-            if text_hash_exists:
-                continue
-
-            text_hash, err = self.textHasService.create_text_hash(args = { "text": value })
-            if err:
-                log.error(f"Error creating text hash for {value}: {err}")
-                continue
-
-            text_hashes.append(text_hash)
             keys.append(key)
             untranslated_text_entries.append(value)
-
 
         # Convert values to text blocks
         text_blocks = self.convert_to_text_blocks(untranslated_text_entries, max_block_size = self.MAX_TEXT_SIZE)
@@ -192,7 +178,7 @@ class JsonTranslator(Translator):
         translated_json = {keys[i]: translated_text_entries[i] for i in range(len(keys))}
         translated_json.update(self._excluded)
 
-        return self.unflatten_dict(translated_json), translated_text_entries, text_hashes
+        return self.unflatten_dict(translated_json), translated_text_entries, untranslated_text_entries
 
     def convert_to_text_blocks(self, text_list, max_block_size=MAX_TEXT_SIZE, magic_text=MAGIC_TEXT):
         """
