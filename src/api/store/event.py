@@ -1,5 +1,6 @@
 import json
 
+from celery.result import AsyncResult
 from django.utils import timezone
 
 from _main_.utils.footage.FootageConstants import FootageConstants
@@ -8,7 +9,7 @@ from _main_.utils.utils import is_url_valid
 from _main_.utils.common import custom_timezone_info, local_time, parse_datetime_to_aware
 from api.store.common import get_media_info, make_media_info
 from api.tests.common import RESET, makeUserUpload
-from api.utils.api_utils import is_admin_of_community
+from api.utils.api_utils import get_eta_from_datetime, is_admin_of_community
 from api.utils.filter_functions import get_events_filter_params
 from database.models import Event, RecurringEventException, UserProfile, EventAttendee, Media, Community, \
     EventNudgeSetting
@@ -25,6 +26,9 @@ from datetime import timedelta
 import calendar
 from typing import Tuple
 from zoneinfo import ZoneInfo
+
+from ..tasks import update_recurring_event
+
 
 def _local_datetime(date_and_time):
     """
@@ -383,6 +387,12 @@ class EventStore:
                 }
 
             new_event.save()
+            
+            # create a task to reschedule event after current end date
+            if new_event.is_recurring:
+               schedule = update_recurring_event.apply_async([str(new_event.id)], eta=get_eta_from_datetime(new_event.end_date_and_time))
+               new_event.recurring_details["task_id"] = schedule.id
+               new_event.save()
             # ----------------------------------------------------------------
             Spy.create_event_footage(events=[new_event], context=context, actor=new_event.user,
                                      type=FootageConstants.create(), notes=f"Event ID({new_event.id})")
@@ -557,6 +567,7 @@ class EventStore:
                     event.shared_to.set(shared_to)
 
             if is_recurring:
+                schedule_id = event.recurring_details.get("task_id", None)
 
                 event.is_recurring = True
                 event.recurring_details = {
@@ -631,6 +642,16 @@ class EventStore:
                     if rescheduled:
                         rescheduled.rescheduled_event.delete()
                         rescheduled.delete()
+                        
+                # get existing recurring event task and revoke it
+                if schedule_id:
+                    schedule = AsyncResult(schedule_id)
+                    schedule.revoke()
+                    
+                # create a new task for the updated recurring event
+                schedule = update_recurring_event.apply_async([str(event.id)], eta=get_eta_from_datetime(event.end_date_and_time))
+                event.recurring_details["task_id"] = schedule.id
+                event.save()
 
             if (is_approved != None and
                 (is_approved != event.is_approved)):  # If changed
