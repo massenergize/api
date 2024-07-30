@@ -11,16 +11,19 @@ from django.utils.timezone import utc
 from _main_.utils.common import parse_datetime_to_aware
 from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
+from _main_.utils.massenergize_logger import log
 from api.constants import ACTIONS, CADMIN_REPORT, CAMPAIGN_INTERACTION_PERFORMANCE_REPORT, CAMPAIGN_PERFORMANCE_REPORT, \
     CAMPAIGN_VIEWS_PERFORMANCE_REPORT, COMMUNITIES, COMMUNITY_PAGEMAP, DOWNLOAD_POLICY, FOLLOWED_REPORT, LIKE_REPORT, \
     LINK_PERFORMANCE_REPORT, METRICS, SAMPLE_USER_REPORT, TEAMS, USERS
 from api.store.common import create_pdf_from_rich_text, sign_mou
 from api.store.download import DownloadStore
 from api.store.utils import get_community, get_user, get_user_from_context
-from api.utils.api_utils import get_sender_email
+from api.utils.api_utils import get_eta_from_datetime, get_final_date, get_sender_email, \
+    handle_recurring_event_exception, update_event_dates
 from api.utils.constants import BROADCAST_EMAIL_TEMPLATE, CADMIN_EMAIL_TEMPLATE, DATA_DOWNLOAD_TEMPLATE, \
     SADMIN_EMAIL_TEMPLATE
-from database.models import Community, CommunityAdminGroup, CommunityMember, CommunityNotificationSetting, Policy, \
+from database.models import Community, CommunityAdminGroup, CommunityMember, CommunityNotificationSetting, Event, \
+    Policy, \
     UserActionRel, UserProfile
 from task_queue.nudges.cadmin_events_nudge import generate_event_list_for_community, send_events_report
 from task_queue.nudges.user_event_nudge import prepare_user_events_nudge
@@ -300,17 +303,17 @@ def send_scheduled_email(subject, message, recipients, image):
             is_sent = send_massenergize_email_with_attachments(BROADCAST_EMAIL_TEMPLATE, data, recipients, None, None)
             
             if is_sent:
-                logging.info(f"Successfully sent email to {str(recipients)}")
+                log.info(f"Successfully sent email to {str(recipients)}")
                 
         except Exception as e:
-            logging.error(f"Error sending email: {str(e)}")
+            log.exception(e)
             
         finally:
-            logging.info(f"===== Deleting Cache Key: {cache_key} =====")
+            log.info(f"===== Deleting Cache Key: {cache_key} =====")
             cache.delete(cache_key)
             
     else:
-        logging.info("Task already picked up by another worker")
+        log.info("Task already picked up by another worker")
         
 @app.task
 def automatically_activate_nudge(community_nudge_setting_id):
@@ -328,14 +331,56 @@ def automatically_activate_nudge(community_nudge_setting_id):
             community_nudge_setting.is_active = True
             community_nudge_setting.save()
             
-            logging.info(f"Successfully activated nudge for community: {community_nudge_setting.community.name}")
+            log.info(f"Successfully activated nudge for community: {community_nudge_setting.community.name}")
             
         except Exception as e:
-            logging.error(f"Error automatically activating nudge: {str(e)}")
+            log.exception(e)
             
         finally:
-            logging.info(f"===== Deleting Cache Key: {cache_key} =====")
+            log.info(f"===== Deleting Cache Key: {cache_key} =====")
             cache.delete(cache_key)
     else:
+        log.info("Task already picked up by another worker")
+        
+        
+@app.task
+def update_recurring_event(event_id):
+    
+    cache_key = f"update_recurring_event_{event_id}"
+    
+    if cache.add(cache_key, True, timeout=3600):
+        event = Event.objects.filter(id=event_id).first()
+        today = parse_datetime_to_aware()
+        try:
+            if not event or not event.is_recurring or not event.recurring_details:
+                return
+            
+            if not event.recurring_details.get('separation_count'):
+                return
+    
+            if event.start_date_and_time > today:
+                return
+    
+            final_date = get_final_date(event, today)
+            if final_date and today > final_date:
+                return
+    
+            update_event_dates(event, today)
+            handle_recurring_event_exception(event)
+            
+            next_date = get_eta_from_datetime(event.end_date_and_time)
+            
+            update_recurring_event.apply_async([event_id], eta=next_date)
+            log.info(f"Successfully updated recurring event: {event.name} to {next_date}")
+            
+        except Exception as e:
+            log.exception(e)
+            
+        finally:
+            log.info(f"===== Deleting Cache Key: {cache_key} =====")
+            cache.delete(cache_key)
+            
+    else:
         logging.info("Task already picked up by another worker")
+
     
