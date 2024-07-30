@@ -2,6 +2,8 @@ import json, os
 import django.db.models.base as Base
 import inspect
 import threading
+import hashlib
+
 from django.db.models.fields.related import ManyToManyField, ForeignKey
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
@@ -218,3 +220,6 @@ def create_list_of_all_records_to_translate(models):
 
 def split_list_into_sublists (list_split, max_sublist_size = 10):
     return [list_split[i:i + max_sublist_size] for i in range(0, len(list_split), max_sublist_size)]
+
+def make_hash (text: str):
+    return hashlib.sha256(text.encode()).hexdigest()
