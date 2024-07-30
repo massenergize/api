@@ -4240,7 +4240,7 @@ class CommunitySupportedLanguage(BaseModel):
         ordering = ("community", "language")
 
 
-class TranslationsCache(BaseModel):
+class TranslationsCache(RootModel):
     """
     A class used to represent the translations cache table
 
