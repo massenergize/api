@@ -370,7 +370,10 @@ def update_recurring_event(event_id):
             
             next_date = get_eta_from_datetime(event.end_date_and_time)
             
-            update_recurring_event.apply_async([event_id], eta=next_date)
+            schedule = update_recurring_event.apply_async([event_id], eta=next_date)
+            event.recurring_details["task_id"] = schedule.id
+            event.save()
+            
             log.info(f"Successfully updated recurring event: {event.name} to {next_date}")
             
         except Exception as e:
