@@ -218,8 +218,8 @@ def create_list_of_all_records_to_translate(models):
     return all_records
 
 
-def split_list_into_sublists (list_split, max_sublist_size = 10):
-    return [list_split[i:i + max_sublist_size] for i in range(0, len(list_split), max_sublist_size)]
+def split_list_into_sublists (list_to_split, max_sublist_size = 10):
+    return [list_to_split[i:i + max_sublist_size] for i in range(0, len(list_to_split), max_sublist_size)]
 
 def make_hash (text: str):
     return hashlib.sha256(text.encode()).hexdigest()
