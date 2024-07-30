@@ -12,7 +12,7 @@ from _main_.utils.massenergize_logger import log
 from _main_.utils.translation import JsonTranslator
 from _main_.utils.translation.translator import Translator
 from _main_.utils.context import Context
-from _main_.utils.utils import to_third_party_lang_code, split_list_into_sublists
+from _main_.utils.utils import to_third_party_lang_code, split_list_into_sublists, make_hash
 
 from api.store.supported_language import SupportedLanguageStore
 from api.store.translations_cache import TranslationsCacheStore
@@ -137,7 +137,9 @@ class TranslationsCacheService:
         """
         flattened_unsuccessful_translation_dict = {}
         for batch in unsuccessful_batches:
-            for key, value in zip(batch[0], batch[1]):
+            hashes = batch[0]
+            translations = batch[1]
+            for key, value in zip(hashes, translations):
                 flattened_unsuccessful_translation_dict[key] = value
 
         return flattened_unsuccessful_translation_dict
@@ -164,6 +166,17 @@ class TranslationsCacheService:
             hashes.popleft()
             log.error(f"Error saving the following translations: {translations[0]} with 3 times. Skipping batch")
 
+    def create_hashes_from_source_texts (self, source_texts: List[str]) -> List[str]:
+        """
+        This function creates a list of hashes from a list of source texts
+
+        Args:
+        - source_texts: list
+
+        Returns:
+        - hashes: list
+        """
+        return [make_hash(text) for text in source_texts]
 
     def translate_all_db_table_contents (self, language_code: str) -> Union[tuple[None, str], tuple[dict[str, str], None], tuple[Exception, None]]:
         try:
@@ -174,9 +187,11 @@ class TranslationsCacheService:
             source_language = to_third_party_lang_code(DEFAULT_SOURCE_LANGUAGE_CODE)
             target_language = to_third_party_lang_code(language_code)
 
+            # Translate all the records
             json_translator = JsonTranslator(all_records)
-            _, translations, hashes = json_translator.translate(source_language, target_language)
+            _, translations, texts = json_translator.translate(source_language, target_language)
 
+            hashes = self.create_hashes_from_source_texts(texts)
             # TODO make the json_translator.translate method return deque objects instead of lists
             translations = split_list_into_sublists(translations, BULK_CREATE_BATCH_SIZE)
             hashes = split_list_into_sublists(hashes, BULK_CREATE_BATCH_SIZE)
@@ -201,7 +216,7 @@ class TranslationsCacheService:
                 translations_batch = translations[0]
                 hashes_batch = hashes[0]
 
-                err, translations_batch = self.save_translations_batch(hashes_batch, language_code, translations_batch)
+                err, translations_batch = self.save_translations_batch(hashes_batch, translations_batch, language_code)
                 batch_first_hash = hashes_batch[0] # using the first hash in the batch to track errors
 
                 if err:
@@ -235,20 +250,19 @@ class TranslationsCacheService:
                     response_message = SOME_TRANSLATIONS_CREATED_ERR_MSG
 
             send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL, {"text": response_message})
+            log.info(response_message)
             return {"message": response_message}, None
 
         except Exception as e:
             log.exception(e)
             return e, None
 
-    def save_translations_batch (self, hashes_batch, language_code, translations_batch):
+    def save_translations_batch (self, hashes_batch, translations_batch, language_code):
         bulk_creation_list = []
-        for i in range(len(translations_batch)):
-            hash = hashes_batch[i]
-            translated_text = translations_batch[i]
 
+        for hash_value, translated_text in zip(hashes_batch, translations_batch):
             bulk_creation_list.append(TranslationsCache(
-                hash = hash,
+                hash = hash_value,
                 source_language_code = DEFAULT_SOURCE_LANGUAGE_CODE,
                 target_language_code = language_code,
                 translated_text = translated_text
