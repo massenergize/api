@@ -567,7 +567,8 @@ class EventStore:
                     event.shared_to.set(shared_to)
 
             if is_recurring:
-                schedule_id = event.recurring_details.get("task_id", None)
+                recurring_details = event.recurring_details or {}
+                schedule_id = recurring_details.get("task_id", None)
 
                 event.is_recurring = True
                 event.recurring_details = {
