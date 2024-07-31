@@ -16,7 +16,6 @@ from _main_.utils.utils import to_third_party_lang_code, split_list_into_sublist
 
 from api.store.supported_language import SupportedLanguageStore
 from api.store.translations_cache import TranslationsCacheStore
-from api.services.text_hash import TextHashService
 
 MAX_RETRY_ATTEMPTS = 3
 
@@ -30,7 +29,7 @@ class TranslationsCacheService:
         self.batch_size = 100
         self.max_chars = 5000
         self.translator = Translator()
-        self.textHashService = TextHashService()
+
 
     def create_translation (self, args: dict) -> Tuple[Union[TranslationsCache, None], None]:
         """
