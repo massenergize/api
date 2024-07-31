@@ -2,7 +2,6 @@ import re
 from typing import Union, Tuple, List
 from _main_.utils.massenergize_logger import log
 from _main_.utils.translation.translator import Translator, MAX_TEXT_SIZE, MAGIC_TEXT
-from api.services.text_hash import TextHashService
 
 JSON_EXCLUDE_KEYS = {
     'id', 'pk', 'file', 'media', 'date'
@@ -36,7 +35,6 @@ class JsonTranslator(Translator):
         self.exclude_keys = set(exclude_keys) if exclude_keys else set()
         self.sep = '.'
         self._flattened, self._excluded = self.flatten_json_for_translation(dict_to_translate)
-        self.textHasService = TextHashService()
 
     def flatten_json_for_translation(self, json_to_translate: Union[dict, list]):
         assert (json_to_translate is not None) and (
