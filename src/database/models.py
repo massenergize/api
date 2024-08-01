@@ -4295,30 +4295,3 @@ class ManualCommunityTranslation(TranslationsCache):
     class Meta:
         db_table = "manual_community_translations"
 
-
-class StaticSiteText(BaseModel):
-    """
-    A class used to represent the static site text table
-
-    Attributes
-    ----------
-    text : str This is the text that will be displayed on the front-end site
-    key : str This is the key that will be used to look up the text
-    site : str This is the site that the text is meant for
-    """
-
-    text = models.TextField(max_length=LONG_STR_LEN)
-    key = models.CharField(max_length=SHORT_STR_LEN, unique=True)
-    site = models.CharField(max_length=SHORT_STR_LEN, default="")
-
-    def __str__(self):
-        return self.key
-
-    def simple_json(self):
-        return model_to_dict(self)
-
-    def full_json(self):
-        return self.simple_json()
-
-    class Meta:
-        db_table = "static_site_texts"
