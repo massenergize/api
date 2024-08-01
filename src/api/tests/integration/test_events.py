@@ -384,6 +384,9 @@ class EventsTestCase(TestCase):
         
         print("==== RESPONSE ====", response)
         self.assertTrue(response["success"])
+        
+        
+        
 
         # should be successful event
         signinAs(self.client, self.CADMIN)
