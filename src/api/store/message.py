@@ -6,7 +6,8 @@ from _main_.utils.footage.spy import Spy
 from api.tasks import send_scheduled_email
 from api.utils.api_utils import is_admin_of_community, is_null
 from api.utils.filter_functions import get_messages_filter_params
-from database.models import Community, CommunityMember, Message, Media, Team, CommunityAdminGroup, UserProfile
+from database.models import Community, CommunityMember, Message, Media, Team, CommunityAdminGroup, UserActionRel, \
+    UserProfile
 from _main_.utils.massenergize_errors import (
     MassEnergizeAPIError,
     InvalidResourceError,
@@ -42,7 +43,8 @@ def get_logo(id):
             return com.logo.file.url if com.logo else None
         
 
-def get_message_recipients(audience, audience_type, community_ids):
+def get_message_recipients(audience, audience_type, community_ids,sub_audience_type):
+    
     if is_null(audience): return None
     if community_ids and not isinstance(community_ids, list):
         community_ids = community_ids.split(",")
@@ -73,7 +75,20 @@ def get_message_recipients(audience, audience_type, community_ids):
                 return list(set(UserProfile.objects.all().values_list("email", flat=True)))
             return list(set(CommunityMember.objects.filter(community__id__in=community_ids).values_list("user__email", flat=True)))
         audience = audience.split(",")
-    
+        
+    elif audience_type == "ACTIONS":
+        audience = audience.split(",")
+        if sub_audience_type == "COMPLETED":
+            user_action_rel = UserActionRel.objects.filter(status="DONE", action__id__in=audience).values_list("user__email", flat=True)
+        elif sub_audience_type == "TODO":
+            user_action_rel = UserActionRel.objects.filter(status="TODO", action__id__in=audience).values_list("user__email", flat=True)
+            
+        elif sub_audience_type == "BOTH":
+            status = ["TODO", "DONE"]
+            user_action_rel = UserActionRel.objects.filter(action__id__in=audience, status__in=status).values_list("user__email", flat=True)
+            
+        return list(set(user_action_rel))
+        
     return list(set(UserProfile.objects.filter(id__in=audience).values_list("email", flat=True)))
 
 
@@ -402,7 +417,7 @@ class MessageStore:
             schedule = get_schedule(args.get("schedule", None))
             communities = args.get("community_ids", None)
 
-            email_list = get_message_recipients(audience, audience_type, communities)
+            email_list = get_message_recipients(audience, audience_type, communities, sub_audience_type)
 
             logo = ME_LOGO_PNG
             

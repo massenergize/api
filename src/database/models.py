@@ -2060,7 +2060,13 @@ class Action(models.Model):
         return f"{str(self.id)} - {self.title}"
 
     def info(self):
-        return model_to_dict(self, ["id", "title"])
+        return {
+            **model_to_dict(self, ["id", "title"]),
+            "community":{
+                "id": self.community.id,
+                "name": self.community.name,
+            }
+        }
 
     def simple_json(self):
         data = model_to_dict(
@@ -3876,6 +3882,9 @@ class Message(models.Model):
         if audience and not audience == "all":
             if audience_type == "COMMUNITY_CONTACTS":
                 real_audience = [c.info() for c in Community.objects.filter(id__in=audience.split(","))]
+                
+            elif audience_type == "ACTIONS":
+                real_audience = [a.info() for a in Action.objects.filter(id__in=audience.split(","))]
             else:
                 real_audience= [u.info() for u in UserProfile.objects.filter(id__in=audience.split(","))]
         if not item_is_empty(community_ids):
