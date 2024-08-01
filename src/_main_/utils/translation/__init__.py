@@ -119,8 +119,9 @@ class JsonTranslator(Translator):
         keys = []
         untranslated_text_entries = []
         for key,value in self._flattened.items():
-            keys.append(key)
-            untranslated_text_entries.append(value)
+            if value:
+                keys.append(key)
+                untranslated_text_entries.append(value)
         
         
         # Convert values to text blocks
@@ -137,7 +138,7 @@ class JsonTranslator(Translator):
         translated_json = {keys[i]: translated_text_entries[i] for i in range(len(keys))}
         translated_json.update(self._excluded)
 
-        return self.unflatten_dict(translated_json)
+        return self.unflatten_dict(translated_json), "", "" #Todo replace these with translated_texts, hashes
 
     def convert_to_text_blocks(self, text_list, max_block_size=MAX_TEXT_SIZE, magic_text=MAGIC_TEXT):
         """

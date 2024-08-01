@@ -9,6 +9,7 @@ from _main_.utils.massenergize_errors import (
     InvalidResourceError,
     MassEnergizeAPIError,
 )
+from _main_.utils.utils import load_json
 from api.tests.common import createUsers
 from api.utils.api_utils import load_default_menus_from_json, \
     remove_unpublished_items, validate_menu_content
@@ -663,4 +664,15 @@ class MiscellaneousStore:
             
             return menu, None
         except Exception as e:
+            return None, CustomMassenergizeError(str(e))
+        
+        
+        
+    def list_all_languages(self, context, args) -> (dict, Exception):
+        """ Get all the languages """
+        try:
+            all_languages = load_json("database/raw_data/other/languages.json")
+            return all_languages, None
+        except Exception as e:
+            log.exception(e)
             return None, CustomMassenergizeError(str(e))

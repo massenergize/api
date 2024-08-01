@@ -4285,4 +4285,3 @@ class ManualCommunityTranslation(TranslationsCache):
 
     class Meta:
         db_table = "manual_community_translations"
-
