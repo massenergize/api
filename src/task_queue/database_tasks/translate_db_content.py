@@ -6,6 +6,7 @@ from _main_.utils.metrics import timed
 from _main_.utils.translation import JsonTranslator
 from _main_.utils.utils import create_list_of_all_records_to_translate, filter_active_records
 from database.models import SupportedLanguage, TranslationsCache
+from _main_.utils.utils import to_third_party_lang_code
 
 SOURCE_LANGUAGE_CODE = 'en'
 
@@ -22,7 +23,8 @@ class TranslateDBContents:
 	
 	def __init__(self):
 		self.translator = JsonTranslator
-		self.supported_languages = SupportedLanguage.objects.values_list('code', flat=True)  #TODO: Use George's unitils to get supported codes
+		_supported_languages = SupportedLanguage.objects.values_list('code', flat=True)
+		self.supported_languages = [lang_code for lang_code in to_third_party_lang_code(list(_supported_languages))]
 	
 	@timed
 	def cache_translations(self, hashes, translated_text_list, language) -> bool:
