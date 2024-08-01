@@ -4278,19 +4278,10 @@ class ManualCommunityTranslation(TranslationsCache):
 
     Attributes
     ----------
-    community : int
+    community : str
     """
 
     community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
-
-    def __str__(self):
-        return self.hash
-
-    def simple_json(self):
-        return model_to_dict(self)
-
-    def full_json(self):
-        return self.simple_json()
 
     class Meta:
         db_table = "manual_community_translations"
