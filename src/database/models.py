@@ -4240,34 +4240,7 @@ class CommunitySupportedLanguage(BaseModel):
         ordering = ("community", "language")
 
 
-class TextHash(RootModel):
-    """
-    A class used to represent the text hash table
-
-    Attributes
-    ----------
-    hash	: str
-    text	: str
-    """
-
-
-    hash = models.CharField(primary_key=True, max_length=SHORT_STR_LEN, unique=True)
-    text = models.TextField(max_length=LONG_STR_LEN)
-
-    def __str__(self):
-        return self.hash
-
-    def simple_json(self):
-        return model_to_dict(self)
-
-    def full_json(self):
-        return self.simple_json()
-
-    class Meta:
-        db_table = "text_hashes"
-
-
-class TranslationsCache(BaseModel):
+class TranslationsCache(RootModel):
     """
     A class used to represent the translations cache table
 
@@ -4280,7 +4253,7 @@ class TranslationsCache(BaseModel):
     last_translated	: DateTime
     """
 
-    hash = models.ForeignKey(TextHash, on_delete=models.CASCADE, db_index=True)
+    hash = models.CharField(primary_key=True, max_length=SHORT_STR_LEN, unique=True)
     source_language_code = models.CharField(max_length=LANG_CODE_STR_LEN)
     target_language_code = models.CharField(max_length=LANG_CODE_STR_LEN)
     translated_text = models.TextField(max_length=LONG_STR_LEN)
@@ -4305,47 +4278,10 @@ class ManualCommunityTranslation(TranslationsCache):
 
     Attributes
     ----------
-    community : int
+    community : str
     """
 
     community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
 
-    def __str__(self):
-        return self.hash
-
-    def simple_json(self):
-        return model_to_dict(self)
-
-    def full_json(self):
-        return self.simple_json()
-
     class Meta:
         db_table = "manual_community_translations"
-
-
-class StaticSiteText(BaseModel):
-    """
-    A class used to represent the static site text table
-
-    Attributes
-    ----------
-    text : str This is the text that will be displayed on the front-end site
-    key : str This is the key that will be used to look up the text
-    site : str This is the site that the text is meant for
-    """
-
-    text = models.TextField(max_length=LONG_STR_LEN)
-    key = models.CharField(max_length=SHORT_STR_LEN, unique=True)
-    site = models.CharField(max_length=SHORT_STR_LEN, default="")
-
-    def __str__(self):
-        return self.key
-
-    def simple_json(self):
-        return model_to_dict(self)
-
-    def full_json(self):
-        return self.simple_json()
-
-    class Meta:
-        db_table = "static_site_texts"
