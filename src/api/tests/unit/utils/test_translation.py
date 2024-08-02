@@ -1,7 +1,6 @@
 import unittest
-from unittest.mock import patch, MagicMock, Mock
+from unittest.mock import patch
 from _main_.utils.translation import JsonTranslator
-from _main_.utils.translation.translator.providers.google_translate import GoogleTranslate
 
 def fake_get_google_translate_key_file ():
     return "fake_key_file"
@@ -120,12 +119,8 @@ class TestJsonTranslator(unittest.TestCase):
             self.assertEqual(expected_flattend, translator.unflatten_dict(d))
 
 
-    @patch("_main_.utils.translation.translator.providers.google_translate.GoogleTranslate")
     @patch("_main_.utils.translation")
-    def test_translate(self, mock_google_translate, mock_translate):
-        mock_google_translate.set_up.return_value = None
-        mock_google_translate.translate.return_value = "translated"
-
+    def test_translate (self, mock_translate):
         mock_translate.translate_text.return_value = "translated"
 
         translator = JsonTranslator(self.nested_dict)
@@ -135,11 +130,8 @@ class TestJsonTranslator(unittest.TestCase):
         )  # Ensure translation returns the same nested structure
 
 
-    @patch("_main_.utils.translation.translator.providers.google_translate.GoogleTranslate")
     @patch("_main_.utils.translation")
-    def test_round_trip(self, mock_google_translate, mock_translate):
-        mock_google_translate.set_up.return_value = None
-        mock_google_translate.translate.return_value = "translated"
+    def test_round_trip (self, mock_translate):
         mock_translate.translate_text.return_value = "translated"
         translator = JsonTranslator(self.nested_dict)
         translated_dict, translations, texts = translator.translate("en", "fr")
