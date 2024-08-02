@@ -1,9 +1,13 @@
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock, Mock
 from _main_.utils.translation import JsonTranslator
+from _main_.utils.translation.translator.providers.google_translate import GoogleTranslate
 
+def fake_get_google_translate_key_file ():
+    return "fake_key_file"
 
 class TestJsonTranslator(unittest.TestCase):
+
     def setUp(self):
         self.nested_dict = {
             "a": {"b": {"c": "1", "d": "2", "id": 999}, "e": "3"},
@@ -13,6 +17,11 @@ class TestJsonTranslator(unittest.TestCase):
         }
         self.flat_dict = {"a.b.c": "1", "a.b.d": "2", "a.e": "3", "f": "4"}
         self.exclude_keys = {"id", "pk"}
+        self.translation_provider = "google"
+
+
+    def tearDown (self):
+        pass
 
     def test_flatten(self):
         # Define test cases for flatten function
@@ -110,18 +119,27 @@ class TestJsonTranslator(unittest.TestCase):
             translator = JsonTranslator({})
             self.assertEqual(expected_flattend, translator.unflatten_dict(d))
 
+
+    @patch("_main_.utils.translation.translator.providers.google_translate.GoogleTranslate")
     @patch("_main_.utils.translation")
-    def test_translate(self, mock_translate):
+    def test_translate(self, mock_google_translate, mock_translate):
+        mock_google_translate.set_up.return_value = None
+        mock_google_translate.translate.return_value = "translated"
+
         mock_translate.translate_text.return_value = "translated"
+
         translator = JsonTranslator(self.nested_dict)
         translated_dict, translations, texts = translator.translate("en", "fr")
-
         self.assertEqual(
             translated_dict, self.nested_dict
         )  # Ensure translation returns the same nested structure
 
+
+    @patch("_main_.utils.translation.translator.providers.google_translate.GoogleTranslate")
     @patch("_main_.utils.translation")
-    def test_round_trip(self, mock_translate):
+    def test_round_trip(self, mock_google_translate, mock_translate):
+        mock_google_translate.set_up.return_value = None
+        mock_google_translate.translate.return_value = "translated"
         mock_translate.translate_text.return_value = "translated"
         translator = JsonTranslator(self.nested_dict)
         translated_dict, translations, texts = translator.translate("en", "fr")
