@@ -12,7 +12,6 @@ class GoogleTranslate:
         self.set_up()
 
     def set_up(self):
-        print("Setting up Google Translate")
         self.__google_translate_key_file = MassEnergizeApiEnvConfig().get_google_translate_key_file()
 
         if not self.__google_translate_key_file:
