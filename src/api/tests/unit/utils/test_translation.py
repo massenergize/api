@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 from _main_.utils.translation import JsonTranslator
 
 
@@ -109,14 +110,18 @@ class TestJsonTranslator(unittest.TestCase):
             translator = JsonTranslator({})
             self.assertEqual(expected_flattend, translator.unflatten_dict(d))
 
-    def test_translate(self):
+    @patch("_main_.utils.translation")
+    def test_translate(self, mock_translate):
+        mock_translate.translate_text.return_value = "translated"
         translator = JsonTranslator(self.nested_dict)
         translated_dict, translations, texts = translator.translate("en", "fr")
         self.assertEqual(
             translated_dict, self.nested_dict
         )  # Ensure translation returns the same nested structure
 
-    def test_round_trip(self):
+    @patch("_main_.utils.translation")
+    def test_round_trip(self, mock_translate):
+        mock_translate.translate_text.return_value = "translated"
         translator = JsonTranslator(self.nested_dict)
         translated_dict, translations, texts = translator.translate("en", "fr")
 
