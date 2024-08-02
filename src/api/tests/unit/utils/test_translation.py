@@ -112,6 +112,7 @@ class TestJsonTranslator(unittest.TestCase):
     def test_translate(self):
         translator = JsonTranslator(self.nested_dict)
         translated_dict, translations, texts = translator.translate("en", "fr")
+
         self.assertEqual(
             translated_dict, self.nested_dict
         )  # Ensure translation returns the same nested structure
