@@ -4,6 +4,9 @@ class MicrosoftTranslator:
     MAX_TEXT_SIZE = 10000
 
     def __init__(self):
+        self.set_up()
+
+    def set_up(self):
         self.__name__ = "MicrosoftTranslator"
         self.__api_key = os.getenv('MICROSOFT_TRANSLATOR_KEY')
         self.region = os.getenv('MICROSOFT_TRANSLATOR_REGION')
