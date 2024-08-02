@@ -111,18 +111,18 @@ class TestJsonTranslator(unittest.TestCase):
 
     def test_translate(self):
         translator = JsonTranslator(self.nested_dict)
-        translated_dict = translator.translate("en", "fr")
+        translated_dict, translations, texts = translator.translate("en", "fr")
         self.assertEqual(
             translated_dict, self.nested_dict
         )  # Ensure translation returns the same nested structure
 
     def test_round_trip(self):
         translator = JsonTranslator(self.nested_dict)
-        translated_dict = translator.translate("en", "fr")
+        translated_dict, translations, texts = translator.translate("en", "fr")
 
         # Test round trip (translate -> flatten -> unflatten -> translate back)
         translator_round_trip = JsonTranslator(translated_dict)
-        translated_dict_round_trip = translator_round_trip.translate("fr", "en")
+        translated_dict_round_trip, translations, texts = translator_round_trip.translate("fr", "en")
 
         self.assertEqual(translated_dict_round_trip, self.nested_dict)
 
