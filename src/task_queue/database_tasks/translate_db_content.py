@@ -22,9 +22,10 @@ class TranslateDBContents:
 	
 	def __init__(self):
 		self.translator = JsonTranslator
-		_supported_languages = SupportedLanguage.objects.values_list('code', flat=True)
-		self.supported_languages = [lang_code for lang_code in to_third_party_lang_code(list(_supported_languages))]
 	
+	def get_supported_languages(self):
+		_supported_languages = SupportedLanguage.objects.values_list('code', flat=True)
+		return [lang_code for lang_code in to_third_party_lang_code(list(_supported_languages))]
 	@timed
 	def cache_translations(self, hashes, translated_text_list, language) -> bool:
 		try:
@@ -47,7 +48,9 @@ class TranslateDBContents:
 		try:
 			models = apps.get_models()
 			data = create_list_of_all_records_to_translate(models)
-			for lang in self.supported_languages:
+			
+			supported_languages = self.get_supported_languages()
+			for lang in supported_languages:
 				log.info(f"Task: Translating DB contents to {lang}")
 				_json, translated_text_list, hashes = self.translator(data).translate("en", lang)
 				self.cache_translations(hashes, translated_text_list, lang)
