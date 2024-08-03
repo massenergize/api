@@ -1,9 +1,11 @@
+from _main_.utils.stage.gtranslate_helper import MockGoogleTranslateClient
 from _main_.utils.stage.secrets import get_s3_file
 from _main_.utils.stage.logging import *
 from dotenv import load_dotenv
 from pathlib import Path  # python3 only
 import os, socket
-
+from google.cloud import translate_v2 as translate
+from google.oauth2 import service_account
 from _main_.utils.utils import load_json
 
 class MassEnergizeApiEnvConfig:
@@ -12,7 +14,6 @@ class MassEnergizeApiEnvConfig:
         self.secrets = None
         self.firebase_creds = None
         self.release_info = self.get_release_info()
-
 
     def load_env_variables(self):
         # this is the expected place we would usually put our .env file
@@ -86,6 +87,21 @@ class MassEnergizeApiEnvConfig:
             return None
         return f"{path}/{filename}"
 
+    def set_up_google_translate_client(self):
+        if self.is_test():
+            return MockGoogleTranslateClient()
+        
+        google_translate_key_file = self.get_google_translate_key_file()
+
+        if not google_translate_key_file:
+            raise Exception("GOOGLE_TRANSLATE_KEY_FILE not found in environment variables")
+
+
+        credentials = service_account.Credentials.from_service_account_file(
+            filename=google_translate_key_file)
+
+        # scopes = ['https://www.googleapis.com/auth/cloud-platform']
+        return  translate.Client(credentials)
 
     def is_prod(self):
         return self.name == "prod"
@@ -154,14 +170,16 @@ class MassEnergizeApiEnvConfig:
 
 
     def _set_api_run_info(self):
-        name = os.getenv("DJANGO_ENV")
+        override_env = os.getenv("DJANGO_ENV")
         is_docker_mode = False
-
+        
         current_run_file_path = Path('.') / '.massenergize'/ 'current_run_info.json'
-        if current_run_file_path.exists():
+        if not override_env and current_run_file_path.exists():
             _current_run_info = load_json(current_run_file_path)
-            name = _current_run_info.get('django_env', name)
-            is_docker_mode = _current_run_info.get('is_docker_mode', is_docker_mode)
+            name = _current_run_info.get('django_env')
+            assert name is not None, f"{current_run_file_path} should have django_env set to one of test, local, dev, canary or prod"
+            is_docker_mode = _current_run_info.get('is_docker_mode')
+            assert name is not None, f"{current_run_file_path} should have is_docker_mode set to true/false"
         else:
             load_dotenv()
             name = os.getenv("DJANGO_ENV", "dev")

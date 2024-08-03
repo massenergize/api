@@ -14,10 +14,9 @@ from _main_.utils.translation.translator.providers.microsoft_translator import M
 # represents a text blob that does not exceed that maximum length.
 # If we have many text elements or sentences to translate, we combine them into blocks, ensuring each block
 # does not exceed the maximum length. Each block contains several of these sentences separated by MAGIC_TEXT.
-
-MAX_TEXT_SIZE = 100
-BATCH_LIMIT = 100
 MAGIC_TEXT = "|||"  # This is used to separate text items or sentences within a block during translation
+MAX_TEXT_SIZE = 5000
+BATCH_LIMIT = 100
 TRANSLATION_PROVIDER = "google"
 
 class Translator:
