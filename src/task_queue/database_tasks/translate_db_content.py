@@ -1,12 +1,11 @@
 from django.apps import apps
-from django.forms import model_to_dict
 from django.utils import timezone
+
 from _main_.utils.massenergize_logger import log
 from _main_.utils.metrics import timed
 from _main_.utils.translation import JsonTranslator
-from _main_.utils.utils import create_list_of_all_records_to_translate, filter_active_records
+from _main_.utils.utils import create_list_of_all_records_to_translate, to_third_party_lang_code
 from database.models import SupportedLanguage, TranslationsCache
-from _main_.utils.utils import to_third_party_lang_code
 
 SOURCE_LANGUAGE_CODE = 'en'
 
