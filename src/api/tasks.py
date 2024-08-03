@@ -1,6 +1,7 @@
 import csv
 import datetime
 import logging
+import time
 
 from celery import shared_task
 from django.db.models import Count
@@ -338,4 +339,10 @@ def automatically_activate_nudge(community_nudge_setting_id):
             cache.delete(cache_key)
     else:
         logging.info("Task already picked up by another worker")
-    
+
+
+@app.task
+def translate_all_models_into_target_language():
+    # sleep for 10 seconds to allow the new language to be created
+    time.sleep(10)
+    return True
