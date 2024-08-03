@@ -72,7 +72,7 @@ class TranslationMiddleware:
 			if language == 'en':  #TODO remove this when we start supporting data upload in other languages
 				return response
 			
-			translated_data = JsonTranslator(response_to_dict.get("data", {})).translate('en', language)
+			translated_data, _, __ = JsonTranslator(response_to_dict.get("data", {})).translate('en', language)
 			
 			response_to_dict["data"] = translated_data
 			

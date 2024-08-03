@@ -9,6 +9,8 @@ from django.core.exceptions import ValidationError
 from django.forms import model_to_dict
 
 
+LANGUAGE_CODES_TO_NOT_SPLIT = {"en-GB", "zh-CN", "zh-TW", "mni-Mtei"}
+
 def load_json(path):
     """
     Loads the json file in the given path.
@@ -208,3 +210,13 @@ def create_list_of_all_records_to_translate(models):
             all_records.extend([model_to_dict(r, fields=translatable_fields) for r in filter_active_records(model)])
 
     return all_records
+
+
+def to_third_party_lang_code(language_code: str) -> str:
+    assert language_code is not None  and len(language_code) > 1
+
+    if language_code in LANGUAGE_CODES_TO_NOT_SPLIT:
+        return language_code
+
+    codes = language_code.split("-")
+    return codes[0] if len(codes) > 1 else language_code
