@@ -42,7 +42,7 @@ class SupportedLanguageHandler(RouteHandler):
     @super_admins_only
     def create(self, request):
         context: Context = request.context
-        args = context.get_request_body()
+        args = context.args
 
         (self.validator
          .expect("language_code", str, is_required=True)

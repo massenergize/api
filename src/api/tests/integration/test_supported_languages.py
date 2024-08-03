@@ -34,13 +34,12 @@ class SuppportedLanguagesTest(TestCase):
         # Perform any clean-up after running the test case class
         pass
 
-    def make_request(self, path, data=None):
-        return self.client.post(f"{self.endpoint}.{path}", data, content_type='application/json').toDict()
+    def make_request(self, _path, data=None):
+        return self.client.post(path=f"/api/supported_languages.{_path}", data=data, format='multipart').toDict()
 
-    @patch('api.services.translations_cache.TranslationsCacheService')
-    def test_supported_languages_create_as_super_admin(self, mock_translations_cache_service):
+    @patch('api.services.supported_language.translate_all_models_into_target_language.apply_async')
+    def test_supported_languages_create_as_super_admin(self,mock_apply_async):
         Console.header("Testing create supported language")
-        mock_translations_cache_service.return_value.translate_all_models.return_value = ({ "message": "All models translation successful" }, None)
         signinAs(self.client, self.SADMIN)
 
         language_code = f"en-ER-{datetime.now().timestamp()}"
@@ -48,12 +47,14 @@ class SuppportedLanguagesTest(TestCase):
             "language_code": language_code,
             "name": self.test_lang_name
         }
-
+        
         response = self.make_request(self.create_path, data)
 
         self.assertEqual(response["success"], True)
         self.assertEqual(response["data"]["code"], language_code)
         self.assertEqual(response["data"]["name"], self.test_lang_name)
+        
+        mock_apply_async.assert_called_once_with(args=[language_code], countdown=10, retry=False)
 
     def test_supported_languages_create_as_community_admin(self):
         Console.header("Testing create supported language as community admin")
@@ -96,7 +97,7 @@ class SuppportedLanguagesTest(TestCase):
         response = self.make_request(self.info_path)
 
         self.assertEqual(response["success"], False)
-        self.assertEqual(response["error"], f"{INVALID_LANGUAGE_CODE_ERR_MSG}: None")
+        self.assertEqual(response["error"], f"{INVALID_LANGUAGE_CODE_ERR_MSG}")
 
     def test_supported_languages_info_invalid_code(self):
         Console.header("Testing fetch supported language info with invalid code")
