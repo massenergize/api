@@ -3,7 +3,6 @@ from typing import Union, Tuple, List
 from _main_.utils.massenergize_logger import log
 from _main_.utils.translation.translator import Translator, MAX_TEXT_SIZE, MAGIC_TEXT
 from _main_.utils.utils import make_hash
-from api.services.translations_cache import TranslationsCacheService
 from database.models import TranslationsCache
 
 JSON_EXCLUDE_KEYS = {
@@ -33,12 +32,16 @@ EXCLUDED_JSON_VALUE_PATTERNS = [
 
 
 class JsonTranslator(Translator):
-    def __init__ (self, dict_to_translate: Union[dict, list], exclude_keys = None):
+    def __init__ (self, dict_to_translate: Union[dict, list], exclude_keys = None, exclude_cached = False):
         super().__init__()
         self.exclude_keys = set(exclude_keys) if exclude_keys else set()
         self.sep = '.'
         self.dict_to_translate = dict_to_translate
-        self.translations_cache = TranslationsCache()
+
+        if exclude_cached:
+            self.translations_cache = TranslationsCache()
+            self.exclude_cached = exclude_cached
+            self.cached_translations = None
 
     def flatten_json_for_translation(self, json_to_translate: Union[dict, list], target_language = "en"):
         assert (json_to_translate is not None) and (
@@ -82,14 +85,11 @@ class JsonTranslator(Translator):
         if not isinstance(_value, str):
             return True
 
-        if self.translation_cached(_value, target_language):
-            return True
-
         # Check if value is in JSON_EXCLUDE_VALUES
         if _value in JSON_EXCLUDE_VALUES or self._is_excluded_pattern(_value):
             return True
 
-        if self.translation_cached(_value, target_language):
+        if self.exclude_cached and self.translation_cached(_value):
             return True
 
         # Default: include the key-value pair
@@ -149,57 +149,56 @@ class JsonTranslator(Translator):
     def get_flattened_dict_for_excluded_keys(self):
         return self._excluded
 
-    def translation_cached(self, text: str, target_language: str):
+    def translation_cached(self, text: str):
         try:
             """
-Check if a translation for the text in the target language is already cached.
-
-Args:
-    text (str): Text to be translated.
-    target_language (str): Target language code.
-
-Returns:
-    bool: True if the translation is cached, False otherwise.
-"""
+            Check if a translation for the text in the target language is already cached.
+            
+            Args:
+                text (str): Text to be translated.
+                target_language (str): Target language code.
+            
+            Returns:
+                bool: True if the translation is cached, False otherwise.
+            """
             hash_value = make_hash(text)
-            translation = TranslationsCache.objects.filter(hash=hash_value, target_language_code = target_language).first()
+            translation = self.cached_translations.get(hash_value)
 
             return translation is not None
         except Exception as e:
-            log.error(e)
+            log.error("Error checking if translation is cached", exception = e)
             return False
 
-    def remove_already_translated_texts(self, texts: list, hash_list: list, target_language: str, source_language: str, ):
-        """
-        Remove already translated (value) texts from the texts list
-         if there are any TranslationCache table entries for their hash and the source and target languages
-
-        Args:
-            texts (list): List of texts to be translated.
-
-        Returns:
-            dict: Flattened dictionary with already translated keys removed.
-        """
-
-        for i in range(len(texts)):
-            hash_value = hash_list[i]
-            text = texts[i]
-            translation_exists = self.translations_cache.get_translation(args={hash : hash_value, target_language : target_language})
-
-            if translation_exists:
-                texts[i] = None
-
-
-        return self._flattened
+    def get_cached_translations(self, target_language: str):
+        try:
+            """
+            Get all cached translation for the target language.
+            
+            Args:
+                target_language (str): Target language code.
+            
+            Returns:
+                str: The cached translation.
+            """
+            cached_translations = TranslationsCache.objects.filter(target_language_code = target_language)
+            cached_dict = {translation.hash: translation.translated_text for translation in cached_translations}
+            del cached_translations  # let's set this up for garbage collection
+            return cached_dict
+        except Exception as e:
+            log.error("Error getting cached translations", exception = e)
+            return None
 
 
-    def translate (self, source_language: str, destination_language: str, filter_translated = False) -> Tuple[dict, List[str], List[dict]]:
+    def translate (self, source_language: str, destination_language: str) -> Tuple[dict, List[str], List[dict]]:
         """
         Translate the flattened dictionary values from source_language to destination_language.
 
         Returns:
             tuple: The translated dictionary in its original nested structure.
         """
+
+        if self.exclude_cached:
+            self.cached_translations = self.get_cached_translations(destination_language)
 
         self._flattened, self._excluded = self.flatten_json_for_translation(self.dict_to_translate, destination_language)
 
