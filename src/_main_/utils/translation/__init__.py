@@ -2,6 +2,9 @@ import re
 from typing import Union, Tuple, List
 from _main_.utils.massenergize_logger import log
 from _main_.utils.translation.translator import Translator, MAX_TEXT_SIZE, MAGIC_TEXT
+from _main_.utils.utils import make_hash
+from api.services.translations_cache import TranslationsCacheService
+from database.models import TranslationsCache
 
 JSON_EXCLUDE_KEYS = {
     'id', 'pk', 'file', 'media', 'date'
@@ -34,9 +37,10 @@ class JsonTranslator(Translator):
         super().__init__()
         self.exclude_keys = set(exclude_keys) if exclude_keys else set()
         self.sep = '.'
-        self._flattened, self._excluded = self.flatten_json_for_translation(dict_to_translate)
+        self.dict_to_translate = dict_to_translate
+        self.translations_cache = TranslationsCache()
 
-    def flatten_json_for_translation(self, json_to_translate: Union[dict, list]):
+    def flatten_json_for_translation(self, json_to_translate: Union[dict, list], target_language = "en"):
         assert (json_to_translate is not None) and (
                 isinstance(json_to_translate, dict) or isinstance(json_to_translate, list))
 
@@ -57,7 +61,7 @@ class JsonTranslator(Translator):
                     stack.append((nested_new_key, item))
             else:
                 flattened_key = self.sep.join(parent_key)
-                if self._should_exclude(parent_key[-1], current):
+                if self._should_exclude(parent_key[-1], current, target_language):
                     flattened_dict_for_keys_to_exclude[flattened_key] = current
                 else:
                     flattened_dict_for_keys_to_include[flattened_key] = current
@@ -67,7 +71,7 @@ class JsonTranslator(Translator):
     def _is_excluded_pattern(self, value:str):
         return any(pattern.fullmatch(value) for pattern in EXCLUDED_JSON_VALUE_PATTERNS)
 
-    def _should_exclude(self, key, _value):
+    def _should_exclude(self, key, _value, target_language = "en"):
         # add more checks here
 
         # Check if key is in exclude_keys or JSON_EXCLUDE_KEYS
@@ -78,8 +82,14 @@ class JsonTranslator(Translator):
         if not isinstance(_value, str):
             return True
 
+        if self.translation_cached(_value, target_language):
+            return True
+
         # Check if value is in JSON_EXCLUDE_VALUES
         if _value in JSON_EXCLUDE_VALUES or self._is_excluded_pattern(_value):
+            return True
+
+        if self.translation_cached(_value, target_language):
             return True
 
         # Default: include the key-value pair
@@ -139,8 +149,51 @@ class JsonTranslator(Translator):
     def get_flattened_dict_for_excluded_keys(self):
         return self._excluded
 
+    def translation_cached(self, text: str, target_language: str):
+        try:
+            """
+Check if a translation for the text in the target language is already cached.
 
-    def translate (self, source_language: str, destination_language: str) -> Tuple[dict, List[str], List[dict]]:
+Args:
+    text (str): Text to be translated.
+    target_language (str): Target language code.
+
+Returns:
+    bool: True if the translation is cached, False otherwise.
+"""
+            hash_value = make_hash(text)
+            translation = TranslationsCache.objects.filter(hash=hash_value, target_language_code = target_language).first()
+
+            return translation is not None
+        except Exception as e:
+            log.error(e)
+            return False
+
+    def remove_already_translated_texts(self, texts: list, hash_list: list, target_language: str, source_language: str, ):
+        """
+        Remove already translated (value) texts from the texts list
+         if there are any TranslationCache table entries for their hash and the source and target languages
+
+        Args:
+            texts (list): List of texts to be translated.
+
+        Returns:
+            dict: Flattened dictionary with already translated keys removed.
+        """
+
+        for i in range(len(texts)):
+            hash_value = hash_list[i]
+            text = texts[i]
+            translation_exists = self.translations_cache.get_translation(args={hash : hash_value, target_language : target_language})
+
+            if translation_exists:
+                texts[i] = None
+
+
+        return self._flattened
+
+
+    def translate (self, source_language: str, destination_language: str, filter_translated = False) -> Tuple[dict, List[str], List[dict]]:
         """
         Translate the flattened dictionary values from source_language to destination_language.
 
@@ -148,8 +201,11 @@ class JsonTranslator(Translator):
             tuple: The translated dictionary in its original nested structure.
         """
 
+        self._flattened, self._excluded = self.flatten_json_for_translation(self.dict_to_translate, destination_language)
+
         keys = [] # Flattened dictionary keys and values
         untranslated_text_entries = [] # texts to be translated
+        hashes = []
 
         # TODO: We should parallelize this
         #  We can plit the list into chunks of maybe 10 and
@@ -159,6 +215,7 @@ class JsonTranslator(Translator):
                 continue
 
             keys.append(key)
+            hashes.append(make_hash(value))
             untranslated_text_entries.append(value)
 
         # Convert values to text blocks
