@@ -216,12 +216,12 @@ class JsonTranslator(Translator):
             hashes.append(make_hash(value))
             untranslated_text_entries.append(value)
 
-        # Convert values to text blocks
-        text_blocks = self.convert_to_text_blocks(untranslated_text_entries, max_block_size = self.MAX_TEXT_SIZE)
-        # Translate text blocks
-        translated_blocks = self._translate_text_blocks(text_blocks, source_language, destination_language)
-        # Unwind translated blocks back to individual translations
-        translated_text_entries = self._unwind_translated_blocks(translated_blocks)
+        # convert values to text batches
+        text_batches = self.convert_to_text_batches(untranslated_text_entries, max_batch_size = self.MAX_TEXT_SIZE)
+        # Translate text batches
+        translated_batches = self._translate_text_batches(text_batches,source_language,destination_language)
+        # Flatten translated batches back to individual translations
+        translated_text_entries = self.flatten_text_batches(translated_batches)
 
         # Ensure the translation count matches the original count
         assert len(untranslated_text_entries) == len(
@@ -300,3 +300,70 @@ class JsonTranslator(Translator):
             translations.extend(block.split(MAGIC_TEXT))
 
         return translations
+
+    def convert_to_text_batches(self, text_list, max_batch_size=MAX_TEXT_SIZE) -> List[List[str]]:
+        """
+        Convert a list of text entries into batches that do not exceed the MAX_TEXT_SIZE limit.
+        Translation APIs, like Google Translate, have a maximum text length they can handle. The idea of a batch here
+        represents a text blob that does not exceed that maximum length.
+        If we have many text elements or sentences to translate, we combine them into batches, ensuring each batch
+        does not exceed the maximum length.
+
+        Args:
+            text_list (list): List of text entries to be translated.
+
+        Returns:
+            list: List of text batches.
+        """
+        batches = []
+        current_batch = []
+        length_of_current_batch = 0
+
+        for text in text_list:
+            if length_of_current_batch + len(text) > max_batch_size:
+                batches.append(current_batch)
+                current_batch = [text]
+                length_of_current_batch = len(text)
+            else:
+                length_of_current_batch += len(text)
+                current_batch.append(text)
+
+        if current_batch:
+            batches.append(current_batch)
+
+        return batches
+
+    def _translate_text_batches(self, text_batches : List[List[str]], source_language, destination_language):
+        """
+        Translate a list of text batches from source_language to destination_language.
+
+        Args:
+            text_batches (list): List of text batches to be translated.
+            source_language (str): Source language code.
+            destination_language (str): Destination language code.
+
+        Returns:
+            list: List of translated text batches.
+        """
+        translated_batches = []
+        for batch in text_batches:
+            translated = self.translate_batch(batch, source_language, destination_language)
+            translated_batches.append(translated)
+
+        return translated_batches
+
+    def flatten_text_batches(self, text_batches : List[List[str]]):
+        """
+        Flatten a list of text batches into a single list of text entries.
+
+        Args:
+            text_batches (list): List of text batches.
+
+        Returns:
+            list: List of text entries.
+        """
+        text_list = []
+        for batch in text_batches:
+            text_list.extend(batch)
+
+        return text_list
