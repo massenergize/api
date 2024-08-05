@@ -37,10 +37,12 @@ class JsonTranslator(Translator):
         self.exclude_keys = set(exclude_keys) if exclude_keys else set()
         self.sep = '.'
         self.dict_to_translate = dict_to_translate
+        self._flattened = {}
+        self._excluded = {}
+        self.exclude_cached = exclude_cached
 
         if exclude_cached:
             self.translations_cache = TranslationsCache()
-            self.exclude_cached = exclude_cached
             self.cached_translations = None
 
     def flatten_json_for_translation(self, json_to_translate: Union[dict, list], target_language = "en"):
