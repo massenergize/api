@@ -2,7 +2,8 @@ import re
 from typing import Union, Tuple, List
 from _main_.utils.massenergize_logger import log
 from _main_.utils.translation.translator import Translator, MAX_TEXT_SIZE, MAGIC_TEXT
-
+from flatten_json import flatten, unflatten_list
+import json_flatten
 JSON_EXCLUDE_KEYS = {
     'id', 'pk', 'file', 'media', 'date'
 }
@@ -16,7 +17,7 @@ JSON_EXCLUDE_VALUES = {
     "null",
     "false",
     "true",
-    ""
+    "",
     # let's add some common JSON string values that should not be translated
 }
 
@@ -35,8 +36,33 @@ class JsonTranslator(Translator):
         self.exclude_keys = set(exclude_keys) if exclude_keys else set()
         self.sep = '.'
         self._flattened, self._excluded = self.flatten_json_for_translation(dict_to_translate)
+        print(1, self._flattened)
+        print(2, self._excluded)
 
     def flatten_json_for_translation(self, json_to_translate: Union[dict, list]):
+        assert (json_to_translate is not None) and (
+                isinstance(json_to_translate, dict) or isinstance(json_to_translate, list))
+
+        flattened_dict_for_keys_to_include = {}
+        flattened_dict_for_keys_to_exclude = {}
+ 
+        flattened = json_flatten.flatten(json_to_translate)
+
+        for k,v in flattened.items():
+            real_key = k.split("_")[-1]
+            if self._should_exclude(real_key,v):
+                flattened_dict_for_keys_to_exclude[k] = v 
+            else:
+                flattened_dict_for_keys_to_include[k] = v
+        
+        print(flattened_dict_for_keys_to_include)
+        print(flattened_dict_for_keys_to_exclude)
+
+        return flattened_dict_for_keys_to_include, flattened_dict_for_keys_to_exclude
+
+
+
+    def flatten_json_for_translation2(self, json_to_translate: Union[dict, list]):
         assert (json_to_translate is not None) and (
                 isinstance(json_to_translate, dict) or isinstance(json_to_translate, list))
 
@@ -85,8 +111,16 @@ class JsonTranslator(Translator):
         # Default: include the key-value pair
         return False
 
-
     def unflatten_dict(self, flattened: dict):
+        all_flattened = flattened
+
+        # now add the keys that got removed during initialization because of the exclusion set
+        all_flattened.update(self._excluded)
+
+        assert all_flattened is not None 
+        return json_flatten.unflatten(all_flattened)
+
+    def unflatten_dict2(self, flattened: dict):
         all_flattened = flattened
 
         # now add the keys that got removed during initialization because of the exclusion set

@@ -38,13 +38,13 @@ class TranslationMiddleware:
 				
 			flattened = translator.get_flattened_dict()
 			unflattened = translator.unflatten_dict(flattened)
-			
+			print("== original: ", response_to_dict)
 			print("== flattened: ", flattened)
-			print("")
 			print("== unflattened: ", unflattened)
 			
 			assert unflattened == response_to_dict, "Mismatch between original and unflattened data"
-			
-			# response.content = json.dumps(response_to_dict).encode('utf-8')
+			v,_,_ = translator.translate('en', language)
+			print(v)
+			response.content = json.dumps(v).encode('utf-8')
 		
 		return response
