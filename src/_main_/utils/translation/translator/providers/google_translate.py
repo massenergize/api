@@ -15,4 +15,6 @@ class GoogleTranslate:
     def translate(self, text, source_language_code, target_language_code):
         # TODO: we need to support lists of texts
         result = self.__client.translate(text, source_language=source_language_code, target_language=target_language_code)
+        if isinstance(text, list):
+            return [r['translatedText'] for r in result]
         return result['translatedText']

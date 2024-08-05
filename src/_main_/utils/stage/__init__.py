@@ -90,7 +90,7 @@ class MassEnergizeApiEnvConfig:
     def set_up_google_translate_client(self):
         if self.is_test():
             return MockGoogleTranslateClient()
-        
+
         google_translate_key_file = self.get_google_translate_key_file()
 
         if not google_translate_key_file:
@@ -101,7 +101,7 @@ class MassEnergizeApiEnvConfig:
             filename=google_translate_key_file)
 
         # scopes = ['https://www.googleapis.com/auth/cloud-platform']
-        return  translate.Client(credentials)
+        return  translate.Client(credentials=credentials)
 
     def is_prod(self):
         return self.name == "prod"
@@ -172,7 +172,7 @@ class MassEnergizeApiEnvConfig:
     def _set_api_run_info(self):
         override_env = os.getenv("DJANGO_ENV")
         is_docker_mode = False
-        
+
         current_run_file_path = Path('.') / '.massenergize'/ 'current_run_info.json'
         if not override_env and current_run_file_path.exists():
             _current_run_info = load_json(current_run_file_path)
