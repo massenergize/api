@@ -67,12 +67,12 @@ class TranslationsCacheService:
         translations, err = self.store.bulk_create_translations(translations)
         return translations if translations else None, err
 
-    def get_translation (self, context: Context, args: dict) -> Tuple[TranslationsCache or None, None]:
+    def get_translation (self, args: dict) -> Tuple[TranslationsCache or None, None]:
         """
         This is a wrapper function for the TranslationsCacheStore.get_translation method.
          It passes the context and args to the store's get_translation method, which retrieves a translation from the TranslationsCache table.
         """
-        translation, err = self.store.get_translation(context, args)
+        translation, err = self.store.get_translation(args)
         return translation if translation else None, err
 
     def get_target_languages (self, context: Context, target_language_code) -> Tuple[Union[list, None], None]:

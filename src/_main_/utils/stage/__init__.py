@@ -89,8 +89,8 @@ class MassEnergizeApiEnvConfig:
 
     def set_up_google_translate_client(self):
         if self.is_test():
-             return MockGoogleTranslateClient()
-        
+            return MockGoogleTranslateClient()
+
         google_translate_key_file = self.get_google_translate_key_file()
 
         if not google_translate_key_file:
