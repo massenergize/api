@@ -37,15 +37,12 @@ class JsonTranslator(Translator):
         self.exclude_keys = set(exclude_keys) if exclude_keys else set()
         self.sep = '.'
         self.dict_to_translate = dict_to_translate
-        self._flattened = {}
-        self._excluded = {}
-        self.exclude_cached = exclude_cached
+        self._exclude_cached = exclude_cached
+        self.translations_cache = TranslationsCache()
+        self.cached_translations = None
+        self._flattened, self._excluded = self.flatten_json_for_translation(self.dict_to_translate)
 
-        if exclude_cached:
-            self.translations_cache = TranslationsCache()
-            self.cached_translations = None
-
-    def flatten_json_for_translation(self, json_to_translate: Union[dict, list], target_language = "en"):
+    def flatten_json_for_translation(self, json_to_translate: Union[dict, list]):
         assert (json_to_translate is not None) and (
                 isinstance(json_to_translate, dict) or isinstance(json_to_translate, list))
 
@@ -66,7 +63,7 @@ class JsonTranslator(Translator):
                     stack.append((nested_new_key, item))
             else:
                 flattened_key = self.sep.join(parent_key)
-                if self._should_exclude(parent_key[-1], current, target_language):
+                if self._should_exclude(parent_key[-1], current):
                     flattened_dict_for_keys_to_exclude[flattened_key] = current
                 else:
                     flattened_dict_for_keys_to_include[flattened_key] = current
@@ -76,7 +73,7 @@ class JsonTranslator(Translator):
     def _is_excluded_pattern(self, value:str):
         return any(pattern.fullmatch(value) for pattern in EXCLUDED_JSON_VALUE_PATTERNS)
 
-    def _should_exclude(self, key, _value, target_language = "en"):
+    def _should_exclude(self, key, _value):
         # add more checks here
 
         # Check if key is in exclude_keys or JSON_EXCLUDE_KEYS
@@ -91,7 +88,7 @@ class JsonTranslator(Translator):
         if _value in JSON_EXCLUDE_VALUES or self._is_excluded_pattern(_value):
             return True
 
-        if self.exclude_cached and self.translation_cached(_value):
+        if self._exclude_cached and self.translation_cached(_value):
             return True
 
         # Default: include the key-value pair
@@ -199,10 +196,10 @@ class JsonTranslator(Translator):
             tuple: The translated dictionary in its original nested structure.
         """
 
-        if self.exclude_cached:
+        if self._exclude_cached:
             self.cached_translations = self.get_cached_translations(destination_language)
+            self._flattened, self._excluded = self.flatten_json_for_translation(self.dict_to_translate)
 
-        self._flattened, self._excluded = self.flatten_json_for_translation(self.dict_to_translate, destination_language)
 
         keys = [] # Flattened dictionary keys and values
         untranslated_text_entries = [] # texts to be translated
