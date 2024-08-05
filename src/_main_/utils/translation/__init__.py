@@ -1,8 +1,7 @@
 import re
 from typing import Union, Tuple, List
-from _main_.utils.massenergize_logger import log
 from _main_.utils.translation.translator import Translator, MAX_TEXT_SIZE, MAGIC_TEXT
-from flatten_json import flatten, unflatten_list
+
 import json_flatten
 JSON_EXCLUDE_KEYS = {
     'id', 'pk', 'file', 'media', 'date'
@@ -36,8 +35,6 @@ class JsonTranslator(Translator):
         self.exclude_keys = set(exclude_keys) if exclude_keys else set()
         self.sep = '.'
         self._flattened, self._excluded = self.flatten_json_for_translation(dict_to_translate)
-        print(1, self._flattened)
-        print(2, self._excluded)
 
     def flatten_json_for_translation(self, json_to_translate: Union[dict, list]):
         assert (json_to_translate is not None) and (
@@ -54,9 +51,6 @@ class JsonTranslator(Translator):
                 flattened_dict_for_keys_to_exclude[k] = v 
             else:
                 flattened_dict_for_keys_to_include[k] = v
-        
-        print(flattened_dict_for_keys_to_include)
-        print(flattened_dict_for_keys_to_exclude)
 
         return flattened_dict_for_keys_to_include, flattened_dict_for_keys_to_exclude
 

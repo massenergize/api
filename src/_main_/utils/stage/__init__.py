@@ -88,8 +88,8 @@ class MassEnergizeApiEnvConfig:
         return f"{path}/{filename}"
 
     def set_up_google_translate_client(self):
-        # if self.is_test():
-        return MockGoogleTranslateClient()
+        if self.is_test():
+             return MockGoogleTranslateClient()
         
         google_translate_key_file = self.get_google_translate_key_file()
 
@@ -101,7 +101,7 @@ class MassEnergizeApiEnvConfig:
             filename=google_translate_key_file)
 
         # scopes = ['https://www.googleapis.com/auth/cloud-platform']
-        return  translate.Client(credentials)
+        return  translate.Client(credentials=credentials)
 
     def is_prod(self):
         return self.name == "prod"

@@ -29,22 +29,13 @@ class TranslationMiddleware:
 			
 			language = request.POST.get('language', 'en')
 			
-			print("== Language: ", request.POST.get('language'))
-			
 			if language == 'en':  #TODO remove this when we start supporting data upload in other languages
 				return response
 			
 			translator = JsonTranslator(response_to_dict)
-				
-			flattened = translator.get_flattened_dict()
-			unflattened = translator.unflatten_dict(flattened)
-			print("== original: ", response_to_dict)
-			print("== flattened: ", flattened)
-			print("== unflattened: ", unflattened)
 			
-			assert unflattened == response_to_dict, "Mismatch between original and unflattened data"
-			v,_,_ = translator.translate('en', language)
-			print(v)
-			response.content = json.dumps(v).encode('utf-8')
+			translated_dict, _, __ = translator.translate('en', language)
+			
+			response.content = json.dumps(translated_dict).encode('utf-8')
 		
 		return response
