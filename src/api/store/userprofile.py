@@ -823,6 +823,7 @@ class UserStore:
     try:
       community_id = args.get("community_id",None)
       user_emails = args.get("user_emails", None)
+      user_ids = args.get("user_ids", None)
 
       filter_params = get_users_filter_params(context.get_params())
 
@@ -834,6 +835,10 @@ class UserStore:
 
       if user_emails: 
         users = UserProfile.objects.filter(email__in = user_emails, *filter_params)
+        return users.distinct(), None
+      
+      if user_ids:
+        users = UserProfile.objects.filter(id__in = user_ids)
         return users.distinct(), None
       
       community, err = get_community(community_id)

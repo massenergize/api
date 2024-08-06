@@ -6,7 +6,8 @@ from _main_.utils.footage.spy import Spy
 from api.tasks import send_scheduled_email
 from api.utils.api_utils import is_admin_of_community, is_null
 from api.utils.filter_functions import get_messages_filter_params
-from database.models import Community, CommunityMember, Message, Media, Team, CommunityAdminGroup, UserProfile
+from database.models import Community, CommunityMember, Message, Media, Team, CommunityAdminGroup, UserActionRel, \
+    UserProfile
 from _main_.utils.massenergize_errors import (
     MassEnergizeAPIError,
     InvalidResourceError,
@@ -24,6 +25,9 @@ from celery.result import AsyncResult
 from django.utils import timezone
 
 
+ALL = "all"
+
+
 def get_schedule(schedule):
     if  not is_null(schedule):
        parsed_datetime = datetime.strptime(schedule, '%a, %d %b %Y %H:%M:%S %Z')
@@ -38,16 +42,55 @@ def get_logo(id):
         if com:
             return com.logo.file.url if com.logo else None
         
+
+def get_message_recipients(audience, audience_type, community_ids,sub_audience_type):
     
+    if is_null(audience): return None
+    if community_ids and not isinstance(community_ids, list):
+        community_ids = community_ids.split(",")
 
-
-def get_message_recipients(audience, audience_type):
-    if not is_null(audience):
+    if audience_type == "COMMUNITY_CONTACTS":
+        communities = Community.objects.all()
+        if audience != ALL:
+            audience = audience.split(",")
+            communities = communities.filter(id__in=audience)
+        return list(set(communities.values_list("owner_email", flat=True)))
+    
+    elif audience_type == "SUPER_ADMIN":
+        if audience == ALL:
+            return list(set(UserProfile.objects.filter(is_super_admin=True).values_list("email", flat=True)))
         audience = audience.split(",")
-        if audience_type == "COMMUNITY_CONTACTS":
-            return Community.objects.filter(id__in=audience).only("owner_email", "id", "name")
+    
+    elif audience_type == "COMMUNITY_ADMIN":
+        if audience == ALL:
+            if not community_ids:
+                return list(set(CommunityAdminGroup.objects.all().values_list("members__email", flat=True)))
+            return list(set(CommunityAdminGroup.objects.filter(community__id__in=community_ids).values_list("members__email", flat=True)))
+            
+        audience = audience.split(",")
         
-        return UserProfile.objects.filter(id__in=audience)
+    elif audience_type == "USERS":
+        if audience == ALL:
+            if not community_ids:
+                return list(set(UserProfile.objects.all().values_list("email", flat=True)))
+            return list(set(CommunityMember.objects.filter(community__id__in=community_ids).values_list("user__email", flat=True)))
+        audience = audience.split(",")
+        
+    elif audience_type == "ACTIONS":
+        audience = audience.split(",")
+        if sub_audience_type == "COMPLETED":
+            user_action_rel = UserActionRel.objects.filter(status="DONE", action__id__in=audience).values_list("user__email", flat=True)
+        elif sub_audience_type == "TODO":
+            user_action_rel = UserActionRel.objects.filter(status="TODO", action__id__in=audience).values_list("user__email", flat=True)
+            
+        elif sub_audience_type == "BOTH":
+            status = ["TODO", "DONE"]
+            user_action_rel = UserActionRel.objects.filter(action__id__in=audience, status__in=status).values_list("user__email", flat=True)
+            
+        return list(set(user_action_rel))
+        
+    return list(set(UserProfile.objects.filter(id__in=audience).values_list("email", flat=True)))
+
 
 class MessageStore:
     def __init__(self):
@@ -374,12 +417,12 @@ class MessageStore:
             schedule = get_schedule(args.get("schedule", None))
             communities = args.get("community_ids", None)
 
-            recipients = get_message_recipients(audience, audience_type)
+            email_list = get_message_recipients(audience, audience_type, communities, sub_audience_type)
 
             logo = ME_LOGO_PNG
             
             associated_community = None
-            if not recipients:
+            if not email_list:
                 return None, InvalidResourceError()
             
             user = get_user_from_context(context)
@@ -389,8 +432,6 @@ class MessageStore:
             if not context.user_is_super_admin:
                 associated_community = Community.objects.filter(id=communities[0]).first()
                 logo = get_logo(communities[0])
-
-            email_list =  list(recipients.values_list("owner_email" if audience_type == "COMMUNITY_CONTACTS" else "email", flat=True))
         
             if message_id:
                 messages = Message.objects.filter(pk=message_id)
