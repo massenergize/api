@@ -5,8 +5,8 @@ from _main_.utils.massenergize_logger import log
 from _main_.utils.translation.translator import Translator, MAX_TEXT_SIZE, MAGIC_TEXT
 from _main_.utils.utils import make_hash
 from database.models import TranslationsCache
-import json_flatten
 
+import json_flatten
 
 JSON_EXCLUDE_KEYS = {
     'id', 'pk', 'file', 'media', 'date', 'link', 'url'
@@ -351,6 +351,7 @@ class JsonTranslator(Translator):
         length_of_current_batch = 0
         MAX_BATCH_LENGTH = 128
 
+
         for text in text_list:
             if length_of_current_batch + len(text) > max_batch_size:
                 batches.append(current_batch)
@@ -358,6 +359,7 @@ class JsonTranslator(Translator):
                 length_of_current_batch = len(text)
             else:
                 length_of_current_batch += len(text)
+
                 if len(current_batch) < MAX_BATCH_LENGTH:
                     current_batch.append(text)
                 else:

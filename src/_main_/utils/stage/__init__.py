@@ -172,7 +172,7 @@ class MassEnergizeApiEnvConfig:
     def _set_api_run_info(self):
         override_env = os.getenv("DJANGO_ENV")
         is_docker_mode = False
-        
+
         current_run_file_path = Path('.') / '.massenergize'/ 'current_run_info.json'
         if not override_env and current_run_file_path.exists():
             _current_run_info = load_json(current_run_file_path)
