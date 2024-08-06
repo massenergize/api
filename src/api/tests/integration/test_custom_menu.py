@@ -330,7 +330,7 @@ class CustomMenuIntegrationTestCase(TestCase):
         self.assertTrue(response['success'])
         self.assertIsInstance(response['data'], list)
         self.assertEqual(response.get("data")[0].get("name"), "PortalMainNavLinks")
-        self.assertEqual(response.get("data")[1].get("name"), "Quick Links")
+        self.assertEqual(response.get("data")[1].get("name"), "PortalFooterLinks")
         
 
         
