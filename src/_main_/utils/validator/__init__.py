@@ -83,7 +83,7 @@ class Validator:
             
           elif field_type == int:
             check = args.pop(field_name)
-            if is_value(check):     # protect against "undefined" or "NULL"
+            if is_value(check):     # protect against "undefined", "NULL", "None"
               args[field_name] = parse_int(check)
           elif field_type == bool:
             args[field_name] = parse_bool(args[field_name])
