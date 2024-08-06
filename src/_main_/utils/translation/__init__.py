@@ -346,6 +346,7 @@ class JsonTranslator(Translator):
         batches = []
         current_batch = []
         length_of_current_batch = 0
+        MAX_BATCH_LENGTH = 128
 
         for text in text_list:
             if length_of_current_batch + len(text) > max_batch_size:
@@ -354,7 +355,12 @@ class JsonTranslator(Translator):
                 length_of_current_batch = len(text)
             else:
                 length_of_current_batch += len(text)
-                current_batch.append(text)
+                if len(current_batch) < MAX_BATCH_LENGTH:
+                    current_batch.append(text)
+                else:
+                    batches.append(current_batch)
+                    current_batch = [text]
+                    length_of_current_batch = len(text)
 
         if current_batch:
             batches.append(current_batch)
