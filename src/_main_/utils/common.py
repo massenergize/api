@@ -262,10 +262,15 @@ def extract_location(args):
 
 
 def is_value(b):
-    if b and b != "undefined" and b != "NONE":
+    if not b:
+        return False
+
+    if isinstance(b, str) and b.lower() not in {"undefined", "null", "none"}:
         return True
+
     if b == "":  # an empty string is a string value
         return True
+
     return False
 
 
