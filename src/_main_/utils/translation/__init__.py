@@ -1,12 +1,15 @@
 import re
 from typing import Union, Tuple, List
+
+from _main_.utils.massenergize_logger import log
 from _main_.utils.translation.translator import Translator, MAX_TEXT_SIZE, MAGIC_TEXT
 from _main_.utils.utils import make_hash
 from database.models import TranslationsCache
-
 import json_flatten
+
+
 JSON_EXCLUDE_KEYS = {
-    'id', 'pk', 'file', 'media', 'date'
+    'id', 'pk', 'file', 'media', 'date', 'link', 'url'
 }
 
 JSON_EXCLUDE_VALUES = {
