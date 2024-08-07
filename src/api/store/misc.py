@@ -682,3 +682,14 @@ class MiscellaneousStore:
             return menu, None
         except Exception as e:
             return None, CustomMassenergizeError(str(e))
+        
+        
+        
+    def list_all_languages(self, context, args) -> (dict, Exception):
+        """ Get all the languages """
+        try:
+            all_languages = load_json("database/raw_data/other/languages.json")
+            return all_languages, None
+        except Exception as e:
+            log.exception(e)
+            return None, CustomMassenergizeError(str(e))

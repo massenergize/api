@@ -262,16 +262,12 @@ def extract_location(args):
 
 
 def is_value(b):
-    if not b:
+    if isinstance(b, str) and b.lower() in {"undefined", "null", "none"}:
+        return False
+    if b is None:
         return False
 
-    if isinstance(b, str) and b.lower() not in {"undefined", "null", "none"}:
-        return True
-
-    if b == "":  # an empty string is a string value
-        return True
-
-    return False
+    return True
 
 
 # def resize_image(img, options={}):
