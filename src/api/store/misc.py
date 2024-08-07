@@ -12,7 +12,7 @@ from _main_.utils.massenergize_errors import (
 from _main_.utils.utils import load_json
 from api.tests.common import createUsers
 from api.utils.api_utils import load_default_menus_from_json, \
-    remove_unpublished_items, validate_menu_content
+    remove_unpublished_menu_items, validate_menu_content
 from database.models import Action, CarbonEquivalency, Community, CommunityAdminGroup, CommunityMember, Data, Event, \
     FeatureFlag, HomePageSettings, Location, Media, Menu, RealEstateUnit, Subdomain, TagCollection, Team, TeamMember, \
     UserActionRel, \
@@ -22,15 +22,15 @@ from .utils import check_location, find_reu_community, get_community, split_loca
 from ..constants import MENU_CONTROL_FEATURE_FLAGS
 
 
-def remove_links_based_on_feature_flag(links, community):
+def remove_menu_links_based_on_feature_flag(links, community):
     links_to_hide = []
     values = MENU_CONTROL_FEATURE_FLAGS.values()
     feature_flags = FeatureFlag.objects.filter(key__in=values)
     for link, feature_flag_key in MENU_CONTROL_FEATURE_FLAGS.items():
         db_feature_flag = feature_flags.filter(key=feature_flag_key).first()
-        if db_feature_flag and not db_feature_flag.is_enabled_for_community(community):
+        if not db_feature_flag or not db_feature_flag.is_enabled_for_community(community):
             links_to_hide.append(link)
-    return remove_unpublished_items(links, links_to_hide)
+    return remove_unpublished_menu_items(links, links_to_hide)
 
 
 class MiscellaneousStore:
@@ -511,8 +511,8 @@ class MiscellaneousStore:
             
             menu = menus.first()
             
-            portal_main_nav_links = remove_links_based_on_feature_flag(menu.content, community)
-            portal_footer_quick_links = remove_links_based_on_feature_flag(menu.footer_content.get("links", []), community)
+            portal_main_nav_links = remove_menu_links_based_on_feature_flag(menu.content, community)
+            portal_footer_quick_links = remove_menu_links_based_on_feature_flag(menu.footer_content.get("links", []), community)
             
             return [
                 {"name": "PortalMainNavLinks", "content": portal_main_nav_links},
@@ -649,8 +649,8 @@ class MiscellaneousStore:
             menus = Menu.objects.filter(community=community)
             
             for menu in menus:
-                menu.content = remove_links_based_on_feature_flag(menu.content, community)
-                menu.footer_content = remove_links_based_on_feature_flag(menu.footer_content.get("links", []), community)
+                menu.content = remove_menu_links_based_on_feature_flag(menu.content, community)
+                menu.footer_content = remove_menu_links_based_on_feature_flag(menu.footer_content.get("links", []), community)
             
             return menus, None
         except Exception as e:
