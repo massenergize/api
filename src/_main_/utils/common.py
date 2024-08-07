@@ -153,7 +153,7 @@ def parse_string(s):
 
 def parse_int(b):
     if not str(b).isdigit():
-        raise ValueError("Input must be a digit")
+        return None
     try:
         return int(b)
     except Exception as e:
@@ -262,11 +262,12 @@ def extract_location(args):
 
 
 def is_value(b):
-    if b and b != "undefined" and b != "NONE":
-        return True
-    if b == "":  # an empty string is a string value
-        return True
-    return False
+    if isinstance(b, str) and b.lower() in {"undefined", "null", "none"}:
+        return False
+    if b is None:
+        return False
+
+    return True
 
 
 # def resize_image(img, options={}):
