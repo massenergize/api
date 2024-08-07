@@ -1,5 +1,5 @@
 import unittest
-from _main_.utils.translation.struct_flattener import StructFlattener
+from _main_.utils.translation.json_flattener import StructFlattener
 
 class TestStructFlattener(unittest.TestCase):
     def test_flatten_nested_keys(self):
