@@ -267,7 +267,7 @@ def prepare_menu_items_for_portal(content, prefix):
             
         return prepared_menu_items
 
-def remove_unpublished_items(content):
+def remove_unpublished_items(content, links_to_hide=[]):
     if not content:
         return None
 
@@ -275,12 +275,12 @@ def remove_unpublished_items(content):
     
     for item in content:
         if not item.get("children"):
-            if item.get("is_published"):
+            if item.get("is_published") and item.get("link") not in links_to_hide:
                 published_items.append(item)
         else:
             if not item.get("is_published"):
                 continue
-            item["children"] = remove_unpublished_items(item["children"])
+            item["children"] = remove_unpublished_items(item["children"], links_to_hide)
             if item["children"]:
                 published_items.append(item)
             
