@@ -2,6 +2,7 @@ import re
 from typing import Union, Tuple, List
 
 from _main_.utils.massenergize_logger import log
+from _main_.utils.translation.json_flattener import JSONFlattener
 from _main_.utils.translation.translator import Translator, MAX_TEXT_SIZE, MAGIC_TEXT
 from _main_.utils.utils import make_hash
 from database.models import TranslationsCache
@@ -43,6 +44,7 @@ class JsonTranslator(Translator):
         self._exclude_cached = exclude_cached
         self.translations_cache = TranslationsCache()
         self.cached_translations = None
+        self.flattener = JSONFlattener()
         self._flattened, self._excluded = self.flatten_json_for_translation(self.dict_to_translate)
 
     def flatten_json_for_translation(self, json_to_translate: Union[dict, list]):
@@ -52,10 +54,10 @@ class JsonTranslator(Translator):
         flattened_dict_for_keys_to_include = {}
         flattened_dict_for_keys_to_exclude = {}
  
-        flattened = json_flatten.flatten(json_to_translate)
+        flattened = self.flattener.flatten(json_to_translate)
 
         for k,v in flattened.items():
-            real_key = k.split("_")[-1]
+            real_key = k.split(".")[-1].split("$")[0]
             if self._should_exclude(real_key,v):
                 flattened_dict_for_keys_to_exclude[k] = v 
             else:
@@ -124,7 +126,7 @@ class JsonTranslator(Translator):
         all_flattened.update(self._excluded)
 
         assert all_flattened is not None 
-        return json_flatten.unflatten(all_flattened)
+        return self.flattener.unflatten(all_flattened)
 
     def unflatten_dict2(self, flattened: dict):
         all_flattened = flattened
