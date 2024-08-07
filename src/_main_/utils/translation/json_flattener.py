@@ -2,6 +2,35 @@ import re
 
 
 class JSONFlattener:
+    """
+    The `JSONFlattener` class provides methods to flatten and unflatten JSON objects or lists.
+
+    Methods:
+        - `flatten(obj: Union[Dict, List]) -> Dict`: Flattens a JSON object into a dictionary, with keys as dot-separated paths and values as corresponding values.
+        - `unflatten(data: Dict) -> Union[Dict, List]`: Unflattens a flattened JSON object dictionary into its original form.
+
+    Example usage:
+    ```python
+    flattener = JSONFlattener()
+
+    # Flatten a JSON object
+    obj = {
+        "foo": {
+            "bar": {
+                "baz": [1, 2, 3]
+            }
+        }
+    }
+    flattened = flattener.flatten(obj)
+    print(flattened)
+    # Output: {'foo.bar.baz[0]': 1, 'foo.bar.baz[1]': 2, 'foo.bar.baz[2]': 3}
+
+    # Unflatten the flattened dictionary
+    unflattened = flattener.unflatten(flattened)
+    print(unflattened)
+    # Output: {'foo': {'bar': {'baz': [1, 2, 3]}}}
+    ```
+    """
     def __init__(self):
         self._types_re = re.compile(r".*\$(none|bool|int|float|empty|emptylist)$")
         self._int_key_re = re.compile(r"\[(\d+)\]")
@@ -32,6 +61,13 @@ class JSONFlattener:
             rows.append((prefix, str(obj)))
         return rows
     
+    def __is_float(self, value):
+        try:
+            float(value)
+            return True
+        except ValueError:
+            return False
+    
     def flatten(self, obj):
         if not isinstance(obj, dict) and not isinstance(obj, list):
             raise TypeError("Expected dict, got {}".format(type(obj)))
@@ -52,7 +88,7 @@ class JSONFlattener:
                 lastkey, lasttype = lastkey.rsplit("$", 2)
                 value = {
                     "int": lambda v: v if not str(v).isdigit() else int(v),
-                    "float": lambda v: v if not str(v).isdecimal() else float(v),
+                    "float": lambda v: v if not self.__is_float(str(v)) else float(v),
                     "empty": lambda v: {},
                     "emptylist": lambda v: [],
                     "bool": lambda v: v.lower() == "true",
