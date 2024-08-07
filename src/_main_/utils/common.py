@@ -153,7 +153,7 @@ def parse_string(s):
 
 def parse_int(b):
     if not str(b).isdigit():
-        raise ValueError("Input must be a digit")
+        return None
     try:
         return int(b)
     except Exception as e:

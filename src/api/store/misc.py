@@ -503,7 +503,7 @@ class MiscellaneousStore:
             
             return [
                 {"name": "PortalMainNavLinks", "content": portal_main_nav_links},
-                {"name": menu.footer_content.get("name", "PortalFooterQuickLinks"), "content": {"links": portal_footer_quick_links}},
+                {"name": menu.footer_content.get("name", "PortalFooterLinks"), "content": {"links": portal_footer_quick_links}},
                 menu.contact_info
             
             ], None
@@ -664,15 +664,4 @@ class MiscellaneousStore:
             
             return menu, None
         except Exception as e:
-            return None, CustomMassenergizeError(str(e))
-        
-        
-        
-    def list_all_languages(self, context, args) -> (dict, Exception):
-        """ Get all the languages """
-        try:
-            all_languages = load_json("database/raw_data/other/languages.json")
-            return all_languages, None
-        except Exception as e:
-            log.exception(e)
             return None, CustomMassenergizeError(str(e))
