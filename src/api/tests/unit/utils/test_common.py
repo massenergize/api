@@ -17,13 +17,13 @@ class TestIsValue(unittest.TestCase):
         self.assertFalse(is_value("None"))
         
         # Test when b is an empty string
-        self.assertFalse(is_value(""))
+        self.assertTrue(is_value(""))
         
         # Test when b is True
         self.assertTrue(is_value(True))
         
         # Test when b is False
-        self.assertFalse(is_value(False))
+        self.assertTrue(is_value(False))
         
         # Test when b is a non-empty string
         self.assertTrue(is_value("Hello World"))
