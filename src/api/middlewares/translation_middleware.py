@@ -27,14 +27,14 @@ class TranslationMiddleware:
 			original_content = response.content.decode('utf-8')
 			response_to_dict = json.loads(original_content)
 			
-			language = request.POST.get('language', 'en')
+			target_destination_language = request.POST.get('__user_language', 'en')
 			
-			if language == 'en':  #TODO remove this when we start supporting data upload in other languages
+			if target_destination_language == 'en':  #TODO remove this when we start supporting data upload in other languages
 				return response
 			
 			translator = JsonTranslator(dict_to_translate=response_to_dict, exclude_cached=True)
 			
-			translated_dict, _, __ = translator.translate('en', language)
+			translated_dict, _, __ = translator.translate('en', target_destination_language)
 			
 			response.content = json.dumps(translated_dict).encode('utf-8')
 		
