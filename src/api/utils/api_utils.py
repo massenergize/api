@@ -5,7 +5,7 @@ from math import atan2, cos, radians, sin, sqrt
 from _main_.utils.utils import load_json
 from database.models import AboutUsPageSettings, ActionsPageSettings, Community, CommunityAdminGroup, \
     ContactUsPageSettings, DonatePageSettings, EventsPageSettings, ImpactPageSettings, Media, Menu, \
-    TeamsPageSettings, TestimonialsPageSettings, UserProfile, \
+    TeamsPageSettings, TestimonialsPageSettings, TranslationsCache, UserProfile, \
     VendorsPageSettings
 import pyshorteners
 
@@ -315,3 +315,8 @@ def get_list_of_internal_links(is_footer=False):
     except Exception as e:
         print(f"Error: {str(e)}")
         return None, str(e)
+
+
+def get_translation_from_cache(text_hash, target_language):
+    translation = TranslationsCache.objects.filter(hash__hash=text_hash, target_language_code=target_language).first()
+    return translation.translated_text if translation else None

@@ -1,13 +1,14 @@
 import unittest
 from unittest.mock import patch, Mock
 from database.models import Role, SupportedLanguage
+from django.test import TestCase
 from task_queue.database_tasks.translate_db_content import TranslateDBContents
 
 
-class TestTranslateDBContents(unittest.TestCase):
+class TestTranslateDBContents(TestCase):
 	def setUp(self):
 		self.translate_db_contents = TranslateDBContents()
-		SupportedLanguage.objects.get_or_create(code='es', name='Spanish Spain')
+		SupportedLanguage.objects.get_or_create(code='es-ES', name='Spanish Spain')
 	
 	@patch('task_queue.database_tasks.translate_db_content.apps')
 	@patch('task_queue.database_tasks.translate_db_content.JsonTranslator')

@@ -4,9 +4,10 @@ from _main_.utils.massenergize_logger import log
 from _main_.utils.translation.translator import Translator, MAX_TEXT_SIZE, MAGIC_TEXT
 from _main_.utils.utils import make_hash
 from database.models import TranslationsCache
+import json_flatten
 
 JSON_EXCLUDE_KEYS = {
-    'id', 'pk', 'file', 'media', 'date'
+    'id', 'pk', 'file', 'media', 'date', 'link', 'url'
 }
 
 JSON_EXCLUDE_VALUES = {
@@ -18,7 +19,7 @@ JSON_EXCLUDE_VALUES = {
     "null",
     "false",
     "true",
-    ""
+    "",
     # let's add some common JSON string values that should not be translated
 }
 
@@ -41,36 +42,26 @@ class JsonTranslator(Translator):
         self.translations_cache = TranslationsCache()
         self.cached_translations = None
         self._flattened, self._excluded = self.flatten_json_for_translation(self.dict_to_translate)
-
+    
     def flatten_json_for_translation(self, json_to_translate: Union[dict, list]):
         assert (json_to_translate is not None) and (
-                isinstance(json_to_translate, dict) or isinstance(json_to_translate, list))
-
-        stack = [((), json_to_translate)]
-
+            isinstance(json_to_translate, dict) or isinstance(json_to_translate, list))
+        
         flattened_dict_for_keys_to_include = {}
         flattened_dict_for_keys_to_exclude = {}
-
-        while stack:
-            parent_key, current = stack.pop()
-            if isinstance(current, dict):
-                for k, v in current.items():
-                    new_key = (parent_key + (k,)) if parent_key else (k,)
-                    stack.append((new_key, v))
-            elif isinstance(current, list):
-                for i, item in enumerate(current):
-                    nested_new_key = parent_key + (f"[{i}]",)
-                    stack.append((nested_new_key, item))
+        
+        flattened = json_flatten.flatten(json_to_translate)
+        
+        for k, v in flattened.items():
+            real_key = k.split(".")[-1].split("$")[0]
+            if self._should_exclude(real_key, v):
+                flattened_dict_for_keys_to_exclude[k] = v
             else:
-                flattened_key = self.sep.join(parent_key)
-                if self._should_exclude(parent_key[-1], current):
-                    flattened_dict_for_keys_to_exclude[flattened_key] = current
-                else:
-                    flattened_dict_for_keys_to_include[flattened_key] = current
-
+                flattened_dict_for_keys_to_include[k] = v
+        
         return flattened_dict_for_keys_to_include, flattened_dict_for_keys_to_exclude
 
-    def _is_excluded_pattern(self, value:str):
+    def _is_excluded_pattern(self, value: str):
         return any(pattern.fullmatch(value) for pattern in EXCLUDED_JSON_VALUE_PATTERNS)
 
     def _should_exclude(self, key, _value):
@@ -93,38 +84,15 @@ class JsonTranslator(Translator):
 
         # Default: include the key-value pair
         return False
-
-
+    
     def unflatten_dict(self, flattened: dict):
         all_flattened = flattened
 
         # now add the keys that got removed during initialization because of the exclusion set
         all_flattened.update(self._excluded)
 
-        nested_dict = {}
-        for flat_key, value in all_flattened.items():
-            keys = self._parse_key(flat_key)
-            current = nested_dict
-            for i, key in enumerate(keys):
-                if i == len(keys) - 1:
-                    current[key] = value
-                else:
-                    next_key = keys[i + 1]
-                    if isinstance(next_key, int):
-                        if key not in current:
-                            current[key] = []
-                        current[key] = self._ensure_list_size(current[key], next_key + 1)
-                        current = current[key]
-                    else:
-                        if key not in current:
-                            current[key] = {}
-                        current = current[key]
-
-        if nested_dict and all(isinstance(k, int) for k in nested_dict.keys()):
-            nested_list = [nested_dict[k] for k in sorted(nested_dict.keys())]
-            return nested_list
-
-        return nested_dict
+        assert all_flattened is not None
+        return json_flatten.unflatten(all_flattened)
 
     def _parse_key(self, key: str):
         parts = key.split(self.sep)
@@ -140,7 +108,6 @@ class JsonTranslator(Translator):
         if len(lst) < size:
             lst.extend([padding] * (size - len(lst)))
         return lst
-
 
     def get_flattened_dict(self):
         return self._flattened
@@ -187,8 +154,7 @@ class JsonTranslator(Translator):
             log.error("Error getting cached translations", exception = e)
             return None
 
-
-    def translate (self, source_language: str, destination_language: str) -> Tuple[dict, List[str], List[dict]]:
+    def translate(self, source_language: str, destination_language: str) -> Tuple[dict, List[str], List[dict]]:
         """
         Translate the flattened dictionary values from source_language to destination_language.
 
@@ -200,7 +166,7 @@ class JsonTranslator(Translator):
             self.cached_translations = self.get_cached_translations(destination_language)
             self._flattened, self._excluded = self.flatten_json_for_translation(self.dict_to_translate)
 
-
+        
         keys = [] # Flattened dictionary keys and values
         untranslated_text_entries = [] # texts to be translated
         hashes = []
@@ -230,6 +196,8 @@ class JsonTranslator(Translator):
         # Reconstruct the translated JSON
         translated_json = {keys[i]: translated_text_entries[i] for i in range(len(keys))}
         translated_json.update(self._excluded)
+        
+        #TODO: save to cache
 
         return self.unflatten_dict(translated_json), translated_text_entries, untranslated_text_entries
 
@@ -318,6 +286,8 @@ class JsonTranslator(Translator):
         batches = []
         current_batch = []
         length_of_current_batch = 0
+        MAX_BATCH_LENGTH = 128
+
 
         for text in text_list:
             if length_of_current_batch + len(text) > max_batch_size:
@@ -326,7 +296,13 @@ class JsonTranslator(Translator):
                 length_of_current_batch = len(text)
             else:
                 length_of_current_batch += len(text)
-                current_batch.append(text)
+
+                if len(current_batch) < MAX_BATCH_LENGTH:
+                    current_batch.append(text)
+                else:
+                    batches.append(current_batch)
+                    current_batch = [text]
+                    length_of_current_batch = len(text)
 
         if current_batch:
             batches.append(current_batch)

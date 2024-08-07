@@ -77,6 +77,7 @@ def get_request_contents(request, **kwargs):
         if filter_out:
             for key in filter_out:
                 args.pop(key, None)
+                
         return args
 
     except Exception as e:
@@ -375,3 +376,4 @@ def to_django_date(date):
         return None
     parsed_date = datetime.datetime.strptime(date, "%a %b %d %Y %H:%M:%S GMT%z")
     return parsed_date.date()
+
