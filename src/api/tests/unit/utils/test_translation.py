@@ -37,7 +37,7 @@ class TestJsonTranslator(unittest.TestCase):
             (
                 {"id": 1, "name": "John", "details": {"pk": 1001, "age": "30"}},
                 {"name": "John", "details.age": "30"},
-                {"id": 1, "details.pk": 1001},
+                {"id$int": "1", "details.pk$int": "1001"},
             ),
             # Complex nested dictionary
             (
@@ -46,18 +46,18 @@ class TestJsonTranslator(unittest.TestCase):
                 {},
             ),
             # Empty dictionary
-            ({}, {}, {}),
+            ({}, {'$empty': '{}'}, {}),
             # Dictionary with a key having None value
-            ({"k": None}, {}, {"k": None}),
+            ({"k": None}, {}, {"k$none": 'None'}),
             # Nested dictionary with a key having None value
-            ({"k": {"sk": None}}, {}, {"k.sk": None}),
+            ({"k": {"sk": None}}, {}, {"k.sk$none": 'None'}),
             # Nested dictionary with mixed types (None and string)
             (
                 {"k": {"sk1": {"ssk1": 1.234}, "sk2": "v"}},
                 {"k.sk2": "v"},
-                {"k.sk1.ssk1": 1.234},
+                {"k.sk1.ssk1$float": '1.234'},
             ),
-            (self.nested_dict, self.flat_dict, {"a.b.id": 999, "pk": 123, "g": True}),
+            (self.nested_dict, self.flat_dict, {"a.b.id$int": '999', "pk$int": '123', "g$bool": 'True'}),
             # with sub lists
             (
                 {"a": "1", "b": [{"b0": "b0a"}, {"b1": "b1a"}, {"b2": [{"k": "0"}]}]},
@@ -65,8 +65,11 @@ class TestJsonTranslator(unittest.TestCase):
                 {},
             ),
             # list jsons
-            ([], {}, {}),
-            ([{"k1": "v1"}, {"k2": "v2"}], {"[0].k1": "v1", "[1].k2": "v2"}, {}),
+            (
+                [{"k1": "v1"}, {"k2": "v2"}],
+                {"[0].k1": "v1", "[1].k2": "v2"},
+                {},
+            ),
         ]
 
         for (d, expected_flattend, expected_excluded_flattened) in flatten_test_cases:

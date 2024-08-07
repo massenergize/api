@@ -33,7 +33,7 @@ class JSONFlattener:
         return rows
     
     def flatten(self, obj):
-        if not isinstance(obj, dict):
+        if not isinstance(obj, dict) and not isinstance(obj, list):
             raise TypeError("Expected dict, got {}".format(type(obj)))
         return dict(self._object_to_rows(obj))
     
@@ -51,8 +51,8 @@ class JSONFlattener:
             if self._types_re.match(lastkey):
                 lastkey, lasttype = lastkey.rsplit("$", 2)
                 value = {
-                    "int": lambda v: v if isinstance(v, str) else int(v),
-                    "float": lambda v: v if isinstance(v, str) else float(v),
+                    "int": lambda v: v if not str(v).isdigit() else int(v),
+                    "float": lambda v: v if not str(v).isdecimal() else float(v),
                     "empty": lambda v: {},
                     "emptylist": lambda v: [],
                     "bool": lambda v: v.lower() == "true",
@@ -63,10 +63,15 @@ class JSONFlattener:
         # We handle foo.[0].one, foo.[1].two syntax in a second pass
         obj = self._replace_integer_keyed_dicts_with_lists(obj)
         
-        # Handle root units only, e.g. {'$empty': '{}'}
-        if list(obj.keys()) == [""]:
-            return list(obj.values())[0]
+        if isinstance(obj, dict):
+            # Handle root units only, e.g. {'$empty': '{}'}
+            if list(obj.keys()) == [""]:
+                return list(obj.values())[0]
+        # elif isinstance(obj, list):
+        
+        
         return obj
+       
     
     def _replace_integer_keyed_dicts_with_lists(self, obj):
         if isinstance(obj, dict):
