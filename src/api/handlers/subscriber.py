@@ -1,13 +1,11 @@
 """Handler file for all routes pertaining to subscribers"""
 
-from _main_.utils.route_handler import RouteHandler
-from _main_.utils.common import get_request_contents, parse_bool, parse_int, rename_field
-from api.services.subscriber import SubscriberService
-from _main_.utils.massenergize_response import MassenergizeResponse
-from types import FunctionType as function
+from _main_.utils.common import parse_bool, parse_int, rename_field
 from _main_.utils.context import Context
-from _main_.utils.validator import Validator
-from api.decorators import admins_only, super_admins_only, login_required
+from _main_.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.route_handler import RouteHandler
+from api.decorators import admins_only, super_admins_only
+from api.services.subscriber import SubscriberService
 
 
 class SubscriberHandler(RouteHandler):
