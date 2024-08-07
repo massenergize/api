@@ -78,8 +78,6 @@ def get_request_contents(request, **kwargs):
             for key in filter_out:
                 args.pop(key, None)
                 
-        if args.get("language"):
-            args.pop("language")
         return args
 
     except Exception as e:
