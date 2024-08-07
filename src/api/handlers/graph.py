@@ -163,7 +163,6 @@ class GraphHandler(RouteHandler):
     args.pop('organic_attained_number_of_actions', None)
     args.pop('organic_attained_carbon_footprint_reduction', None)
 
-    print("=====>", args)
     graph_info, err = self.service.update_graph(context, args)
     if err:
       return err
