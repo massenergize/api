@@ -27,9 +27,9 @@ class TranslationMiddleware:
 			original_content = response.content.decode('utf-8')
 			response_to_dict = json.loads(original_content)
 			
-			target_destination_language = request.POST.get('__user_language', 'en')
+			target_destination_language = request.POST.get('__user_language', 'en-US')
 			
-			if target_destination_language == 'en':  #TODO remove this when we start supporting data upload in other languages
+			if target_destination_language == 'en-US':  #TODO remove this when we start supporting data upload in other languages
 				return response
 			
 			translator = JsonTranslator(dict_to_translate=response_to_dict, exclude_cached=True)
