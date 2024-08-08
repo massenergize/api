@@ -1,3 +1,5 @@
+import json
+
 from _main_.utils.stage.gtranslate_helper import MockGoogleTranslateClient
 from _main_.utils.stage.secrets import get_s3_file
 from _main_.utils.stage.logging import *
@@ -6,7 +8,7 @@ from pathlib import Path  # python3 only
 import os, socket
 from google.cloud import translate_v2 as translate
 from google.oauth2 import service_account
-from _main_.utils.utils import load_json
+from _main_.utils.utils import load_json, write_json_to_file
 
 class MassEnergizeApiEnvConfig:
     def __init__(self):
@@ -100,8 +102,8 @@ class MassEnergizeApiEnvConfig:
             service_account_key = get_s3_file(google_translate_key_file_path)
             # let's write the key to a file in the src/.massenergize/creds directory
             key_file_path = f"{Path('.')}/.massenergize/creds/{filename}"
-            with open(key_file_path, 'w') as f:
-                f.write(service_account_key)
+
+            write_json_to_file(service_account_key, key_file_path)
             google_translate_key_file_path = key_file_path
 
         credentials = service_account.Credentials.from_service_account_file(
