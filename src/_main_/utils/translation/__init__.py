@@ -42,7 +42,8 @@ class JsonTranslator(Translator):
         self.translations_cache = TranslationsCache()
         self.cached_translations = None
         self._flattened, self._excluded = self.flatten_json_for_translation(self.dict_to_translate)
-    
+
+
     def flatten_json_for_translation(self, json_to_translate: Union[dict, list]):
         assert (json_to_translate is not None) and (
             isinstance(json_to_translate, dict) or isinstance(json_to_translate, list))
@@ -154,7 +155,8 @@ class JsonTranslator(Translator):
             log.error("Error getting cached translations", exception = e)
             return None
 
-    def translate(self, source_language: str, destination_language: str) -> Tuple[dict, List[str], List[dict]]:
+
+    def translate (self, source_language: str, destination_language: str) -> Tuple[dict, List[str], List[dict]]:
         """
         Translate the flattened dictionary values from source_language to destination_language.
 
@@ -166,7 +168,6 @@ class JsonTranslator(Translator):
             self.cached_translations = self.get_cached_translations(destination_language)
             self._flattened, self._excluded = self.flatten_json_for_translation(self.dict_to_translate)
 
-        
         keys = [] # Flattened dictionary keys and values
         untranslated_text_entries = [] # texts to be translated
         hashes = []
@@ -286,6 +287,7 @@ class JsonTranslator(Translator):
         batches = []
         current_batch = []
         length_of_current_batch = 0
+
         MAX_BATCH_LENGTH = 128
 
 
@@ -296,13 +298,7 @@ class JsonTranslator(Translator):
                 length_of_current_batch = len(text)
             else:
                 length_of_current_batch += len(text)
-
-                if len(current_batch) < MAX_BATCH_LENGTH:
-                    current_batch.append(text)
-                else:
-                    batches.append(current_batch)
-                    current_batch = [text]
-                    length_of_current_batch = len(text)
+                current_batch.append(text)
 
         if current_batch:
             batches.append(current_batch)
