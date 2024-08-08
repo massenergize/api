@@ -4240,7 +4240,7 @@ class CommunitySupportedLanguage(BaseModel):
         ordering = ("community", "language")
 
 
-class TranslationsCache(RootModel):
+class TranslationsCache(BaseModel):
     """
     A class used to represent the translations cache table
 
@@ -4252,8 +4252,7 @@ class TranslationsCache(RootModel):
     translated_text	: str
     last_translated	: DateTime
     """
-
-    hash = models.CharField(primary_key=True, max_length=SHORT_STR_LEN, unique=True)
+    hash = models.CharField(max_length=SHORT_STR_LEN)
     source_language_code = models.CharField(max_length=LANG_CODE_STR_LEN)
     target_language_code = models.CharField(max_length=LANG_CODE_STR_LEN)
     translated_text = models.TextField(max_length=LONG_STR_LEN)
