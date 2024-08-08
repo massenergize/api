@@ -269,9 +269,12 @@ def extract_location(args):
 #     return False
 
 def is_value(b):
-    if b and b not in ["undefined", "null", "None", ""]:
-        return True
-    return False
+    if isinstance(b, str) and b.lower() in {"undefined", "null", "none"}:
+        return False
+    if b is None:
+        return False
+
+    return True
 
 
 # def resize_image(img, options={}):
