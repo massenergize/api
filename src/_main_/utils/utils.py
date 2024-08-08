@@ -13,7 +13,6 @@ from django.forms import model_to_dict
 # we're not splitting these language codes because they are supported by third party API providers
 LANGUAGE_CODES_TO_NOT_SPLIT = { "en-GB", "zh-CN", "zh-TW", "mni-Mtei" }
 
-LANGUAGE_CODES_TO_NOT_SPLIT = {"en-GB", "zh-CN", "zh-TW", "mni-Mtei"}
 
 def load_json(path):
     """
@@ -165,17 +164,6 @@ def run_in_background(func):
         thread = threading.Thread(target=func, args=args, kwargs=kwargs)
         thread.start()
     return wrapper
-
-# This function is needed because some third-party APIs don't support the full language code
-def to_third_party_lang_code(language_code: str) -> str:
-    assert language_code is not None  and len(language_code) > 1
-
-    if language_code in LANGUAGE_CODES_TO_NOT_SPLIT:
-        return language_code
-
-    codes = language_code.split("-")
-    return codes[0] if len(codes) > 1 else language_code
-
 
 # This function is needed because some third-party APIs don't support the full language code
 def to_third_party_lang_code(language_code: str) -> str:

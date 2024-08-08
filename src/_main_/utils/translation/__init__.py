@@ -168,6 +168,7 @@ class JsonTranslator(Translator):
             self.cached_translations = self.get_cached_translations(destination_language)
             self._flattened, self._excluded = self.flatten_json_for_translation(self.dict_to_translate)
 
+
         keys = [] # Flattened dictionary keys and values
         untranslated_text_entries = [] # texts to be translated
         hashes = []
