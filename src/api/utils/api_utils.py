@@ -5,7 +5,7 @@ from math import atan2, cos, radians, sin, sqrt
 from _main_.utils.utils import load_json
 from database.models import AboutUsPageSettings, ActionsPageSettings, Community, CommunityAdminGroup, \
     ContactUsPageSettings, DonatePageSettings, EventsPageSettings, ImpactPageSettings, Media, Menu, \
-    TeamsPageSettings, TestimonialsPageSettings, UserProfile, \
+    TeamsPageSettings, TestimonialsPageSettings, TranslationsCache, UserProfile, \
     VendorsPageSettings
 import pyshorteners
 
@@ -267,7 +267,8 @@ def prepare_menu_items_for_portal(content, prefix):
             
         return prepared_menu_items
 
-def remove_unpublished_items(content):
+
+def remove_unpublished_menu_items(content, links_to_hide=[]):
     if not content:
         return None
 
@@ -275,12 +276,12 @@ def remove_unpublished_items(content):
     
     for item in content:
         if not item.get("children"):
-            if item.get("is_published"):
+            if item.get("is_published") and item.get("link") not in links_to_hide:
                 published_items.append(item)
         else:
             if not item.get("is_published"):
                 continue
-            item["children"] = remove_unpublished_items(item["children"])
+            item["children"] = remove_unpublished_menu_items(item["children"], links_to_hide)
             if item["children"]:
                 published_items.append(item)
             
@@ -314,3 +315,8 @@ def get_list_of_internal_links(is_footer=False):
     except Exception as e:
         print(f"Error: {str(e)}")
         return None, str(e)
+
+
+def get_translation_from_cache(text_hash, target_language):
+    translation = TranslationsCache.objects.filter(hash__hash=text_hash, target_language_code=target_language).first()
+    return translation.translated_text if translation else None
