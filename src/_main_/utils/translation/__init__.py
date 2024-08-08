@@ -43,7 +43,8 @@ class JsonTranslator(Translator):
         self.translations_cache = TranslationsCache()
         self.cached_translations = None
         self._flattened, self._excluded = self.flatten_json_for_translation(self.dict_to_translate)
-    
+
+
     def flatten_json_for_translation(self, json_to_translate: Union[dict, list]):
         assert (json_to_translate is not None) and (
             isinstance(json_to_translate, dict) or isinstance(json_to_translate, list))
@@ -112,6 +113,7 @@ class JsonTranslator(Translator):
 
     def get_flattened_dict_for_excluded_keys(self):
         return self._excluded
+      
         
     @run_in_background
     def cache_translations(sef, raw_texts, translated_text_list, target_language, source_language):
@@ -139,7 +141,8 @@ class JsonTranslator(Translator):
         except Exception as e:
             log.exception(e)
             return False
-    
+          
+          
     def separate_translated_and_untranslated(self, target_language: str, source_language: str):
         flattened_translated_dict = {}
         flattened_untranslated_dict = {}
@@ -158,8 +161,9 @@ class JsonTranslator(Translator):
                 flattened_untranslated_dict[key] = value
         
         return flattened_translated_dict, flattened_untranslated_dict
-    
-    def translate(self, source_language: str, destination_language: str) -> Tuple[dict, List[str], List[dict]]:
+
+
+    def translate (self, source_language: str, destination_language: str) -> Tuple[dict, List[str], List[dict]]:
         """
         Translate the flattened dictionary values from source_language to destination_language.
 
@@ -280,6 +284,7 @@ class JsonTranslator(Translator):
         batches = []
         current_batch = []
         length_of_current_batch = 0
+
         MAX_BATCH_LENGTH = 128
 
 
@@ -290,13 +295,7 @@ class JsonTranslator(Translator):
                 length_of_current_batch = len(text)
             else:
                 length_of_current_batch += len(text)
-
-                if len(current_batch) < MAX_BATCH_LENGTH:
-                    current_batch.append(text)
-                else:
-                    batches.append(current_batch)
-                    current_batch = [text]
-                    length_of_current_batch = len(text)
+                current_batch.append(text)
 
         if current_batch:
             batches.append(current_batch)

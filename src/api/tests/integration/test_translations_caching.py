@@ -58,7 +58,8 @@ class TranslationsCacheServiceTest(unittest.TestCase):
     def test_get_translation (self):
         Console.header("Testing: get_translation")
         self.mock_service.store.get_translation.return_value = (self.test_translation, None)
- 
+
+
         result_translation, err = self.mock_service.get_translation(self.test_args)
         self.assertEqual(result_translation, self.test_translation)
 

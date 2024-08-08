@@ -6,7 +6,7 @@ from pathlib import Path  # python3 only
 import os, socket
 from google.cloud import translate_v2 as translate
 from google.oauth2 import service_account
-from _main_.utils.utils import load_json
+from _main_.utils.utils import load_json, write_json_to_file
 
 class MassEnergizeApiEnvConfig:
     def __init__(self):
@@ -85,20 +85,26 @@ class MassEnergizeApiEnvConfig:
         filename = os.getenv('GOOGLE_TRANSLATE_KEY_FILE_NAME')
         if not path or not filename:
             return None
-        return f"{path}/{filename}"
+        return f"{path}/{filename}", filename
 
     def set_up_google_translate_client(self):
         if self.is_test():
             return MockGoogleTranslateClient()
 
-        google_translate_key_file = self.get_google_translate_key_file()
-
-        if not google_translate_key_file:
+        google_translate_key_file_path, filename = self.get_google_translate_key_file()
+        if not google_translate_key_file_path:
             raise Exception("GOOGLE_TRANSLATE_KEY_FILE not found in environment variables")
 
+        if not self.is_test() and not self.is_local():
+            service_account_key = get_s3_file(google_translate_key_file_path)
+            # let's write the key to a file in the src/.massenergize/creds directory
+            key_file_path = f"{Path('.')}/.massenergize/creds/{filename}"
+
+            write_json_to_file(service_account_key, key_file_path)
+            google_translate_key_file_path = key_file_path
 
         credentials = service_account.Credentials.from_service_account_file(
-            filename=google_translate_key_file)
+            filename=google_translate_key_file_path)
 
         # scopes = ['https://www.googleapis.com/auth/cloud-platform']
         return  translate.Client(credentials=credentials)
