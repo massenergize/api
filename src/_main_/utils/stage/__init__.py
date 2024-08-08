@@ -6,7 +6,7 @@ from pathlib import Path  # python3 only
 import os, socket
 from google.cloud import translate_v2 as translate
 from google.oauth2 import service_account
-from _main_.utils.utils import load_json
+from _main_.utils.utils import load_json, write_json_to_file
 
 class MassEnergizeApiEnvConfig:
     def __init__(self):
@@ -96,7 +96,7 @@ class MassEnergizeApiEnvConfig:
             raise Exception("GOOGLE_TRANSLATE_KEY_FILE not found in environment variables")
 
         if not self.is_test() and not self.is_local():
-            # let's donwload the service account key file from s3
+            # let's download the service account key file from s3
             service_account_key = get_s3_file(google_translate_key_file_path)
             # let's write the key to a file in the src/.massenergize/creds directory
             key_file_path = f"{Path('.')}/.massenergize/creds/{filename}"
