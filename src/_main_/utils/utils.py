@@ -23,6 +23,9 @@ def load_json(path):
         return json.load(file)
     return {}
 
+def write_json_to_file(data, file_path, indent=2):
+    with open(file_path, 'w') as f:
+        json.dump(data, f, indent=indent)
 
 def load_text_contents(path) -> str:
     data = {}
