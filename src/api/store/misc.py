@@ -502,7 +502,7 @@ class MiscellaneousStore:
             
             return [
                 {"name": "PortalMainNavLinks", "content": portal_main_nav_links},
-                {"name": menu.footer_content.get("name", "Quick Links"), "content": {"links": portal_footer_quick_links}},
+                {"name": menu.footer_content.get("name", "PortalFooterLinks"), "content": {"links": portal_footer_quick_links}},
                 menu.contact_info
             
             ], None

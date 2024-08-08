@@ -149,12 +149,12 @@ class GraphHandler(RouteHandler):
 
     # 9/29/21 moved from home_page_settings route
     args['goal'] = {
-      'initial_number_of_actions': parse_int(args.pop('initial_number_of_actions', 0)),
-      'target_number_of_actions': parse_int(args.pop('target_number_of_actions', 0)),
-      'initial_number_of_households': parse_int(args.pop('initial_number_of_households', 0)),
-      'target_number_of_households': parse_int(args.pop('target_number_of_households', 0)),
-      'initial_carbon_footprint_reduction': parse_int(args.pop('initial_carbon_footprint_reduction', 0)),
-      'target_carbon_footprint_reduction': parse_int(args.pop('target_carbon_footprint_reduction', 0))
+      'initial_number_of_actions': parse_int(args.pop('initial_number_of_actions', 0)) or 0,
+      'target_number_of_actions': parse_int(args.pop('target_number_of_actions', 0)) or 0,
+      'initial_number_of_households': parse_int(args.pop('initial_number_of_households', 0)) or 0,
+      'target_number_of_households': parse_int(args.pop('target_number_of_households', 0)) or 0,
+      'initial_carbon_footprint_reduction': parse_int(args.pop('initial_carbon_footprint_reduction', 0)) or 0,
+      'target_carbon_footprint_reduction': parse_int(args.pop('target_carbon_footprint_reduction', 0)) or 0,
     }
     args.pop('attained_number_of_households', None)
     args.pop('attained_number_of_actions', None)
@@ -163,6 +163,7 @@ class GraphHandler(RouteHandler):
     args.pop('organic_attained_number_of_actions', None)
     args.pop('organic_attained_carbon_footprint_reduction', None)
 
+    print("=====>", args)
     graph_info, err = self.service.update_graph(context, args)
     if err:
       return err
