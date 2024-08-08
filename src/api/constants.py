@@ -1,4 +1,4 @@
-from _main_.utils.feature_flag_keys import USER_EVENTS_NUDGES_FF
+from _main_.utils.feature_flag_keys import REWIRING_AMERICA_MENU_ITEM_FF, USER_EVENTS_NUDGES_FF
 
 USERS = "users"
 COMMUNITIES = 'communities'
@@ -40,3 +40,6 @@ CSV_FIELD_NAMES = [
 
 COMMUNITY_NOTIFICATION_TYPES = [USER_EVENTS_NUDGES_FF]
 
+MENU_CONTROL_FEATURE_FLAGS = {
+  '/rewiring-america': REWIRING_AMERICA_MENU_ITEM_FF,
+}
