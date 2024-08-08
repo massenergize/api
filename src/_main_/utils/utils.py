@@ -22,6 +22,9 @@ def load_json(path):
         return json.load(file)
     return {}
 
+def write_json_to_file(data, file_path, indent=2):
+    with open(file_path, 'w') as f:
+        json.dump(data, f, indent=indent)
 
 def load_text_contents(path) -> str:
     data = {}
@@ -175,21 +178,21 @@ def filter_active_records(model) -> list:
     """Return a list of active instances of a model."""
     if not model:
         return []
-    
+
     # Initialize query parameters
     query_params = {
         attr: True
         for attr in ["is_active", "is_published"]
         if hasattr(model, attr)
     }
-    
+
     # Add attributes that should be 'False' to the query parameters
     query_params.update({
         attr: False
         for attr in ["is_deleted", "is_archived"]
         if hasattr(model, attr)
     })
-    
+
     return model.objects.filter(**query_params)
 
 
