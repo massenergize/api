@@ -29,7 +29,6 @@ EXCLUDED_JSON_VALUE_PATTERNS = [
     re.compile("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"),     #  UUID_REGEX
     re.compile(r'\b(\d{4})-(0?[1-9]|1[0-2])-(0?[1-9]|[12]\d|3[01])T([01]\d|2[0-3]):([0-5]\d):([0-5]\d)\.(\d{3})Z\b'),                     #  DATE_REGEX
     re.compile("\d{4}-\d{2}-\d{2}"),                                                #  SHORT_DATE_REGEX
-    re.compile(r'\b\d+\b')
 ]
 
 
@@ -76,7 +75,10 @@ class JsonTranslator(Translator):
         # Check if value is not a string.  For eg. we want to exclude types like bool, int etc
         if not isinstance(_value, str):
             return True
-
+        
+        if _value.isdigit():
+            return True
+            
         # Check if value is in JSON_EXCLUDE_VALUES
         if _value in JSON_EXCLUDE_VALUES or self._is_excluded_pattern(_value):
             return True
