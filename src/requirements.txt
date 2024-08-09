@@ -16,7 +16,7 @@ jsons==1.2.0
 querystring-parser==1.2.4
 PyJWT==1.7.1
 python-dotenv==0.13.0
-sentry-sdk==1.44.1
+sentry-sdk==2.8.0
 zipcodes==1.1.2
 termcolor==1.1.0
 django-hosts==6.0
