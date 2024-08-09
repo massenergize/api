@@ -2,12 +2,12 @@ import re
 from typing import Union, Tuple, List
 from _main_.utils.massenergize_logger import log
 from _main_.utils.translation.translator import Translator, MAX_TEXT_SIZE, MAGIC_TEXT
-from _main_.utils.utils import make_hash
+from _main_.utils.utils import make_hash, run_in_background
 from database.models import TranslationsCache
 import json_flatten
 
 JSON_EXCLUDE_KEYS = {
-    'id', 'pk', 'file', 'media', 'date', 'link', 'url'
+    'id', 'pk', 'file', 'media', 'date', 'link', 'url', 'icon', 'key', 'slug'
 }
 
 JSON_EXCLUDE_VALUES = {
@@ -27,8 +27,8 @@ EXCLUDED_JSON_VALUE_PATTERNS = [
     re.compile("[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+"),                   #  EMAIL_REGEX
     re.compile("(https?://)?\w+(\.\w+)+"),                                          #  URL_REGEX
     re.compile("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"),     #  UUID_REGEX
-    re.compile("'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z"),                     #  DATE_REGEX
-    re.compile("\d{4}-\d{2}-\d{2}")                                                 #  SHORT_DATE_REGEX
+    re.compile(r'\b(\d{4})-(0?[1-9]|1[0-2])-(0?[1-9]|[12]\d|3[01])T([01]\d|2[0-3]):([0-5]\d):([0-5]\d)\.(\d{3})Z\b'),                     #  DATE_REGEX
+    re.compile("\d{4}-\d{2}-\d{2}"),                                                #  SHORT_DATE_REGEX
 ]
 
 
@@ -75,12 +75,12 @@ class JsonTranslator(Translator):
         # Check if value is not a string.  For eg. we want to exclude types like bool, int etc
         if not isinstance(_value, str):
             return True
-
+        
+        if _value.isdigit():
+            return True
+            
         # Check if value is in JSON_EXCLUDE_VALUES
         if _value in JSON_EXCLUDE_VALUES or self._is_excluded_pattern(_value):
-            return True
-
-        if self._exclude_cached and self.translation_cached(_value):
             return True
 
         # Default: include the key-value pair
@@ -115,45 +115,54 @@ class JsonTranslator(Translator):
 
     def get_flattened_dict_for_excluded_keys(self):
         return self._excluded
-
-    def translation_cached(self, text: str):
+      
+        
+    @run_in_background
+    def cache_translations(sef, raw_texts, translated_text_list, target_language, source_language):
         try:
-            """
-            Check if a translation for the text in the target language is already cached.
+            for text, translated_text in zip(raw_texts, translated_text_list):
+                _hash = make_hash(text)
+                existing_translations = TranslationsCache.objects.filter(
+                    hash=_hash,
+                    target_language_code=target_language,
+                    source_language_code=source_language
+                )
+                if not existing_translations.exists():
+                    TranslationsCache.objects.create(
+                        hash=_hash,
+                        target_language_code=target_language,
+                        source_language_code=source_language,
+                        translated_text=translated_text
+                    )
+                else:
+                    for translation in existing_translations:
+                        translation.translated_text = translated_text
+                        translation.save()
             
-            Args:
-                text (str): Text to be translated.
-                target_language (str): Target language code.
-            
-            Returns:
-                bool: True if the translation is cached, False otherwise.
-            """
-            hash_value = make_hash(text)
-            translation = self.cached_translations.get(hash_value)
-
-            return translation is not None
+            return True
         except Exception as e:
-            log.error("Error checking if translation is cached", exception = e)
+            log.exception(e)
             return False
-
-    def get_cached_translations(self, target_language: str):
-        try:
-            """
-            Get all cached translation for the target language.
-            
-            Args:
-                target_language (str): Target language code.
-            
-            Returns:
-                str: The cached translation.
-            """
-            cached_translations = TranslationsCache.objects.filter(target_language_code = target_language)
-            cached_dict = {translation.hash: translation.translated_text for translation in cached_translations}
-            del cached_translations  # let's set this up for garbage collection
-            return cached_dict
-        except Exception as e:
-            log.error("Error getting cached translations", exception = e)
-            return None
+          
+          
+    def separate_translated_and_untranslated(self, target_language: str, source_language: str):
+        flattened_translated_dict = {}
+        flattened_untranslated_dict = {}
+        
+        flattened_values = list(self._flattened.values())
+        hashes = set(make_hash(value) for value in flattened_values)
+        
+        translations = TranslationsCache.objects.filter(target_language_code=target_language, hash__in=hashes, source_language_code=source_language)
+        
+        for key, value in self._flattened.items():
+            hash_key = make_hash(value)
+            translation = translations.filter(hash=hash_key).first()
+            if translation:
+                flattened_translated_dict[key] = translation.translated_text
+            else:
+                flattened_untranslated_dict[key] = value
+        
+        return flattened_translated_dict, flattened_untranslated_dict
 
 
     def translate (self, source_language: str, destination_language: str) -> Tuple[dict, List[str], List[dict]]:
@@ -163,26 +172,14 @@ class JsonTranslator(Translator):
         Returns:
             tuple: The translated dictionary in its original nested structure.
         """
-
-        if self._exclude_cached:
-            self.cached_translations = self.get_cached_translations(destination_language)
-            self._flattened, self._excluded = self.flatten_json_for_translation(self.dict_to_translate)
-
-
-        keys = [] # Flattened dictionary keys and values
-        untranslated_text_entries = [] # texts to be translated
-        hashes = []
+        
+        translated_flattened, untranslated_flattened = self.separate_translated_and_untranslated(destination_language, source_language)
+        untranslated_text_entries = list(untranslated_flattened.values())
+        keys = list(untranslated_flattened.keys())
 
         # TODO: We should parallelize this
         #  We can plit the list into chunks of maybe 10 and
         #  have the job of the translation done in several threads and the results combined.
-        for key, value in self._flattened.items():
-            if not value:
-                continue
-
-            keys.append(key)
-            hashes.append(make_hash(value))
-            untranslated_text_entries.append(value)
 
         # convert values to text batches
         text_batches = self.convert_to_text_batches(untranslated_text_entries, max_batch_size = self.MAX_TEXT_SIZE)
@@ -192,14 +189,15 @@ class JsonTranslator(Translator):
         translated_text_entries = self.flatten_text_batches(translated_batches)
 
         # Ensure the translation count matches the original count
-        assert len(untranslated_text_entries) == len(
-            translated_text_entries), "Mismatch between original and translated text entries"
+        assert len(untranslated_text_entries) == len(translated_text_entries), "Mismatch between original and translated text entries"
 
         # Reconstruct the translated JSON
         translated_json = {keys[i]: translated_text_entries[i] for i in range(len(keys))}
+        translated_json.update(translated_flattened)
         translated_json.update(self._excluded)
         
-        #TODO: save to cache
+        if len(untranslated_text_entries) > 0:
+            self.cache_translations(untranslated_text_entries, translated_text_entries, destination_language, source_language)
 
         return self.unflatten_dict(translated_json), translated_text_entries, untranslated_text_entries
 

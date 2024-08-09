@@ -10,11 +10,11 @@ class TestJsonTranslator(unittest.TestCase):
     def setUp(self):
         self.nested_dict = {
             "a": {"b": {"c": "1", "d": "2", "id": 999}, "e": "3"},
-            "f": "4",
+            "f": "bdk",
             "pk": 123,
             "g": True,
         }
-        self.flat_dict = {"a.b.c": "1", "a.b.d": "2", "a.e": "3", "f": "4"}
+        self.flat_dict = {"f": "bdk"}
         self.exclude_keys = {"id", "pk"}
         self.translation_provider = "google"
 
@@ -36,8 +36,8 @@ class TestJsonTranslator(unittest.TestCase):
             # Dictionary with excluded keys 'id' and 'pk'
             (
                 {"id": 1, "name": "John", "details": {"pk": 1001, "age": "30"}},
-                {"name": "John", "details.age": "30"},
-                {"id$int": '1', "details.pk$int": '1001'},
+                {"name": "John"},
+                {"id$int": '1', "details.pk$int": '1001',  "details.age": "30"},
             ),
             # Complex nested dictionary
             (
@@ -57,12 +57,12 @@ class TestJsonTranslator(unittest.TestCase):
                 {"k.sk2": "v"},
                 {"k.sk1.ssk1$float": '1.234'},
             ),
-            (self.nested_dict, self.flat_dict, {"a.b.id$int": '999', "pk$int": '123', "g$bool": 'True'}),
+            (self.nested_dict, self.flat_dict, {'a.b.c': '1', 'a.b.d': '2', 'a.b.id$int': '999','a.e': '3', 'g$bool': 'True', 'pk$int': '123'}),
             # with sub lists
             (
                 {"a": "1", "b": [{"b0": "b0a"}, {"b1": "b1a"}, {"b2": [{"k": "0"}]}]},
-                {"a": "1", "b.[0].b0": "b0a", "b.[1].b1": "b1a", "b.[2].b2.[0].k": "0"},
-                {},
+                {'b.[0].b0': 'b0a', 'b.[1].b1': 'b1a'},
+                {'a': '1', 'b.[2].b2.[0].k': '0'}
             ),
             # list jsons
             # (
