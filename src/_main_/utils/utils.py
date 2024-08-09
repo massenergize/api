@@ -3,13 +3,16 @@ import json, os
 import django.db.models.base as Base
 import inspect
 import threading
+import hashlib
+
 from django.db.models.fields.related import ManyToManyField, ForeignKey
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 from django.forms import model_to_dict
 
+# we're not splitting these language codes because they are supported by third party API providers
+LANGUAGE_CODES_TO_NOT_SPLIT = { "en-GB", "zh-CN", "zh-TW", "mni-Mtei" }
 
-LANGUAGE_CODES_TO_NOT_SPLIT = {"en-GB", "zh-CN", "zh-TW", "mni-Mtei"}
 
 def load_json(path):
     """
@@ -162,7 +165,6 @@ def run_in_background(func):
         thread.start()
     return wrapper
 
-
 # This function is needed because some third-party APIs don't support the full language code
 def to_third_party_lang_code(language_code: str) -> str:
     assert language_code is not None  and len(language_code) > 1
@@ -223,7 +225,6 @@ def create_list_of_all_records_to_translate(models):
 
 def split_list_into_sublists (list_to_split, max_sublist_size = 10):
     return [list_to_split[i:i + max_sublist_size] for i in range(0, len(list_to_split), max_sublist_size)]
-
 
 
 def make_hash (text: str):
