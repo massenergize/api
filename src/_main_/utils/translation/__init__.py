@@ -7,7 +7,7 @@ from database.models import TranslationsCache
 import json_flatten
 
 JSON_EXCLUDE_KEYS = {
-    'id', 'pk', 'file', 'media', 'date', 'link', 'url', 'icon', 'key', 'slug'
+    'id', 'pk', 'file', 'media', 'date', 'link', 'url', 'icon', 'key', 'slug',"created_at", "updated_at"
 }
 
 JSON_EXCLUDE_VALUES = {
@@ -28,6 +28,7 @@ EXCLUDED_JSON_VALUE_PATTERNS = [
     re.compile("(https?://)?\w+(\.\w+)+"),                                          #  URL_REGEX
     re.compile("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"),     #  UUID_REGEX
     re.compile(r'\b(\d{4})-(0?[1-9]|1[0-2])-(0?[1-9]|[12]\d|3[01])T([01]\d|2[0-3]):([0-5]\d):([0-5]\d)\.(\d{3})Z\b'),                     #  DATE_REGEX
+    re.compile(r'\b(\d{4})-(0?[1-9]|1[0-2])-(0?[1-9]|[12]\d|3[01])T([01]\d|2[0-3]):([0-5]\d):([0-5]\d)Z\b'),                     #  DATE_REGEX
     re.compile("\d{4}-\d{2}-\d{2}"),                                                #  SHORT_DATE_REGEX
 ]
 
