@@ -4292,7 +4292,7 @@ class CampaignSupportedLanguage(BaseModel):
     is_active = models.BooleanField(default=True, blank=True)
     
     def __str__(self):
-        return f"{self.campaign.name} - {self.language.name}"
+        return f"{self.campaign.title} - {self.language.name}"
     
     def simple_json(self):
         return {"id": str(self.id), "is_active": self.is_active, "campaign": str(self.id), "code": self.language.code, "name": self.language.name}
