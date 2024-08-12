@@ -696,7 +696,7 @@ class CampaignTechnologyEvent(BaseModel):
                 "end_date": self.event.end_date_and_time,
                 "description": self.event.description,
                 "image": get_json_if_not_none(self.event.image),
-                "event_type": self.event.event_type if self.event.event_type else "Online" if not self.event.location else "In person",
+                "event_type": self.event.event_type if self.event.event_type else "Online" if not self.event.location else "In-Person",
         }
         }
         return res
