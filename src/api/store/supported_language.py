@@ -77,7 +77,7 @@ class SupportedLanguageStore:
             log.exception(e)
             return None, CustomMassenergizeError(str(e))
         
-    def manage_campaign_supported_language(self, context,  args):
+    def update_campaign_supported_language(self, context,  args):
         try:
             campaign_id = args.get('campaign_id', None)
             supported_languages_dict = args.get('supported_languages', None)

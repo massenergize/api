@@ -22,7 +22,7 @@ class SupportedLanguageHandler(RouteHandler):
         self.add("/supported_languages.add", self.create)
         self.add("/supported_languages.list", self.list)
         
-        self.add("/campaigns.supported_languages.manage", self.manage_campaign_supported_language)
+        self.add("/campaigns.supported_languages.update", self.update_campaign_supported_language)
         self.add("/campaigns.supported_languages.list", self.list_campaign_supported_languages)
         
         
@@ -69,7 +69,7 @@ class SupportedLanguageHandler(RouteHandler):
         return err if err else MassenergizeResponse(data=supported_languages)
     
     
-    def manage_campaign_supported_language(self, request):
+    def update_campaign_supported_language(self, request):
         context: Context = request.context
         args = context.args
 
@@ -83,7 +83,7 @@ class SupportedLanguageHandler(RouteHandler):
             if err:
                 return err
             
-            supported_language, err = self.service.manage_campaign_supported_language(context, args)
+            supported_language, err = self.service.update_campaign_supported_language(context, args)
             if err:
                 return err
             
