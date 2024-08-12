@@ -23,7 +23,6 @@ class SupportedLanguageHandler(RouteHandler):
         self.add("/supported_languages.list", self.list)
         
         self.add("/campaigns.supported_languages.update", self.update_campaign_supported_language)
-        
         self.add("/campaigns.supported_languages.list", self.list_campaign_supported_languages)
         
         
@@ -79,6 +78,7 @@ class SupportedLanguageHandler(RouteHandler):
              .expect("campaign_id", str, is_required=True)
              .expect("supported_languages", dict, is_required=True)
              )
+            
             args, err = self.validator.verify(args)
             
             if err:
