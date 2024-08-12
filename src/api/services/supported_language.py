@@ -69,3 +69,28 @@ class SupportedLanguageService:
     def enable_supported_language (self, context, language_code) -> Tuple[ SupportedLanguage, any ]:
         language, err = self.store.enable_supported_language(context, language_code)
         return None if err else serialize(language), err
+    
+    def manage_campaign_supported_language(self, context,  args):
+        try:
+            supported_language, err = self.store.manage_campaign_supported_language(context, args)
+            
+            if err:
+                return None, err
+            
+            return serialize_all(supported_language), err
+        
+        except Exception as e:
+            return None, e
+        
+    def list_campaign_supported_languages(self, context, args):
+        try:
+            supported_languages, err = self.store.list_campaign_supported_languages(context, args)
+            
+            if err:
+                return None, err
+            
+            return serialize_all(supported_languages), err
+        
+        except Exception as e:
+            return None, e
+        
