@@ -4,7 +4,7 @@ from _main_.utils.massenergize_errors import CustomMassenergizeError
 from _main_.utils.activity_logger import log
 from typing import Tuple
 from django.db import IntegrityError
-from _main_.utils.constants import INVALID_LANGUAGE_CODE_ERR_MSG
+from _main_.utils.constants import DEFAULT_SOURCE_LANGUAGE_CODE, INVALID_LANGUAGE_CODE_ERR_MSG
 
 
 class SupportedLanguageStore:
@@ -87,9 +87,11 @@ class SupportedLanguageStore:
                 
             campaign = Campaign.objects.get(pk=campaign_id)
             
-            if not supported_languages_dict or not isinstance(supported_languages_dict, dict):
-                campaign_supported_languages = campaign.supported_languages.all()
-                return campaign_supported_languages, None
+            if not campaign:
+                return None, CustomMassenergizeError("Campaign not found")
+            
+            if not supported_languages_dict:
+                return None, CustomMassenergizeError("Please provide supported_languages")
             
             supported_languages_codes = list(supported_languages_dict.keys())
             
@@ -146,10 +148,28 @@ class SupportedLanguageStore:
             if not campaign:
                 return None, CustomMassenergizeError("Campaign not found")
             
+            campaign_supported_languages = campaign.supported_languages.all()
+            all_supported_languages = SupportedLanguage.objects.all()
             
-            supported_languages = campaign.supported_languages.all()
+            campaign_supported_languages_codes = [lang.language.code for lang in campaign_supported_languages]
+            all_supported_languages_codes = [lang.code for lang in all_supported_languages]
             
-            return supported_languages, None
+            supported_languages_codes = list(set(all_supported_languages_codes) - set(campaign_supported_languages_codes))
+            supported_languages = all_supported_languages.filter(code__in=supported_languages_codes)
+            
+            new_campaign_supported_languages = []
+            for lang in supported_languages:
+                new_campaign_supported_language = CampaignSupportedLanguage(
+                    campaign=campaign,
+                    language=lang,
+                    is_active=False if lang.code != DEFAULT_SOURCE_LANGUAGE_CODE else True
+                )
+                new_campaign_supported_languages.append(new_campaign_supported_language)
+            
+            if len(new_campaign_supported_languages) > 0:
+                CampaignSupportedLanguage.objects.bulk_create(new_campaign_supported_languages)
+                
+            return campaign.supported_languages.all(), None
             
         except Exception as e:
             log.exception(e)
