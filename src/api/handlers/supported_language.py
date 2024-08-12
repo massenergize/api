@@ -21,6 +21,11 @@ class SupportedLanguageHandler(RouteHandler):
         self.add("/supported_languages.create", self.create)
         self.add("/supported_languages.add", self.create)
         self.add("/supported_languages.list", self.list)
+        
+        self.add("/campaigns.supported_languages.manage", self.manage_campaign_supported_language)
+        self.add("/campaigns.supported_languages.list", self.list_campaign_supported_languages)
+        
+        
 
     def info(self, request):
         context: Context = request.context
@@ -62,4 +67,50 @@ class SupportedLanguageHandler(RouteHandler):
 
         supported_languages, err = self.service.list_supported_languages(context, args)
         return err if err else MassenergizeResponse(data=supported_languages)
+    
+    
+    def manage_campaign_supported_language(self, request):
+        context: Context = request.context
+        args = context.args
+
+        try:
+            (self.validator
+             .expect("campaign_id", str, is_required=True)
+             .expect("supported_languages", dict, is_required=False)
+             )
+            args, err = self.validator.verify(args)
+            
+            if err:
+                return err
+            
+            supported_language, err = self.service.manage_campaign_supported_language(context, args)
+            if err:
+                return err
+            
+            return MassenergizeResponse(data=supported_language)
+        
+        except Exception as e:
+            return MassenergizeResponse(error=str(e))
+        
+    def list_campaign_supported_languages(self, request):
+        context: Context = request.context
+        args = context.args
+
+        try:
+            (self.validator
+             .expect("campaign_id", str, is_required=True)
+             )
+            args, err = self.validator.verify(args)
+            
+            if err:
+                return err
+            
+            supported_languages, err = self.service.list_campaign_supported_languages(context, args)
+            if err:
+                return err
+            
+            return MassenergizeResponse(data=supported_languages)
+        
+        except Exception as e:
+            return MassenergizeResponse(error=str(e))
 
