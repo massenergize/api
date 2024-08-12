@@ -23,6 +23,7 @@ class SupportedLanguageHandler(RouteHandler):
         self.add("/supported_languages.list", self.list)
         
         self.add("/campaigns.supported_languages.update", self.update_campaign_supported_language)
+        
         self.add("/campaigns.supported_languages.list", self.list_campaign_supported_languages)
         
         
