@@ -76,7 +76,7 @@ class SupportedLanguageHandler(RouteHandler):
         try:
             (self.validator
              .expect("campaign_id", str, is_required=True)
-             .expect("supported_languages", dict, is_required=True)
+             .expect("supported_languages", dict, is_required=False)
              )
             args, err = self.validator.verify(args)
             

@@ -82,10 +82,14 @@ class SupportedLanguageStore:
             campaign_id = args.get('campaign_id', None)
             supported_languages_dict = args.get('supported_languages', None)
             
-            if not campaign_id or not supported_languages_dict:
-                return None, CustomMassenergizeError("Please provide a campaign_id and supported_languages")
+            if not campaign_id:
+                return None, CustomMassenergizeError("Please provide a campaign_id")
                 
             campaign = Campaign.objects.get(pk=campaign_id)
+            
+            if not supported_languages_dict or not isinstance(supported_languages_dict, dict):
+                campaign_supported_languages = campaign.supported_languages.all()
+                return campaign_supported_languages, None
             
             supported_languages_codes = list(supported_languages_dict.keys())
             
