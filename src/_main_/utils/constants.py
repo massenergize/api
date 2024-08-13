@@ -92,6 +92,9 @@ INSPIRATIONAL_MESSAGES = [
     "Your efforts matter. Let's save the planet together.",
     "Join the green revolution and make a difference."
 ]
+DJANGO_BULK_CREATE_LIMIT = 999 # set to 999 due to the bulk_creation of sqlite db
+DEFAULT_SOURCE_LANGUAGE_CODE = "en-US"
+INVALID_LANGUAGE_CODE_ERR_MSG = "Invalid language code"
 
 
 class AudienceType(Enum):
