@@ -39,3 +39,6 @@ better-profanity==0.7.0
 django-cid==2.3
 watchtower==3.1.0
 coverage==7.5.0
+google-auth-oauthlib==1.2.1
+google-cloud-translate==3.15.3
+json-flatten==0.3

@@ -77,6 +77,7 @@ def get_request_contents(request, **kwargs):
         if filter_out:
             for key in filter_out:
                 args.pop(key, None)
+                
         return args
 
     except Exception as e:
@@ -262,11 +263,12 @@ def extract_location(args):
 
 
 def is_value(b):
-    if b and b != "undefined" and b != "NONE":
-        return True
-    if b == "":  # an empty string is a string value
-        return True
-    return False
+    if isinstance(b, str) and b.lower() in {"undefined", "null", "none"}:
+        return False
+    if b is None:
+        return False
+
+    return True
 
 
 # def resize_image(img, options={}):
@@ -386,3 +388,4 @@ def item_is_empty(item):
     if isinstance(item, list) and len(item) == 0:
         return True
     return False
+

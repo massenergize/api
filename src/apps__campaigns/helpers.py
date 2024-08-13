@@ -111,6 +111,7 @@ def get_campaign_details_for_user(campaign, email):
     communities = CampaignCommunity.objects.filter(campaign__id=campaign.id, is_deleted=False)
     key_contact = CampaignManager.objects.filter(is_key_contact=True, is_deleted=False, campaign__id=campaign.id).first()
     campaign_views = CampaignTechnologyView.objects.filter(campaign_technology__campaign__id=campaign.id,is_deleted=False).first()
+    languages = campaign.supported_languages.filter(is_active=True)
 
     if email:
         my_testimonials = CampaignTechnologyTestimonial.objects.filter(
@@ -129,6 +130,7 @@ def get_campaign_details_for_user(campaign, email):
         "communities": serialize_all(communities),
         "campaign_views": campaign_views.count if campaign_views else 0,
         "navigation": generate_campaign_navigation(campaign),
+        "languages": serialize_all(languages),
     }
 
 
