@@ -70,7 +70,7 @@ class CustomMenuIntegrationTestCase(TestCase):
         signinAs(self.client, self.SADMIN)
         response = self.make_request("menus.create", {"community_id": "xyz"})
         self.assertFalse(response['success'])
-        self.assertEqual(response['error'], "Input must be a digit")
+        self.assertEqual(response['error'], "community_id or subdomain not provided")
     
     def test_create_custom_menu_no_payload(self):
         Console.header("Testing create custom menu:  with no payload")
@@ -107,7 +107,7 @@ class CustomMenuIntegrationTestCase(TestCase):
         response = self.make_request("menus.update", args)
         
         self.assertFalse(response['success'])
-        self.assertEqual(response['error'], 'Input must be a digit')
+        self.assertEqual(response['error'], 'id not provided')
         
     def test_super_admin_delete_custom_menu(self):
         Console.header("Testing delete custom menu: as super admin")
@@ -133,7 +133,7 @@ class CustomMenuIntegrationTestCase(TestCase):
         response = self.make_request("menus.delete", args)
         
         self.assertFalse(response['success'])
-        self.assertEqual(response['error'], 'Input must be a digit')
+        self.assertEqual(response['error'], 'Menu not found')
     
     def test_delete_menu_with_normal_user(self):
         Console.header("Testing delete custom menu: with normal user")
@@ -162,7 +162,7 @@ class CustomMenuIntegrationTestCase(TestCase):
         response = self.make_request("menus.get", args)
         
         self.assertFalse(response['success'])
-        self.assertEqual(response['error'], 'Input must be a digit')
+        self.assertEqual(response['error'], 'Menu not found')
         
     def test_get_menu_with_normal_user(self):
         Console.header("Testing get custom menu: with normal user")
@@ -242,7 +242,7 @@ class CustomMenuIntegrationTestCase(TestCase):
         response = self.make_request("menus.reset", args)
         
         self.assertFalse(response['success'])
-        self.assertEqual(response['error'], 'Input must be a digit')
+        self.assertEqual(response['error'], 'id not provided!!')
         
     def test_reset_menu_with_out_of_range_id(self):
         Console.header("Testing reset custom menu: with out of range id")
@@ -330,7 +330,7 @@ class CustomMenuIntegrationTestCase(TestCase):
         self.assertTrue(response['success'])
         self.assertIsInstance(response['data'], list)
         self.assertEqual(response.get("data")[0].get("name"), "PortalMainNavLinks")
-        self.assertEqual(response.get("data")[1].get("name"), "Quick Links")
+        self.assertEqual(response.get("data")[1].get("name"), "PortalFooterQuickLinks")
         
 
         

@@ -1,11 +1,11 @@
 from django.apps import apps
-from django.forms import model_to_dict
 from django.utils import timezone
+
 from _main_.utils.massenergize_logger import log
 from _main_.utils.metrics import timed
 from _main_.utils.translation import JsonTranslator
-from _main_.utils.utils import create_list_of_all_records_to_translate, filter_active_records
-from database.models import SupportedLanguage, TranslationsCache
+from _main_.utils.utils import create_list_of_all_records_to_translate, to_third_party_lang_code
+from database.models import SupportedLanguage
 
 SOURCE_LANGUAGE_CODE = 'en'
 
@@ -22,35 +22,25 @@ class TranslateDBContents:
 	
 	def __init__(self):
 		self.translator = JsonTranslator
-		self.supported_languages = SupportedLanguage.objects.values_list('code', flat=True)  #TODO: Use George's unitils to get supported codes
 	
-	@timed
-	def cache_translations(self, hashes, translated_text_list, language) -> bool:
+	def get_supported_languages(self):
 		try:
-			caches = []
-			for _hash, translated_text in zip(hashes, translated_text_list):
-				cache = TranslationsCache(
-					hash=_hash,
-					target_language_code=language,
-					source_language_code=SOURCE_LANGUAGE_CODE,
-					translated_text=translated_text
-				)
-				caches.append(cache)
-			TranslationsCache.objects.bulk_create(caches, batch_size=500)
-			return True
+			_supported_languages = SupportedLanguage.objects.values_list('code', flat=True)
+			return [to_third_party_lang_code(lang_code) for lang_code in _supported_languages]
 		except Exception as e:
 			log.exception(e)
-			return False
+			return []
 	
 	def load_db_contents_and_translate(self) -> bool:
 		try:
 			models = apps.get_models()
 			data = create_list_of_all_records_to_translate(models)
-			for lang in self.supported_languages:
-				log.info(f"Task: Translating DB contents to {lang}")
-				_json, translated_text_list, hashes = self.translator(data).translate("en", lang)
-				self.cache_translations(hashes, translated_text_list, lang)
 			
+			supported_languages = self.get_supported_languages()
+			for lang in supported_languages:
+				log.info(f"Task: Translating DB contents to {lang}")
+				self.translator({"data": data}).translate("en", lang)
+				
 			log.info("Task: Finished translating all DB contents")
 			return True
 		except Exception as e:

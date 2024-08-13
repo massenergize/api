@@ -2,21 +2,35 @@
 import unittest
 from datetime import datetime
 from unittest.mock import MagicMock, patch
+from _main_.utils.utils import Console
 from api.utils import filter_functions
 from database.models import Role
+from django.db import transaction
+from django.test.testcases import TestCase
 
-
-class FiltersFunctionTests(unittest.TestCase):
+class FiltersFunctionTests(TestCase):
 	
 	def setUp(self):
-		Role.objects.create(name=f"Test Admin-{datetime.now()}")
-		Role.objects.create(name=f"Test User- {datetime.now()}")
-		Role.objects.create(name=f"Test Super Admin - {datetime.now()}")
-		Role.objects.create(name=f"Test Moderator- {datetime.now()}")
-		Role.objects.create(name=f"Test Editor - {datetime.now()}")
-		
-		self.qs = Role.objects.all()
-		
+		Console.header("UNIT TEST:(FiltersFunctionTests)")
+
+	@classmethod
+	def tearDownClass(self):
+		super().tearDownClass() 
+
+	def _create_roles(self):
+		try:
+			with transaction.atomic():
+				Role.objects.bulk_create([
+					Role(name=f"Test Admin-{datetime.now()}"),
+					Role(name=f"Test User- {datetime.now()}"),
+					Role(name=f"Test Super Admin - {datetime.now()}"),
+					Role(name=f"Test Moderator- {datetime.now()}"),
+					Role(name=f"Test Editor - {datetime.now()}")
+				])
+		except Exception:
+			pass	
+
+
 	def test_get_sort_params_sort_name_asc(self):
 		params = {'sort_params': {'name': 'name', 'direction': 'asc'}}
 		result = filter_functions.get_sort_params(params)
@@ -47,7 +61,9 @@ class FiltersFunctionTests(unittest.TestCase):
 		"""
 		Test sort_items function with queryset as a list
 		"""
-		queryset = self.qs.order_by("-name")
+		self._create_roles()
+		qs = Role.objects.all()
+		queryset = qs.order_by("-name")
 		params = {'sort_params': {"direction":"asc", "name":"name"}}
 		result = filter_functions.sort_items(queryset, params)
 		self.assertEqual(result.first(), queryset.first(), "Result should be same as input queryset")
