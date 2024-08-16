@@ -32,8 +32,7 @@ EXCLUDED_JSON_VALUE_PATTERNS = [
     re.compile(r'\b(\d{4})-(0?[1-9]|1[0-2])-(0?[1-9]|[12]\d|3[01])T([01]\d|2[0-3]):([0-5]\d):([0-5]\d)\.(\d{3})Z\b'),                     #  DATE_REGEX
     re.compile(r'\b(\d{4})-(0?[1-9]|1[0-2])-(0?[1-9]|[12]\d|3[01])T([01]\d|2[0-3]):([0-5]\d):([0-5]\d)Z\b'),                     #  DATE_REGEX
     re.compile("\d{4}-\d{2}-\d{2}"),                                                #  SHORT_DATE_REGEX
-    re.compile(r"(\w+\sID\((\d+)\))|(\w+\sfrom ID\((\d+)\) to \((\d+)\))"),
-    re.compile(r".*\.community\.name"),
+    re.compile(r"(\w+\sID\((\d+)\))|(\w+\sfrom ID\((\d+)\) to \((\d+)\))")
 ]
 
 
@@ -48,7 +47,6 @@ class JsonTranslator(Translator):
         self.cached_translations = None
         self._flattened, self._excluded = self.flatten_json_for_translation(self.dict_to_translate)
 
-
     def flatten_json_for_translation(self, json_to_translate: Union[dict, list]):
         assert (json_to_translate is not None) and (
             isinstance(json_to_translate, dict) or isinstance(json_to_translate, list))
@@ -57,9 +55,6 @@ class JsonTranslator(Translator):
         flattened_dict_for_keys_to_exclude = {}
         
         flattened = json_flatten.flatten(json_to_translate)
-        
-        #  write to json file
-        open("flattened.json", "w").write(json.dumps(flattened, indent=2))
         
         for k, v in flattened.items():
             if self._should_exclude(k, v):
