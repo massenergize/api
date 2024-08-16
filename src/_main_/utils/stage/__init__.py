@@ -89,8 +89,9 @@ class MassEnergizeApiEnvConfig:
 
     def set_up_google_translate_client(self):
         if self.is_test():
-            return MockGoogleTranslateClient()
-
+            print(f"\033[90m Setting up Google Translate Client Test Mode\033[0m")
+        return MockGoogleTranslateClient()
+        
         google_translate_key_file_path, filename = self.get_google_translate_key_file()
         if not google_translate_key_file_path:
             raise Exception("GOOGLE_TRANSLATE_KEY_FILE not found in environment variables")
