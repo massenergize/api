@@ -2,6 +2,7 @@ import json
 from _main_.utils.translation import JsonTranslator
 from _main_.utils.utils import to_third_party_lang_code
 from api.middlewares.translation_exclusion_patterns import TRANSLATION_EXCLUSION_PATTERNS_PER_URL
+from api.utils.api_utils import get_supported_language
 
 
 class TranslationMiddleware:
@@ -34,8 +35,9 @@ class TranslationMiddleware:
 			
 			if target_destination_language == 'en-US':  #TODO remove this when we start supporting data upload in other languages
 				return response
-				
-			target_language_code = to_third_party_lang_code(target_destination_language)
+			
+			supported_language = get_supported_language(target_destination_language)
+			target_language_code = to_third_party_lang_code(supported_language)
 			
 			patterns_to_ignore = TRANSLATION_EXCLUSION_PATTERNS_PER_URL.get(request.path, [])
 			

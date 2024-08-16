@@ -5,11 +5,11 @@ from math import atan2, cos, radians, sin, sqrt
 from _main_.utils.utils import load_json
 from database.models import AboutUsPageSettings, ActionsPageSettings, Community, CommunityAdminGroup, \
     ContactUsPageSettings, DonatePageSettings, EventsPageSettings, ImpactPageSettings, Media, Menu, \
-    TeamsPageSettings, TestimonialsPageSettings, TranslationsCache, UserProfile, \
+    SupportedLanguage, TeamsPageSettings, TestimonialsPageSettings, TranslationsCache, UserProfile, \
     VendorsPageSettings
 import pyshorteners
 
-from _main_.utils.constants import COMMUNITY_URL_ROOT
+from _main_.utils.constants import COMMUNITY_URL_ROOT, DEFAULT_SOURCE_LANGUAGE_CODE
 
 
 def is_admin_of_community(context, community_id):
@@ -320,3 +320,10 @@ def get_list_of_internal_links(is_footer=False):
 def get_translation_from_cache(text_hash, target_language):
     translation = TranslationsCache.objects.filter(hash__hash=text_hash, target_language_code=target_language).first()
     return translation.translated_text if translation else None
+
+
+def get_supported_language(language_code):
+    supported_language = SupportedLanguage.objects.filter(code=language_code).first()
+    if supported_language:
+        return supported_language.code
+    return DEFAULT_SOURCE_LANGUAGE_CODE
