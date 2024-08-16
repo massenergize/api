@@ -1,7 +1,7 @@
 import json
 from _main_.utils.translation import JsonTranslator
 from _main_.utils.utils import to_third_party_lang_code
-from api.middlewares.translation_exclusion_patterns import TRANSLATION_EXCLUSION_PATTERNS
+from api.middlewares.translation_exclusion_patterns import TRANSLATION_EXCLUSION_PATTERNS_PER_URL
 
 
 class TranslationMiddleware:
@@ -37,7 +37,7 @@ class TranslationMiddleware:
 				
 			target_language_code = to_third_party_lang_code(target_destination_language)
 			
-			patterns_to_ignore = TRANSLATION_EXCLUSION_PATTERNS.get(request.path, [])
+			patterns_to_ignore = TRANSLATION_EXCLUSION_PATTERNS_PER_URL.get(request.path, [])
 			
 			translator = JsonTranslator(dict_to_translate=response_to_dict, excluded_key_patterns=patterns_to_ignore)
 			
