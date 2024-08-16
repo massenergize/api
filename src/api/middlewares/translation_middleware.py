@@ -1,4 +1,6 @@
 import json
+
+from _main_.utils.constants import DEFAULT_SOURCE_LANGUAGE_CODE
 from _main_.utils.translation import JsonTranslator
 from _main_.utils.utils import to_third_party_lang_code
 from api.middlewares.translation_exclusion_patterns import TRANSLATION_EXCLUSION_PATTERNS_PER_URL
@@ -37,6 +39,10 @@ class TranslationMiddleware:
 				return response
 			
 			supported_language = get_supported_language(destination_language)
+			
+			if supported_language == DEFAULT_SOURCE_LANGUAGE_CODE:
+				return response
+			
 			target_language_code = to_third_party_lang_code(supported_language)
 			
 			patterns_to_ignore = TRANSLATION_EXCLUSION_PATTERNS_PER_URL.get(request.path, [])
