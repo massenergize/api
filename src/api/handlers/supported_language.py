@@ -21,11 +21,11 @@ class SupportedLanguageHandler(RouteHandler):
         self.add("/supported_languages.create", self.create)
         self.add("/supported_languages.add", self.create)
         self.add("/supported_languages.list", self.list)
-        
         self.add("/campaigns.supported_languages.update", self.update_campaign_supported_language)
         self.add("/campaigns.supported_languages.list", self.list_campaign_supported_languages)
-        
-        
+
+        self.add("/community.supported_languages.list", self.list_community_supported_languages)
+        self.add("/community.supported_languages.update", self.update_community_supported_languages)
 
     def info(self, request):
         context: Context = request.context
@@ -67,8 +67,7 @@ class SupportedLanguageHandler(RouteHandler):
 
         supported_languages, err = self.service.list_supported_languages(context, args)
         return err if err else MassenergizeResponse(data=supported_languages)
-    
-    
+
     def update_campaign_supported_language(self, request):
         context: Context = request.context
         args = context.args
@@ -78,21 +77,21 @@ class SupportedLanguageHandler(RouteHandler):
              .expect("campaign_id", str, is_required=True)
              .expect("supported_languages", dict, is_required=True)
              )
-            
+
             args, err = self.validator.verify(args)
-            
+
             if err:
                 return err
-            
+
             supported_language, err = self.service.update_campaign_supported_language(context, args)
             if err:
                 return err
-            
+
             return MassenergizeResponse(data=supported_language)
-        
+
         except Exception as e:
             return MassenergizeResponse(error=str(e))
-        
+
     def list_campaign_supported_languages(self, request):
         context: Context = request.context
         args = context.args
@@ -102,16 +101,62 @@ class SupportedLanguageHandler(RouteHandler):
              .expect("campaign_id", str, is_required=True)
              )
             args, err = self.validator.verify(args)
-            
+
             if err:
                 return err
-            
+
             supported_languages, err = self.service.list_campaign_supported_languages(context, args)
             if err:
                 return err
-            
+
             return MassenergizeResponse(data=supported_languages)
-        
+
+        except Exception as e:
+            return MassenergizeResponse(error=str(e))
+
+    def list_community_supported_languages(self, request):
+        context: Context = request.context
+        args = context.args
+
+        try:
+            self.validator.expect("community_id", str, is_required=True)
+            args, err = self.validator.verify(args)
+
+            if err:
+                return MassenergizeResponse(error=str(err))
+
+            supported_languages, err = self.service.list_community_supported_languages(context, args)
+
+            if err:
+                return MassenergizeResponse(error=str(err))
+
+            return MassenergizeResponse(data=supported_languages)
+
+        except Exception as e:
+            return MassenergizeResponse(error=str(e))
+
+    def update_community_supported_languages(self, request):
+        context: Context = request.context
+        args = context.args
+
+        try:
+            (self.validator
+             .expect("language_code", str, is_required=True)
+             .expect("community_id", str, is_required=True)
+             .expect("is_enabled", bool, is_required=True)
+             )
+
+            _, err = self.validator.verify(args)
+
+            if err:
+                return MassenergizeResponse(error=str(err))
+
+            updated_languages, err = self.service.update_community_supported_languages(context, args)
+            if err:
+                return err
+
+            return MassenergizeResponse(data=updated_languages)
+
         except Exception as e:
             return MassenergizeResponse(error=str(e))
 
