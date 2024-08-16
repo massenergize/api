@@ -1,6 +1,7 @@
 import json
-
 from _main_.utils.translation import JsonTranslator
+from _main_.utils.utils import to_third_party_lang_code
+from api.middlewares.translation_exclusion_patterns import TRANSLATION_EXCLUSION_PATTERNS
 
 
 class TranslationMiddleware:
@@ -18,23 +19,29 @@ class TranslationMiddleware:
 	- __call__(self, request): Middleware function to translate response data.
 
 	"""
+	
 	def __init__(self, get_response):
 		self.get_response = get_response
 	
 	def __call__(self, request):
 		response = self.get_response(request)
-		if 'application/json' in response['Content-Type']: #TODO: create an HTML translator
+		if 'application/json' in response['Content-Type']:  #TODO: create an HTML translator
 			original_content = response.content.decode('utf-8')
 			response_to_dict = json.loads(original_content)
 			
-			target_destination_language = request.POST.get('__user_language', 'en-US')
+			preferred_language = request.POST.get('__preferred_language', "en-US")
+			target_destination_language = request.POST.get('__user_language', preferred_language)
 			
 			if target_destination_language == 'en-US':  #TODO remove this when we start supporting data upload in other languages
 				return response
+				
+			target_language_code = to_third_party_lang_code(target_destination_language)
 			
-			translator = JsonTranslator(dict_to_translate=response_to_dict, exclude_cached=True)
+			patterns_to_ignore = TRANSLATION_EXCLUSION_PATTERNS.get(request.path, [])
 			
-			translated_dict, _, __ = translator.translate('en', target_destination_language)
+			translator = JsonTranslator(dict_to_translate=response_to_dict, excluded_key_patterns=patterns_to_ignore)
+			
+			translated_dict, _, __ = translator.translate('en', target_language_code)
 			
 			response.content = json.dumps(translated_dict).encode('utf-8')
 		
