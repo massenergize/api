@@ -42,7 +42,7 @@ class TranslationMiddleware:
 				
 			target_language_code = to_third_party_lang_code(target_language)
 			
-			patterns_to_ignore = TRANSLATION_EXCLUSION_PATTERNS_PER_URL.get(request.path, [])
+			patterns_to_ignore = TRANSLATION_EXCLUSION_PATTERNS_PER_URL.get(request.get_full_path(), [])
 			
 			translator = JsonTranslator(dict_to_translate=response_to_dict, excluded_key_patterns=patterns_to_ignore)
 			
