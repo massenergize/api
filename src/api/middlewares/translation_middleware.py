@@ -32,18 +32,15 @@ class TranslationMiddleware:
 			original_content = response.content.decode('utf-8')
 			response_to_dict = json.loads(original_content)
 			
-			preferred_language = request.POST.get('__preferred_language', "en-US")
+			preferred_language = request.POST.get('__preferred_language', DEFAULT_SOURCE_LANGUAGE_CODE)
 			destination_language = request.POST.get('__user_language', preferred_language)
 			
-			if destination_language == 'en-US':  #TODO remove this when we start supporting data upload in other languages
+			supported_language_target_language = get_supported_language(destination_language)
+			
+			if supported_language_target_language == DEFAULT_SOURCE_LANGUAGE_CODE:  #TODO remove this when we start supporting data upload in other languages
 				return response
-			
-			supported_language = get_supported_language(destination_language)
-			
-			if supported_language == DEFAULT_SOURCE_LANGUAGE_CODE:
-				return response
-			
-			target_language_code = to_third_party_lang_code(supported_language)
+				
+			target_language_code = to_third_party_lang_code(supported_language_target_language)
 			
 			patterns_to_ignore = TRANSLATION_EXCLUSION_PATTERNS_PER_URL.get(request.path, [])
 			
