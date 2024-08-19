@@ -33,9 +33,9 @@ class TranslationMiddleware:
 			response_to_dict = json.loads(original_content)
 			
 			preferred_language = request.POST.get('__preferred_language', DEFAULT_SOURCE_LANGUAGE_CODE)
-			destination_language = request.POST.get('__user_language', preferred_language)
+			user_language = request.POST.get('__user_language', preferred_language)
 			
-			supported_language_target_language = get_supported_language(destination_language)
+			supported_language_target_language = get_supported_language(user_language)
 			
 			if supported_language_target_language == DEFAULT_SOURCE_LANGUAGE_CODE:  #TODO remove this when we start supporting data upload in other languages
 				return response
