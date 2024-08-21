@@ -8,7 +8,7 @@ import pystmark
 
 from _main_.settings import IS_CANARY, POSTMARK_ACCOUNT_TOKEN, POSTMARK_EMAIL_SERVER_TOKEN, POSTMARK_DOWNLOAD_SERVER_TOKEN, IS_PROD
 from _main_.utils.constants import ME_INBOUND_EMAIL_ADDRESS
-from _main_.utils.utils import is_test_mode
+from _main_.utils.utils import is_test_mode, run_in_background
 
 FROM_EMAIL = 'no-reply@massenergize.org'
 
@@ -18,7 +18,7 @@ def is_dev_env():
   else:
     return True
 
-
+@run_in_background
 def send_massenergize_email(subject, msg, to, sender=None):
   if is_test_mode(): 
     return True
@@ -33,8 +33,7 @@ def send_massenergize_email(subject, msg, to, sender=None):
   response.raise_for_status()
 
   if not response.ok:
-    #if IS_PROD:
-    #  log.error(f"Error Occurred in Sending Email to {to}", level="error")
+    log.error(f"Error Occurred in Sending Email to {to}", level="error")
     return False
   return True
 
@@ -60,6 +59,7 @@ def send_massenergize_email_with_attachments(temp, t_model, to, file, file_name,
     return False
   return True
   
+@run_in_background
 def send_massenergize_rich_email(subject, to, massenergize_email_type, content_variables, from_email=None):
   if is_test_mode():
     return True
@@ -72,16 +72,15 @@ def send_massenergize_rich_email(subject, to, massenergize_email_type, content_v
   message = pystmark.Message(
     subject=subject,
     to=to,
-    sender=from_email, 
-    html=html_content, 
+    sender=from_email,
+    html=html_content,
     text=text_content,
     reply_to=ME_INBOUND_EMAIL_ADDRESS,
   )
   response = pystmark.send(message, api_key=POSTMARK_EMAIL_SERVER_TOKEN)
 
   if not response.ok:
-    #if IS_PROD:
-    #  log.error(f"Error Occurred in Sending Email to {to}", level="error")
+    log.error(f"Error Occurred in Sending Email to {to}", level="error")
     return False
   return True
 
