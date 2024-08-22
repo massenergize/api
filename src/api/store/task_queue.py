@@ -26,7 +26,7 @@ class TaskQueueStore:
   def list_tasks(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
         filter_args = args
-        tasks = Task.objects.filter(is_archived=False, **filter_args)
+        tasks = Task.objects.filter(is_archived=False,is_automatic_task=False, **filter_args)
         return tasks, None
     except Exception as e:
       log.exception(e)
