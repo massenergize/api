@@ -32,10 +32,13 @@ from zoneinfo import ZoneInfo
 def _local_datetime(date_and_time):
     """
     Converts a UTC datetime string to local datetime in Massachusetts time zone.
-    """
-    # Parse the datetime string to a datetime object
-    dt = datetime.datetime.strptime(str(date_and_time), '%Y-%m-%dT%H:%M:%SZ')
-
+    """    # Parse the datetime string to a datetime object
+    try:
+        # Try parsing the datetime string with the first format
+        dt = datetime.datetime.strptime(str(date_and_time), '%Y-%m-%dT%H:%M:%SZ')
+    except ValueError:
+        # If it fails, try the second format
+        dt = datetime.datetime.strptime(str(date_and_time), '%Y-%m-%d %H:%M:%S%z')
     # Specify the Massachusetts time zone
     massachusetts_zone = ZoneInfo('America/New_York')
 
@@ -62,7 +65,6 @@ def _check_recurring_date(start_date_and_time, end_date_and_time, day_of_week, w
     converter = {"first": 1, "second": 2, "third": 3, "fourth": 4}
 
     if start_date_and_time and end_date_and_time:
-
         # the date check below fails because the local date (in Massachusetts) is different than the UTC date
         local_start = _local_datetime(start_date_and_time)
         local_end = _local_datetime(end_date_and_time)
@@ -388,6 +390,7 @@ class EventStore:
             
             # create a task to reschedule event after current end date
             if new_event.is_recurring:
+                print("Creating task to update recurring event")
                 update_recurring_event(new_event.id)
             # ----------------------------------------------------------------
             Spy.create_event_footage(events=[new_event], context=context, actor=new_event.user,
@@ -637,10 +640,7 @@ class EventStore:
                     if rescheduled:
                         rescheduled.rescheduled_event.delete()
                         rescheduled.delete()
-                        
-                # call update function
-                update_recurring_event(event.id)
-                
+                    
 
             if (is_approved != None and
                 (is_approved != event.is_approved)):  # If changed
@@ -655,6 +655,11 @@ class EventStore:
 
             # successful return
             event.save()
+            
+            # create a task to reschedule event after current end date
+            if event.is_recurring:
+                print("Creating task to update recurring event")
+                update_recurring_event(event.id)
 
             # ----------------------------------------------------------------
             Spy.create_event_footage(events=[event], context=context, type=FootageConstants.update(),
