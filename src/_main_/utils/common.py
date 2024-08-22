@@ -1,6 +1,8 @@
 import io
 import json
 from querystring_parser import parser
+
+from _main_.settings import EnvConfig
 from _main_.utils.massenergize_errors import CustomMassenergizeError
 from zoneinfo import ZoneInfo
 from django.utils import timezone
@@ -430,8 +432,7 @@ def log_sentry_metric(type: Literal[METRIC_TYPE] = METRIC_TYPE[2], options: dict
 
     :return: None
     """
-
-    if MassEnergizeApiEnvConfig().is_test() or MassEnergizeApiEnvConfig().is_local():
+    if EnvConfig.is_test() or EnvConfig.is_local():
         return
 
     SENTRY_METRIC_TYPES = {
