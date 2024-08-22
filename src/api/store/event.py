@@ -390,7 +390,6 @@ class EventStore:
             
             # create a task to reschedule event after current end date
             if new_event.is_recurring:
-                print("Creating task to update recurring event")
                 update_recurring_event(new_event.id)
             # ----------------------------------------------------------------
             Spy.create_event_footage(events=[new_event], context=context, actor=new_event.user,
@@ -658,7 +657,6 @@ class EventStore:
             
             # create a task to reschedule event after current end date
             if event.is_recurring:
-                print("Creating task to update recurring event")
                 update_recurring_event(event.id)
 
             # ----------------------------------------------------------------
