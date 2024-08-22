@@ -229,3 +229,8 @@ def split_list_into_sublists (list_to_split, max_sublist_size = 10):
 
 def make_hash (text: str):
     return hashlib.sha256(text.encode()).hexdigest()
+
+def cal_string_list_length (string_list):
+    if type(string_list) == str:
+        return len(string_list)
+    return sum([len(s) for s in string_list])
