@@ -165,6 +165,7 @@ def parse_int(b):
         log.exception(e)
         return 1
 
+
 def parse_date(d):
     try:
         if d == "undefined" or d == "null":  # providing date as 'null' should clear it
@@ -342,7 +343,6 @@ def shorten_url(url):
     return s.tinyurl.short(url)
 
 
-
 def generate_workbook_with_sheets(sheet_data):
     wb = Workbook()
 
@@ -366,8 +366,6 @@ def generate_workbook_with_sheets(sheet_data):
 
     bytes_data = buffer.getvalue()
     return bytes_data
-
-
 
 
 def contains_profane_words(text):
