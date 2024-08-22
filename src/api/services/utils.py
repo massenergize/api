@@ -2,9 +2,10 @@
 import requests 
 import json
 
-from _main_.utils.utils import is_test_mode
+from _main_.utils.utils import is_test_mode, run_in_background
 
 
+@run_in_background
 def send_slack_message(webhook, body):
 
   if is_test_mode():

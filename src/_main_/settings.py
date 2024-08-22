@@ -30,6 +30,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 EnvConfig = MassEnergizeApiEnvConfig()
 EnvConfig.load_env_variables()
 
+GOOGLE_TRANSLATE_CLIENT = EnvConfig.set_up_google_translate_client()
+
 # Database selection, development DB unless one of these chosen
 IS_PROD = EnvConfig.is_prod()
 IS_CANARY = EnvConfig.is_canary()
@@ -97,6 +99,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
     #custom middlewares
+    'api.middlewares.translation_middleware.TranslationMiddleware',
     'authentication.middleware.MassenergizeJWTAuthMiddleware',
     'django_hosts.middleware.HostsResponseMiddleware',
     '_main_.utils.metrics.middleware.MetricsMiddleware'

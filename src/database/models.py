@@ -204,7 +204,7 @@ class TagCollection(models.Model):
         return self.simple_json()
 
     class TranslationMeta:
-        fields_to_translate = ["name"]
+        fields_to_translate = []
 
     class Meta:
         ordering = ("name",)
@@ -777,7 +777,7 @@ class Community(models.Model):
         }
 
     class TranslationMeta:
-        fields_to_translate = ["name", "about_community"]
+        fields_to_translate = ["about_community"]
 
     class Meta:
         verbose_name_plural = "Communities"
@@ -2184,9 +2184,7 @@ class Event(models.Model):
     end_date_and_time = models.DateTimeField(db_index=True)
     location = models.JSONField(blank=True, null=True)
     tags = models.ManyToManyField(Tag, blank=True)
-    image = models.ForeignKey(
-        Media, on_delete=models.SET_NULL, null=True, blank=True, related_name="events"
-    )
+    image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True, blank=True, related_name="events")
     archive = models.BooleanField(default=False, blank=True)
     is_global = models.BooleanField(default=False, blank=True)
     external_link = models.CharField(max_length=LONG_STR_LEN, blank=True, null=True)
@@ -2200,25 +2198,17 @@ class Event(models.Model):
     is_published = models.BooleanField(default=False, blank=True)
     rank = models.PositiveIntegerField(default=0, blank=True, null=True)
     # which user posted this event - may be the responsible party
-    user = models.ForeignKey(
-        UserProfile, related_name="event_user", on_delete=models.SET_NULL, null=True, blank=True
-    )
+    user = models.ForeignKey(UserProfile, related_name="event_user", on_delete=models.SET_NULL, null=True, blank=True)
     is_recurring = models.BooleanField(default=False, blank=True, null=True)
     recurring_details = models.JSONField(blank=True, null=True)
     is_approved = models.BooleanField(default=False, blank=True)
     # Made publicity a string, so we can handle more than two (open/close) states
-    publicity = models.CharField(
-        max_length=SHORT_STR_LEN, default=EventConstants.open()
-    )
+    publicity = models.CharField(max_length=SHORT_STR_LEN, default=EventConstants.open())
     # If any community is added here, it means the event is either (Open to / Closed to) depending
     # on what the value of "publicity" is
-    communities_under_publicity = models.ManyToManyField(
-        Community, related_name="event_access_selections", blank=True
-    )
+    communities_under_publicity = models.ManyToManyField(Community, related_name="event_access_selections", blank=True)
     # Communities that have shared an event to their site will be in this list
-    shared_to = models.ManyToManyField(
-        Community, related_name="events_from_others", blank=True
-    )
+    shared_to = models.ManyToManyField(Community, related_name="events_from_others", blank=True)
     # Date and time when the event went live
     published_at = models.DateTimeField(blank=True, null=True)
     event_type = models.CharField(max_length=SHORT_STR_LEN, blank=True)
@@ -2274,7 +2264,7 @@ class Event(models.Model):
         data["shared_to"] = [c.info() for c in self.shared_to.all()]
         data["is_on_home_page"] = self.is_on_homepage()
 
-        data["event_type"] = self.event_type if self.event_type else "Online" if not self.location else "In person"
+        data["event_type"] = self.event_type if self.event_type else "Online" if not self.location else "In-Person"
         data["settings"] = dict(notifications=[x.simple_json() for x in self.nudge_settings.all().order_by("-created_at") if x.communities.exists()])
 
         return data
@@ -2721,7 +2711,7 @@ class CommunityAdminGroup(models.Model):
         db_table = "community_admin_group"
 
     class TranslationMeta:
-        fields_to_translate = ["description", "name"]
+        fields_to_translate = []
 
 
 class UserGroup(models.Model):
@@ -2817,7 +2807,7 @@ class Data(models.Model):
         db_table = "data"
 
     class TranslationMeta:
-        fields_to_translate = ["name"]
+        fields_to_translate = []
 
 
 class Graph(models.Model):
@@ -4140,7 +4130,7 @@ class Footage(models.Model):
         ordering = ("-id",)
 
     class TranslationMeta:
-        fields_to_translate = ["activity_type", "notes"]
+        fields_to_translate = ["notes"]
 
 
 class CommunityNotificationSetting(models.Model):
@@ -4240,33 +4230,6 @@ class CommunitySupportedLanguage(BaseModel):
         ordering = ("community", "language")
 
 
-class TextHash(RootModel):
-    """
-    A class used to represent the text hash table
-
-    Attributes
-    ----------
-    hash	: str
-    text	: str
-    """
-
-
-    hash = models.CharField(primary_key=True, max_length=SHORT_STR_LEN, unique=True)
-    text = models.TextField(max_length=LONG_STR_LEN)
-
-    def __str__(self):
-        return self.hash
-
-    def simple_json(self):
-        return model_to_dict(self)
-
-    def full_json(self):
-        return self.simple_json()
-
-    class Meta:
-        db_table = "text_hashes"
-
-
 class TranslationsCache(BaseModel):
     """
     A class used to represent the translations cache table
@@ -4279,8 +4242,7 @@ class TranslationsCache(BaseModel):
     translated_text	: str
     last_translated	: DateTime
     """
-
-    hash = models.ForeignKey(TextHash, on_delete=models.CASCADE, db_index=True)
+    hash = models.CharField(max_length=SHORT_STR_LEN)
     source_language_code = models.CharField(max_length=LANG_CODE_STR_LEN)
     target_language_code = models.CharField(max_length=LANG_CODE_STR_LEN)
     translated_text = models.TextField(max_length=LONG_STR_LEN)
@@ -4305,47 +4267,28 @@ class ManualCommunityTranslation(TranslationsCache):
 
     Attributes
     ----------
-    community : int
+    community : str
     """
 
     community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
-
-    def __str__(self):
-        return self.hash
-
-    def simple_json(self):
-        return model_to_dict(self)
-
-    def full_json(self):
-        return self.simple_json()
 
     class Meta:
         db_table = "manual_community_translations"
 
 
-class StaticSiteText(BaseModel):
-    """
-    A class used to represent the static site text table
-
-    Attributes
-    ----------
-    text : str This is the text that will be displayed on the front-end site
-    key : str This is the key that will be used to look up the text
-    site : str This is the site that the text is meant for
-    """
-
-    text = models.TextField(max_length=LONG_STR_LEN)
-    key = models.CharField(max_length=SHORT_STR_LEN, unique=True)
-    site = models.CharField(max_length=SHORT_STR_LEN, default="")
-
+class CampaignSupportedLanguage(BaseModel):
+    language = models.ForeignKey(SupportedLanguage, on_delete=models.CASCADE, db_index=True)
+    campaign = models.ForeignKey("apps__campaigns.Campaign", on_delete=models.CASCADE, db_index=True, related_name="supported_languages")
+    is_active = models.BooleanField(default=True, blank=True)
+    
     def __str__(self):
-        return self.key
-
+        return f"{self.campaign.title} - {self.language.name}"
+    
     def simple_json(self):
-        return model_to_dict(self)
-
+        return {"id": str(self.id), "is_active": self.is_active, "campaign": str(self.id), "code": self.language.code, "name": self.language.name}
+    
     def full_json(self):
         return self.simple_json()
-
+    
     class Meta:
-        db_table = "static_site_texts"
+        db_table = "campaign_supported_languages"
