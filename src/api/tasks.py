@@ -1,7 +1,6 @@
 import csv
 import datetime
 import logging
-import time
 
 from celery import shared_task
 from django.db.models import Count
@@ -12,6 +11,7 @@ from django.utils.timezone import utc
 from _main_.utils.common import parse_datetime_to_aware
 from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
+from _main_.utils.massenergize_logger import log
 from api.constants import ACTIONS, CADMIN_REPORT, CAMPAIGN_INTERACTION_PERFORMANCE_REPORT, CAMPAIGN_PERFORMANCE_REPORT, \
     CAMPAIGN_VIEWS_PERFORMANCE_REPORT, COMMUNITIES, COMMUNITY_PAGEMAP, DOWNLOAD_POLICY, FOLLOWED_REPORT, LIKE_REPORT, \
     LINK_PERFORMANCE_REPORT, METRICS, SAMPLE_USER_REPORT, TEAMS, USERS
@@ -80,7 +80,7 @@ def download_data(self, args, download_type):
             error_notification(ACTIONS, email)
         else:
             generate_csv_and_email(data=files, download_type=ACTIONS, community_name=com_name, email=email)
-
+    
 
     elif download_type == COMMUNITIES:
         (files, dummy), err = store.communities_download(context)
@@ -124,7 +124,7 @@ def download_data(self, args, download_type):
             if not stat:
                 error_notification(CADMIN_REPORT, email)
                 return
-
+            
     elif download_type == SAMPLE_USER_REPORT:
         prepare_user_events_nudge(email=email, community_id=args.get("community_id"))
 
@@ -143,15 +143,15 @@ def download_data(self, args, download_type):
         community_id = args.get("community_id", None)
         if community_id:
              com, err = get_community(community_id)
-
+             
         (files, dummy), err = store.community_pagemap_download(context, community_id=community_id)
         if err:
             error_notification(COMMUNITY_PAGEMAP, email)
         else:
             generate_csv_and_email(
                 data=files, download_type=COMMUNITY_PAGEMAP, community_name=com.name, email=email)
-
-
+            
+    
     #  --------------- CAMPAIGN REPORTS ----------------
     elif download_type == FOLLOWED_REPORT:
         campaign_id = args.get("campaign_id", None)
@@ -170,7 +170,7 @@ def download_data(self, args, download_type):
         else:
             generate_csv_and_email(data=files, download_type=LIKE_REPORT, email=email)
 
-
+    
     elif download_type == LINK_PERFORMANCE_REPORT:
         campaign_id = args.get("campaign_id", None)
         (files, dummy), err = store.campaign_link_performance_download(context, campaign_id=campaign_id)
@@ -192,7 +192,7 @@ def download_data(self, args, download_type):
             }
           send_massenergize_email_with_attachments(DATA_DOWNLOAD_TEMPLATE,temp_data,[email], files, f"{campaign_title} Report.xlsx", None)
 
-
+          
 
     elif download_type == CAMPAIGN_VIEWS_PERFORMANCE_REPORT:
         campaign_id = args.get("campaign_id", None)
@@ -209,8 +209,8 @@ def download_data(self, args, download_type):
             error_notification(CAMPAIGN_INTERACTION_PERFORMANCE_REPORT, email)
         else:
             generate_csv_and_email(data=files, download_type=CAMPAIGN_INTERACTION_PERFORMANCE_REPORT, email=email)
-
-
+        
+       
 
 
 
@@ -263,12 +263,12 @@ def generate_and_send_weekly_report(self):
 
         }
         from_email = get_sender_email(community.id)
-
+        
 
         send_email(None, None,all_community_admins, CADMIN_EMAIL_TEMPLATE,cadmin_temp_data, from_email)
 
         writer.writerow([community_name, community_total_signup,community_weekly_signup, community_actions_taken, community_weekly_done_actions, community_weekly_todo_actions])
-
+    
     sadmin_temp_data =  {
             'name':"there",
             'start': str(one_week_ago.date()),
@@ -295,34 +295,34 @@ def deactivate_user(self,email):
 @app.task
 def send_scheduled_email(subject, message, recipients, image):
     cache_key = f"email_sent_{subject.replace(' ', '_')}"
-
+    
     if cache.add(cache_key, True, timeout=3600):
-
+        
         try:
             data = {"body": message, "subject": subject, "image": image}
-
+            
             is_sent = send_massenergize_email_with_attachments(BROADCAST_EMAIL_TEMPLATE, data, recipients, None, None)
-
+            
             if is_sent:
-                logging.info(f"Successfully sent email to {str(recipients)}")
-
+                log.info(f"Successfully sent email to {str(recipients)}")
+                
         except Exception as e:
-            logging.error(f"Error sending email: {str(e)}")
-
+            log.exception(e)
+            
         finally:
-            logging.info(f"===== Deleting Cache Key: {cache_key} =====")
+            log.info(f"===== Deleting Cache Key: {cache_key} =====")
             cache.delete(cache_key)
-
+            
     else:
-        logging.info("Task already picked up by another worker")
-
+        log.info("Task already picked up by another worker")
+        
 @app.task
 def automatically_activate_nudge(community_nudge_setting_id):
-
+    
     cache_key =f"nudge_activation_{community_nudge_setting_id}"
-
+    
     if cache.add(cache_key, True, timeout=3600):
-
+        
         try:
             community_nudge_setting = CommunityNotificationSetting.objects.filter(id=community_nudge_setting_id).first()
             if not community_nudge_setting:
@@ -331,66 +331,21 @@ def automatically_activate_nudge(community_nudge_setting_id):
             community_nudge_setting.activate_on = None
             community_nudge_setting.is_active = True
             community_nudge_setting.save()
-
-            logging.info(f"Successfully activated nudge for community: {community_nudge_setting.community.name}")
-
+            
+            log.info(f"Successfully activated nudge for community: {community_nudge_setting.community.name}")
+            
         except Exception as e:
-            logging.error(f"Error automatically activating nudge: {str(e)}")
-
+            log.exception(e)
+            
         finally:
-            logging.info(f"===== Deleting Cache Key: {cache_key} =====")
+            log.info(f"===== Deleting Cache Key: {cache_key} =====")
             cache.delete(cache_key)
     else:
-        logging.info("Task already picked up by another worker")
-
+        log.info("Task already picked up by another worker")
+        
 
 @app.task
 def translate_all_models_into_target_language(language_code):
     translationsCacheService = TranslationsCacheService()
     translationsCacheService.translate_all_db_table_contents(language_code)
     logging.info(f"Successfully translated all models into {language_code}")
-
-
-@app.task
-def update_recurring_event(event_id):
-	cache_key = f"update_recurring_event_{event_id}"
-	
-	if cache.add(cache_key, True, timeout=3600):
-		event = Event.objects.filter(id=event_id).first()
-		today = parse_datetime_to_aware()
-		try:
-			if not event or not event.is_recurring or not event.recurring_details:
-				return
-			
-			if not event.recurring_details.get('separation_count'):
-				return
-			
-			if event.start_date_and_time > today:
-				return
-			
-			final_date = get_final_date(event, today)
-			if final_date and today > final_date:
-				return
-			
-			update_event_dates(event, today)
-			handle_recurring_event_exception(event)
-			
-			next_date = get_eta_from_datetime(event.end_date_and_time)
-			
-			schedule = update_recurring_event.apply_async([event_id], eta=next_date)
-			event.recurring_details["task_id"] = schedule.id
-			event.save()
-			
-			log.info(f"Successfully updated recurring event: {event.name} to {next_date}")
-		
-		except Exception as e:
-			log.exception(e)
-		
-		finally:
-			log.info(f"===== Deleting Cache Key: {cache_key} =====")
-			cache.delete(cache_key)
-	
-	else:
-		logging.info("Task already picked up by another worker")
-
-
