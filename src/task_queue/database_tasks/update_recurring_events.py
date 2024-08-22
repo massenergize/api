@@ -1,8 +1,9 @@
+import json
 from datetime import datetime
 
 from _main_.utils.common import parse_datetime_to_aware
 from _main_.utils.massenergize_logger import log
-from api.utils.api_utils import get_eta_from_datetime, get_final_date, handle_recurring_event_exception, \
+from api.utils.api_utils import get_final_date, handle_recurring_event_exception, \
 	update_event_dates
 from database.models import Event
 from task_queue.models import Task
@@ -21,11 +22,14 @@ def get_recurring_details_from_date(date_time):
 	day_of_month = date_time.day
 	hour = date_time.hour
 	minute = date_time.minute
+	year = date_time.year
 	return {
 		'month_of_year': month_of_year,
 		'day_of_month': day_of_month,
 		'hour': hour,
-		'minute': minute
+		'minute': minute,
+		'year': year,
+		'actual': date_time.isoformat()
 	}
 
 
@@ -61,13 +65,15 @@ def update_recurring_event(event_id):
 		
 		recurring_details = get_recurring_details_from_date(event.end_date_and_time)
 		
+		recurring_details_str = json.dumps(recurring_details) if recurring_details else None
 		if not task:
 			task = Task(
 				name=key,
 				job_name="Update Recurring Events",
 				status="PENDING",
-				recurring_details=recurring_details if recurring_details else None,
+				recurring_details=recurring_details_str,
 				frequency="ONE_OFF",
+				is_automatic_task=True
 			)
 			task.create_task()
 			task.save()
