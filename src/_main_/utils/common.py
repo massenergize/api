@@ -17,6 +17,8 @@ from typing import Literal, Tuple
 from sentry_sdk.metrics import incr, gauge, distribution, set
 from _main_.utils.utils import run_in_background
 
+from _main_.utils.stage import MassEnergizeApiEnvConfig
+
 
 def custom_timezone_info(zone="UTC"):
     if not zone:
@@ -428,6 +430,10 @@ def log_sentry_metric(type: Literal[METRIC_TYPE] = METRIC_TYPE[2], options: dict
 
     :return: None
     """
+
+    if MassEnergizeApiEnvConfig().is_test() or MassEnergizeApiEnvConfig().is_local():
+        return
+
     SENTRY_METRIC_TYPES = {
         "COUNT": incr,
         "INCR": incr,
