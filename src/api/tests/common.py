@@ -36,7 +36,7 @@ import requests
 from io import BytesIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
-from apps__campaigns.models import Technology
+from apps__campaigns.models import Campaign, CampaignAccount, Technology
 
 from database.models import Vendor
 from ..utils.api_utils import load_default_menus_from_json
@@ -409,3 +409,35 @@ def make_feature_flag(**kwargs):
 def make_supported_language(code=f"en-US-{datetime.now().timestamp()}", name="English (US)"):
     lang = SupportedLanguage.objects.create(code=code, name=name)
     return lang
+
+
+def create_supported_language(**kwargs):
+    code = kwargs.get("code") or f"en-US-{datetime.now().timestamp()}"
+    name = kwargs.get("name") or "English (US)"
+    lang = SupportedLanguage.objects.create(code=code, name=name)
+    return lang
+
+
+def make_campaign_account(**kwargs):
+    creator = kwargs.get("creator") or makeAdmin()
+    community = kwargs.get("community") or makeCommunity()
+    subdomain = kwargs.get("subdomain") or f"test.campaign.account-{datetime.now().timestamp()}"
+    return CampaignAccount.objects.create(**{
+        "name": "Test Campaign Account",
+        "creator": creator,
+        "community": community,
+        "subdomain": subdomain,
+    })
+
+def make_campaign(**kwargs):
+    title = kwargs.get("title") or f"New Campaign-{datetime.now().timestamp()}"
+    desc = kwargs.get("description") or "New Campaign Description"
+    account = kwargs.get("account") or make_campaign_account()
+    
+    return Campaign.objects.create(**{
+        **kwargs,
+        "title": title,
+        "tagline": kwargs.get("tagline") or "New Campaign Tagline",
+        "description": desc,
+        "account": account,
+    })
