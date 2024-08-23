@@ -7,6 +7,9 @@ from django.test import TestCase, Client
 from unittest.mock import patch
 
 from _main_.utils.constants import INVALID_LANGUAGE_CODE_ERR_MSG
+from _main_.utils.error_messages import CAMPAIGN_DOES_NOT_EXIST_ERR_MSG, MISSING_REQUIRED_FIELD_ERROR_MSG, \
+    NO_SUPPORTED_LANGUAGE_FOUND_ERR_MSG, \
+    PERMISSION_DENIED_ERROR_MSG
 from api.tests.common import create_supported_language, make_campaign, signinAs, createUsers, make_supported_language, \
     makeCommunity
 from _main_.utils.utils import Console, load_json
@@ -93,7 +96,7 @@ class SuppportedLanguagesTest(TestCase):
         response = self.make_request(self.create_path, data)
 
         self.assertEqual(response["success"], False)
-        self.assertEqual(response["error"], "permission_denied")
+        self.assertEqual(response["error"], PERMISSION_DENIED_ERROR_MSG)
 
     def test_supported_languages_info(self):
         Console.header("Testing fetch supported language info")
@@ -118,7 +121,7 @@ class SuppportedLanguagesTest(TestCase):
         response = self.make_request(self.info_path, {"language_code": "invalid"})
 
         self.assertEqual(response["success"], False)
-        self.assertEqual(response["error"], "No supported language found with the provided code")
+        self.assertEqual(response["error"], NO_SUPPORTED_LANGUAGE_FOUND_ERR_MSG)
 
     def test_get_supported_languages(self):
         Console.header("Testing fetch all supported languages")
@@ -142,14 +145,14 @@ class SuppportedLanguagesTest(TestCase):
         response = self.make_request("campaigns.supported_languages.list", {"campaign_id": "invalid"})
 
         self.assertEqual(response["success"], False)
-        self.assertEqual(response["error"], f"Campaign with id(invalid) does not exist")
+        self.assertEqual(response["error"], CAMPAIGN_DOES_NOT_EXIST_ERR_MSG.format("invalid"))
         
     def test_list_campaign_supported_languages_without_UUID(self):
         Console.header("Testing fetch all supported languages")
         response = self.make_request("campaigns.supported_languages.list")
 
         self.assertEqual(response["success"], False)
-        self.assertEqual(response["error"], "You are Missing a Required Input: Campaign Id")
+        self.assertEqual(response["error"], MISSING_REQUIRED_FIELD_ERROR_MSG.format("Campaign Id"))
         
     def test_list_campaign_supported_languages_with_slug(self):
         Console.header("Testing fetch all supported languages")
@@ -163,7 +166,7 @@ class SuppportedLanguagesTest(TestCase):
         response = self.make_request("campaigns.supported_languages.list", {"campaign_id": "invalid"})
 
         self.assertEqual(response["success"], False)
-        self.assertEqual(response["error"], "Campaign with id(invalid) does not exist")
+        self.assertEqual(response["error"], CAMPAIGN_DOES_NOT_EXIST_ERR_MSG.format("invalid"))
         
     def test_update_campaign_supported_languages_with_correct_data(self):
         Console.header("Testing update supported languages")
@@ -176,10 +179,11 @@ class SuppportedLanguagesTest(TestCase):
         Console.header("Testing update supported languages")
         response = self.make_request("campaigns.supported_languages.update", {"campaign_id": self.campaign.id})
         self.assertEqual(response["success"], False)
-        self.assertEqual(response["error"], "You are Missing a Required Input: Supported Languages")
+        self.assertEqual(response["error"], MISSING_REQUIRED_FIELD_ERROR_MSG.format("Supported Languages"))
         
     def test_update_campaign_supported_languages_without_campaign_id(self):
         Console.header("Testing update supported languages")
         response = self.make_request("campaigns.supported_languages.update", {"supported_languages": {"en": True, "fr": False}})
         self.assertEqual(response["success"], False)
-        self.assertEqual(response["error"], "You are Missing a Required Input: Campaign Id")
+        self.assertEqual(response["error"], MISSING_REQUIRED_FIELD_ERROR_MSG.format("Campaign Id"))
+        

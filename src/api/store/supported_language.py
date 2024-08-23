@@ -1,3 +1,5 @@
+from _main_.utils.error_messages import CAMPAIGN_DOES_NOT_EXIST_ERR_MSG, MISSING_CAMPAIGN_ID_ERR_MSG, \
+    MISSING_SUPPORTED_LANGUAGES_ERR_MSG
 from apps__campaigns.models import Campaign
 from database.models import CampaignSupportedLanguage, SupportedLanguage
 from _main_.utils.massenergize_errors import CustomMassenergizeError
@@ -84,15 +86,15 @@ class SupportedLanguageStore:
             supported_languages_dict = args.get('supported_languages', None)
             
             if not campaign_id:
-                return None, CustomMassenergizeError("Please provide a campaign_id")
+                return None, CustomMassenergizeError(MISSING_CAMPAIGN_ID_ERR_MSG)
                 
             campaign = Campaign.objects.get(pk=campaign_id)
             
             if not campaign:
-                return None, CustomMassenergizeError("Campaign not found")
+                return None, CustomMassenergizeError(CAMPAIGN_DOES_NOT_EXIST_ERR_MSG.format(campaign_id))
             
             if not supported_languages_dict:
-                return None, CustomMassenergizeError("Please provide supported_languages")
+                return None, CustomMassenergizeError(MISSING_SUPPORTED_LANGUAGES_ERR_MSG)
             
             supported_languages_codes = list(supported_languages_dict.keys())
             
@@ -142,7 +144,7 @@ class SupportedLanguageStore:
             campaign_id = args.get('campaign_id', None)
             
             if not campaign_id:
-                return None, CustomMassenergizeError("Please provide a campaign_id")
+                return None, CustomMassenergizeError(MISSING_CAMPAIGN_ID_ERR_MSG)
             
             campaign = None
             try:
@@ -152,7 +154,7 @@ class SupportedLanguageStore:
                 campaign = Campaign.objects.filter(slug=campaign_id, is_deleted=False).first()
             
             if not campaign:
-                return None, CustomMassenergizeError(f"Campaign with id({campaign_id}) does not exist")
+                return None, CustomMassenergizeError(CAMPAIGN_DOES_NOT_EXIST_ERR_MSG.format(campaign_id))
             
             campaign_supported_languages = campaign.supported_languages.all()
             all_supported_languages = SupportedLanguage.objects.all()
