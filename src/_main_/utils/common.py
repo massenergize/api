@@ -1,6 +1,8 @@
 import io
 import json
 from querystring_parser import parser
+
+from _main_.settings import EnvConfig
 from _main_.utils.massenergize_errors import CustomMassenergizeError
 from zoneinfo import ZoneInfo
 from django.utils import timezone
@@ -12,6 +14,12 @@ import pyshorteners
 from openpyxl import Workbook
 from better_profanity import profanity
 import datetime
+from typing import Literal, Tuple
+
+from sentry_sdk.metrics import incr, gauge, distribution, set
+from _main_.utils.utils import run_in_background
+
+from _main_.utils.stage import MassEnergizeApiEnvConfig
 
 
 def custom_timezone_info(zone="UTC"):
@@ -25,18 +33,18 @@ def parse_datetime_to_aware(datetime_str=None, timezone_str='UTC'):
     :param datetime_str: The string representing the datetime to parse. If not provided, the current date and time will be used.
     :param timezone_str: The string representing the timezone to apply to the parsed datetime. Defaults to 'UTC'.
     :return: An aware datetime object.
-    
+
     """
     if not datetime_str:
         datetime_str = datetime.datetime.now()
-    
+
     if isinstance(datetime_str, datetime.datetime):
         datetime_str = datetime_str.strftime('%Y-%m-%d %H:%M:%S')
     try:
         naive_datetime = datetime.datetime.strptime(datetime_str, '%Y-%m-%d %H:%M:%S.%f')
     except ValueError:
         naive_datetime = datetime.datetime.strptime(datetime_str, '%Y-%m-%d %H:%M:%S')
-    
+
     try:
         aware_datetime = timezone.make_aware(naive_datetime, custom_timezone_info(timezone_str))
         return aware_datetime
@@ -77,7 +85,7 @@ def get_request_contents(request, **kwargs):
         if filter_out:
             for key in filter_out:
                 args.pop(key, None)
-                
+
         return args
 
     except Exception as e:
@@ -160,6 +168,7 @@ def parse_int(b):
     except Exception as e:
         log.exception(e)
         return 1
+
 
 def parse_date(d):
     try:
@@ -338,7 +347,6 @@ def shorten_url(url):
     return s.tinyurl.short(url)
 
 
-
 def generate_workbook_with_sheets(sheet_data):
     wb = Workbook()
 
@@ -364,8 +372,6 @@ def generate_workbook_with_sheets(sheet_data):
     return bytes_data
 
 
-
-
 def contains_profane_words(text):
     profanity.load_censor_words()
     return profanity.contains_profanity(text)
@@ -376,4 +382,77 @@ def to_django_date(date):
         return None
     parsed_date = datetime.datetime.strptime(date, "%a %b %d %Y %H:%M:%S GMT%z")
     return parsed_date.date()
+
+
+METRIC_TYPE: Tuple[str, str, str, str] = ("COUNT", "GAUGE", "DISTRIBUTION", "SET")
+
+@run_in_background
+def log_sentry_metric(type: Literal[METRIC_TYPE] = METRIC_TYPE[2], options: dict = {}):
+
+    """
+    Log a metric to Sentry
+
+    :param type: The type of metric to log. One of "count", "gauge", "distribution", "summary", or "set".
+    :param options: The options to pass to the metric logger. The options are different for each metric type.
+
+    for the different types of metrics, the options are:
+
+    count: {
+                key="button_click",
+                value=1,
+                tags={
+                    "browser": "Firefox",
+                     "app_version": "1.0.0"
+                  }
+            }
+    gauge: {
+            key="page_load",
+            value=15.0,
+            unit="millisecond",
+            tags={
+                "page": "/home"
+            }
+        }
+    distribution: {
+                key="page_load",
+                value=15.0,
+                unit="millisecond",
+                tags= {
+                    "page": "/home"
+                    }
+                }
+    set: {
+        key="user_view",
+        value="jane",
+        unit="username",
+        tags={
+            "page": "/home"
+        }
+    }
+
+    :return: None
+    """
+    if EnvConfig.is_test() or EnvConfig.is_local():
+        return
+
+    SENTRY_METRIC_TYPES = {
+        "COUNT": incr,
+        "INCR": incr,
+        "GAUGE": gauge,
+        "DISTRIBUTION": distribution,
+        "SET": set,
+    }
+
+    try:
+        type = type.lower()
+        if type not in SENTRY_METRIC_TYPES:
+            return
+
+        log_metric = SENTRY_METRIC_TYPES[type]
+        log_metric(**options)
+
+
+    except Exception as e:
+        log.exception(e)
+        return None
 
