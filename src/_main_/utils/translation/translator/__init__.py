@@ -70,15 +70,6 @@ class Translator:
                 "date": datetime.now().isoformat()
             }
         })
-        log_sentry_metric("COUNT", {
-            "event": "LANGUAGE_USE",
-            "value": target_language,
-            "unit": None,
-            "tags": {
-                "source_language": source_language,
-                "date": datetime.now().isoformat()
-            }
-        })
         return self.provider.translate(value, target_language, source_language)
 
     def translate_text (self, text: str, target_language: str, source_language:str = 'en') -> str:
