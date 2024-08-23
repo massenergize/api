@@ -422,25 +422,22 @@ def make_campaign_account(**kwargs):
     creator = kwargs.get("creator") or makeAdmin()
     community = kwargs.get("community") or makeCommunity()
     subdomain = kwargs.get("subdomain") or f"test.campaign.account-{datetime.now().timestamp()}"
-    account = CampaignAccount.objects.create(**{
+    return CampaignAccount.objects.create(**{
         "name": "Test Campaign Account",
         "creator": creator,
         "community": community,
         "subdomain": subdomain,
     })
-    return account
 
 def make_campaign(**kwargs):
     title = kwargs.get("title") or f"New Campaign-{datetime.now().timestamp()}"
     desc = kwargs.get("description") or "New Campaign Description"
     account = kwargs.get("account") or make_campaign_account()
     
-    c = Campaign.objects.create(**{
+    return Campaign.objects.create(**{
         **kwargs,
         "title": title,
         "tagline": kwargs.get("tagline") or "New Campaign Tagline",
         "description": desc,
         "account": account,
     })
-
-    return c
