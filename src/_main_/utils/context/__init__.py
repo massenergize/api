@@ -45,7 +45,8 @@ class Context:
     self.is_sandbox = parse_bool(self.args.pop('__is_sandbox', False))
     self.community = self.args.pop('__community', None)
     self.is_admin_site = parse_bool(self.args.pop('__is_admin_site', False))
-    self.preferred_language = self.args.pop('__user_language', 'en')
+    preferred_language = self.args.pop('__preferred_language', 'en-US')
+    self.preferred_language = self.args.pop('__user_language', preferred_language)
 
     #set the is_dev field
     self.is_prod = parse_bool(self.args.pop('__is_prod', False))

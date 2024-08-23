@@ -206,7 +206,7 @@ class TagCollection(models.Model):
         return self.simple_json()
 
     class TranslationMeta:
-        fields_to_translate = ["name"]
+        fields_to_translate = []
 
     class Meta:
         ordering = ("name",)
@@ -779,7 +779,7 @@ class Community(models.Model):
         }
 
     class TranslationMeta:
-        fields_to_translate = ["name", "about_community"]
+        fields_to_translate = ["about_community"]
 
     class Meta:
         verbose_name_plural = "Communities"
@@ -2193,9 +2193,7 @@ class Event(models.Model):
     end_date_and_time = models.DateTimeField(db_index=True)
     location = models.JSONField(blank=True, null=True)
     tags = models.ManyToManyField(Tag, blank=True)
-    image = models.ForeignKey(
-        Media, on_delete=models.SET_NULL, null=True, blank=True, related_name="events"
-    )
+    image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True, blank=True, related_name="events")
     archive = models.BooleanField(default=False, blank=True)
     is_global = models.BooleanField(default=False, blank=True)
     external_link = models.CharField(max_length=LONG_STR_LEN, blank=True, null=True)
@@ -2209,25 +2207,17 @@ class Event(models.Model):
     is_published = models.BooleanField(default=False, blank=True)
     rank = models.PositiveIntegerField(default=0, blank=True, null=True)
     # which user posted this event - may be the responsible party
-    user = models.ForeignKey(
-        UserProfile, related_name="event_user", on_delete=models.SET_NULL, null=True, blank=True
-    )
+    user = models.ForeignKey(UserProfile, related_name="event_user", on_delete=models.SET_NULL, null=True, blank=True)
     is_recurring = models.BooleanField(default=False, blank=True, null=True)
     recurring_details = models.JSONField(blank=True, null=True)
     is_approved = models.BooleanField(default=False, blank=True)
     # Made publicity a string, so we can handle more than two (open/close) states
-    publicity = models.CharField(
-        max_length=SHORT_STR_LEN, default=EventConstants.open()
-    )
+    publicity = models.CharField(max_length=SHORT_STR_LEN, default=EventConstants.open())
     # If any community is added here, it means the event is either (Open to / Closed to) depending
     # on what the value of "publicity" is
-    communities_under_publicity = models.ManyToManyField(
-        Community, related_name="event_access_selections", blank=True
-    )
+    communities_under_publicity = models.ManyToManyField(Community, related_name="event_access_selections", blank=True)
     # Communities that have shared an event to their site will be in this list
-    shared_to = models.ManyToManyField(
-        Community, related_name="events_from_others", blank=True
-    )
+    shared_to = models.ManyToManyField(Community, related_name="events_from_others", blank=True)
     # Date and time when the event went live
     published_at = models.DateTimeField(blank=True, null=True)
     event_type = models.CharField(max_length=SHORT_STR_LEN, blank=True)
@@ -2730,7 +2720,7 @@ class CommunityAdminGroup(models.Model):
         db_table = "community_admin_group"
 
     class TranslationMeta:
-        fields_to_translate = ["description", "name"]
+        fields_to_translate = []
 
 
 class UserGroup(models.Model):
@@ -2826,7 +2816,7 @@ class Data(models.Model):
         db_table = "data"
 
     class TranslationMeta:
-        fields_to_translate = ["name"]
+        fields_to_translate = []
 
 
 class Graph(models.Model):
@@ -4178,7 +4168,7 @@ class Footage(models.Model):
         ordering = ("-id",)
 
     class TranslationMeta:
-        fields_to_translate = ["activity_type", "notes"]
+        fields_to_translate = ["notes"]
 
 
 class CommunityNotificationSetting(models.Model):
