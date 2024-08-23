@@ -152,7 +152,7 @@ class SupportedLanguageStore:
                 campaign = Campaign.objects.filter(slug=campaign_id, is_deleted=False).first()
             
             if not campaign:
-                return None, CustomMassenergizeError("Campaign with id does not exist")
+                return None, CustomMassenergizeError(f"Campaign with id({campaign_id}) does not exist")
             
             campaign_supported_languages = campaign.supported_languages.all()
             all_supported_languages = SupportedLanguage.objects.all()

@@ -142,7 +142,7 @@ class SuppportedLanguagesTest(TestCase):
         response = self.make_request("campaigns.supported_languages.list", {"campaign_id": "invalid"})
 
         self.assertEqual(response["success"], False)
-        self.assertEqual(response["error"], 'Campaign with id does not exist')
+        self.assertEqual(response["error"], f"Campaign with id(invalid) does not exist")
         
     def test_list_campaign_supported_languages_without_UUID(self):
         Console.header("Testing fetch all supported languages")
@@ -163,7 +163,7 @@ class SuppportedLanguagesTest(TestCase):
         response = self.make_request("campaigns.supported_languages.list", {"campaign_id": "invalid"})
 
         self.assertEqual(response["success"], False)
-        self.assertEqual(response["error"], "Campaign with id does not exist")
+        self.assertEqual(response["error"], "Campaign with id(invalid) does not exist")
         
     def test_update_campaign_supported_languages_with_correct_data(self):
         Console.header("Testing update supported languages")
