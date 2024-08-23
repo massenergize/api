@@ -48,8 +48,10 @@ def get_message_recipients(audience, audience_type, community_ids,sub_audience_t
     This function is designed to return a list of recipients(emails) for a message based on the various parameters provided.
     
     Parameters:
-    - audience (str): A string representing the audience to which the message will be delivered. It can have values like `COMMUNITY_CONTACTS`, `SUPER_ADMINS`, `COMMUNITY_ADMIN`, `USERS`, `ACTION_TAKERS`.
-    - audience_type (str): A string that further categorizes the audience. It can alternate between `COMPLETED`, `TODO`, and `BOTH`.
+    - audience (str): A string representing the audience to which the message will be delivered.
+        It can have values like `COMMUNITY_CONTACTS`, `SUPER_ADMINS`, `COMMUNITY_ADMIN`, `USERS`, `ACTION_TAKERS`.
+    - audience_type (str): A string that further categorizes the audience. It can alternate between
+        `COMPLETED`, `TODO`, and `BOTH`.
     - community_ids (list): A list of community IDs that represent the communities targeted by the message.
     - sub_audience_type (str): This represents the type of users within the audience who will receive the message.
     
@@ -62,19 +64,19 @@ def get_message_recipients(audience, audience_type, community_ids,sub_audience_t
     if community_ids and not isinstance(community_ids, list):
         community_ids = community_ids.split(",")
 
-    if audience_type.lower() == AudienceType.COMMUNITY_CONTACTS.lower():
+    if audience_type.lower() == AudienceType.COMMUNITY_CONTACTS.value.lower():
         communities = Community.objects.all()
         if audience.lower() != ALL.lower():
             audience = audience.split(",")
             communities = communities.filter(id__in=audience)
         return list(set(communities.values_list("owner_email", flat=True)))
     
-    elif audience_type.lower() == AudienceType.SUPER_ADMINS.lower():
+    elif audience_type.lower() == AudienceType.SUPER_ADMINS.value.lower():
         if audience.lower() != ALL.lower():
             return list(set(UserProfile.objects.filter(is_super_admin=True).values_list("email", flat=True)))
         audience = audience.split(",")
     
-    elif audience_type.lower() == AudienceType.COMMUNITY_ADMIN.lower():
+    elif audience_type.lower() == AudienceType.COMMUNITY_ADMIN.value.lower():
         if audience.lower() != ALL.lower():
             if not community_ids:
                 return list(set(CommunityAdminGroup.objects.all().values_list("members__email", flat=True)))
@@ -82,21 +84,22 @@ def get_message_recipients(audience, audience_type, community_ids,sub_audience_t
             
         audience = audience.split(",")
         
-    elif audience_type.lower() == AudienceType.USERS.lower():
+    elif audience_type.lower() == AudienceType.USERS.value.lower():
         if audience.lower() != ALL.lower():
             if not community_ids:
                 return list(set(UserProfile.objects.all().values_list("email", flat=True)))
             return list(set(CommunityMember.objects.filter(community__id__in=community_ids).values_list("user__email", flat=True)))
         audience = audience.split(",")
         
-    elif audience_type.lower() == AudienceType.ACTION_TAKERS.lower():
+    elif audience_type.lower() == AudienceType.ACTION_TAKERS.value.lower():
         audience = audience.split(",")
-        if sub_audience_type.lower() == SubAudienceType.COMPLETED.lower():
+        user_action_rel = []
+        if sub_audience_type.lower() == SubAudienceType.COMPLETED.value.lower():
             user_action_rel = UserActionRel.objects.filter(status=SubAudienceType.COMPLETED, action__id__in=audience).values_list("user__email", flat=True)
-        elif sub_audience_type.lower() == SubAudienceType.TODO.lower():
+        elif sub_audience_type.lower() == SubAudienceType.TODO.value.lower():
             user_action_rel = UserActionRel.objects.filter(status=SubAudienceType.TODO, action__id__in=audience).values_list("user__email", flat=True)
             
-        elif sub_audience_type.lower() == SubAudienceType.BOTH.lower():
+        elif sub_audience_type.lower() == SubAudienceType.BOTH.value.lower():
             status = [SubAudienceType.COMPLETED, SubAudienceType.TODO]
             user_action_rel = UserActionRel.objects.filter(action__id__in=audience, status__in=status).values_list("user__email", flat=True)
             
