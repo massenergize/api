@@ -1,20 +1,24 @@
-import random
+from unittest.mock import patch
 
 from django.test.testcases import TestCase
-from unittest.mock import patch, MagicMock
-from api.store.message import get_message_recipients
+
 from _main_.utils.constants import AudienceType, SubAudienceType
-from api.tests.common import makeAdmin, makeCommunity, makeUser
-from database.models import Community, UserProfile, CommunityAdminGroup, CommunityMember, UserActionRel
+from api.store.message import get_message_recipients
+from api.tests.common import makeAction, makeAdmin, makeCommunity, makeUser, makeUserActionRel
 
 
 class TestGetMessageRecipients(TestCase):
 	
 	def setUp(self):
+		self.action1 = makeAction(community=makeCommunity(), title=f"Action TEST 1")
+		self.action2 = makeAction(community=makeCommunity(), title=f"Action TEST 2")
 		for i in range(4):
 			community = makeCommunity(name=f"Community - {i + 1}", owner_email=f"admin{i +1 }@me.com")
-			makeAdmin(communities=[community])
-			makeUser(email=f"user{i + 1}+{1}@me.com", is_super_admin=True if i % 2 == 0 else False)
+			makeAdmin(communities=[community], email=f"cadmin{i +1}@me.com")
+			user = makeUser(email=f"user{i}+{i}@me.com", is_super_admin=True if i % 2 == 0 else False)
+			
+			makeUserActionRel(user=user, action=self.action1 if i % 2 == 0 else self.action2, status='DONE' if i % 2 == 0 else 'TODO')
+			
 	
 	@patch('api.store.message.is_null')
 	def test_null_audience(self, mock_is_null):
@@ -22,71 +26,37 @@ class TestGetMessageRecipients(TestCase):
 		result = get_message_recipients(None, 'COMMUNITY_CONTACTS', [], 'COMPLETED')
 		self.assertIsNone(result)
 	
-	def test_community_contacts(self, ):
+	def test_community_contacts(self):
 		result = get_message_recipients('all', 'COMMUNITY_CONTACTS', None, None)
-		print("== result ==>", result)
-		self.assertEqual(len(result), 4)
+		self.assertEqual(len(result), 5)
 		
+	def test_super_admins(self):
+		result = get_message_recipients('all', 'SUPER_ADMINS', None, None)
+		self.assertEqual(set(result), {'user2+2@me.com', 'user0+0@me.com'})
 	
-	@patch('api.store.message.UserProfile')
-	@patch('api.store.message.AudienceType')
-	def test_super_admins(self, mock_audience_type, mock_user_profile):
-		mock_audience_type.SUPER_ADMINS.value.lower.return_value = 'super_admins'
-		mock_user_profile.objects.filter.return_value = MagicMock(
-			values_list=MagicMock(return_value=['admin1@example.com', 'admin2@example.com']))
-		result = get_message_recipients('SUPER_ADMINS', 'SUPER_ADMINS', [], 'COMPLETED')
-		self.assertEqual(set(result), {'admin1@example.com', 'admin2@example.com'})
+	def test_community_admin(self, ):
+		result = get_message_recipients('all', 'COMMUNITY_ADMIN', None, None)
+		self.assertEqual(len(result), 4)
+		self.assertEqual(set(result), {"cadmin1@me.com", "cadmin2@me.com", "cadmin3@me.com", "cadmin4@me.com"})
 	
-	@patch('api.store.message.CommunityAdminGroup')
-	@patch('api.store.message.AudienceType')
-	def test_community_admin(self, mock_audience_type, mock_community_admin_group):
-		mock_audience_type.COMMUNITY_ADMIN.value.lower.return_value = 'community_admin'
-		mock_community_admin_group.objects.all.return_value = MagicMock(
-			values_list=MagicMock(return_value=['admin1@example.com', 'admin2@example.com']))
-		result = get_message_recipients('COMMUNITY_ADMIN', 'COMMUNITY_ADMIN', [], 'COMPLETED')
-		self.assertEqual(set(result), {'admin1@example.com', 'admin2@example.com'})
+	def test_users(self):
+		result = get_message_recipients('all', 'USERS', None, None)
+		self.assertEquals(set(result), {'user1+1@me.com', 'user3+3@me.com'})
 	
-	@patch('api.store.message.UserProfile')
-	@patch('api.store.message.AudienceType')
-	def test_users(self, mock_audience_type, mock_user_profile):
-		mock_audience_type.USERS.value.lower.return_value = 'users'
-		mock_user_profile.objects.all.return_value = MagicMock(
-			values_list=MagicMock(return_value=['user1@example.com', 'user2@example.com']))
-		result = get_message_recipients('USERS', 'USERS', [], 'COMPLETED')
-		self.assertEqual(set(result), {'user1@example.com', 'user2@example.com'})
-	
-	@patch('api.store.message.UserActionRel')
-	@patch('api.store.message.SubAudienceType')
-	@patch('api.store.message.AudienceType')
-	def test_action_takers_completed(self, mock_audience_type, mock_sub_audience_type, mock_user_action_rel):
-		mock_audience_type.ACTION_TAKERS.value.lower.return_value = 'action_takers'
-		mock_sub_audience_type.COMPLETED.value.lower.return_value = 'completed'
-		mock_user_action_rel.objects.filter.return_value = MagicMock(
-			values_list=MagicMock(return_value=['taker1@example.com', 'taker2@example.com']))
-		result = get_message_recipients('ACTION_TAKERS', 'ACTION_TAKERS', [], 'COMPLETED')
+	def test_action_takers_completed(self):
+		result = get_message_recipients(f'{self.action2.id},{self.action1.id}', AudienceType.ACTION_TAKERS.value,  None, SubAudienceType.COMPLETED.value)
+		print("=== RESULT DONE ===", result)
 		self.assertEqual(set(result), {'taker1@example.com', 'taker2@example.com'})
 	
-	@patch('api.store.message.UserActionRel')
-	@patch('api.store.message.SubAudienceType')
-	@patch('api.store.message.AudienceType')
-	def test_action_takers_todo(self, mock_audience_type, mock_sub_audience_type, mock_user_action_rel):
-		mock_audience_type.ACTION_TAKERS.value.lower.return_value = 'action_takers'
-		mock_sub_audience_type.TODO.value.lower.return_value = 'todo'
-		mock_user_action_rel.objects.filter.return_value = MagicMock(
-			values_list=MagicMock(return_value=['taker3@example.com', 'taker4@example.com']))
-		result = get_message_recipients('ACTION_TAKERS', 'ACTION_TAKERS', [], 'TODO')
+	def test_action_takers_todo(self):
+		result = get_message_recipients(f'{self.action2.id},{self.action1.id}', AudienceType.ACTION_TAKERS.value,  None, SubAudienceType.TODO.value)
+		print("=== RESULT TODO ===", result)
 		self.assertEqual(set(result), {'taker3@example.com', 'taker4@example.com'})
 	
-	@patch('api.store.message.UserActionRel')
-	@patch('api.store.message.SubAudienceType')
-	@patch('api.store.message.AudienceType')
-	def test_action_takers_both(self, mock_audience_type, mock_sub_audience_type, mock_user_action_rel):
-		mock_audience_type.ACTION_TAKERS.value.lower.return_value = 'action_takers'
-		mock_sub_audience_type.BOTH.value.lower.return_value = 'both'
-		mock_user_action_rel.objects.filter.return_value = MagicMock(
-			values_list=MagicMock(return_value=['taker5@example.com', 'taker6@example.com']))
-		result = get_message_recipients('ACTION_TAKERS', 'ACTION_TAKERS', [], 'BOTH')
-		self.assertEqual(set(result), {'taker5@example.com', 'taker6@example.com'})
+	def test_action_takers_both(self):
+		result = get_message_recipients(f'{self.action2.id},{self.action1.id}', AudienceType.ACTION_TAKERS.value,  None, SubAudienceType.BOTH.value)
+		print("=== RESULT BOTH ===", result)
+		self.assertEqual(set(result), {''})
 
 
 if __name__ == '__main__':

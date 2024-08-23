@@ -72,12 +72,12 @@ def get_message_recipients(audience, audience_type, community_ids,sub_audience_t
         return list(set(communities.values_list("owner_email", flat=True)))
     
     elif audience_type.lower() == AudienceType.SUPER_ADMINS.value.lower():
-        if audience.lower() != ALL.lower():
+        if audience.lower() == ALL.lower():
             return list(set(UserProfile.objects.filter(is_super_admin=True).values_list("email", flat=True)))
         audience = audience.split(",")
     
     elif audience_type.lower() == AudienceType.COMMUNITY_ADMIN.value.lower():
-        if audience.lower() != ALL.lower():
+        if audience.lower() == ALL.lower():
             if not community_ids:
                 return list(set(CommunityAdminGroup.objects.all().values_list("members__email", flat=True)))
             return list(set(CommunityAdminGroup.objects.filter(community__id__in=community_ids).values_list("members__email", flat=True)))
@@ -85,9 +85,9 @@ def get_message_recipients(audience, audience_type, community_ids,sub_audience_t
         audience = audience.split(",")
         
     elif audience_type.lower() == AudienceType.USERS.value.lower():
-        if audience.lower() != ALL.lower():
+        if audience.lower() == ALL.lower():
             if not community_ids:
-                return list(set(UserProfile.objects.all().values_list("email", flat=True)))
+                return list(set(UserProfile.objects.filter(is_super_admin=False, is_community_admin=False).values_list("email", flat=True)))
             return list(set(CommunityMember.objects.filter(community__id__in=community_ids).values_list("user__email", flat=True)))
         audience = audience.split(",")
         
