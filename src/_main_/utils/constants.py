@@ -102,7 +102,7 @@ class AudienceType(Enum):
     SUPER_ADMINS = "SUPER_ADMINS"
     USERS = "USERS"
     ACTION_TAKERS = "ACTIONS"
-    COMMUNITY_ADMIN = "COMMUNITY_ADMIN"
+    COMMUNITY_ADMIN = "COMMUNITY_ADMINS"
     
     
 class SubAudienceType(Enum):

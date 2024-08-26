@@ -81,7 +81,7 @@ def get_message_recipients(audience, audience_type, community_ids,sub_audience_t
             if not community_ids:
                 return list(set(CommunityAdminGroup.objects.all().values_list("members__email", flat=True)))
             return list(set(CommunityAdminGroup.objects.filter(community__id__in=community_ids).values_list("members__email", flat=True)))
-            
+    
         audience = audience.split(",")
         
     elif audience_type.lower() == AudienceType.USERS.value.lower():
@@ -95,12 +95,12 @@ def get_message_recipients(audience, audience_type, community_ids,sub_audience_t
         audience = audience.split(",")
         user_action_rel = []
         if sub_audience_type.lower() == SubAudienceType.COMPLETED.value.lower():
-            user_action_rel = UserActionRel.objects.filter(status=SubAudienceType.COMPLETED, action__id__in=audience).values_list("user__email", flat=True)
+            user_action_rel = UserActionRel.objects.filter(status=SubAudienceType.COMPLETED.value, action__id__in=audience).values_list("user__email", flat=True)
         elif sub_audience_type.lower() == SubAudienceType.TODO.value.lower():
-            user_action_rel = UserActionRel.objects.filter(status=SubAudienceType.TODO, action__id__in=audience).values_list("user__email", flat=True)
+            user_action_rel = UserActionRel.objects.filter(status=SubAudienceType.TODO.value, action__id__in=audience).values_list("user__email", flat=True)
             
         elif sub_audience_type.lower() == SubAudienceType.BOTH.value.lower():
-            status = [SubAudienceType.COMPLETED, SubAudienceType.TODO]
+            status = [SubAudienceType.COMPLETED.value, SubAudienceType.TODO.value]
             user_action_rel = UserActionRel.objects.filter(action__id__in=audience, status__in=status).values_list("user__email", flat=True)
             
         return list(set(user_action_rel))
