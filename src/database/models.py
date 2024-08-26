@@ -4280,15 +4280,30 @@ class CampaignSupportedLanguage(BaseModel):
     language = models.ForeignKey(SupportedLanguage, on_delete=models.CASCADE, db_index=True)
     campaign = models.ForeignKey("apps__campaigns.Campaign", on_delete=models.CASCADE, db_index=True, related_name="supported_languages")
     is_active = models.BooleanField(default=True, blank=True)
-    
+
     def __str__(self):
         return f"{self.campaign.title} - {self.language.name}"
-    
+
     def simple_json(self):
         return {"id": str(self.id), "is_active": self.is_active, "campaign": str(self.id), "code": self.language.code, "name": self.language.name}
-    
+
     def full_json(self):
         return self.simple_json()
-    
+
     class Meta:
         db_table = "campaign_supported_languages"
+
+class CommunityExcludedTestimonialCategories(BaseModel):
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
+    tags = models.ManyToManyField(Tag, blank=True)
+
+    def __str__(self):
+        return f"{self.community.name} - {', '.join([tag.name for tag in self.tags.all()])}"
+
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
+
+
