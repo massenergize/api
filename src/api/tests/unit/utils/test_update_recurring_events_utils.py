@@ -3,8 +3,8 @@ from datetime import datetime, timedelta
 from unittest.mock import MagicMock, Mock, patch
 
 from _main_.utils.common import custom_timezone_info
-from api.utils.api_utils import (get_date_of_first_weekday, get_final_date, handle_recurring_event_exception,
-                                 update_event_dates, update_monthly_event)
+from task_queue.database_tasks.update_recurring_events import get_date_of_first_weekday, get_final_date, \
+    handle_recurring_event_exception, update_event_dates, update_monthly_event
 
 
 class TestRecurringEventsUtils(unittest.TestCase):
