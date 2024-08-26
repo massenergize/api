@@ -5,6 +5,6 @@ TRANSLATION_EXCLUSION_PATTERNS_PER_URL = {
 		re.compile(r"data\.title"),
 	],
 	"/campaigns.technologies.info": [
-		re.compile(r".*\.vendor.*"),
+		re.compile(r".*\.vendor.name"),
 	]
 }
