@@ -3,6 +3,8 @@ This file contains Global constants used throughout the codebase.
 """
 
 import os
+from enum import Enum
+
 from _main_.settings import IS_PROD, IS_CANARY, IS_LOCAL, BASE_DIR
 from _main_.utils.utils import load_json
 
@@ -90,7 +92,20 @@ INSPIRATIONAL_MESSAGES = [
     "Your efforts matter. Let's save the planet together.",
     "Join the green revolution and make a difference."
 ]
-
 DJANGO_BULK_CREATE_LIMIT = 999 # set to 999 due to the bulk_creation of sqlite db
 DEFAULT_SOURCE_LANGUAGE_CODE = "en-US"
 INVALID_LANGUAGE_CODE_ERR_MSG = "Invalid language code"
+
+
+class AudienceType(Enum):
+    COMMUNITY_CONTACTS = "COMMUNITY_CONTACTS"
+    SUPER_ADMINS = "SUPER_ADMINS"
+    USERS = "USERS"
+    ACTION_TAKERS = "ACTIONS"
+    COMMUNITY_ADMIN = "COMMUNITY_ADMINS"
+    
+    
+class SubAudienceType(Enum):
+    COMPLETED = "DONE"
+    TODO = "TODO"
+    BOTH = "BOTH"
