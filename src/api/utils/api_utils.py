@@ -1,23 +1,12 @@
 import secrets
 import string
-from datetime import datetime, timedelta
 from math import atan2, cos, radians, sin, sqrt
-import calendar
-
-from _main_.utils.common import custom_timezone_info
-from _main_.utils.constants import COMMUNITY_URL_ROOT
-from _main_.utils.utils import load_json
-from database.models import AboutUsPageSettings, ActionsPageSettings, Community, CommunityAdminGroup, \
-    ContactUsPageSettings, DonatePageSettings, EventsPageSettings, ImpactPageSettings, Media, Menu, \
-    SupportedLanguage, TeamsPageSettings, TestimonialsPageSettings, TranslationsCache, UserProfile, \
-    ContactUsPageSettings, DonatePageSettings, EventsPageSettings, ImpactPageSettings, Media, RecurringEventException, \
-    TeamsPageSettings, \
-    TestimonialsPageSettings, UserProfile, \
-    VendorsPageSettings
-import pyshorteners
 
 from _main_.utils.constants import COMMUNITY_URL_ROOT, DEFAULT_SOURCE_LANGUAGE_CODE
-from django.utils import timezone
+from _main_.utils.utils import load_json
+from database.models import AboutUsPageSettings, ActionsPageSettings, Community, CommunityAdminGroup, \
+    ContactUsPageSettings, DonatePageSettings, EventsPageSettings, ImpactPageSettings, Media, SupportedLanguage, \
+    TeamsPageSettings, TestimonialsPageSettings, TranslationsCache, UserProfile, VendorsPageSettings
 
 
 def is_admin_of_community(context, community_id):
@@ -336,81 +325,4 @@ def get_supported_language(language_code):
         return supported_language.code
     return DEFAULT_SOURCE_LANGUAGE_CODE
 
-
-# ------------------------ Recurring Events utils ----------------------------------------#
-
-def get_final_date(event, today):
-    start_time = event.start_date_and_time.strftime("%H:%M:%S+00:00")
-    final_date_str = event.recurring_details.get('final_date')
-    
-    if final_date_str and final_date_str != 'None':
-        final_date = datetime.strptime(f"{final_date_str} {start_time}", "%Y-%m-%d %H:%M:%S+00:00")
-        return final_date.replace(tzinfo=custom_timezone_info())
-    
-    return None
-
-
-def update_event_dates(event, today):
-    sep_count = int(event.recurring_details['separation_count'])
-    start_date = event.start_date_and_time
-    end_date = event.end_date_and_time
-    duration = end_date - start_date
-    
-    if event.recurring_details['recurring_type'] == "week":
-        update_weekly_event(event, start_date, duration, sep_count, today)
-    elif event.recurring_details['recurring_type'] == "month":
-        update_monthly_event(event, start_date, duration, sep_count, today)
-
-
-def update_weekly_event(event, start_date, duration, sep_count, today):
-    while start_date <= today:
-        start_date += timedelta(7 * sep_count)
-    event.start_date_and_time = start_date
-    event.end_date_and_time = start_date + duration
-    event.save()
-
-
-def update_monthly_event(event, start_date, duration, sep_count, today):
-    converter = {"first": 1, "second": 2, "third": 3, "fourth": 4}
-    while start_date <= today:
-        new_month = start_date + timedelta((sep_count * 31) + 1)
-        date_of_first_weekday = get_date_of_first_weekday(new_month, event.recurring_details['day_of_week'])
-        upcoming_date = date_of_first_weekday + ((converter[event.recurring_details['week_of_month']] - 1) * 7)
-        start_date = datetime(new_month.year, new_month.month, upcoming_date, start_date.hour, start_date.minute,
-                              tzinfo=custom_timezone_info())
-    
-    event.start_date_and_time = start_date
-    event.end_date_and_time = start_date + duration
-    event.save()
-
-
-def get_date_of_first_weekday(new_month, day_of_week):
-    obj = calendar.Calendar()
-    for day in obj.itermonthdates(new_month.year, new_month.month):
-        if day.day >= 8:
-            continue
-        d1 = datetime(day.year, day.month, day.day, tzinfo=custom_timezone_info())
-        if calendar.day_name[d1.weekday()] == day_of_week:
-            return day.day
-    return 1
-
-
-def handle_recurring_event_exception(event):
-    exception = RecurringEventException.objects.filter(event=event).first()
-    if exception:
-        exception_former_time = exception.former_time.replace(tzinfo=custom_timezone_info())
-        event_start_date_and_time = event.start_date_and_time.replace(tzinfo=custom_timezone_info())
-        if exception_former_time < event_start_date_and_time:
-            exception.delete()
-            
-            
-def get_eta_from_datetime(_datetime):
-    if not _datetime:
-        return None
-    
-    if timezone.is_aware(_datetime):
-        return _datetime
-    parsed_datetime = datetime.strptime(_datetime, '%a, %d %b %Y %H:%M:%S %Z')
-    formatted_date_string = timezone.make_aware(parsed_datetime)
-    return formatted_date_string
     
