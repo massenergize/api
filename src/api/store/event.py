@@ -9,7 +9,7 @@ from _main_.utils.utils import is_url_valid
 from _main_.utils.common import custom_timezone_info, local_time, parse_datetime_to_aware
 from api.store.common import get_media_info, make_media_info
 from api.tests.common import RESET, makeUserUpload
-from api.utils.api_utils import get_eta_from_datetime, is_admin_of_community
+from api.utils.api_utils import is_admin_of_community
 from api.utils.filter_functions import get_events_filter_params
 from database.models import Event, RecurringEventException, UserProfile, EventAttendee, Media, Community, \
     EventNudgeSetting
