@@ -19,8 +19,7 @@ from api.services.translations_cache import TranslationsCacheService
 from api.store.common import create_pdf_from_rich_text, sign_mou
 from api.store.download import DownloadStore
 from api.store.utils import get_community, get_user, get_user_from_context
-from api.utils.api_utils import get_eta_from_datetime, get_final_date, get_sender_email, \
-    handle_recurring_event_exception, update_event_dates
+from api.utils.api_utils import get_sender_email
 from api.utils.constants import BROADCAST_EMAIL_TEMPLATE, CADMIN_EMAIL_TEMPLATE, DATA_DOWNLOAD_TEMPLATE, \
     SADMIN_EMAIL_TEMPLATE
 from database.models import Community, CommunityAdminGroup, CommunityMember, CommunityNotificationSetting, Event, \
