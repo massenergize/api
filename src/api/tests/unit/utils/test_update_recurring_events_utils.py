@@ -32,19 +32,19 @@ class TestRecurringEventsUtils(unittest.TestCase):
         result = get_final_date(self.event, self.today)
         self.assertIsNone(result)
 
-    @patch('api.utils.api_utils.update_weekly_event')
+    @patch('task_queue.database_tasks.update_recurring_events.update_weekly_event')
     def test_update_event_dates_weekly(self, mock_update_weekly_event):
         self.event.recurring_details = {'separation_count': '1', 'recurring_type': 'week'}
         update_event_dates(self.event, self.today)
         mock_update_weekly_event.assert_called_once()
 
-    @patch('api.utils.api_utils.update_monthly_event')
+    @patch('task_queue.database_tasks.update_recurring_events.update_monthly_event')
     def test_update_event_dates_monthly(self, mock_update_monthly_event):
         self.event.recurring_details = {'separation_count': '1', 'recurring_type': 'month'}
         update_event_dates(self.event, self.today)
         mock_update_monthly_event.assert_called_once()
 
-    @patch('api.utils.api_utils.get_date_of_first_weekday', return_value=1)
+    @patch('task_queue.database_tasks.update_recurring_events.get_date_of_first_weekday', return_value=1)
     def test_update_monthly_event(self, mock_get_date_of_first_weekday):
         sep_count = 1
         self.event.recurring_details = {'day_of_week': 'Monday', 'week_of_month': 'first'}
@@ -58,7 +58,7 @@ class TestRecurringEventsUtils(unittest.TestCase):
         result = get_date_of_first_weekday(new_month, day_of_week)
         self.assertEqual(result, 2)  # 2nd January 2023 is a Monday
 
-    @patch('api.utils.api_utils.RecurringEventException')
+    @patch('task_queue.database_tasks.update_recurring_events.RecurringEventException')
     def test_handle_recurring_event_exception(self, MockRecurringEventException):
         mock_event = MagicMock()
         mock_event.start_date_and_time = datetime(2023, 1, 1, 10, 0, 0, tzinfo=custom_timezone_info())
