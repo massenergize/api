@@ -1,5 +1,6 @@
 import json
 
+from celery.result import AsyncResult
 from django.utils import timezone
 
 from _main_.utils.footage.FootageConstants import FootageConstants
@@ -19,6 +20,7 @@ from _main_.utils.context import Context
 from _main_.utils.massenergize_logger import log
 
 from database.utils.settings.model_constants.events import EventConstants
+from task_queue.database_tasks.update_recurring_events import update_recurring_event
 from .utils import get_user_from_context, get_user_or_die, get_new_title
 import datetime
 from datetime import timedelta
@@ -26,13 +28,17 @@ import calendar
 from typing import Tuple
 from zoneinfo import ZoneInfo
 
+
 def _local_datetime(date_and_time):
     """
     Converts a UTC datetime string to local datetime in Massachusetts time zone.
-    """
-    # Parse the datetime string to a datetime object
-    dt = datetime.datetime.strptime(str(date_and_time), '%Y-%m-%dT%H:%M:%SZ')
-
+    """    # Parse the datetime string to a datetime object
+    try:
+        # Try parsing the datetime string with the first format
+        dt = datetime.datetime.strptime(str(date_and_time), '%Y-%m-%dT%H:%M:%SZ')
+    except ValueError:
+        # If it fails, try the second format
+        dt = datetime.datetime.strptime(str(date_and_time), '%Y-%m-%d %H:%M:%S%z')
     # Specify the Massachusetts time zone
     massachusetts_zone = ZoneInfo('America/New_York')
 
@@ -59,7 +65,6 @@ def _check_recurring_date(start_date_and_time, end_date_and_time, day_of_week, w
     converter = {"first": 1, "second": 2, "third": 3, "fourth": 4}
 
     if start_date_and_time and end_date_and_time:
-
         # the date check below fails because the local date (in Massachusetts) is different than the UTC date
         local_start = _local_datetime(start_date_and_time)
         local_end = _local_datetime(end_date_and_time)
@@ -288,8 +293,7 @@ class EventStore:
             publicity_selections = args.pop("publicity_selections", [])
 
             if end_date_and_time < start_date_and_time:
-                return None, CustomMassenergizeError(
-                    "Please provide an end date and time that comes after the start date and time.")
+                return None, CustomMassenergizeError("Please provide an end date and time that comes after the start date and time.")
 
             if args.get('is_published', False):
                 args['published_at'] = local_time()
@@ -383,6 +387,10 @@ class EventStore:
                 }
 
             new_event.save()
+            
+            # create a task to reschedule event after current end date
+            if new_event.is_recurring:
+                update_recurring_event(new_event.id)
             # ----------------------------------------------------------------
             Spy.create_event_footage(events=[new_event], context=context, actor=new_event.user,
                                      type=FootageConstants.create(), notes=f"Event ID({new_event.id})")
@@ -631,6 +639,7 @@ class EventStore:
                     if rescheduled:
                         rescheduled.rescheduled_event.delete()
                         rescheduled.delete()
+                    
 
             if (is_approved != None and
                 (is_approved != event.is_approved)):  # If changed
@@ -645,6 +654,10 @@ class EventStore:
 
             # successful return
             event.save()
+            
+            # create a task to reschedule event after current end date
+            if event.is_recurring:
+                update_recurring_event(event.id)
 
             # ----------------------------------------------------------------
             Spy.create_event_footage(events=[event], context=context, type=FootageConstants.update(),

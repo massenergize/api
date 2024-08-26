@@ -27,5 +27,5 @@ FUNCTIONS = {
     "Process Content Spacing": process_spacing_data,
     "Update Action Content": update_actions_content,
     "Remove Duplicate Images": remove_duplicate_images,
-    "Translate Database Contents": TranslateDBContents().start_translations
+    "Translate Database Contents": TranslateDBContents().start_translations,
 }

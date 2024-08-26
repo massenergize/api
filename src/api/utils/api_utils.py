@@ -2,14 +2,11 @@ import secrets
 import string
 from math import atan2, cos, radians, sin, sqrt
 
+from _main_.utils.constants import COMMUNITY_URL_ROOT, DEFAULT_SOURCE_LANGUAGE_CODE
 from _main_.utils.utils import load_json
 from database.models import AboutUsPageSettings, ActionsPageSettings, Community, CommunityAdminGroup, \
-    ContactUsPageSettings, DonatePageSettings, EventsPageSettings, ImpactPageSettings, Media, Menu, \
-    SupportedLanguage, TeamsPageSettings, TestimonialsPageSettings, TranslationsCache, UserProfile, \
-    VendorsPageSettings
-import pyshorteners
-
-from _main_.utils.constants import COMMUNITY_URL_ROOT, DEFAULT_SOURCE_LANGUAGE_CODE
+    ContactUsPageSettings, DonatePageSettings, EventsPageSettings, ImpactPageSettings, Media, SupportedLanguage, \
+    TeamsPageSettings, TestimonialsPageSettings, TranslationsCache, UserProfile, VendorsPageSettings
 
 
 def is_admin_of_community(context, community_id):
@@ -327,3 +324,5 @@ def get_supported_language(language_code):
     if supported_language:
         return supported_language.code
     return DEFAULT_SOURCE_LANGUAGE_CODE
+
+    
