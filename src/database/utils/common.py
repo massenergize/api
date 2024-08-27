@@ -5,7 +5,6 @@ retrieving data
 import base64
 import hashlib
 import json
-from django.forms.models import model_to_dict
 from collections.abc import Iterable
 from _main_.settings import AWS_S3_REGION_NAME, AWS_STORAGE_BUCKET_NAME
 from _main_.utils.massenergize_logger import log

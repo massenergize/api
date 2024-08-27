@@ -11,14 +11,13 @@ from database.models import CommunityAdminGroup, Footage, Policy, PolicyAcceptan
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
-from _main_.settings import DEBUG, IS_PROD, IS_CANARY
+from _main_.settings import DEBUG, IS_PROD, IS_CANARY, SLACK_SUPER_ADMINS_WEBHOOK_URL
 from _main_.utils.massenergize_logger import log
 from .utils import get_community, get_user_from_context, get_user_or_die, get_community_or_die, get_admin_communities, remove_dups, \
   find_reu_community, split_location_string, check_location
 import json
 from typing import Tuple
 from api.services.utils import send_slack_message
-from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY, DEBUG
 from _main_.utils.constants import COMMUNITY_URL_ROOT, ME_LOGO_PNG
 from api.utils.constants import GUEST_USER_EMAIL_TEMPLATE, ME_SUPPORT_TEAM_EMAIL, MOU_SIGNED_ADMIN_RECIPIENT, MOU_SIGNED_SUPPORT_TEAM_TEMPLATE
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments

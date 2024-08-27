@@ -1,7 +1,7 @@
 from _main_.utils.utils import is_not_null
 from api.utils.api_utils import is_admin_of_community
 from api.utils.filter_functions import get_super_admins_filter_params
-from database.models import UserProfile, CommunityAdminGroup, Media, UserProfile, Message
+from database.models import UserProfile, CommunityAdminGroup, Media, Message
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.context import Context
 from .utils import get_community, get_user, get_community_or_die, unique_media_filename

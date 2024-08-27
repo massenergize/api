@@ -1,14 +1,10 @@
 """Handler file for all routes pertaining to users"""
-from functools import wraps
-from _main_.utils import context
 from _main_.utils.route_handler import RouteHandler
 from api.services.userprofile import UserService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.massenergize_errors import NotAuthorizedError
 from _main_.utils.context import Context
 from api.decorators import admins_only, super_admins_only, login_required
-from api.store.common import create_pdf_from_rich_text
-from database.models import Policy
 
 
 class UserHandler(RouteHandler):

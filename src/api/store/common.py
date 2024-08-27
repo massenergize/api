@@ -12,20 +12,10 @@ from xhtml2pdf import pisa
 from _main_.settings import AWS_S3_REGION_NAME
 from _main_.utils.common import custom_timezone_info, serialize, serialize_all
 from api.constants import CSV_FIELD_NAMES
-from api.store.utils import getCarbonScoreFromActionRel
 from carbon_calculator.models import Action
 from database.utils.common import calculate_hash_for_bucket_item
-from xhtml2pdf import pisa
-import pytz
-from _main_.utils.utils import Console
 from database.models import Community, CommunityAdminGroup, Event, Media, Team, UserActionRel
 from carbon_calculator.carbonCalculator import getCarbonImpact
-from django.db.models import Q, Model
-from django.utils import timezone
-import boto3
-import hashlib
-from django.db.models import Count, QuerySet
-from django.http import HttpResponse
 
 s3 = boto3.client("s3", region_name=AWS_S3_REGION_NAME)
 
