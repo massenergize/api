@@ -2,7 +2,6 @@ from datetime import datetime
 from database.models import UserProfile, DeviceProfile, Location, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError
 from _main_.utils.context import Context
-from _main_.settings import DEBUG
 from _main_.utils.massenergize_logger import log
 from typing import Tuple
 

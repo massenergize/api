@@ -9,17 +9,18 @@ from _main_.utils.policy.PolicyConstants import PolicyConstants
 from _main_.utils.base_model import BaseModel
 from _main_.utils.base_model import RootModel
 from apps__campaigns.helpers import get_user_accounts
-from database.utils.settings.model_constants.events import EventConstants
 from django.db import models
 from django.db.models.fields import BooleanField
 from _main_.utils.feature_flags.FeatureFlagConstants import FeatureFlagConstants
 from _main_.utils.footage.FootageConstants import FootageConstants
 from database.utils.constants import *
+from database.utils.settings.model_constants.events import EventConstants
 from database.utils.settings.admin_settings import AdminPortalSettings
 from database.utils.settings.model_constants.user_media_uploads import (
     UserMediaConstants,
 )
 from database.utils.settings.user_settings import UserPortalSettings
+from carbon_calculator.carbonCalculator import getCarbonImpact
 from django.utils import timezone
 from django.core.files.storage import default_storage
 from django.db.models.query import QuerySet
@@ -34,7 +35,6 @@ from .utils.common import (
 from api.constants import COMMUNITY_NOTIFICATION_TYPES, STANDARD_USER, GUEST_USER
 from django.forms.models import model_to_dict
 from carbon_calculator.models import Action as CCAction
-from carbon_calculator.carbonCalculator import AverageImpact
 
 CHOICES = json_loader("./database/raw_data/other/databaseFieldChoices.json")
 ZIP_CODE_AND_STATES = json_loader("./database/raw_data/other/states.json")
@@ -669,10 +669,7 @@ class Community(models.Model):
 
         carbon_footprint_reduction = 0
         for actionRel in done_actions:
-            if actionRel.action and actionRel.action.calculator_action:
-                carbon_footprint_reduction += AverageImpact(
-                    actionRel.action.calculator_action, actionRel.date_completed
-                )
+            carbon_footprint_reduction += getCarbonImpact(actionRel)
 
         goal["organic_attained_carbon_footprint_reduction"] = carbon_footprint_reduction
 
@@ -1026,20 +1023,14 @@ class UserProfile(models.Model):
         ).prefetch_related("action__calculator_action")
         done_points = 0
         for actionRel in done_actions:
-            if actionRel.action and actionRel.action.calculator_action:
-                done_points += AverageImpact(actionRel.action.calculator_action, actionRel.date_completed)
-            else:
-                done_points += actionRel.carbon_impact
+            done_points += getCarbonImpact(actionRel)
 
         todo_actions = UserActionRel.objects.filter(
             user=self, status="TODO"
         ).prefetch_related("action__calculator_action")
         todo_points = 0
         for actionRel in todo_actions:
-            if actionRel.action and actionRel.action.calculator_action:
-                todo_points += AverageImpact(actionRel.action.calculator_action, actionRel.date_completed)
-            else:
-                todo_points += actionRel.carbon_impact
+            todo_points += getCarbonImpact(actionRel, False)   # second arg for TODO actions
 
         user_testimonials = Testimonial.objects.filter(
             is_deleted=False, is_approved=True, user=self
@@ -2128,7 +2119,7 @@ class Action(models.Model):
                     "name": u.real_estate_unit.name if u.real_estate_unit else None,
                 },
                 "date_completed": u.date_completed,
-                "carbon_impact": AverageImpact(u.action.calculator_action, u.date_completed) if u.action.calculator_action else None,
+                "carbon_impact": getCarbonImpact(u),
                 "recorded_at": u.updated_at,
             }
             for u in UserActionRel.objects.filter(action=self, is_deleted=False)

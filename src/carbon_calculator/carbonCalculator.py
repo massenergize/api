@@ -119,12 +119,69 @@ def SavePic2Media(picURL):
         print("Error encountered: "+str(e))
         return None
 
-def AverageImpact(action, date=None, locality="default"):
+
+def getCarbonImpact(action, done_only=True): 
+  
+    if not action: return 0
+
+    if hasattr(action, "status"):
+        # this is a UserActionRel for a completed or todo action
+        if done_only and action.status !="DONE":  return 0
+
+        household = action.real_estate_unit
+        if household.address:
+            loc_options = locality_options(action.real_estate_unit.address.simple_json())
+        else:
+            if household.community:
+                location = household.community.locations.first().simple_json()
+                loc_options = locality_options(location)
+            else:    
+                loc_options = []   
+        if action.action and action.action.calculator_action:
+            return AverageImpact(action.action.calculator_action, action.date_completed, loc_options)
+        else:
+            return action.carbon_impact
+
+    elif hasattr(action, "calculator_action"):
+        # This is an Action posted by the community.  In this case we use the community location (community.locations)
+        location = action.community.locations.first().simple_json()
+        loc_options = locality_options(location)
+        if action.calculator_action:
+            return AverageImpact(action.calculator_action, None, loc_options)
+        else:
+            return 0
+    else:
+        return 0
+
+def AverageImpact(action, date=None, loc_options=[]):
     averageName = action.name + '_average_points'
-    impact = getDefault(locality, averageName, date, default=TOKEN_POINTS)
+    impact = getDefault(loc_options, averageName, date, default=TOKEN_POINTS)
     return impact
 
+
+def locality_options(loc):
+    # for actions which have been completed, use RealEstateUnit location
+    # for actions posted by communities, but not done we use the Community location
+    # return options in precedence order: city, county, state, i.e. ["Concord-MA", "Middlesex County-MA", "MA"]
+    options = []
+    if type(loc) == dict:
+        city = loc.get("city")
+        county = loc.get("county")
+        state = loc.get("state")
+        if city and state:
+            options.append(city + "-" + state)
+            if county:
+                options.append(county + "-" + state)
+            options.append(state)
+        return options
+    # not usual:
+    # invalid location information, use default
+    print("carbon calculator: Locality type = "+str(type(loc))+ " loc = "+str(loc))
+    return []
+
+
 class CarbonCalculator:
+    
     def __init__(self, reset=False) :
 
         start = time.time()
@@ -201,6 +258,7 @@ class CarbonCalculator:
         except Exception as e:
             print(str(e))
             print("Calculator initialization skipped")
+
 
     # query actions
     def Query(self,action=None):

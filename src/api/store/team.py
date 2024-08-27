@@ -9,10 +9,9 @@ from database.models import Team, UserProfile, Media, Community, TeamMember, Com
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.context import Context
 from _main_.utils.constants import COMMUNITY_URL_ROOT, ADMIN_URL_ROOT
-from .utils import get_community_or_die, get_user_or_die, get_admin_communities, getCarbonScoreFromActionRel, unique_media_filename
-from _main_.utils.massenergize_logger import log
+from .utils import get_community_or_die, get_user_or_die, get_admin_communities, unique_media_filename
+from carbon_calculator.carbonCalculator import getCarbonImpact
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
-from carbon_calculator.carbonCalculator import AverageImpact
 from typing import Tuple
 from django.db.models import Q
 def can_set_parent(parent, this_team=None):
@@ -117,7 +116,7 @@ class TeamStore:
             res["actions_todo"] += actions.filter(status="TODO").count()
             for done_action in done_actions:
               if done_action.action and done_action.action.calculator_action:
-                res["carbon_footprint_reduction"] += AverageImpact(done_action.action.calculator_action, done_action.date_completed)
+                res["carbon_footprint_reduction"] += getCarbonImpact(done_action)
 
         ans.append(res)
 
@@ -638,7 +637,7 @@ class TeamStore:
       completed_actions = UserActionRel.objects.filter(user__in=users, is_deleted=False).select_related('action', 'action__calculator_action')
       for completed_action in completed_actions:
           action_id = completed_action.action.id
-          action_carbon = getCarbonScoreFromActionRel(completed_action)
+          action_carbon = getCarbonImpact(completed_action)
           done = 1 if completed_action.status == "DONE" else 0
           todo = 1 if completed_action.status == "TODO" else 0
        

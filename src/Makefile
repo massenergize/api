@@ -118,7 +118,7 @@ celery-remote:
 	celery -A _main_.celery.app worker -l info
 
 full-celery-local: 
-	make -j 2 start celery
+	DJANGO_ENV="local" make -j 2 start celery
 .PHONY: full-celery-local
 
 beat-remote:

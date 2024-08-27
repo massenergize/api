@@ -1,7 +1,6 @@
 from _main_.utils.massenergize_errors import CustomMassenergizeError, MassEnergizeAPIError
 from _main_.utils.common import serialize, serialize_all
 from _main_.utils.pagination import paginate
-from api.decorators import login_required
 from api.store.userprofile import UserStore
 from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import send_massenergize_rich_email

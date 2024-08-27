@@ -54,11 +54,6 @@ class MiscellaneousService:
             return None, err
         return serialize_all(main_menu_items), None
 
-    def backfill(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
-        result, err = self.store.backfill(context, args)
-        if err:
-            return None, err
-        return result, None
     def actions_report(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
         result, err = self.store.actions_report(context, args)
         if err:

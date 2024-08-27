@@ -10,14 +10,14 @@ from api.utils.constants import (
     YEARLY_MOU_TEMPLATE,
 )
 from api.constants import STANDARD_USER, GUEST_USER
-from database.models import FeatureFlag, UserProfile, UserActionRel, Community, CommunityAdminGroup, CommunityMember, Event, RealEstateUnit, Team, Testimonial, Vendor, PolicyConstants, PolicyAcceptanceRecords, CommunitySnapshot, Goal, Action
+from database.models import UserProfile, UserActionRel, Community, CommunityAdminGroup, CommunityMember, Event, RealEstateUnit, Team, Testimonial, Vendor, PolicyConstants, PolicyAcceptanceRecords, CommunitySnapshot, Goal, Action
+from carbon_calculator.carbonCalculator import getCarbonImpact
 from django.utils import timezone
 import datetime
 from django.utils.timezone import utc
 from django.db.models import Count
 from django.db.models import Q
 from django.core.exceptions import ObjectDoesNotExist
-from carbon_calculator.carbonCalculator import AverageImpact
 
 today = parse_datetime_to_aware()
 one_week_ago = today - timezone.timedelta(days=7)
@@ -254,9 +254,7 @@ def _get_user_reported_info(community, users):
 
     carbon_user_reported = sum(
         [
-            AverageImpact(action_rel.action.calculator_action, action_rel.date_completed)
-            if action_rel.action.calculator_action
-            else 0
+            getCarbonImpact(action_rel)
             for action_rel in done_action_rels
         ]
     )

@@ -121,13 +121,6 @@ class TechnologyService:
         return serialize_all(res), None
     
 
-    def list_technologies_for_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
-        technologies, err = self.store.list_technologies_for_admin(context, args)
-        if err:
-            return None, err
-        return serialize_all(technologies), None
-    
-
     def create_technology_deal(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
         res, err = self.store.create_technology_deal(context, args)
         if err:

@@ -110,7 +110,7 @@ class DeviceHandler(RouteHandler):
     
     if metric:
       if metric == "anonymous_users":
-        metric, err = self.service.metric_anonymous_users(context, args)
+        metric, err = self.service.metric_anonymous_users()
 
       elif community_id and metric == "anonymous_community_users":
         metric, err = self.service.metric_anonymous_community_users(community_id)

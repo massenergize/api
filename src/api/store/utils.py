@@ -1,25 +1,15 @@
 from _main_.settings import IS_LOCAL, IS_PROD, IS_CANARY
 from _main_.utils.metrics import timed
 from _main_.utils.utils import strip_website
-from database.models import Community, UserProfile, RealEstateUnit, Location, CustomCommunityWebsiteDomain
-from _main_.utils.massenergize_errors import CustomMassenergizeError, InvalidResourceError
+from database.models import Community, UserProfile, CustomCommunityWebsiteDomain
+from _main_.utils.massenergize_errors import CustomMassenergizeError
 from _main_.utils.context import Context
 from django.db.models import Q
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from database.utils.constants import SHORT_STR_LEN
 import zipcodes
 import datetime
-from carbon_calculator.carbonCalculator import AverageImpact
 from _main_.utils.massenergize_logger import log
-
-
-def getCarbonScoreFromActionRel(actionRel): 
-  if not actionRel or actionRel.status !="DONE":  return 0 
-  if actionRel.carbon_impact : return actionRel.carbon_impact
-  calculator_action = actionRel.action.calculator_action
-  if calculator_action: 
-      return AverageImpact(calculator_action, actionRel.date_completed)
-  return 0
 
 def get_community(community_id=None, subdomain=None):
   try:

@@ -5,7 +5,6 @@ from _main_.utils.massenergize_errors import (
     InvalidResourceError,
     CustomMassenergizeError,
 )
-from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from collections import Counter
 from api.store.utils import get_human_readable_date
@@ -44,18 +43,15 @@ from api.store.team import get_team_users
 from api.constants import STANDARD_USER, GUEST_USER
 from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
 from api.store.tag_collection import TagCollectionStore
-from api.store.deviceprofile import DeviceStore
 from django.db.models import Q
 from _main_.utils.massenergize_logger import log
 from typing import Tuple
 
 from django.utils import timezone
 import datetime
-from django.utils.timezone import utc
-from carbon_calculator.carbonCalculator import AverageImpact
 from django.db.models import Count, Sum
 from uuid import UUID
-
+from carbon_calculator.carbonCalculator import getCarbonImpact
 
 EMPTY_DOWNLOAD = (None, None)
 
@@ -448,13 +444,8 @@ class DownloadStore:
 
     #Gets row information for the All Actions CSV and the All Communities and Actions CSV
     def _get_action_info_cells(self, action):
-        average_carbon_points = (
-            AverageImpact(action.calculator_action)
-            if action.calculator_action
-            else int(action.average_carbon_score)
-            if action.average_carbon_score.isdigit()
-            else 0
-        )
+
+        average_carbon_points = getCarbonImpact(action)
 
         is_published = "Yes" if action.is_published else "No"
 
@@ -575,10 +566,8 @@ class DownloadStore:
             done_actions_count += actions.filter(status= "DONE").count()
 
             for done_action in done_actions:
-                if done_action.action and done_action.action.calculator_action:
-                    total_carbon_points += (
-                        AverageImpact(done_action.action.calculator_action, done_action.date_completed)
-                    )
+                total_carbon_points += getCarbonImpact(done_action)
+
         total_carbon_points = str(total_carbon_points)
 
         trending_actions = self._get_last_30_days_list(members)
@@ -738,9 +727,7 @@ class DownloadStore:
 
         carbon_user_reported = sum(
             [
-                AverageImpact(action_rel.action.calculator_action)
-                if action_rel.action.calculator_action
-                else 0
+                getCarbonImpact(action_rel)
                 for action_rel in done_action_rels
             ]
         )

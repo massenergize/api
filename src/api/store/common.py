@@ -12,10 +12,10 @@ from xhtml2pdf import pisa
 from _main_.settings import AWS_S3_REGION_NAME
 from _main_.utils.common import custom_timezone_info, serialize, serialize_all
 from api.constants import CSV_FIELD_NAMES
-from api.store.utils import getCarbonScoreFromActionRel
 from carbon_calculator.models import Action
+from database.utils.common import calculate_hash_for_bucket_item
 from database.models import Community, CommunityAdminGroup, Event, Media, Team, UserActionRel
-from database.utils.common import calculate_hash_for_bucket_item, get_image_size_from_bucket
+from carbon_calculator.carbonCalculator import getCarbonImpact
 
 s3 = boto3.client("s3", region_name=AWS_S3_REGION_NAME)
 
@@ -104,7 +104,7 @@ def count_action_completed_and_todos(**kwargs):
     for completed_action in completed_actions:
         action_id = completed_action.action.id
         action_name = completed_action.action.title
-        action_carbon = getCarbonScoreFromActionRel(completed_action)
+        action_carbon = getCarbonImpact(completed_action)
         done = 1 if completed_action.status == "DONE" else 0
         todo = 1 if completed_action.status == "TODO" else 0
 

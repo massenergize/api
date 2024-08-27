@@ -23,7 +23,6 @@ class MiscellaneousHandler(RouteHandler):
         self.add("/menus.remake", self.remake_navigation_menu)
         self.add("/menus.list", self.navigation_menu_list)
         self.add("/user.portal.menu.list", self.load_menu_items)
-        self.add("/data.backfill", self.backfill)
         self.add("/data.carbonEquivalency.create", self.create_carbon_equivalency)
         self.add("/data.carbonEquivalency.update", self.update_carbon_equivalency)
         self.add("/data.carbonEquivalency.get", self.get_carbon_equivalencies)
@@ -77,14 +76,6 @@ class MiscellaneousHandler(RouteHandler):
         context: Context = request.context
         args: dict = context.args
         goal_info, err = self.service.navigation_menu_list(context, args)
-        if err:
-            return err
-        return MassenergizeResponse(data=goal_info)
-
-    def backfill(self, request):
-        context: Context = request.context
-        args: dict = context.args
-        goal_info, err = self.service.backfill(context, args)
         if err:
             return err
         return MassenergizeResponse(data=goal_info)
