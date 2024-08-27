@@ -1,5 +1,6 @@
 import csv
 from django.http import HttpResponse
+from _main_.utils.common import parse_datetime_to_aware
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
 from _main_.settings import IS_PROD
 from _main_.utils.constants import ADMIN_URL_ROOT
@@ -18,7 +19,7 @@ from django.db.models import Count
 from django.db.models import Q
 from django.core.exceptions import ObjectDoesNotExist
 
-today = datetime.datetime.utcnow().replace(tzinfo=utc)
+today = parse_datetime_to_aware()
 one_week_ago = today - timezone.timedelta(days=7)
 communities = Community.objects.all().order_by("is_approved")
 

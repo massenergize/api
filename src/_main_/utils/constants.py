@@ -3,6 +3,8 @@ This file contains Global constants used throughout the codebase.
 """
 
 import os
+from enum import Enum
+
 from _main_.settings import IS_PROD, IS_CANARY, IS_LOCAL, BASE_DIR
 from _main_.utils.utils import load_json
 
@@ -61,3 +63,49 @@ ME_INBOUND_EMAIL_ADDRESS = (
 
 
 PUBLIC_EMAIL_DOMAINS=["gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "aol.com"]
+
+import random
+
+INSPIRATIONAL_MESSAGES = [
+    "Together, we can make a difference for our planet.",
+    "Every small action counts in the fight against climate change.",
+    "Be the change you wish to see in the world.",
+    "Our planet needs heroes. Are you ready?",
+    "A greener future starts with you.",
+    "Plant trees, save lives.",
+    "Sustainability is the key to our future.",
+    "Reduce, reuse, recycle.",
+    "Act now for a cleaner tomorrow.",
+    "Join us in protecting our planet.",
+    "Climate action is not a choice, it's a necessity.",
+    "The Earth does not belong to us; we belong to the Earth.",
+    "Together, we can turn the tide on climate change.",
+    "Every action for the environment counts.",
+    "Be the solution to pollution.",
+    "Protect our planet, it's the only home we have.",
+    "Small steps lead to big changes.",
+    "Eco-friendly is the way to be.",
+    "Let's work together for a sustainable future.",
+    "Our actions today shape the world of tomorrow.",
+    "Be part of the change for a better world.",
+    "Make every day Earth Day.",
+    "Your efforts matter. Let's save the planet together.",
+    "Join the green revolution and make a difference."
+]
+DJANGO_BULK_CREATE_LIMIT = 999 # set to 999 due to the bulk_creation of sqlite db
+DEFAULT_SOURCE_LANGUAGE_CODE = "en-US"
+INVALID_LANGUAGE_CODE_ERR_MSG = "Invalid language code"
+
+
+class AudienceType(Enum):
+    COMMUNITY_CONTACTS = "COMMUNITY_CONTACTS"
+    SUPER_ADMINS = "SUPER_ADMINS"
+    USERS = "USERS"
+    ACTION_TAKERS = "ACTIONS"
+    COMMUNITY_ADMIN = "COMMUNITY_ADMINS"
+    
+    
+class SubAudienceType(Enum):
+    COMPLETED = "DONE"
+    TODO = "TODO"
+    BOTH = "BOTH"

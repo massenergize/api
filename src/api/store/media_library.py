@@ -16,7 +16,7 @@ from api.store.common import (
     resolve_relations,
     summarize_duplicates_into_csv,
 )
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 from _main_.utils.context import Context
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
@@ -45,12 +45,12 @@ class MediaLibraryStore:
             string = read_image_from_s3(image.file.name)
             return string, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def print_duplicates(self, args, context: Context):
-        grouped_dupes = find_duplicate_items()
-        filename = "summary-of-duplicates" 
+        grouped_dupes = find_duplicate_items(False,**args)
+        filename = "Summary-of-duplicates" 
         csv_file = summarize_duplicates_into_csv(grouped_dupes,filename)
 
         response = HttpResponse(content_type="text/csv")
@@ -174,7 +174,7 @@ class MediaLibraryStore:
             return media, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def find_images(self, args, _):

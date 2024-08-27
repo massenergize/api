@@ -1,11 +1,16 @@
+from http.client import BAD_REQUEST
+import os
 from uuid import UUID
 import html2text, traceback
 from django.shortcuts import render, redirect
 from _main_.utils.common import serialize_all
+from _main_.utils.massenergize_errors import InvalidResourceError, ServerError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from django.http import Http404, JsonResponse
-from _main_.settings import IS_PROD, IS_CANARY, RUN_SERVER_LOCALLY, STAGE
-from sentry_sdk import capture_message
+from _main_.settings import IS_PROD, IS_CANARY, RUN_SERVER_LOCALLY, EnvConfig
+from _main_.utils.massenergize_logger import log
+from api.decorators import x_frame_options_exempt
+from api.handlers.misc import MiscellaneousHandler
 from api.store.misc import MiscellaneousStore
 from _main_.utils.constants import RESERVED_SUBDOMAIN_LIST, STATES
 from api.utils.api_utils import get_distance_between_coords
@@ -27,11 +32,8 @@ from apps__campaigns.models import Campaign, CampaignTechnology
 from django.db.models import Q
 from django.template.loader import render_to_string
 from _main_.utils.metrics import timed
-
 import zipcodes
-
-import logging
-logger = logging.getLogger(STAGE.get_logger_identifier())
+from _main_.utils.massenergize_logger import log
 
 extract_text_from_html = html2text.HTML2Text()
 extract_text_from_html.ignore_links = True
@@ -92,6 +94,13 @@ META = {
     "tags": ["#ClimateChange"],
     "is_local": IS_LOCAL,
 }
+
+@x_frame_options_exempt
+def rewiring_america(request):
+    args  ={
+        "rewiring_america": os.environ.get('REWIRING_AMERICA_API_KEY')
+    }
+    return render(request,"rewiring_america.html", args)
 
 @timed
 def campaign(request, campaign_id):
@@ -363,6 +372,10 @@ def home(request):
         return community(request, subdomain)
 
     return redirect(HOST)
+
+def api_home(request):
+    return MiscellaneousHandler().home(request)
+
 
 @timed
 def search_communities(request):
@@ -927,7 +940,11 @@ def contact_us(request, subdomain=None):
     return render(request, "page__contact_us.html", args)
 
 def health_check(request):
-    return JsonResponse(data={"ok": True, "msg": "Thanks for coming.  I am doing really well. yay!"}, safe=False)
+    return MiscellaneousHandler().health_check(request)
+
+
+def version(request):
+    return MiscellaneousHandler().version(request)
 
 
 def generate_sitemap(request):
@@ -941,23 +958,46 @@ def generate_sitemap_main(request):
 
 
 def handler400(request, exception):
-    logger.error(exception, exc_info=1)
-    return MassenergizeResponse(error="bad_request")
+    log.error(
+        exception=str(exception),
+        extra={
+            'status_code': 400,
+            'request_path': request.path
+        }
+    )
+    return MassenergizeResponse(error=str(exception))
 
 
 def handler403(request, exception):
-    logger.error(exception, exc_info=1)
-    return MassenergizeResponse(error="permission_denied")
+    log.error(
+        exception=str(exception),
+        extra={
+            'status_code': 403,
+            'request_path': request.path
+        }
+    )
+    return MassenergizeResponse(error=str(exception.msg))
 
 
 def handler404(request, exception):
-    logger.error(f"resource_not_found: path={request.path}")
-    if request.path.startswith("/v2"):
-        return MassenergizeResponse(error="method_deprecated")
-    return MassenergizeResponse(error="resource_not_found")
+    log.error(
+        exception=str(exception),
+        extra={
+            'status_code': InvalidResourceError().status_code,
+            'request_path': request.path
+        }
+    )
+
+    return MassenergizeResponse(error=str(exception))
 
 
 def handler500(request):
-    logger.error("ServerError", exc_info=1)
-    capture_message(str(traceback.print_exc()))
-    return MassenergizeResponse(error="server_error")
+    err = ServerError()
+    log.error(
+        message=err.msg,
+        extra={
+            'status_code': err.status_code,
+            'request_path': request.path
+        }
+    )
+    return MassenergizeResponse(error=err.msg)

@@ -25,7 +25,7 @@ black==21.7b0
 geoip2==4.4.0
 user_agents==2.2.0
 pystmark==0.5.1
-pycurl==7.19.3.1
+pycurl==7.45.3
 redis==4.4.4
 semver==2.13.0
 xhtml2pdf==0.2.15
@@ -35,7 +35,10 @@ wordfilter==0.2.7
 pyshorteners==1.0.1
 openpyxl==3.1.2
 python-slugify==8.0.1
-better-profanity==0.7.
+better-profanity==0.7.0
 django-cid==2.3
 watchtower==3.1.0
 coverage==7.5.0
+google-auth-oauthlib==1.2.1
+google-cloud-translate==3.15.3
+json-flatten==0.3

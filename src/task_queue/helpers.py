@@ -53,3 +53,19 @@ def is_time_to_run(task):
 	else:
 		
 		return False
+
+
+def get_event_location(event):
+	evnt_type = event.get("event_type", "").lower()
+	location_mapping = {
+		"both": "Hybrid",
+		"in-person": "In-Person",
+		"online": "Online",
+	}
+	location = location_mapping.get(evnt_type, None)
+	if location:
+		return location
+	
+	if event.get("location"): return "In-Person"
+	if event.get("online_location"): return "Online"
+	return "N/A"

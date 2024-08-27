@@ -44,7 +44,7 @@ from api.constants import STANDARD_USER, GUEST_USER
 from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
 from api.store.tag_collection import TagCollectionStore
 from django.db.models import Q
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 from typing import Tuple
 
 from django.utils import timezone
@@ -232,9 +232,14 @@ class DownloadStore:
 
         if isinstance(user, Subscriber):
             full_name = user.name
-            space = full_name.find(" ")
-            first_name = full_name[:space]
-            last_name = full_name[space + 1 :]
+            if full_name is None:
+                first_name = "---"
+                last_name = "---"
+            else:
+                space = full_name.find(" ")
+                first_name = full_name[:space]
+                last_name = full_name[space + 1 :]
+                
             user_cells_1 = {
                 "First Name": first_name,
                 "Last Name": last_name,
@@ -249,9 +254,13 @@ class DownloadStore:
                 return None
 
         full_name = user.full_name
-        space = full_name.find(" ")
-        first_name = full_name[:space]
-        last_name = full_name[space + 1 :]
+        if not full_name:
+            first_name = "---"
+            last_name = "---"
+        else:
+            space = full_name.find(" ")
+            first_name = full_name[:space]
+            last_name = full_name[space + 1 :]
 
         user_cells_1 = {
             "First Name": first_name,
@@ -1490,7 +1499,7 @@ class DownloadStore:
                 return EMPTY_DOWNLOAD, NotAuthorizedError()
         except Exception as e:
             print(str(e))
-            capture_message(str(e), level="error")
+            log.exception(e)
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
         
 
@@ -1517,7 +1526,7 @@ class DownloadStore:
             else:
                 return EMPTY_DOWNLOAD, NotAuthorizedError()
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
 
     #For All Communities CSV - for superadmin, information about each community
@@ -1529,7 +1538,7 @@ class DownloadStore:
                 return EMPTY_DOWNLOAD, NotAuthorizedError()
             return (self._all_communities_download(), None), None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
 
     #For Teams CSV --  information about the Teams in a given community
@@ -1551,7 +1560,7 @@ class DownloadStore:
             else:
                 return EMPTY_DOWNLOAD, InvalidResourceError()
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
 
 
@@ -1574,7 +1583,7 @@ class DownloadStore:
                     self._all_metrics_download(context, args), 
                     None,), None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
         
 
@@ -1596,7 +1605,7 @@ class DownloadStore:
             
             
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
         
 
@@ -1615,7 +1624,7 @@ class DownloadStore:
                 return EMPTY_DOWNLOAD, NotAuthorizedError()
         except Exception as e:
             print("community_pagemap_exception: " + str(e))
-            capture_message(str(e), level="error")
+            log.exception(e)
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
         
 
@@ -1671,7 +1680,7 @@ class DownloadStore:
             return (self._campaign_follows_download(campaign), None), None
             
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
         
 
@@ -1723,7 +1732,7 @@ class DownloadStore:
             return (self._campaign_likes_download(campaign), None), None
             
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
     
 
@@ -1754,7 +1763,7 @@ class DownloadStore:
             
             return (self._campaign_link_performance_download(campaign), None), None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
         
 
@@ -1780,7 +1789,7 @@ class DownloadStore:
             return (data, None), None
             
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
         
 
@@ -1812,7 +1821,7 @@ class DownloadStore:
             return (self._campaign_interaction_performance_download(campaign), None), None
             
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
         
 
@@ -1955,7 +1964,7 @@ class DownloadStore:
 
             return (wb, campaign.title), None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
         
 

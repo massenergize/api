@@ -1,4 +1,4 @@
-from _main_.utils.common import serialize
+from _main_.utils.common import parse_datetime_to_aware, serialize
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from api.constants import LOOSED_USER, STANDARD_USER,GUEST_USER
@@ -12,7 +12,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from _main_.settings import DEBUG, IS_PROD, IS_CANARY
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 from .utils import get_community, get_user_from_context, get_user_or_die, get_community_or_die, get_admin_communities, remove_dups, \
   find_reu_community, split_location_string, check_location
 import json
@@ -264,7 +264,7 @@ class UserStore:
 
       accepted = args.get("accept", False)
       key = args.get("policy_key",None)
-      current_timestamp = datetime.now()
+      current_timestamp = parse_datetime_to_aware()
       current_timestamp_str = current_timestamp.strftime('%Y-%m-%d')
       current_timestamp_str = current_timestamp_str.split(".")[0]
       username = user.full_name
@@ -288,7 +288,7 @@ class UserStore:
                                                   "salutation":"Dear Support Team,", 
                                                   "community_name":community_names or "..."},
                                                   ME_SUPPORT_TEAM_EMAIL,pdf,filename)
-        record = PolicyAcceptanceRecords(user = user, policy=policy, signed_at = datetime.utcnow())
+        record = PolicyAcceptanceRecords(user = user, policy=policy, signed_at = parse_datetime_to_aware())
         record.save()
         user.refresh_from_db()
         # ----------------------------------------------------------------
@@ -305,7 +305,7 @@ class UserStore:
         return self.decline_mou( user, args), None
       
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -379,7 +379,7 @@ class UserStore:
     except Exception as e:
       if IS_PROD or IS_CANARY:
         send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL, {"text": str(e)+str(context)}) 
-      capture_message(str(e), level="error")
+      log.exception(e)
       import traceback
       traceback.print_exc()
       return None, CustomMassenergizeError(e)
@@ -397,7 +397,7 @@ class UserStore:
       return user, None
     
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
   
   def remove_household(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -415,7 +415,7 @@ class UserStore:
       return RealEstateUnit.objects.get(pk=household_id).delete(), None
     
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
   
   def add_household(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -440,7 +440,7 @@ class UserStore:
     
     except Exception as e:
       print("=== error from add_household ===", e)
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
   
   def edit_household(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -469,7 +469,7 @@ class UserStore:
       reu.save()
       return reu, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
   
   def list_households(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -478,7 +478,7 @@ class UserStore:
       
       return user.real_estate_units.all(), None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
   
   def list_users(self, context,community_id) -> Tuple[list, MassEnergizeAPIError]:
@@ -531,7 +531,7 @@ class UserStore:
       attendees = EventAttendee.objects.filter(user=user)
       return attendees, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
   
   def check_user_imported(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -546,7 +546,7 @@ class UserStore:
         return {"imported": True, "firstName": first_name, "lastName": last_name, "preferredName": first_name}, None
       return {"imported": False}, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
   
   def complete_imported_user(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -557,7 +557,7 @@ class UserStore:
         return MassenergizeResponse(data={"completed": False}), None
       return MassenergizeResponse(data={"completed": True}), None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def create_user(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -687,7 +687,7 @@ class UserStore:
       return res, None
     
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
   
   def update_user(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -733,7 +733,7 @@ class UserStore:
         return None, CustomMassenergizeError('permission_denied')
     
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
   
   def delete_user(self, context: Context, user_id) -> Tuple[dict, MassEnergizeAPIError]:
@@ -814,13 +814,14 @@ class UserStore:
 
       return users.first(), None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
   
   def list_users_for_community_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       community_id = args.get("community_id",None)
       user_emails = args.get("user_emails", None)
+      user_ids = args.get("user_ids", None)
 
       filter_params = get_users_filter_params(context.get_params())
 
@@ -832,6 +833,10 @@ class UserStore:
 
       if user_emails: 
         users = UserProfile.objects.filter(email__in = user_emails, *filter_params)
+        return users.distinct(), None
+      
+      if user_ids:
+        users = UserProfile.objects.filter(id__in = user_ids)
         return users.distinct(), None
       
       community, err = get_community(community_id)
@@ -858,7 +863,7 @@ class UserStore:
       users = UserProfile.objects.filter(id__in={user.id for user in users}).filter(*filter_params)
       return users.distinct(), None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
   
   def list_users_for_super_admin(self, context: Context, args):
@@ -888,7 +893,7 @@ class UserStore:
       users = UserProfile.objects.filter(is_deleted=False, *filter_params)
       return users.distinct(), None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
   
   def add_action_todo(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -913,7 +918,7 @@ class UserStore:
       
       return todo, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
   
   def list_completed_actions(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -932,7 +937,7 @@ class UserStore:
       
       return todo, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
   
   def remove_user_action(self, context: Context, user_action_id) -> Tuple[dict, MassEnergizeAPIError]:
@@ -962,7 +967,7 @@ class UserStore:
     except Exception as e:
       if IS_PROD or IS_CANARY:
         send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL, {"text": str(e)+str(context)}) 
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
   
   def add_invited_user(self, context: Context, args, first_name, last_name, email) -> Tuple[dict, MassEnergizeAPIError]:
@@ -1041,7 +1046,7 @@ class UserStore:
 
       return ret, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
     
   
@@ -1078,7 +1083,7 @@ class UserStore:
       return follow, None
     
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
     
   def get_loosed_user(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -1099,6 +1104,6 @@ class UserStore:
       return user, None
     
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 

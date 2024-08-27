@@ -5,7 +5,7 @@ import json
 import jsons
 import os
 from django.utils import timezone #For keeping track of when the consistency was last checked
-from api.tests.common import signinAs, setupCC
+from api.tests.common import signinAs
 
 OUTPUTS_FILE   = "carbon_calculator/tests/expected_outputs.txt"
 INPUTS_FILE    = "carbon_calculator/tests/allPossibleInputs.txt"
@@ -38,8 +38,6 @@ class CarbonCalculatorTest(TestCase):
         })
 
         signinAs(self.client, self.SADMIN)
-
-        setupCC(self.client)
 
         generate_inputs = eval(os.getenv("GENERATE_INPUTS"))
         if generate_inputs > 0:

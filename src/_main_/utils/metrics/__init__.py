@@ -3,9 +3,10 @@ import functools
 import boto3
 import threading
 import random 
-from _main_.settings import STAGE
+from _main_.settings import EnvConfig
+from _main_.utils.massenergize_logger import log
 
-DEFAULT_CAPTURE_RATE = 1 # for now we want to capture 100% of the logs.
+DEFAULT_CAPTURE_RATE = .7 # for now we want to capture 50% of the logs.
 FUNCTION_LATENCY_NAMESPACE = "ApiService/FunctionPerformance"
 
 def timed(func):
@@ -37,22 +38,26 @@ def timed(func):
 def send_metric(func, execution_time, name_space=FUNCTION_LATENCY_NAMESPACE, extra_dimensions=[]):
     function_name = get_function_name(func)
     metric_name = function_name
-    dimensions = [{'Name': 'FunctionName', 'Value': function_name}]
+    dimensions = []
+
     if extra_dimensions:
         dimensions.extend(extra_dimensions)
+
     metric_data=[
         {
-            'MetricName': metric_name or function_name,
+            'MetricName': metric_name,
             'Dimensions': dimensions,
             'Unit': 'Milliseconds',
             'Value': execution_time
         },
     ]
-    put_metric_data(name_space, metric_data)
+
+    env_name_space = f"{EnvConfig.name.title()}/{name_space}"
+    put_metric_data(env_name_space, metric_data)
 
 
 def put_metric_data(name_space, metric_data):
-    if not STAGE.can_send_logs_to_cloudwatch():
+    if not EnvConfig.can_send_logs_to_cloudwatch():
         return 
 
     try:
@@ -63,8 +68,7 @@ def put_metric_data(name_space, metric_data):
         )
         print(f"Metric {metric_data[0]['MetricName']} sent to CloudWatch: {metric_data[0]['Value']} ms\n")
     except Exception as e:
-        print(e)
-        pass
+        log.exception(e)
 
 def timed_with_dimensions(dimensions=None, capture_rate=DEFAULT_CAPTURE_RATE):
     

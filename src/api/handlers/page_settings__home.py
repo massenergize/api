@@ -1,14 +1,12 @@
 """Handler file for all routes pertaining to home_page_settings"""
 
-from _main_.utils.route_handler import RouteHandler
-from _main_.utils.common import get_request_contents, rename_field, rename_fields, parse_bool, parse_list, check_length, parse_int
-from _main_.utils.utils import Console
-from api.services.page_settings__home import HomePageSettingsService
-from _main_.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.common import parse_bool, parse_list, rename_field
 from _main_.utils.context import Context
-from _main_.utils.validator import Validator
-from sentry_sdk import capture_message
-from api.decorators import admins_only, super_admins_only, login_required
+from _main_.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.route_handler import RouteHandler
+from api.decorators import admins_only, super_admins_only
+from api.services.page_settings__home import HomePageSettingsService
+
 
 class HomePageSettingsHandler(RouteHandler):
 

@@ -7,7 +7,7 @@ from _main_.utils.emailer.send_email import send_massenergize_rich_email
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY
 from api.utils.filter_functions import sort_items
 from .utils import send_slack_message
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 from typing import Tuple
 
 class AdminService:
@@ -36,7 +36,7 @@ class AdminService:
             subject, admin.email, 'new_admin_email.html', content_variables, None)
         return serialize(admin, full=True), None
       except Exception as e:
-        capture_message(str(e), level="error")
+        log.exception(e)
         return None, CustomMassenergizeError(e)
 
     def remove_super_admin(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -73,7 +73,7 @@ class AdminService:
         res["user"] = serialize(res.get("user"))
         return res, None
       except Exception as e:
-        capture_message(str(e), level="error")
+        log.exception(e)
         return None, CustomMassenergizeError(e)
 
     def remove_community_admin(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -132,7 +132,7 @@ class AdminService:
 
         return serialize(message), None
       except Exception as e:
-        capture_message(str(e), level="error")
+        log.exception(e)
         return None, CustomMassenergizeError(e)
    
     def list_admin_messages(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:

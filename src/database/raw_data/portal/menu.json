@@ -1,69 +1,108 @@
 {
   "PortalMainNavLinks": [
     {
-
       "name": "Home",
-      "navItemId": "menu-home-id",
-       "children": [
+      "id": "menu-home-id",
+      "is_published": true,
+      "children": [
         {
-            "link": "/",
-            "name": "Home"
+          "link": "/",
+          "name": "Home",
+          "id": "menu-home-page-id",
+          "is_link_external": false,
+          "is_published": true
         },
         {
-            "link": "/?tour=true",
-            "name": "Take the tour",
-            "navItemId": "take-the-tour"
-
+          "link": "/rewiring-america",
+          "name": "Rewiring America",
+          "id": "rewiring-america-id",
+          "is_link_external": false,
+          "is_published": true
+        },
+        {
+          "link": "/?tour=true",
+          "name": "Take the tour",
+          "id": "menu-take-the-tour-id",
+          "is_published": true,
+          "is_link_external": false
         }
       ]
-    },   
+    },
     {
       "name": "Actions",
-      "navItemId": "menu-actions-id",
+      "id": "menu-actions-id",
+      "is_published": true,
       "children": [
         {
           "link": "/actions",
-          "name": "All Actions"
+          "name": "All Actions",
+          "id": "menu-all-actions-id",
+            "is_published": true,
+          "is_link_external": false
         },
         {
           "link": "/services",
-          "name": "Service Providers"
+          "name": "Service Providers",
+          "id": "menu-service-providers-id",
+            "is_published": true,
+          "is_link_external": false
         },
         {
           "link": "/testimonials",
-          "name": "Testimonials"
+          "name": "Testimonials",
+          "id": "menu-testimonials-id",
+            "is_published": true,
+          "is_link_external": false
+
         }
       ]
     },
     {
       "link": "/teams",
-      "navItemId": "menu-teams-id",
-      "name": "Teams"
+      "id": "menu-teams-id",
+        "is_published": true,
+      "name": "Teams",
+      "is_link_external": false
     },
     {
       "link": "/events",
-      "navItemId": "menu-events-id",
-      "name": "Events"
+      "id": "menu-events-id",
+        "is_published": true,
+      "name": "Events",
+      "is_link_external": false
     },
     {
       "name": "About Us",
-      "navItemId": "menu-about-us-id",
+      "id": "menu-about-us-id",
+      "is_published": true,
       "children": [
         {
           "link": "/impact",
-          "name": "Impact"
+            "is_published": true,
+          "name": "Impact",
+          "id": "menu-impact-id",
+          "is_link_external": false
         },
         {
           "link": "/aboutus",
-          "name": "Our Story"
+          "name": "Our Story",
+            "is_published": true,
+          "id": "menu-our-story-id",
+          "is_link_external": false
         },
         {
           "link": "/donate",
-          "name": "Donate"
+          "name": "Donate",
+            "is_published": true,
+          "id": "menu-donate-id",
+          "is_link_external": false
         },
         {
           "link": "/contactus",
-          "name": "Contact Us"
+          "name": "Contact Us",
+            "is_published": true,
+          "id": "menu-contact-us-id",
+          "is_link_external": false
         }
       ]
     }
@@ -79,18 +118,24 @@
     "links": [
       {
         "link": "policies?name=Privacy%20Policy",
-        "navItemId": "footer-privacy-policy-id",
-        "name": "Privacy Policy"
+        "id": "footer-privacy-policy-id",
+        "name": "Privacy Policy",
+          "is_published": true,
+        "is_link_external": false
       },
       {
         "link": "policies?name=Terms%20of%20Service",
-        "navItemId": "footer-terms-of-service-id",
-        "name": "Terms of Service"
+        "id": "footer-terms-of-service-id",
+        "name": "Terms of Service",
+          "is_published": true,
+        "is_link_external": false
       },
       {
         "link": "https://docs.google.com/forms/d/e/1FAIpQLScxNPrJNsyy6k834hsPdy_Rf0jaDcczRAkjCM3Z1xgYn49Zsw/viewform",
-        "navItemId": "footer-report-a-bug-id",
-        "name": "Report a bug/Suggest a feature"
+        "id": "footer-report-a-bug-id",
+        "name": "Report a bug/Suggest a feature",
+          "is_published": true,
+        "is_link_external": true
       }
     ]
   }

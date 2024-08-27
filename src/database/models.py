@@ -2,7 +2,12 @@ import datetime
 from datetime import timezone, timedelta
 import json
 import uuid
+
+from _main_.utils.common import item_is_empty
+
 from _main_.utils.policy.PolicyConstants import PolicyConstants
+from _main_.utils.base_model import BaseModel
+from _main_.utils.base_model import RootModel
 from apps__campaigns.helpers import get_user_accounts
 from django.db import models
 from django.db.models.fields import BooleanField
@@ -134,9 +139,7 @@ class Location(models.Model):
     city = models.CharField(max_length=SHORT_STR_LEN, blank=True)
     county = models.CharField(max_length=SHORT_STR_LEN, blank=True)
     is_deleted = models.BooleanField(default=False, blank=True)
-    state = models.CharField(
-        max_length=SHORT_STR_LEN, choices=ZIP_CODE_AND_STATES.items(), blank=True
-    )
+    state = models.CharField(max_length=SHORT_STR_LEN, choices=ZIP_CODE_AND_STATES.items(), blank=True)
     country = models.CharField(max_length=SHORT_STR_LEN, default="US", blank=True)
     more_info = models.JSONField(blank=True, null=True)
 
@@ -167,9 +170,11 @@ class Location(models.Model):
     def full_json(self):
         return self.simple_json()
 
+    class TranslationMeta:
+        fields_to_translate = []
+
     class Meta:
         db_table = "locations"
-
 
 class TagCollection(models.Model):
     """
@@ -199,6 +204,9 @@ class TagCollection(models.Model):
 
     def full_json(self):
         return self.simple_json()
+
+    class TranslationMeta:
+        fields_to_translate = []
 
     class Meta:
         ordering = ("name",)
@@ -245,6 +253,9 @@ class Tag(models.Model):
         data = self.simple_json()
         data["tag_collection"] = get_json_if_not_none(self.tag_collection)
         return data
+
+    class TranslationMeta:
+        fields_to_translate = ["name"]
 
     class Meta:
         ordering = ("rank",)
@@ -326,6 +337,11 @@ class Media(models.Model):
                 self.hash = hash
         super().save(*args, **kwargs)
 
+    def get_s3_key(self):
+        return self.file.name
+
+    class TranslationMeta:
+        fields_to_translate = []
 
     class Meta:
         db_table = "media"
@@ -377,6 +393,9 @@ class Policy(models.Model):
         if community:
             res["community"] = get_json_if_not_none(community)
         return res
+
+    class TranslationMeta:
+        fields_to_translate = ["name", "description"]
 
     class Meta:
         ordering = ("name",)
@@ -452,6 +471,9 @@ class Goal(models.Model):
 
     def full_json(self):
         return self.simple_json()
+
+    class TranslationMeta:
+        fields_to_translate = ["name", "description"]
 
     class Meta:
         db_table = "goals"
@@ -564,9 +586,15 @@ class Community(models.Model):
         return str(self.id) + " - " + self.name
 
     def info(self):
-       res = model_to_dict(self, ["id", "name", "subdomain"])
+       res = model_to_dict(self, ["id", "name", "subdomain", "is_geographically_focused"])
        res["logo"] = get_json_if_not_none(self.logo)
        return res
+
+    def get_logo_link_from_menu(self):
+        menu = Menu.objects.filter(community=self, is_published=True)
+        if menu:
+            return menu.first().community_logo_link
+        return None
 
     def simple_json(self):
         res = model_to_dict(
@@ -589,7 +617,7 @@ class Community(models.Model):
         )
         res["logo"] = get_json_if_not_none(self.logo)
         res["favicon"] = get_json_if_not_none(self.favicon)
-        # this will not slow it down measurably
+        res["community_logo_link"] = self.get_logo_link_from_menu()
         res["feature_flags"] = get_enabled_flags(self)
         return res
 
@@ -652,7 +680,7 @@ class Community(models.Model):
         if impact_page_settings:
             display_prefs = impact_page_settings.more_info or {}
         else:
-            # capture_message("Impact Page Settings not found", level="error")
+            # log.error("Impact Page Settings not found", level="error")
             display_prefs = {}  # not usual - show nothing
 
         value = 0
@@ -744,7 +772,11 @@ class Community(models.Model):
             "feature_flags": get_enabled_flags(self),
             "is_demo": self.is_demo,
             "contact_sender_alias": self.contact_sender_alias,
+            "community_logo_link": self.get_logo_link_from_menu(),
         }
+
+    class TranslationMeta:
+        fields_to_translate = ["about_community"]
 
     class Meta:
         verbose_name_plural = "Communities"
@@ -804,6 +836,9 @@ class CommunitySnapshot(models.Model):
             self.date,
         )
 
+    class TranslationMeta:
+        fields_to_translate = []
+
     class Meta:
         db_table = "community_snapshots"
 
@@ -862,6 +897,9 @@ class RealEstateUnit(models.Model):
     class Meta:
         db_table = "real_estate_units"
 
+    class TranslationMeta:
+        fields_to_translate = []
+
 
 class Role(models.Model):
     """
@@ -894,6 +932,9 @@ class Role(models.Model):
     class Meta:
         ordering = ("name",)
         db_table = "roles"
+	    
+    class TranslationMeta:
+        fields_to_translate = ["name", "description"]
 
 
 class UserProfile(models.Model):
@@ -1142,6 +1183,9 @@ class UserProfile(models.Model):
         db_table = "user_profiles"
         ordering = ("-created_at",)
 
+    class TranslationMeta:
+        fields_to_translate = []
+
 
 class PolicyAcceptanceRecords(models.Model):
     """
@@ -1191,32 +1235,35 @@ class PolicyAcceptanceRecords(models.Model):
     class Meta:
         ordering = ("-id",)
 
+    class TranslationMeta:
+        fields_to_translate = []
+
 
 class UserMediaUpload(models.Model):
     """A class that creates a relationship between a user(all user kinds) on the platform and media they have uploaded
-    
+
     Attributes
     ----------
     user : UserProfile
-    A user profile object of the currently signed in user who uploaded the media 
+    A user profile object of the currently signed in user who uploaded the media
 
-    communities: Community 
-    All communities that have access to the attached media object 
+    communities: Community
+    All communities that have access to the attached media object
 
-    media : Media 
+    media : Media
     A reference to the actual media object
 
     is_universal: bool
-    True/False value that indicates whether or not an image is open to everyone. 
-    PS: Its no longer being used (as at 12/10/23). We want more than two states, so we now use "publicity" 
+    True/False value that indicates whether or not an image is open to everyone.
+    PS: Its no longer being used (as at 12/10/23). We want more than two states, so we now use "publicity"
 
-    publicity: str 
+    publicity: str
     This value is used to determine whether or not an upload is OPEN_TO specific communities, CLOSED_TO, or wide open  to any communities check UserMediaConstants for all the available options
 
-    info: JSON 
+    info: JSON
     Json field that stores very important information about the attached media. Example: has_copyright_permission,copyright_att,guardian_info,size etc.
 
-    settings: JSON 
+    settings: JSON
     Just another field to store more information about the media (I dont think we use this...)
     """
 
@@ -1268,6 +1315,9 @@ class UserMediaUpload(models.Model):
 
     def full_json(self):
         return self.simple_json()
+
+    class TranslationMeta:
+        fields_to_translate = []
 
 
 class DeviceProfile(models.Model):
@@ -1375,6 +1425,9 @@ class DeviceProfile(models.Model):
     def full_json(self):
         return self.simple_json()
 
+    class TranslationMeta:
+        fields_to_translate = []
+
 
 class CommunityMember(models.Model):
     id = models.AutoField(primary_key=True)
@@ -1401,6 +1454,9 @@ class CommunityMember(models.Model):
         db_table = "community_members_and_admins"
         unique_together = [["community", "user"]]
         ordering = ("-created_at",)
+
+    class TranslationMeta:
+        fields_to_translate = []
 
 
 class Subdomain(models.Model):
@@ -1430,6 +1486,9 @@ class Subdomain(models.Model):
     class Meta:
         db_table = "subdomains"
 
+    class TranslationMeta:
+        fields_to_translate = []
+
 
 class CustomCommunityWebsiteDomain(models.Model):
     id = models.AutoField(primary_key=True)
@@ -1456,6 +1515,9 @@ class CustomCommunityWebsiteDomain(models.Model):
 
     class Meta:
         db_table = "custom_community_website_domain"
+
+    class TranslationMeta:
+        fields_to_translate = []
 
 
 class Team(models.Model):
@@ -1583,6 +1645,9 @@ class Team(models.Model):
         db_table = "teams"
         unique_together = [["primary_community", "name"]]
 
+    class TranslationMeta:
+        fields_to_translate = ["name", "tagline", "description"]
+
 
 class TeamMember(models.Model):
     id = models.AutoField(primary_key=True)
@@ -1608,6 +1673,9 @@ class TeamMember(models.Model):
     class Meta:
         db_table = "team_members_and_admins"
         unique_together = [["team", "user"]]
+
+    class TranslationMeta:
+        fields_to_translate = []
 
 
 class Service(models.Model):
@@ -1659,6 +1727,9 @@ class Service(models.Model):
     class Meta:
         db_table = "services"
 
+    class TranslationMeta:
+        fields_to_translate = ["description", "name"]
+
 
 class ActionProperty(models.Model):
     """
@@ -1689,6 +1760,9 @@ class ActionProperty(models.Model):
         verbose_name_plural = "Properties"
         ordering = ("id",)
         db_table = "action_properties"
+
+    class TranslationMeta:
+        fields_to_translate = ["name", "short_description"]
 
 
 class CarbonEquivalency(models.Model):
@@ -1736,6 +1810,9 @@ class CarbonEquivalency(models.Model):
         verbose_name_plural = "CarbonEquivalencies"
         ordering = ("id",)
         db_table = "carbon_equivalencies"
+
+    class TranslationMeta:
+        fields_to_translate = ["name", "explanation"]
 
 
 class Vendor(models.Model):
@@ -1895,6 +1972,9 @@ class Vendor(models.Model):
     class Meta:
         db_table = "vendors"
 
+    class TranslationMeta:
+        fields_to_translate = ["description", "name"]
+
 
 class Action(models.Model):
     """
@@ -1966,13 +2046,18 @@ class Action(models.Model):
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=False, blank=True)
     is_approved = models.BooleanField(default=False, blank=True)
-    # is_user_submitted = models.BooleanField(default=False, blank=True, null=True)
 
     def __str__(self):
         return f"{str(self.id)} - {self.title}"
 
     def info(self):
-        return model_to_dict(self, ["id", "title"])
+        return {
+            **model_to_dict(self, ["id", "title"]),
+            "community":{
+                "id": self.community.id,
+                "name": self.community.name,
+            }
+        }
 
     def simple_json(self):
         data = model_to_dict(
@@ -1996,6 +2081,9 @@ class Action(models.Model):
         )
         data["image"] = get_summary_info(self.image)
         data["calculator_action"] = get_summary_info(self.calculator_action)
+        if self.calculator_action:
+            data["category"] =  self.calculator_action.category.simple_json() if self.calculator_action.category else None
+            data["subcategory"] = self.calculator_action.sub_category.simple_json() if self.calculator_action.sub_category else None
         data["tags"] = [t.simple_json() for t in self.tags.all()]
         data["community"] = get_summary_info(self.community)
         data["created_at"] = self.created_at
@@ -2045,6 +2133,9 @@ class Action(models.Model):
         ordering = ["rank", "title"]
         db_table = "actions"
 
+    class TranslationMeta:
+        fields_to_translate = ["title", "about", "steps_to_take", "deep_dive", "featured_summary"]
+
 
 class Event(models.Model):
     """
@@ -2093,9 +2184,7 @@ class Event(models.Model):
     end_date_and_time = models.DateTimeField(db_index=True)
     location = models.JSONField(blank=True, null=True)
     tags = models.ManyToManyField(Tag, blank=True)
-    image = models.ForeignKey(
-        Media, on_delete=models.SET_NULL, null=True, blank=True, related_name="events"
-    )
+    image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True, blank=True, related_name="events")
     archive = models.BooleanField(default=False, blank=True)
     is_global = models.BooleanField(default=False, blank=True)
     external_link = models.CharField(max_length=LONG_STR_LEN, blank=True, null=True)
@@ -2109,25 +2198,17 @@ class Event(models.Model):
     is_published = models.BooleanField(default=False, blank=True)
     rank = models.PositiveIntegerField(default=0, blank=True, null=True)
     # which user posted this event - may be the responsible party
-    user = models.ForeignKey(
-        UserProfile, related_name="event_user", on_delete=models.SET_NULL, null=True, blank=True
-    )
+    user = models.ForeignKey(UserProfile, related_name="event_user", on_delete=models.SET_NULL, null=True, blank=True)
     is_recurring = models.BooleanField(default=False, blank=True, null=True)
     recurring_details = models.JSONField(blank=True, null=True)
     is_approved = models.BooleanField(default=False, blank=True)
     # Made publicity a string, so we can handle more than two (open/close) states
-    publicity = models.CharField(
-        max_length=SHORT_STR_LEN, default=EventConstants.open()
-    )
+    publicity = models.CharField(max_length=SHORT_STR_LEN, default=EventConstants.open())
     # If any community is added here, it means the event is either (Open to / Closed to) depending
     # on what the value of "publicity" is
-    communities_under_publicity = models.ManyToManyField(
-        Community, related_name="event_access_selections", blank=True
-    )
+    communities_under_publicity = models.ManyToManyField(Community, related_name="event_access_selections", blank=True)
     # Communities that have shared an event to their site will be in this list
-    shared_to = models.ManyToManyField(
-        Community, related_name="events_from_others", blank=True
-    )
+    shared_to = models.ManyToManyField(Community, related_name="events_from_others", blank=True)
     # Date and time when the event went live
     published_at = models.DateTimeField(blank=True, null=True)
     event_type = models.CharField(max_length=SHORT_STR_LEN, blank=True)
@@ -2183,7 +2264,7 @@ class Event(models.Model):
         data["shared_to"] = [c.info() for c in self.shared_to.all()]
         data["is_on_home_page"] = self.is_on_homepage()
 
-        data["event_type"] = self.event_type if self.event_type else "Online" if not self.location else "In person"
+        data["event_type"] = self.event_type if self.event_type else "Online" if not self.location else "In-Person"
         data["settings"] = dict(notifications=[x.simple_json() for x in self.nudge_settings.all().order_by("-created_at") if x.communities.exists()])
 
         return data
@@ -2197,6 +2278,9 @@ class Event(models.Model):
             "-start_date_and_time",
         )
         db_table = "events"
+
+    class TranslationMeta:
+        fields_to_translate = ["name", "description", "featured_summary", "rsvp_message", "external_link_type", "event_type"]
 
 
 class EventNudgeSetting(models.Model):
@@ -2240,6 +2324,9 @@ class EventNudgeSetting(models.Model):
         res["event"] = self.event.info()
         return res
 
+    class TranslationMeta:
+        fields_to_translate = []
+
 
 
 # leaner class that stores information about events that have already passed
@@ -2250,6 +2337,9 @@ class PastEvent(models.Model):
     description = models.TextField(max_length=LONG_STR_LEN)
     start_date_and_time = models.DateTimeField()
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
+
+    class TranslationMeta:
+        fields_to_translate = []
 
 
 class RecurringEventException(models.Model):
@@ -2293,6 +2383,9 @@ class RecurringEventException(models.Model):
         data["rescheduled_end_time"] = str(self.rescheduled_event.end_date_and_time)
         return data
 
+    class TranslationMeta:
+        fields_to_translate = []
+
 
 class EventAttendee(models.Model):
     """
@@ -2334,6 +2427,9 @@ class EventAttendee(models.Model):
         db_table = "event_attendees"
         unique_together = [["user", "event"]]
 
+    class TranslationMeta:
+        fields_to_translate = []
+
 
 class Permission(models.Model):
     """
@@ -2370,6 +2466,9 @@ class Permission(models.Model):
         ordering = ("name",)
         db_table = "permissions"
 
+    class TranslationMeta:
+        fields_to_translate = ["description", "name"]
+
 
 class UserPermissions(models.Model):
     """
@@ -2404,6 +2503,9 @@ class UserPermissions(models.Model):
     class Meta:
         ordering = ("who",)
         db_table = "user_permissions"
+
+    class TranslationMeta:
+        fields_to_translate = []
 
 
 class Testimonial(models.Model):
@@ -2492,6 +2594,9 @@ class Testimonial(models.Model):
         ordering = ("rank",)
         db_table = "testimonials"
 
+    class TranslationMeta:
+        fields_to_translate = ["title", "body"]
+
 
 class UserActionRel(models.Model):
     """
@@ -2564,6 +2669,9 @@ class UserActionRel(models.Model):
         ordering = ("-id", "status", "user", "action")
         unique_together = [["user", "action", "real_estate_unit"]]
 
+    class TranslationMeta:
+        fields_to_translate = []
+
 
 class CommunityAdminGroup(models.Model):
     """
@@ -2601,6 +2709,9 @@ class CommunityAdminGroup(models.Model):
     class Meta:
         ordering = ["-id"]
         db_table = "community_admin_group"
+
+    class TranslationMeta:
+        fields_to_translate = []
 
 
 class UserGroup(models.Model):
@@ -2642,6 +2753,9 @@ class UserGroup(models.Model):
     class Meta:
         ordering = ("name",)
         db_table = "user_groups"
+
+    class TranslationMeta:
+        fields_to_translate = ["description", "name"]
 
 
 class Data(models.Model):
@@ -2692,6 +2806,9 @@ class Data(models.Model):
         ordering = ("name", "value")
         db_table = "data"
 
+    class TranslationMeta:
+        fields_to_translate = []
+
 
 class Graph(models.Model):
     """Instances keep track of a statistic from the admin
@@ -2732,6 +2849,9 @@ class Graph(models.Model):
     class Meta:
         verbose_name_plural = "Graphs"
         ordering = ("title",)
+
+    class TranslationMeta:
+        fields_to_translate = ["title"]
 
 
 class Button(models.Model):
@@ -2798,7 +2918,6 @@ class SliderImage(models.Model):
         verbose_name_plural = "Slider Images"
         db_table = "slider_images"
 
-
 class Slider(models.Model):
     """
     Model that represents a model for a slider/carousel on the website
@@ -2840,6 +2959,7 @@ class Slider(models.Model):
         return res
 
 
+
 class Menu(models.Model):
     """Represents items on the menu/navigation bar (top-most bar on the webpage)
     Attributes
@@ -2855,18 +2975,28 @@ class Menu(models.Model):
     content = models.JSONField(blank=True, null=True)
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=False, blank=True)
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, null=True, blank=True)
+    community_logo_link = models.CharField(max_length=LONG_STR_LEN, blank=True, null=True)
+    is_custom = models.BooleanField(default=False, blank=True)
+    footer_content = models.JSONField(blank=True, null=True)
+    contact_info = models.JSONField(blank=True, null=True)
 
     def __str__(self):
         return self.name
 
     def simple_json(self):
-        return model_to_dict(self)
+        res =  model_to_dict(self)
+        res["community"] = get_summary_info(self.community)
+        return res
 
     def full_json(self):
         return self.simple_json()
 
     class Meta:
         ordering = ("name",)
+
+    class TranslationMeta:
+        fields_to_translate = ["name"]
 
 
 class Card(models.Model):
@@ -3325,6 +3455,9 @@ class HomePageSettings(models.Model):
         db_table = "home_page_settings"
         verbose_name_plural = "HomePageSettings"
 
+    class TranslationMeta:
+        fields_to_translate = ["title", "sub_title", "description", "featured_stats_description", "featured_events_description", "featured_stats_subtitle", "featured_events_subtitle"]
+
 
 class ActionsPageSettings(models.Model):
     """
@@ -3365,6 +3498,9 @@ class ActionsPageSettings(models.Model):
         db_table = "actions_page_settings"
         verbose_name_plural = "ActionsPageSettings"
 
+    class TranslationMeta:
+        fields_to_translate = ["title", "sub_title", "description"]
+
 
 class ContactUsPageSettings(models.Model):
     """
@@ -3404,6 +3540,9 @@ class ContactUsPageSettings(models.Model):
     class Meta:
         db_table = "contact_us_page_settings"
         verbose_name_plural = "ContactUsPageSettings"
+
+    class TranslationMeta:
+        fields_to_translate = ["title", "sub_title", "description"]
 
 
 class DonatePageSettings(models.Model):
@@ -3449,6 +3588,9 @@ class DonatePageSettings(models.Model):
         db_table = "donate_page_settings"
         verbose_name_plural = "DonatePageSettings"
 
+    class TranslationMeta:
+        fields_to_translate = ["title", "sub_title", "description"]
+
 
 class AboutUsPageSettings(models.Model):
     """
@@ -3490,6 +3632,8 @@ class AboutUsPageSettings(models.Model):
     class Meta:
         db_table = "about_us_page_settings"
         verbose_name_plural = "AboutUsPageSettings"
+    class TranslationMeta:
+        fields_to_translate = ["title", "sub_title", "description"]
 
 
 class ImpactPageSettings(models.Model):
@@ -3531,6 +3675,9 @@ class ImpactPageSettings(models.Model):
         db_table = "impact_page_settings"
         verbose_name_plural = "ImpactPageSettings"
 
+    class TranslationMeta:
+        fields_to_translate = ["title", "sub_title", "description"]
+
 
 class TeamsPageSettings(PageSettings):
     """
@@ -3547,6 +3694,9 @@ class TeamsPageSettings(PageSettings):
     class Meta:
         db_table = "teams_page_settings"
         verbose_name_plural = "TeamsPageSettings"
+
+    class TranslationMeta:
+        fields_to_translate = ["title", "sub_title", "description"]
 
 
 class VendorsPageSettings(PageSettings):
@@ -3565,6 +3715,9 @@ class VendorsPageSettings(PageSettings):
         db_table = "vendors_page_settings"
         verbose_name_plural = "VendorsPageSettings"
 
+    class TranslationMeta:
+        fields_to_translate = ["title", "sub_title", "description"]
+
 
 class EventsPageSettings(PageSettings):
     """
@@ -3581,6 +3734,9 @@ class EventsPageSettings(PageSettings):
     class Meta:
         db_table = "events_page_settings"
         verbose_name_plural = "EventsPageSettings"
+
+    class TranslationMeta:
+        fields_to_translate = ["title", "sub_title", "description"]
 
 
 class TestimonialsPageSettings(PageSettings):
@@ -3599,6 +3755,9 @@ class TestimonialsPageSettings(PageSettings):
         db_table = "testimonials_page_settings"
         verbose_name_plural = "TestimonialsPageSettings"
 
+    class TranslationMeta:
+        fields_to_translate = ["title", "sub_title", "description"]
+
 
 class RegisterPageSettings(PageSettings):
     """
@@ -3616,6 +3775,9 @@ class RegisterPageSettings(PageSettings):
         db_table = "register_page_settings"
         verbose_name_plural = "RegisterPageSettings"
 
+    class TranslationMeta:
+        fields_to_translate = ["title", "sub_title", "description"]
+
 
 class SigninPageSettings(PageSettings):
     """
@@ -3632,6 +3794,9 @@ class SigninPageSettings(PageSettings):
     class Meta:
         db_table = "signin_page_settings"
         verbose_name_plural = "SigninPageSettings"
+
+    class TranslationMeta:
+        fields_to_translate = ["title", "sub_title", "description"]
 
 
 class Message(models.Model):
@@ -3686,15 +3851,47 @@ class Message(models.Model):
         ]
         res["created_at"] = self.created_at.strftime("%Y-%m-%d %H:%M")
         return res
+    
+    def get_scheduled_message_info(self):
+        scheduled_info = self.schedule_info or {}
+        recipients = scheduled_info.get("recipients", {})
+        audience = recipients.get("audience", None)
+        audience_type = recipients.get("audience_type", None)
+        community_ids = recipients.get("community_ids", None)
+        
+        real_audience = audience
+        if audience and not audience == "all":
+            if audience_type == "COMMUNITY_CONTACTS":
+                real_audience = [c.info() for c in Community.objects.filter(id__in=audience.split(","))]
+                
+            elif audience_type == "ACTIONS":
+                real_audience = [a.info() for a in Action.objects.filter(id__in=audience.split(","))]
+            else:
+                real_audience= [u.info() for u in UserProfile.objects.filter(id__in=audience.split(","))]
+        if not item_is_empty(community_ids):
+            community_ids = [c.info() for c in Community.objects.filter(id__in=community_ids.split(","))]
+        else:
+            community_ids = []
+        
+        scheduled_info["recipients"]["audience"] = real_audience
+        scheduled_info["recipients"]["community_ids"] = community_ids
+        
+        return scheduled_info
+        
 
     def full_json(self):
         res = self.simple_json()
         res["uploaded_file"] = get_json_if_not_none(self.uploaded_file)
+        if self.schedule_info:
+            res["schedule_info"] = self.get_scheduled_message_info()
         return res
 
     class Meta:
         ordering = ("title",)
         db_table = "messages"
+
+    class TranslationMeta:
+        fields_to_translate = ["title", "body"]
 
 
 class ActivityLog(models.Model):
@@ -3805,7 +4002,7 @@ class FeatureFlag(models.Model):
 
     def __str__(self):
         return f"{self.name}"
-    
+
     def info(self):
         return {"id": self.id, "name": self.name, "key": self.key,}
 
@@ -3839,8 +4036,8 @@ class FeatureFlag(models.Model):
             for u in self.users.all()
         ]
         return res
-    
-    
+
+
     def is_enabled_for_community(self, community: Community):
         """
         Returns : True if the feature flag is enabled for the community
@@ -3865,17 +4062,17 @@ class FeatureFlag(models.Model):
           """
         if not communities_in:
             communities_in = Community.objects.filter(is_deleted=False)
-        
+
         community_ids = self.communities.values_list('id', flat=True)
-        
+
         if self.audience == "EVERYONE":
             return communities_in
         elif self.audience == "SPECIFIC":
             return communities_in.filter(id__in=community_ids)
         elif self.audience == "ALL_EXCEPT":
             return communities_in.exclude(id__in=community_ids)
-        
-        return None
+
+        return []
 
     def enabled_users(self, users_in: QuerySet):
         if self.user_audience == "EVERYONE":
@@ -3961,9 +4158,12 @@ class Footage(models.Model):
         db_table = "footages"
         ordering = ("-id",)
 
+    class TranslationMeta:
+        fields_to_translate = ["notes"]
+
 
 class CommunityNotificationSetting(models.Model):
-    
+
     COMMUNITY_NOTIFICATION_TYPES_CHOICES = [(item, item) for item in COMMUNITY_NOTIFICATION_TYPES]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -3978,7 +4178,7 @@ class CommunityNotificationSetting(models.Model):
 
     def __str__(self):
         return f"{self.community.name} - {self.notification_type}"
-    
+
     def info(self):
         return {"id": self.id, "is_active": self.is_active, "activate_on": str(self.activate_on) if self.activate_on else self.activate_on, "notification_type": self.notification_type,}
 
@@ -3991,6 +4191,133 @@ class CommunityNotificationSetting(models.Model):
         data["community"] = self.community.info()
         data["updated_by"] = self.updated_by.info() if self.updated_by else None
         return data
-    
+
     class Meta:
         indexes = [ models.Index(fields=["community", "notification_type"]),]
+
+    class TranslationMeta:
+        fields_to_translate = ["notification_type"]
+
+
+# localisation
+class SupportedLanguage(BaseModel):
+    """
+    A class used to represent the languages supported by the platform
+
+    Attributes
+    ----------
+    name : str
+      name of the language.
+    code : str
+
+    """
+
+    code = models.CharField(max_length=LANG_CODE_STR_LEN, unique=True)
+    name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
+    is_right_to_left = models.BooleanField(default=False, blank=True) # not used now but maybe used in the future
+
+    def __str__(self):
+        return self.name
+
+
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
+
+    class Meta:
+        db_table = "supported_languages"
+        ordering = ("name",)
+
+
+class CommunitySupportedLanguage(BaseModel):
+    """
+    A class used to represent the languages supported by the platform
+
+    Attributes
+    ----------
+    community : int Foreign key to the community
+    language : int Foreign key to the supported language
+    """
+
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
+    language = models.ForeignKey(SupportedLanguage, on_delete=models.CASCADE, db_index=True)
+
+    def __str__(self):
+        return f"{self.community.name} - {self.language.name}"
+
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
+
+    class Meta:
+        db_table = "community_supported_languages"
+        unique_together = ["community", "language"]
+        ordering = ("community", "language")
+
+
+class TranslationsCache(BaseModel):
+    """
+    A class used to represent the translations cache table
+
+    Attributes
+    ----------
+    hash	: str
+    source_language_code  : str
+    target_language_code  : str
+    translated_text	: str
+    last_translated	: DateTime
+    """
+    hash = models.CharField(max_length=SHORT_STR_LEN)
+    source_language_code = models.CharField(max_length=LANG_CODE_STR_LEN)
+    target_language_code = models.CharField(max_length=LANG_CODE_STR_LEN)
+    translated_text = models.TextField(max_length=LONG_STR_LEN)
+    last_translated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.hash}: {self.translated_text}"
+
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
+
+    class Meta:
+        db_table = "translations_cache"
+
+
+class ManualCommunityTranslation(TranslationsCache):
+    """
+    A class used to represent the manual translations done by the community
+
+    Attributes
+    ----------
+    community : str
+    """
+
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
+
+    class Meta:
+        db_table = "manual_community_translations"
+
+
+class CampaignSupportedLanguage(BaseModel):
+    language = models.ForeignKey(SupportedLanguage, on_delete=models.CASCADE, db_index=True)
+    campaign = models.ForeignKey("apps__campaigns.Campaign", on_delete=models.CASCADE, db_index=True, related_name="supported_languages")
+    is_active = models.BooleanField(default=True, blank=True)
+    
+    def __str__(self):
+        return f"{self.campaign.title} - {self.language.name}"
+    
+    def simple_json(self):
+        return {"id": str(self.id), "is_active": self.is_active, "campaign": str(self.id), "code": self.language.code, "name": self.language.name}
+    
+    def full_json(self):
+        return self.simple_json()
+    
+    class Meta:
+        db_table = "campaign_supported_languages"

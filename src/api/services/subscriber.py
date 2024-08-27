@@ -4,7 +4,7 @@ from _main_.utils.pagination import paginate
 from api.store.subscriber import SubscriberStore
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
 from _main_.utils.constants import COMMUNITY_URL_ROOT, ME_LOGO_PNG
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 from typing import Tuple
 from api.utils.api_utils import get_sender_email
 
@@ -51,7 +51,7 @@ class SubscriberService:
 
       return serialize(subscriber), None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def update_subscriber(self, subscriber_id, args) -> Tuple[dict, MassEnergizeAPIError]:

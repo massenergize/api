@@ -1,12 +1,18 @@
 import csv
 import datetime
-from functools import reduce
 import io
+from functools import reduce
 from typing import List
+
+import boto3
+from django.db.models import Count, Model, Q
 from django.http import FileResponse
-from _main_.settings import AWS_S3_REGION_NAME, AWS_STORAGE_BUCKET_NAME, IS_LOCAL
-from _main_.utils.common import serialize, serialize_all
+from xhtml2pdf import pisa
+
+from _main_.settings import AWS_S3_REGION_NAME
+from _main_.utils.common import custom_timezone_info, serialize, serialize_all
 from api.constants import CSV_FIELD_NAMES
+from api.store.utils import getCarbonScoreFromActionRel
 from carbon_calculator.models import Action
 from database.utils.common import calculate_hash_for_bucket_item
 from xhtml2pdf import pisa
@@ -21,7 +27,6 @@ import hashlib
 from django.db.models import Count, QuerySet
 from django.http import HttpResponse
 
-
 s3 = boto3.client("s3", region_name=AWS_S3_REGION_NAME)
 
 
@@ -30,15 +35,17 @@ LAST_WEEK = "last-week"
 LAST_MONTH = "last-month"
 LAST_YEAR = "last-year"
 
+NON_EXISTENT_IMAGE = "NON_EXISTENT_IMAGE"
 
 def js_datetime_to_python(datetext):
     _format = "%Y-%m-%dT%H:%M:%SZ"
     _date = datetime.datetime.strptime(datetext, _format)
-    return pytz.utc.localize(_date)
+    _date = _date.replace(tzinfo=custom_timezone_info())
+    return _date
 
 
 def make_time_range_from_text(time_range):
-    today = datetime.datetime.utcnow()
+    today = datetime.datetime.now()
     if time_range == LAST_WEEK:
         start_time = today - datetime.timedelta(days=7)
         end_time = today
@@ -49,7 +56,7 @@ def make_time_range_from_text(time_range):
     elif time_range == LAST_YEAR:
         start_time = today - datetime.timedelta(days=365)
         end_time = today
-    return [pytz.utc.localize(start_time), pytz.utc.localize(end_time)]
+    return [start_time, end_time]
 
 
 def count_action_completed_and_todos(**kwargs):
@@ -216,21 +223,30 @@ def get_media_info(media):
 
 def find_duplicate_items(_serialize=False, **kwargs):
     community_ids = kwargs.get("community_ids", None)
-
-    # Retrieve all media items with multiple occurences of the same hash (excluding empty or None hashes)
-    duplicate_hashes = (
-        Media.objects.exclude(hash__exact="")
-        .exclude(hash=None)
-        .values("hash")
-        .annotate(hash_count=Count("hash"))
-        .filter(hash_count__gt=1)
-    )
-    print(duplicate_hashes)
-
-    if IS_LOCAL:
-        #check_hashes = Media.objects.exclude(hash__exact="").exclude(hash=None).values("hash").annotate(hash_count=Count("hash"))
-        check_hashes = Media.objects.exclude(hash__exact="").exclude(hash=None).values("hash","id").annotate(Count('hash'))
-        print(check_hashes, check_hashes.count())
+    if community_ids:
+        # First, filter the Media objects that belong to the given communities
+        print("Communities specified, duplicate context will be against only images in communities with ids : ",community_ids)
+        media_in_communities = Media.objects.filter(user_upload__communities__id__in=community_ids)
+        # Then, find the duplicate hashes in these media items
+        duplicate_hashes = (
+            media_in_communities.exclude(hash__exact="")
+            .exclude(hash=None)
+            .exclude(hash=NON_EXISTENT_IMAGE)
+            .values("hash")
+            .annotate(hash_count=Count("hash"))
+            .filter(hash_count__gt=1)
+        )
+    else:
+        # If no community_ids are provided, check duplicates against all the media records
+        print("No communities specified, duplicate context will be against all images in the bucket....")
+        duplicate_hashes = (
+            Media.objects.exclude(hash__exact="")
+            .exclude(hash=None)
+            .exclude(hash=NON_EXISTENT_IMAGE)
+            .values("hash")
+            .annotate(hash_count=Count("hash"))
+            .filter(hash_count__gt=1)
+        )
 
      # Now, retrieve the media items associated with the duplicate hashes
     if community_ids: 
@@ -260,6 +276,7 @@ def group_duplicates(duplicates, _serialize=False):
             old.append(json)
         else:
             response[item.hash] = [json]
+
 
     return response
 
@@ -322,7 +339,7 @@ def merge_and_get_distinct(array1, array2, property_name, _serialize=False):
     # Create a list to store the distinct objects
     distinct_objects = []
     # Combine the two arrays
-    combined_array = array1 + array2
+    combined_array = array1 or [] + array2 or []
 
     for obj in combined_array:
         property_value = obj.get(property_name, None)
@@ -483,6 +500,31 @@ def arrange_for_csv(usage_object: dict):
         return count, text
 
 
+def compile_duplicate_size(image): 
+    if not image: return 0 
+    tracker = {}
+    _sum = 0 
+    for img in image:
+        url = img.file.url
+        same_url =  tracker.get(url, None)
+        if not same_url: 
+            size = get_image_size_from_bucket(img.get_s3_key()) or 0
+            _sum += size
+            tracker[url] = size 
+
+    return _sum 
+
+
+def calculate_space_saved(grouped_dupes): 
+    space_saved = 0
+    if not grouped_dupes: 
+        return space_saved
+    for _, array in grouped_dupes.items():
+            rest =  rest = array[1:]
+            total = compile_duplicate_size(rest)
+            space_saved +=total
+    return space_saved
+
 def summarize_duplicates_into_csv(grouped_dupes, filename = None, field_names = CSV_FIELD_NAMES):
         """
         Returns: 
@@ -493,13 +535,18 @@ def summarize_duplicates_into_csv(grouped_dupes, filename = None, field_names = 
             combined = resolve_relations(array)
             usage_count, usage_summary = arrange_for_csv(combined.get("usage", {}))
             media = array[0]
+            rest = array[1:]
+            # total = sum([ get_image_size_from_bucket(m.get_s3_key()) for m in rest])
+            total = compile_duplicate_size(rest)
             obj = {
                 "media_url": media.file.url,
                 "primary_media_id": media.id,  # No other criteria is used to determine which media is going to be the primary media. The first 1 is simply chosen...
                 "usage_stats": usage_count,
                 "usage_summary": usage_summary,
-                "duplicates": ", ".join([m.file.url for m in array[1:]]),
-                "ids_of_duplicates": ", ".join([str(m.id) for m in array[1:]]),
+                "duplicates": ", ".join([m.file.url for m in rest]),
+                "ids_of_duplicates": ", ".join([str(m.id) for m in rest]),
+                "readable_compiled_size_of_duplicates": convert_bytes_to_human_readable(total),
+                "compiled_size_of_duplicates" : total
             }
             csv_data.append(obj)
 
@@ -508,7 +555,37 @@ def summarize_duplicates_into_csv(grouped_dupes, filename = None, field_names = 
 
         return csv_file
 
+def convert_bytes_to_human_readable(size):
+    """
+    Converts bytes into human readable image sizes.
 
+    Parameters:
+    - size (int): The size in bytes.
+
+    Returns:
+    - str: The human readable size.
+    """
+    # Define the units and their corresponding values
+    units = {
+        "B": {"value":1, "prev": "B"},
+        "KB": {"value":1024, "prev": "B"},
+        "MB": {"value":1024 ** 2, "prev": "KB"},
+        "GB": {"value":1024 ** 3, "prev": "MB"},
+        "TB": {"value":1024 ** 4, "prev": "GB"},
+    }
+    # Find the appropriate unit to use
+    for unit in units:
+        if size < units[unit].get("value"):
+            if size != 0:
+                unit = units[unit].get("prev")
+            break
+    # Calculate the size in the appropriate unit
+    size /= units[unit].get("value")
+    # Format the size with two decimal places
+    size = "{:.2f}".format(size)
+
+    # Return the formatted size with the unit
+    return f"{size}{unit}"
 
 def get_admins_of_communities(community_ids): 
      groups = CommunityAdminGroup.objects.filter(community__id__in = community_ids)
@@ -580,10 +657,14 @@ def generate_hashes():
     """
     images = Media.objects.filter(Q(hash__exact="") | Q(hash=None)).distinct()
     count = 0
+    print("Generating Hashes...")
     for image in images:
         hash = calculate_hash_for_bucket_item(image.file.name)
         if hash:
             image.hash = hash
             image.save()
             count = count + 1
+        else: 
+            image.hash = NON_EXISTENT_IMAGE 
+            image.save() 
     return count

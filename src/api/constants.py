@@ -1,4 +1,4 @@
-from _main_.utils.feature_flag_keys import USER_EVENTS_NUDGES_FF
+from _main_.utils.feature_flag_keys import REWIRING_AMERICA_MENU_ITEM_FF, USER_EVENTS_NUDGES_FF
 
 USERS = "users"
 COMMUNITIES = 'communities'
@@ -31,9 +31,16 @@ CSV_FIELD_NAMES = [
     "primary_media_id",
     "usage_stats",
     "usage_summary",
+    "readable_compiled_size_of_duplicates", 
+    "compiled_size_of_duplicates",
     "ids_of_duplicates",
-    "duplicates",
-]
+    "duplicates"
+    
+, ]
 
 COMMUNITY_NOTIFICATION_TYPES = [USER_EVENTS_NUDGES_FF]
+
+MENU_CONTROL_FEATURE_FLAGS = {
+  '/rewiring-america': REWIRING_AMERICA_MENU_ITEM_FF,
+}
 

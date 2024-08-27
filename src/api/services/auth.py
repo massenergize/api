@@ -10,7 +10,7 @@ from _main_.utils.massenergize_errors import CustomMassenergizeError
 from database.models import Community, UserProfile
 from _main_.settings import SECRET_KEY
 import jwt
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 import requests
 import os
 from _main_.utils.metrics import timed
@@ -81,11 +81,11 @@ class AuthService:
       else:
         return None, None, CustomMassenergizeError("invalid_auth")
     except PermissionError:
-      capture_message("not_an_admin", level="error")
+      log.error("not_an_admin", level="error")
       return None, None, CustomMassenergizeError('not_an_admin')
     except Exception as e:
       print(e)
-      capture_message("Authentication Error", level="error")
+      log.error("Authentication Error", level="error")
       return None, None, CustomMassenergizeError(e)
 
 
@@ -107,7 +107,7 @@ class AuthService:
       return serialize(user, full=True), None
 
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
 
       return None, CustomMassenergizeError(e)
 
@@ -131,7 +131,7 @@ class AuthService:
           'Invalid reCAPTCHA. Please try again.')
           
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def guest_login(self, context: Context):
@@ -170,10 +170,10 @@ class AuthService:
       else:
         return None, None, CustomMassenergizeError("invalid_auth")
     #except PermissionError:
-    #  capture_message("not_an_admin", level="error")
+    #  log.error("not_an_admin", level="error")
     #  return None, None, CustomMassenergizeError('not_an_admin')
     except Exception as e:
-      capture_message("Authentication Error", level="error")
+      log.error("Authentication Error", level="error")
       return None, None, CustomMassenergizeError(e)
 
 
@@ -213,7 +213,7 @@ class AuthService:
       
 
     except Exception as e:
-      capture_message("Authentication Error", level="error")
+      log.error("Authentication Error", level="error")
       return None, CustomMassenergizeError(e)
 
 

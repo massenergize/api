@@ -9,9 +9,8 @@ from api.services.utils import send_slack_message
 from task_queue.helpers import is_time_to_run
 from .jobs import FUNCTIONS
 from .models import Task
+from _main_.utils.massenergize_logger import log
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 FAILED = "FAILED"
 SUCCEEDED = "SUCCEEDED"
@@ -25,11 +24,11 @@ def log_status(task, message):
 	task_name = get_task_info(task)
 
 	if task.status == FAILED:
-		logger.error(f"Task: {task_name}, Status: {task.status}, Info: {message}")
+		log.error(f"Task: {task_name}, Status: {task.status}, Info: {message}")
 		if IS_PROD:
 			send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL, {"text": f"Task: {task_name}, Status: {task.status}, Info: {message}"})
 	else:
-		logger.info(f"Task: {task_name}, Status: {task.status}, Info: {message}")
+		log.info(f"Task: {task_name}, Status: {task.status}, Info: {message}")
 
 
 @shared_task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 1, 'countdown': 5})
@@ -67,4 +66,4 @@ def run_some_task(self, task_id):
 			task.save()
 			
 	except Exception as e:
-		logger.error(f"Task: {task_id}, Status: ❌, Info: {str(e)}")
+		log.error(f"Task: {task_id}, Status: ❌, Info: {str(e)}")

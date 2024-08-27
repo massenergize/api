@@ -1,18 +1,20 @@
+from _main_.utils.stage.gtranslate_helper import MockGoogleTranslateClient
 from _main_.utils.stage.secrets import get_s3_file
 from _main_.utils.stage.logging import *
 from dotenv import load_dotenv
 from pathlib import Path  # python3 only
 import os, socket
-
-from _main_.utils.utils import load_json
+from google.cloud import translate_v2 as translate
+from google.oauth2 import service_account
+from _main_.utils.utils import load_json, write_json_to_file
 
 class MassEnergizeApiEnvConfig:
     def __init__(self):
         self._set_api_run_info()
         self.secrets = None
         self.firebase_creds = None
-        
-    
+        self.release_info = self.get_release_info()
+
     def load_env_variables(self):
         # this is the expected place we would usually put our .env file
         env_file_dir =  Path('.') / '.massenergize' / 'creds/'
@@ -46,7 +48,7 @@ class MassEnergizeApiEnvConfig:
     def get_firebase_auth(self):
         if self.firebase_creds:
             return self.firebase_creds
-        
+
         firebase_s3_path: str =  os.getenv('FIREBASE_AUTH_KEY_PATH')
         firebase_local_path: str =  os.getenv('FIREBASE_AUTH_LOCAL_KEY_PATH')
 
@@ -78,6 +80,34 @@ class MassEnergizeApiEnvConfig:
         self.firebase_creds = firebase_creds
         return firebase_creds
 
+    def get_google_translate_key_file(self):
+        path = os.getenv('GOOGLE_TRANSLATE_KEY_FILE_PATH')
+        filename = os.getenv('GOOGLE_TRANSLATE_KEY_FILE_NAME')
+        if not path or not filename:
+            return None
+        return f"{path}/{filename}", filename
+
+    def set_up_google_translate_client(self):
+        if self.is_test() or self.is_local():
+            return MockGoogleTranslateClient()
+        
+        google_translate_key_file_path, filename = self.get_google_translate_key_file()
+        if not google_translate_key_file_path:
+            raise Exception("GOOGLE_TRANSLATE_KEY_FILE not found in environment variables")
+
+        if not self.is_test() and not self.is_local():
+            service_account_key = get_s3_file(google_translate_key_file_path)
+            # let's write the key to a file in the src/.massenergize/creds directory
+            key_file_path = f"{Path('.')}/.massenergize/creds/{filename}"
+
+            write_json_to_file(service_account_key, key_file_path)
+            google_translate_key_file_path = key_file_path
+
+        credentials = service_account.Credentials.from_service_account_file(
+            filename=google_translate_key_file_path)
+
+        # scopes = ['https://www.googleapis.com/auth/cloud-platform']
+        return  translate.Client(credentials=credentials)
 
     def is_prod(self):
         return self.name == "prod"
@@ -99,7 +129,7 @@ class MassEnergizeApiEnvConfig:
 
 
     def get_logging_settings(self):
-        if self.is_local() or not self.secrets:
+        if self.is_local() or self.is_test():
             return get_local_logging_settings()
         return get_default_logging_settings(self.name)
 
@@ -111,7 +141,7 @@ class MassEnergizeApiEnvConfig:
 
     def load_override_env_vars(self):
         env_path = Path('.') / '.env'
-        self.load_env_vars_from_path(env_path)  
+        self.load_env_vars_from_path(env_path)
 
         env_path = Path('.') / f'{self.name}.env'
         self.load_env_vars_from_path(env_path)
@@ -122,17 +152,17 @@ class MassEnergizeApiEnvConfig:
 
         if self.is_docker_mode and self.is_local():
             db_host =  os.getenv('DATABASE_HOST', "localhost")
-            redis_host = os.getenv('CELERY_LOCAL_REDIS_BROKER_URL', "redis://localhost:6379/0")            
+            redis_host = os.getenv('CELERY_LOCAL_REDIS_BROKER_URL', "redis://localhost:6379/0")
             _local_hosts =  ['localhost', '127.0.0.1', '0.0.0.0']
             _docker_internal = "host.docker.internal"
 
             for _local_host in _local_hosts:
                 if (_local_host in db_host):
                     db_host = db_host.replace(_local_host, _docker_internal)
-                    os.environ.update({ 'DATABASE_HOST': db_host }) 
+                    os.environ.update({ 'DATABASE_HOST': db_host })
                 if (_local_host in redis_host):
                     redis_host = redis_host.replace(_local_host, _docker_internal)
-                    os.environ.update({ 'CELERY_LOCAL_REDIS_BROKER_URL': redis_host }) 
+                    os.environ.update({ 'CELERY_LOCAL_REDIS_BROKER_URL': redis_host })
 
 
     def load_env_vars_from_path(self, env_path: Path):
@@ -146,18 +176,21 @@ class MassEnergizeApiEnvConfig:
 
 
     def _set_api_run_info(self):
-        name = os.getenv("DJANGO_ENV")
+        override_env = os.getenv("DJANGO_ENV")
         is_docker_mode = False
 
         current_run_file_path = Path('.') / '.massenergize'/ 'current_run_info.json'
-        if current_run_file_path.exists():
+        if not override_env and current_run_file_path.exists():
             _current_run_info = load_json(current_run_file_path)
-            name = _current_run_info.get('django_env', name)
-            is_docker_mode = _current_run_info.get('is_docker_mode', is_docker_mode)
+            name = _current_run_info.get('django_env')
+            assert name is not None, f"{current_run_file_path} should have django_env set to one of test, local, dev, canary or prod"
+            is_docker_mode = _current_run_info.get('is_docker_mode')
+            assert name is not None, f"{current_run_file_path} should have is_docker_mode set to true/false"
         else:
+            load_dotenv()
             name = os.getenv("DJANGO_ENV", "dev")
             is_docker_mode = "DOCKER_CONTAINER" in os.environ
-        
+
         name = name.lower()
         assert name in [ "test", "local", "dev", "canary", "prod"]
         self.name = name
@@ -174,3 +207,12 @@ class MassEnergizeApiEnvConfig:
             return ip_address
         except socket.error:
             return "Unable to get IP address"
+
+    def get_release_info(self):
+        release_info = load_json("release_info.json")
+        return release_info
+
+    def get_trusted_origins(self):
+        origins = os.getenv('CSRF_TRUSTED_ORIGINS', '').split(",")
+        origins = [o.strip() for o in origins if o.strip()]
+        return origins or []

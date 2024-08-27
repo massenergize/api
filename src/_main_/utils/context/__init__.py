@@ -28,6 +28,7 @@ class Context:
     self.community = None
     self.is_admin_site = False
     self.request = None
+    self.preferred_language = 'en'
 
   def set_user_credentials(self, decoded_token):
     self.user_is_logged_in = True
@@ -44,6 +45,8 @@ class Context:
     self.is_sandbox = parse_bool(self.args.pop('__is_sandbox', False))
     self.community = self.args.pop('__community', None)
     self.is_admin_site = parse_bool(self.args.pop('__is_admin_site', False))
+    preferred_language = self.args.pop('__preferred_language', 'en-US')
+    self.preferred_language = self.args.pop('__user_language', preferred_language)
 
     #set the is_dev field
     self.is_prod = parse_bool(self.args.pop('__is_prod', False))
@@ -67,6 +70,7 @@ class Context:
       "user_email": self.user_email,
       "user_is_super_admin": self.user_is_super_admin,
       "user_is_community_admin": self.user_is_community_admin,
+      "preferred_language": self.preferred_language
     })
 
 

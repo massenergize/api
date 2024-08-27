@@ -11,7 +11,6 @@ from _main_.utils.context import Context
 from _main_.utils.constants import COMMUNITY_URL_ROOT, ADMIN_URL_ROOT
 from .utils import get_community_or_die, get_user_or_die, get_admin_communities, unique_media_filename
 from carbon_calculator.carbonCalculator import getCarbonImpact
-from sentry_sdk import capture_message
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
 from typing import Tuple
 from django.db.models import Q
@@ -56,7 +55,7 @@ class TeamStore:
         return None, CustomMassenergizeError("Cannot access team until it is approved")
       return team, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -68,7 +67,7 @@ class TeamStore:
       team_admins = [a.user for a in team_admins if a.user]
       return team_admins, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
       
@@ -83,7 +82,7 @@ class TeamStore:
         teams = user.team_set.all()
       return teams, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -123,7 +122,7 @@ class TeamStore:
 
       return ans, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -253,7 +252,7 @@ class TeamStore:
         # ----------------------------------------------------------------
       return team, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       if team:
         team.delete()
       return None, CustomMassenergizeError(e)
@@ -382,7 +381,7 @@ class TeamStore:
       return team, None
     except Exception as e:
       print(str(e))
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
     
 
@@ -415,7 +414,7 @@ class TeamStore:
         # ----------------------------------------------------------------
       return team, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -434,7 +433,7 @@ class TeamStore:
 
       return team, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def leave_team(self, context,args) -> Tuple[Team, MassEnergizeAPIError]:
@@ -451,7 +450,7 @@ class TeamStore:
 
       return team, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def add_team_member(self, args,context) -> Tuple[Team, MassEnergizeAPIError]:
@@ -481,7 +480,7 @@ class TeamStore:
       # ----------------------------------------------------------------
       return team, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def remove_team_member(self, args,context) -> Tuple[Team, MassEnergizeAPIError]:
@@ -507,7 +506,7 @@ class TeamStore:
       # ----------------------------------------------------------------
       return team, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -558,7 +557,7 @@ class TeamStore:
 
       return res, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, InvalidResourceError()
 
 
@@ -594,7 +593,7 @@ class TeamStore:
       return teams.distinct(), None
 
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def list_teams_for_super_admin(self, context: Context, args):
@@ -615,7 +614,7 @@ class TeamStore:
       return teams.distinct(), None
 
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def list_actions_completed(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
@@ -660,6 +659,6 @@ class TeamStore:
       actions_completed = sorted(actions_completed, key=lambda d: d['done_count']*-1)
       return actions_completed, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 

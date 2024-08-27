@@ -1,10 +1,14 @@
 import base64
 import time
+from zoneinfo import ZoneInfo
+
 import jwt
 from http.cookies import SimpleCookie
 from datetime import datetime, timedelta
 from django.utils import timezone
 
+from _main_.utils.common import parse_datetime_to_aware
+from _main_.utils.utils import load_json
 from ..store.utils import unique_media_filename
 from _main_.settings import SECRET_KEY
 from _main_.utils.feature_flags.FeatureFlagConstants import FeatureFlagConstants
@@ -18,30 +22,32 @@ from database.models import (
     Footage,
     HomePageSettings,
     Media,
-    Message,
+    Menu, Message,
     RealEstateUnit,
     Team,
     Testimonial,
     UserActionRel,
     UserMediaUpload,
     UserProfile,
+    SupportedLanguage
 )
 from carbon_calculator.models import CalcDefault
 import requests
 from io import BytesIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
-from apps__campaigns.models import Technology
+from apps__campaigns.models import Campaign, CampaignAccount, Technology
 
 from database.models import Vendor
+from ..utils.api_utils import load_default_menus_from_json
 
 RESET = "reset"
 ME_DEFAULT_TEST_IMAGE = "https://www.whitehouse.gov/wp-content/uploads/2021/04/P20210303AS-1901-cropped.jpg"
 
 def makeFootage(**kwargs):
-    communities = kwargs.pop("communities",None)    
+    communities = kwargs.pop("communities",None)
     f =  Footage.objects.create(**{**kwargs})
-    if communities: 
+    if communities:
         f.communities.set(communities)
     return f
 
@@ -110,9 +116,9 @@ def makeMedia(**kwargs):
     name = kwargs.get("name") or "New Media"
     file = kwargs.get("file") or kwargs.get("image") or createImage()
     file.name = unique_media_filename(file)
-    tags = kwargs.pop("tags", None) 
+    tags = kwargs.pop("tags", None)
     media = Media.objects.create(**{**kwargs, "name": name, "file": file})
-    if tags: 
+    if tags:
         media.tags.set(tags)
     return media
 
@@ -127,11 +133,14 @@ def makeEvent(**kwargs):
     community = kwargs.get("community")
     name = kwargs.get("name") or "Event default Name"
     pub_coms = kwargs.pop("communities_under_publicity", [])
+    start_date = parse_datetime_to_aware(datetime.now()+ timezone.timedelta(days=1))
+    end_date = parse_datetime_to_aware(datetime.now() + timezone.timedelta(days=2))
+
     event = Event.objects.create(
         **{
             "is_published": True,
-            "start_date_and_time": timezone.now()+ timezone.timedelta(days=1),
-            "end_date_and_time": timezone.now() + timezone.timedelta(days=2),
+            "start_date_and_time": start_date,
+            "end_date_and_time": end_date,
             **kwargs,
             "community": community,
             "name": name,
@@ -242,19 +251,19 @@ def makeCommunity(**kwargs):
     return com
 
 
-def setupCC(client):
-    cq = CalcDefault.objects.all()
-    num = cq.count()
-    if num <= 0:
-        client.post(
-            "/cc/import",
-            {
-                "Confirm": "Yes",
-                "Actions": "carbon_calculator/content/Actions.csv",
-                "Questions": "carbon_calculator/content/Questions.csv",
-                "Defaults": "carbon_calculator/content/Defaults.csv",
-            },
-        )
+def makeMenu(community):
+    menu_json = load_default_menus_from_json()
+    menu = Menu(
+        name=community.subdomain + " Main Menu",
+        community=community,
+        is_custom=True,
+        content=menu_json["PortalMainNavLinks"],
+        footer_content=menu_json["PortalFooterQuickLinks"],
+        contact_info=menu_json["PortalFooterContactInfo"],
+        is_published=True,
+    )
+    menu.save()
+    return menu
 
 
 def makeAuthToken(user):
@@ -346,7 +355,7 @@ def createImage(picURL=None):
     return image_file
 
 
-def image_url_to_base64(image_url = None): 
+def image_url_to_base64(image_url = None):
     image_url = image_url or ME_DEFAULT_TEST_IMAGE
     response = requests.get(image_url)
 
@@ -377,3 +386,58 @@ def make_vendor(**kwargs):
     })
 
     return vendor
+
+def make_feature_flag(**kwargs):
+    communities = kwargs.pop("communities", [])
+    users = kwargs.pop("users", [])
+    flag = FeatureFlag.objects.create(**{
+        **kwargs,
+        "name": kwargs.get("name") or f"New Flag-{timezone.now().timestamp()}",
+        "key": kwargs.get("key") or f"New Flag-{timezone.now().timestamp()}-feature-flag",
+        "notes": kwargs.get("description") or "New Flag Description",
+    })
+
+    if communities:
+        flag.communities.set(communities)
+    if users:
+        flag.users.set(users)
+    flag.save()
+
+    return flag
+
+
+def make_supported_language(code=f"en-US-{datetime.now().timestamp()}", name="English (US)"):
+    lang = SupportedLanguage.objects.create(code=code, name=name)
+    return lang
+
+
+def create_supported_language(**kwargs):
+    code = kwargs.get("code") or f"en-US-{datetime.now().timestamp()}"
+    name = kwargs.get("name") or "English (US)"
+    lang = SupportedLanguage.objects.create(code=code, name=name)
+    return lang
+
+
+def make_campaign_account(**kwargs):
+    creator = kwargs.get("creator") or makeAdmin()
+    community = kwargs.get("community") or makeCommunity()
+    subdomain = kwargs.get("subdomain") or f"test.campaign.account-{datetime.now().timestamp()}"
+    return CampaignAccount.objects.create(**{
+        "name": "Test Campaign Account",
+        "creator": creator,
+        "community": community,
+        "subdomain": subdomain,
+    })
+
+def make_campaign(**kwargs):
+    title = kwargs.get("title") or f"New Campaign-{datetime.now().timestamp()}"
+    desc = kwargs.get("description") or "New Campaign Description"
+    account = kwargs.get("account") or make_campaign_account()
+    
+    return Campaign.objects.create(**{
+        **kwargs,
+        "title": title,
+        "tagline": kwargs.get("tagline") or "New Campaign Tagline",
+        "description": desc,
+        "account": account,
+    })

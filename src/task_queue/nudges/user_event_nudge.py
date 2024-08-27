@@ -1,6 +1,5 @@
 import datetime
-import pytz
-from _main_.utils.common import encode_data_for_URL, serialize_all
+from _main_.utils.common import custom_timezone_info, encode_data_for_URL, serialize_all
 from _main_.utils.constants import COMMUNITY_URL_ROOT
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
 from _main_.utils.feature_flag_keys import USER_EVENTS_NUDGES_FF
@@ -17,12 +16,14 @@ from datetime import timedelta
 from database.utils.settings.model_constants.events import EventConstants
 from django.utils import timezone
 
+from task_queue.helpers import get_event_location
+
 WEEKLY = "per_week"
 BI_WEEKLY = "biweekly"
 MONTHLY = "per_month"
 DAILY = "per_day"
 
-eastern_tz = pytz.timezone("US/Eastern")
+eastern_tz = custom_timezone_info("US/Eastern")
 
 LIMIT = 5
 
@@ -210,7 +211,7 @@ def prepare_events_email_data(events):
             "logo": get_logo(event),
             "title": truncate_title(event.get("name")),
             "date": get_date_range(event.get("start_date_and_time"), event.get("end_date_and_time")),
-            "location": "In person" if event.get("location") else "Online",
+            "location": get_event_location(event),
             "view_link": f'{COMMUNITY_URL_ROOT}/{event.get("community", {}).get("subdomain")}/events/{event.get("id")}',
             } for event in events]
     return data

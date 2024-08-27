@@ -1,4 +1,4 @@
-﻿Action Name,Title,Description,Where&When,Category,Subcategory,Helptext,Avg points,Questions,Picture,Information,Stations
+Action Name,Title,Description,Where&When,Category,Subcategory,Helptext,Avg points,Questions,Picture,Information,Stations
 energy_fair,Sustainability event,"Attend energy or sustainability fair, to find ways to take sustainable action",Multiple,Activism & Education,Activism,Attending an energy fair is a great way to get started lowering energy use.,15.0,"attend_fair,own_rent,fuel_assistance,activity_group",,"Although the action in itself does not lead to emission savings, it leads to a small point allocation because we know you will do something!","Welcome_1,Welcome_CCH,All_Actions_ME"
 activism,Activism,"Voter registration, petition, protest, organize",Multiple,Activism & Education,Activism,,,,,,
 campaign,Publicity campaign,Execute a local publicity campaign on a climate or sustainability issue,Multiple,Activism & Education,Activism,,,,,,

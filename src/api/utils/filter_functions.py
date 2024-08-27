@@ -3,8 +3,9 @@ import json
 import operator
 from functools import reduce
 from django.db.models import Q
+from django.utils import timezone
 
-from database.models import CommunityMember
+from database.models import CommunityAdminGroup, CommunityMember
 
 
 def get_events_filter_params(params):
@@ -80,7 +81,7 @@ def get_actions_filter_params(params):
       status = None
 
       if search_text:
-        search= reduce(operator.or_, 
+        search= reduce(operator.or_,
         (Q(title__icontains= search_text),
         Q(tags__name__icontains= search_text),
         Q(community__name__icontains= search_text),
@@ -171,7 +172,7 @@ def get_messages_filter_params(params):
 
 
       if is_scheduled:
-        query.append(Q(scheduled_at__isnull=False) & Q(scheduled_at__gt=datetime.datetime.now()))
+        query.append(Q(scheduled_at__isnull=False) & Q(scheduled_at__gt=timezone.now()))
 
       if communities:
         query.append(Q(community__name__in=communities))
@@ -306,27 +307,36 @@ def get_users_filter_params(params):
     try:
       query = []
       search_text = params.get("search_text", None)
+      is_community_admin = "Community Admin" in params.get("membership", [])
+      is_super_admin = "Super Admin" in params.get("membership", [])
+      is_member = "Member" in params.get("membership", [])
+      
       if search_text:
         users = CommunityMember.objects.filter(community__name__icontains=search_text).values_list('user', flat=True).distinct()
         search= reduce(
         operator.or_, (
         Q(full_name__icontains= search_text),
-        Q(Q(id__in=users)),# 
+        Q(Q(id__in=users)),#
         Q(email__icontains= search_text),
         ))
         query.append(search)
 
       communities = params.get("community", None)
+      
+      if communities and is_community_admin:
+        users = CommunityAdminGroup.objects.filter(Q(community__name__in=communities)| Q(community__id__in=communities), members__is_community_admin=True).values_list('members', flat=True).distinct()
+        query.append(Q(id__in=users))
+        return query
 
       if communities:
-        users = CommunityMember.objects.filter(community__name__in=communities).values_list('user', flat=True).distinct()
+        users = CommunityMember.objects.filter(Q(community__name__in=communities)| Q(community__id__in=communities)).values_list('user', flat=True).distinct()
         query.append(Q(id__in=users))
 
-      if  "Community Admin" in params.get("membership", []):
+      if is_community_admin:
         query.append(Q(is_community_admin=True))
-      elif "Super Admin" in params.get("membership",[]):
+      elif is_super_admin:
         query.append(Q(is_super_admin=True))
-      elif "Member" in params.get("membership",[]):
+      elif is_member:
           query.append(Q(is_super_admin=False,is_community_admin=False) )
  
       return query
@@ -369,21 +379,18 @@ def get_super_admins_filter_params(params):
       return []
 
 
-
-
 def get_sort_params(params):
   try:
     sort_params = params.get("sort_params", None)
     sort =""
     if sort_params:
       sort+= sort_params.get("name")
-      if sort_params.get("direction") == "desc":
+      if sort_params.get("direction") == "asc":
         sort = "-"+sort
       return sort.lower()
     
     return "-id"
-
-
+  
   except Exception as e:
     return '-id'
 
@@ -391,10 +398,17 @@ def get_sort_params(params):
 
 
 def sort_items(queryset, params):
-  if not queryset:
-    return []
-  if isinstance(queryset, list):
+  try:
+    if not queryset:
+      return []
+    
+    if isinstance(queryset, list):
+      return queryset
+    
+    sort_params = get_sort_params(params)
+    sorted =  queryset.order_by(sort_params)
+    
+    return sorted
+  
+  except Exception as e:
     return queryset
-
-  sort_params = get_sort_params(params)
-  return queryset.order_by(sort_params)

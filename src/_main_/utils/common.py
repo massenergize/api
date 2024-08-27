@@ -1,21 +1,61 @@
 import io
 import json
 from querystring_parser import parser
+
+from _main_.settings import EnvConfig
 from _main_.utils.massenergize_errors import CustomMassenergizeError
-import pytz
+from zoneinfo import ZoneInfo
 from django.utils import timezone
-from datetime import datetime, timedelta
+from datetime import timedelta
 from dateutil import tz
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 import base64
 import pyshorteners
 from openpyxl import Workbook
 from better_profanity import profanity
+import datetime
+from typing import Literal, Tuple
+
+from sentry_sdk.metrics import incr, gauge, distribution, set
+from _main_.utils.utils import run_in_background
+
+from _main_.utils.stage import MassEnergizeApiEnvConfig
+
+
+def custom_timezone_info(zone="UTC"):
+    if not zone:
+        zone = "UTC"
+    return ZoneInfo(zone)
+
+
+def parse_datetime_to_aware(datetime_str=None, timezone_str='UTC'):
+    """
+    :param datetime_str: The string representing the datetime to parse. If not provided, the current date and time will be used.
+    :param timezone_str: The string representing the timezone to apply to the parsed datetime. Defaults to 'UTC'.
+    :return: An aware datetime object.
+
+    """
+    if not datetime_str:
+        datetime_str = datetime.datetime.now()
+
+    if isinstance(datetime_str, datetime.datetime):
+        datetime_str = datetime_str.strftime('%Y-%m-%d %H:%M:%S')
+    try:
+        naive_datetime = datetime.datetime.strptime(datetime_str, '%Y-%m-%d %H:%M:%S.%f')
+    except ValueError:
+        naive_datetime = datetime.datetime.strptime(datetime_str, '%Y-%m-%d %H:%M:%S')
+
+    try:
+        aware_datetime = timezone.make_aware(naive_datetime, custom_timezone_info(timezone_str))
+        return aware_datetime
+    except Exception as e:
+        log.exception(e)
+        return None
 
 
 def get_date_and_time_in_milliseconds(**kwargs):
     hours = kwargs.get("hours", None)
-    date = datetime.now(tz=pytz.UTC)
+    date = datetime.datetime.now(tz=custom_timezone_info())
     if hours:
         delta = timedelta(hours=hours)
         date = date + delta
@@ -45,10 +85,11 @@ def get_request_contents(request, **kwargs):
         if filter_out:
             for key in filter_out:
                 args.pop(key, None)
+
         return args
 
     except Exception as e:
-        capture_message(str(e), level="error")
+        log.exception(e)
         return {}
 
 
@@ -67,14 +108,14 @@ def parse_list(d):
         return res
 
     except Exception as e:
-        capture_message(str(e), level="error")
+        log.exception(e)
         return []
 
 def parse_dict(d: object) -> object:
     try:
         return json.loads(d)
     except Exception as e:
-        capture_message(str(e), level="error")
+        log.exception(e)
         return dict()
 
 
@@ -85,7 +126,7 @@ def parse_str_list(d):
             return tmp
         return []
     except Exception as e:
-        capture_message(str(e), level="error")
+        log.exception(e)
         return []
 
 
@@ -108,15 +149,24 @@ def parse_string(s):
             return None
         return s
     except Exception as e:
-        capture_message(str(e), level="error")
+        log.exception(e)
         return None
 
 
+# def parse_int(b):
+#     try:
+#         return int(b)
+#     except Exception as e:
+#         log.exception(e)
+#         return 1
+
 def parse_int(b):
+    if not str(b).isdigit():
+        return None
     try:
         return int(b)
     except Exception as e:
-        capture_message(str(e), level="error")
+        log.exception(e)
         return 1
 
 
@@ -125,12 +175,12 @@ def parse_date(d):
         if d == "undefined" or d == "null":  # providing date as 'null' should clear it
             return None
         if len(d) == 10:
-            return pytz.utc.localize(datetime.strptime(d, "%Y-%m-%d"))
+            return datetime.datetime.strptime(d, "%Y-%m-%d").replace(tzinfo=custom_timezone_info())
         else:
-            return pytz.utc.localize(datetime.strptime(d, "%Y-%m-%d %H:%M"))
+            return datetime.datetime.strptime(d, "%Y-%m-%d %H:%M").replace(tzinfo=custom_timezone_info())
 
     except Exception as e:
-        capture_message(str(e), level="error")
+        log.exception(e)
         return timezone.now()
 
 
@@ -222,11 +272,12 @@ def extract_location(args):
 
 
 def is_value(b):
-    if b and b != "undefined" and b != "NONE":
-        return True
-    if b == "":  # an empty string is a string value
-        return True
-    return False
+    if isinstance(b, str) and b.lower() in {"undefined", "null", "none"}:
+        return False
+    if b is None:
+        return False
+
+    return True
 
 
 # def resize_image(img, options={}):
@@ -275,14 +326,14 @@ def set_cookie(response, key, value):  # TODO
 
 def local_time():
     local_zone = tz.tzlocal()
-    dt_utc = datetime.utcnow()
+    dt_utc = parse_datetime_to_aware()
     local_now = dt_utc.astimezone(local_zone)
     return local_now
 
 
 def utc_to_local(iso_str):
     local_zone = tz.tzlocal()
-    dt_utc = datetime.strptime(iso_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=pytz.UTC)
+    dt_utc = datetime.datetime.strptime(iso_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=custom_timezone_info())
     local_now = dt_utc.astimezone(local_zone)
     return local_now
 
@@ -332,5 +383,86 @@ def contains_profane_words(text):
 def to_django_date(date):
     if not date:
         return None
-    parsed_date = datetime.strptime(date, "%a %b %d %Y %H:%M:%S GMT%z")
+    parsed_date = datetime.datetime.strptime(date, "%a %b %d %Y %H:%M:%S GMT%z")
     return parsed_date.date()
+
+
+def item_is_empty(item):
+    if isinstance(item, str) and item.strip() in {"", "null", "undefined"}:
+        return True
+    elif (isinstance(item, dict) or isinstance(item, list)) and len(item) == 0:
+        return True
+    return False
+
+METRIC_TYPE: Tuple[str, str, str, str] = ("COUNT", "GAUGE", "DISTRIBUTION", "SET")
+
+@run_in_background
+def log_sentry_metric(type: Literal[METRIC_TYPE] = METRIC_TYPE[2], options: dict = {}):
+
+    """
+    Log a metric to Sentry
+
+    :param type: The type of metric to log. One of "count", "gauge", "distribution", "summary", or "set".
+    :param options: The options to pass to the metric logger. The options are different for each metric type.
+
+    for the different types of metrics, the options are:
+
+    count: {
+                key="button_click",
+                value=1,
+                tags={
+                    "browser": "Firefox",
+                     "app_version": "1.0.0"
+                  }
+            }
+    gauge: {
+            key="page_load",
+            value=15.0,
+            unit="millisecond",
+            tags={
+                "page": "/home"
+            }
+        }
+    distribution: {
+                key="page_load",
+                value=15.0,
+                unit="millisecond",
+                tags= {
+                    "page": "/home"
+                    }
+                }
+    set: {
+        key="user_view",
+        value="jane",
+        unit="username",
+        tags={
+            "page": "/home"
+        }
+    }
+
+    :return: None
+    """
+    if EnvConfig.is_test() or EnvConfig.is_local():
+        return
+
+    SENTRY_METRIC_TYPES = {
+        "COUNT": incr,
+        "INCR": incr,
+        "GAUGE": gauge,
+        "DISTRIBUTION": distribution,
+        "SET": set,
+    }
+
+    try:
+        type = type.lower()
+        if type not in SENTRY_METRIC_TYPES:
+            return
+
+        log_metric = SENTRY_METRIC_TYPES[type]
+        log_metric(**options)
+
+
+    except Exception as e:
+        log.exception(e)
+        return None
+

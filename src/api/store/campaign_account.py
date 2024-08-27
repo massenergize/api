@@ -1,6 +1,6 @@
 from typing import Tuple
 
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 from _main_.utils.context import Context
 from _main_.utils.massenergize_errors import CustomMassenergizeError, MassEnergizeAPIError
 from api.store.utils import get_user_from_context
@@ -31,7 +31,7 @@ class CampaignAccountStore:
             account = CampaignAccount.objects.create(**args)
             return account, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
         
     
@@ -47,7 +47,7 @@ class CampaignAccountStore:
             else:
                 return None, CustomMassenergizeError("id not provided")
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
         
 
@@ -61,7 +61,7 @@ class CampaignAccountStore:
             account.update(is_deleted=True)
             return account.first(), None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
         
 
@@ -70,7 +70,7 @@ class CampaignAccountStore:
             accounts = CampaignAccount.objects.filter(is_deleted=False)
             return accounts, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
         
 
@@ -83,7 +83,7 @@ class CampaignAccountStore:
 
             return account.first(), None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
         
 
@@ -104,7 +104,7 @@ class CampaignAccountStore:
             account_admin = CampaignAccountAdmin.objects.create(account=account.first(), user=user, role=role)
             return account_admin, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
         
 
@@ -118,7 +118,7 @@ class CampaignAccountStore:
             admin.update(is_deleted=True)
             return admin.first(), None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
         
 
@@ -132,6 +132,6 @@ class CampaignAccountStore:
             admin.update(**args)
             return admin.first(), None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 

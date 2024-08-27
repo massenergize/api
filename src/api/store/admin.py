@@ -6,7 +6,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassene
 from _main_.utils.context import Context
 from .utils import get_community, get_user, get_community_or_die, unique_media_filename
 from api.store.community import CommunityStore
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 from typing import Tuple
 
 class AdminStore:
@@ -37,7 +37,7 @@ class AdminStore:
       return user, None
       
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -64,7 +64,7 @@ class AdminStore:
       return user, None
 
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -76,7 +76,7 @@ class AdminStore:
       admins = UserProfile.objects.filter(is_super_admin=True, is_deleted=False, *filter_params)
       return admins, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -130,7 +130,7 @@ class AdminStore:
       return res, None
       
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -185,7 +185,7 @@ class AdminStore:
       return admin_group, None
 
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -208,7 +208,7 @@ class AdminStore:
 
       return community_admin_group, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -244,7 +244,7 @@ class AdminStore:
       return new_message, None 
 
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def list_admin_messages(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
@@ -275,5 +275,5 @@ class AdminStore:
       messages = Message.objects.filter(community__id = community.id, is_deleted=False).select_related('uploaded_file', 'community', 'user')
       return messages, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)

@@ -3,7 +3,7 @@ import geoip2.database
 import socket
 from user_agents import parse
 from _main_.settings import RUN_SERVER_LOCALLY
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 
 def ip_valid(ip):
 
@@ -23,7 +23,7 @@ class GeoIP:
     except Exception as e:
       # presumably file not found, in the case of running locally
       if not RUN_SERVER_LOCALLY:
-        capture_message(str(e), level="error")
+        log.exception(e)
 
       self.reader = None  # open in first call to GetGeo to avoid crashing developers running locally: geoip2.database.Reader('_main_/utils/GeoLite2-City/GeoLite2-City.mmdb')
 

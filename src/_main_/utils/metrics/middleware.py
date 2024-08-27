@@ -1,13 +1,8 @@
 import time
 import boto3
-import logging
+from _main_.utils.massenergize_logger import log
 from django.utils.deprecation import MiddlewareMixin
-from botocore.exceptions import NoCredentialsError, ClientError
-from _main_.settings import STAGE
-
-
 from _main_.utils.utils import run_in_background
-logger = logging.getLogger(STAGE.get_logger_identifier())
 
 class MetricsMiddleware(MiddlewareMixin):
     def __init__(self, get_response=None):
@@ -18,54 +13,17 @@ class MetricsMiddleware(MiddlewareMixin):
         request.start_time = time.time()
 
     def process_response(self, request, response):
-        self.send_cw_metrics(request)
+        self.log_the_time_taken_to_complete_request(request)
         return response
 
     @run_in_background
-    def send_cw_metrics(self, request):
-        if not STAGE.can_send_logs_to_cloudwatch():
-            return 
+    def log_the_time_taken_to_complete_request(self, request):
+        if not hasattr(request, 'start_time'):
+            return
+        latency = (time.time() - request.start_time) * 1000 # convert to milliseconds
+        
+        log.info(
+            f"Path: {request.path} Latency(ms): {latency}", 
+            extra={"path": request.path, "latency": latency}
+        )
 
-        if hasattr(request, 'start_time'):
-            latency = (time.time() - request.start_time) * 1000 # convert to milliseconds
-            print(request.path, latency)
-            return #TODO; remove
-
-        try:
-            self.cloudwatch.put_metric_data(
-                        Namespace='ApiService',
-                        MetricData=[
-                        {
-                            'MetricName': 'Latency',
-                            'Dimensions': [
-                                {
-                                    'Name': 'Endpoint',
-                                    'Value': request.path
-                                },
-                                {
-                                    'Name': 'Stage',
-                                    'Value': STAGE.name
-                                }
-                            ],
-                            'Unit': 'Milliseconds',
-                            'Value': latency                            
-                        },
-                        {
-                            'MetricName': 'Count',
-                            'Dimensions': [
-                                {
-                                    'Name': 'Endpoint',
-                                    'Value': request.path
-                                },
-                                {
-                                    'Name': 'Stage',
-                                    'Value': STAGE.name
-                                }
-                            ],
-                            'Unit': 'Count',
-                            'Value': 1
-                        },
-                    ]
-                    )
-        except Exception:
-            logging.error("AWS credentials not configured properly.")

@@ -5,7 +5,7 @@ from api.store.message import MessageStore
 from api.store.team import TeamStore
 from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import send_massenergize_email
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 from typing import Tuple
 from api.utils.api_utils import get_sender_email
 
@@ -32,6 +32,8 @@ class MessageService:
       if err:
         return None, err
       
+      is_inbound = args.get("is_inbound", False)
+      
       new_args = {
           "parent": message,
           'community_id': message.community.pk,
@@ -50,18 +52,24 @@ class MessageService:
       body = args.pop('body', None)
       orig_date = message.created_at.strftime("%Y-%m-%d %H:%M")
       from_email = get_sender_email(message.community.id)
+      
+      old_body = "\r\n\r\n============================================\r\nIn reply to the following message received "+orig_date + ":\r\n\r\n" + message.body
+      
+      if is_inbound:
+        reply_body = f'Hello {message.user_name},\r\n\r\nThanks for reaching out!\r\n {body} \r\n\r\nPlease let me know if you have any questions.\r\n\r\nSincerely,\r\n{reply.user.full_name}' + old_body
+      else:
+        reply_body = body + old_body
 
-      reply_body = body + "\r\n\r\n============================================\r\nIn reply to the following message received "+orig_date + ":\r\n\r\n" + message.body
       success = send_massenergize_email(title, reply_body, to, from_email)
       if success:
         message.have_replied = True
         message.save()
       # attached_file = args.pop('attached_file', None)
-      # 
-      # return reply message   
+      #
+      # return reply message
       return serialize(reply), None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def forward_to_team_admins(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -81,7 +89,7 @@ class MessageService:
       sender_name = message.user_name or (message.user and message.user.full_name)
       sender_email  = message.email or (message.user and message.user.email)
       raw_msg = message.body
-      title = f"FW: {message.title}" 
+      title = f"FW: {message.title}"
 
       body = f"\n\
       Hi Team Leader,\n\
@@ -104,11 +112,11 @@ class MessageService:
           message.save()
 
      
-      # attached_file = args.pop('attached_file', None)    
+      # attached_file = args.pop('attached_file', None)
 
       return serialize(message), None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def delete_message(self, message_id,context) -> Tuple[dict, MassEnergizeAPIError]:

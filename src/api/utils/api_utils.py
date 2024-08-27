@@ -1,9 +1,12 @@
+import secrets
+import string
 from math import atan2, cos, radians, sin, sqrt
+
+from _main_.utils.constants import COMMUNITY_URL_ROOT, DEFAULT_SOURCE_LANGUAGE_CODE
+from _main_.utils.utils import load_json
 from database.models import AboutUsPageSettings, ActionsPageSettings, Community, CommunityAdminGroup, \
-    ContactUsPageSettings, EventsPageSettings, ImpactPageSettings, Media, Menu, \
-    TeamsPageSettings, TestimonialsPageSettings, UserProfile, \
-    VendorsPageSettings
-import pyshorteners
+    ContactUsPageSettings, DonatePageSettings, EventsPageSettings, ImpactPageSettings, Media, SupportedLanguage, \
+    TeamsPageSettings, TestimonialsPageSettings, TranslationsCache, UserProfile, VendorsPageSettings
 
 
 def is_admin_of_community(context, community_id):
@@ -102,45 +105,84 @@ def create_media_file(file, name):
     media.save()
     return media
 
+
+def generate_random_key(name, key_length=10):
+    """
+    Generate a random key of specified length with an associated name,
+    and return them as a single string in the format 'name-key'.
+
+    :param name: The name to associate with the key.
+    :param key_length: Length of the random key. Default is 10.
+    :return: A string in the format 'name-key'.
+    """
+    
+    alphabet = string.ascii_letters + string.digits
+    key = ''.join(secrets.choice(alphabet) for _ in range(key_length))
+    
+    if not name:
+        return key.lower()
+    
+    return f"{name}-{key}".lower()
+
 # -------------------------- Menu Utils --------------------------
 
 
-def prepend_prefix_to_links(menu_item: object, prefix: object) -> object:
+def has_no_custom_website(community, host):
+    if host and host == COMMUNITY_URL_ROOT:
+        return True
+    
+    elif community.community_website and community.community_website.first() and community.community_website.first().website:
+        return False
+    
+    return True
+
+
+def prepend_prefix_to_links(menu_item, prefix):
+  
     if not menu_item:
         return None
     if "link" in menu_item:
         existing_link = menu_item["link"]
+        
         if existing_link.startswith("/"):
             existing_link = existing_link[1:]
-        menu_item["link"] = f"/{prefix}/{existing_link}"
+        if not existing_link.startswith(("http", "https")):
+            menu_item["link"] = f"{prefix}/{existing_link}"
+        
     if "children" in menu_item:
+        
         for child in menu_item["children"]:
             prepend_prefix_to_links(child, prefix)
+            
     return menu_item
 
 
-def modify_menu_items_if_published(menu_items, page_settings, prefix):
-    if not menu_items or not page_settings or not prefix:
+def modify_menu_items_if_published(menu_items, page_settings):
+    def process_items(items):
+        active_menu_items = []
+        for item in items:
+            if not item.get("children"):
+                name = item.get("link", "").strip("/")
+                
+                if name in page_settings:
+                    active_menu_items.append({**item,"is_published": page_settings[name]})
+            
+            else:
+                if item.get("name") == "Home":
+                    active_menu_items.append(item)
+                else:
+                    item["children"] = process_items(item["children"])
+                    if item["children"]:
+                        active_menu_items.append(item)
+                        
+        return active_menu_items
+    
+    if not menu_items or not page_settings:
         return []
-
-    main_menu = []
-
-    for item in menu_items:
-        if not item.get("children"):
-            name = item.get("link", "").strip("/")
-            if name in page_settings and not page_settings[name]:
-                main_menu.remove(item)
-        else:
-            for child in item["children"]:
-                name = child.get("link", "").strip("/")
-                if name in page_settings and not page_settings[name]:
-                    item["children"].remove(child)
-
-    for item in menu_items:
-        f = prepend_prefix_to_links(item, prefix)
-        main_menu.append(f)
-
-    return main_menu
+    
+    processed_menu_items = process_items(menu_items)
+    
+    return processed_menu_items
 
 
 def get_viable_menu_items(community):
@@ -152,37 +194,135 @@ def get_viable_menu_items(community):
     teams_page_settings = TeamsPageSettings.objects.filter(community=community).first()
     testimonial_page_settings = TestimonialsPageSettings.objects.filter(community=community).first()
     vendors_page_settings = VendorsPageSettings.objects.filter(community=community).first()
+    donate_page_settings = DonatePageSettings.objects.filter(community=community).first()
 
+    all_menu = load_json("database/raw_data/portal/menu.json")
 
-    menu_items = {}
-    all_menu = Menu.objects.all()
+    nav_menu = all_menu.get("PortalMainNavLinks")
+    
+    portal_main_nav_links = modify_menu_items_if_published(nav_menu, {
+        "impact": impact_page_settings.is_published if impact_page_settings else True,
+        "aboutus": about_us_page_settings.is_published if about_us_page_settings else True,
+        "contactus": contact_us_page_settings.is_published if contact_us_page_settings else True,
+        "actions": actions_page_settings.is_published if actions_page_settings else True,
+        "services": vendors_page_settings.is_published if vendors_page_settings else True,
+        "testimonials": testimonial_page_settings.is_published if testimonial_page_settings else True,
+        "teams": teams_page_settings.is_published if teams_page_settings else True,
+        "events": events_page_settings.is_published if events_page_settings else True,
+        "donate": donate_page_settings.is_published if donate_page_settings else True,
+    })
+    
+    footer_menu_content = all_menu.get('PortalFooterQuickLinks')
 
-    nav_menu = all_menu.get(name="PortalMainNavLinks")
-
-    portal_main_nav_links = modify_menu_items_if_published(nav_menu.content, {
-        "impact": impact_page_settings.is_published,
-        "aboutus": about_us_page_settings.is_published,
-        "contactus": contact_us_page_settings.is_published,
-        "actions": actions_page_settings.is_published,
-        "services": vendors_page_settings.is_published,
-        "testimonials": testimonial_page_settings.is_published,
-        "teams": teams_page_settings.is_published,
-        "events": events_page_settings.is_published,
-    }, community.subdomain)
-
-    footer_menu_content = all_menu.get(name='PortalFooterQuickLinks')
-
-    portal_footer_quick_links = [
-        {**item, "link": "/"+community.subdomain + "/" + item["link"]}
-        if not item.get("children") and item.get("navItemId", None) != "footer-report-a-bug-id"
-        else item
-        for item in footer_menu_content.content["links"]
-    ]
-    portal_footer_contact_info = all_menu.get(name='PortalFooterContactInfo')
-    return [
-        {**nav_menu.simple_json(), "content": portal_main_nav_links},
-        {**footer_menu_content.simple_json(), "content": {"links": portal_footer_quick_links}},
-        portal_footer_contact_info.simple_json()
-
-    ]
+    portal_footer_contact_info = all_menu.get('PortalFooterContactInfo')
+    return {
+        "PortalMainNavLinks": portal_main_nav_links,
+        "PortalFooterQuickLinks": footer_menu_content,
+        "PortalFooterContactInfo": portal_footer_contact_info
+    }
 # -------------------------- Menu Utils --------------------------
+
+
+def load_default_menus_from_json(json_file_path=None):
+    if not json_file_path:
+        json_file_path = "database/raw_data/portal/menu.json"
+        
+    json = load_json(json_file_path)
+    
+    return json
+
+
+def validate_menu_content(content):
+    
+    if not content or not isinstance(content, list):
+        return False
+    
+    for item in content:
+        if not item.get('name', None):
+            return False
+        
+        if not item.get('link', None) and not item.get('children', None):
+            return False
+        
+        if item.get('children', None):
+            
+            if not validate_menu_content(item['children']):
+                
+                return False
+    return True
+
+
+def prepare_menu_items_for_portal(content, prefix):
+        if not content:
+            return None
+
+        prepared_menu_items = []
+        
+        for item in content:
+            prepared_menu_item = prepend_prefix_to_links(item, prefix)
+            prepared_menu_items.append(prepared_menu_item)
+            
+        return prepared_menu_items
+
+
+def remove_unpublished_menu_items(content, links_to_hide=[]):
+    if not content:
+        return None
+
+    published_items = []
+    
+    for item in content:
+        if not item.get("children"):
+            if item.get("is_published") and item.get("link") not in links_to_hide:
+                published_items.append(item)
+        else:
+            if not item.get("is_published"):
+                continue
+            item["children"] = remove_unpublished_menu_items(item["children"], links_to_hide)
+            if item["children"]:
+                published_items.append(item)
+            
+    return published_items
+
+
+def get_list_of_internal_links(is_footer=False):
+    """
+    Returns a list of internal links
+    """
+    try:
+        default_menu = load_default_menus_from_json()
+        if not default_menu:
+            return None, "Could not load default menus."
+        if is_footer:
+            menu = default_menu.get("PortalFooterQuickLinks", {})
+            menu = menu.get("links", [])
+        else:
+            menu = default_menu.get("PortalMainNavLinks", [])
+           
+        
+        internal_links = []
+        for item in menu:
+            if item.get("children"):
+                for child in item["children"]:
+                    internal_links.append({"name": child.get("name"), "link": child.get("link")})
+            else:
+                internal_links.append({"name": item.get("name"), "link": item.get("link")})
+        
+        return internal_links, None
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return None, str(e)
+
+
+def get_translation_from_cache(text_hash, target_language):
+    translation = TranslationsCache.objects.filter(hash__hash=text_hash, target_language_code=target_language).first()
+    return translation.translated_text if translation else None
+
+
+def get_supported_language(language_code):
+    supported_language = SupportedLanguage.objects.filter(code=language_code).first()
+    if supported_language:
+        return supported_language.code
+    return DEFAULT_SOURCE_LANGUAGE_CODE
+
+    

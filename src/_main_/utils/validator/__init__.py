@@ -1,6 +1,6 @@
 from _main_.utils.massenergize_errors import CustomMassenergizeError
 from _main_.utils.common import parse_bool, parse_date, parse_list, parse_int, parse_string, parse_location, is_value, parse_str_list, parse_dict
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 
 
 class Validator:
@@ -83,8 +83,10 @@ class Validator:
             
           elif field_type == int:
             check = args.pop(field_name)
-            if is_value(check):     # protect against "undefined" or "NULL"
-              args[field_name] = parse_int(check)
+            if is_value(check): # protect against "undefined" or "NULL"
+                parsed_int = parse_int(check)
+                if parsed_int is not None:
+                    args[field_name] = parsed_int
           elif field_type == bool:
             args[field_name] = parse_bool(args[field_name])
           elif field_type == list:
@@ -119,5 +121,5 @@ class Validator:
       self.fields = {}
       self.rename_fields = set()
 
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)

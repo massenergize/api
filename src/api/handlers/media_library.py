@@ -26,7 +26,7 @@ class MediaLibraryHandler(RouteHandler):
         self.add("/gallery.generate.hashes", self.generate_hashes) # A temporary route that we will need to run to generate hashes of already uploaded content (ONCE!)
         self.add("/gallery.duplicates.summarize", self.summarize_duplicates) # Generates a CSV of duplicate images with other useful attributes
         self.add("/gallery.duplicates.clean", self.clean_duplicates) # Allows you to clean all/some duplicates and transfer relationships to only one record
-        self.add("/gallery.duplicates.summary.print", self.print_duplicates) # Allows you to clean all/some duplicates and transfer relationships to only one record
+        self.add("/gallery.duplicates.summary.print", self.print_duplicates) # Create a downloadable csv file of all image duplicates and their usage data
 
     # @admins_only
     def read_image(self, request):
@@ -44,12 +44,13 @@ class MediaLibraryHandler(RouteHandler):
             return error
         return MassenergizeResponse(data=image_data)
 
-    @admins_only
+    # @admins_only
     def print_duplicates(self, request):
         """ Creates a downloadable file that contains the summary of duplicate media"""
         context: Context = request.context
         args: dict = context.args
         self.validator.expect("type", str) #  Future Enhancement: provide type as 'csv' or 'pdf' or other formats. But currently, only CSV
+        self.validator.expect("community_ids",list)
         args, err = self.validator.verify(args, strict=True)
         if err:
             return err

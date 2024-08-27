@@ -28,6 +28,10 @@ class FeatureFlagConstants:
         return FeatureFlagConstants.AUDIENCE["ALL_EXCEPT"]["key"] == _type
 
     @staticmethod
+    def is_for_specific_audience(_type):
+        return FeatureFlagConstants.AUDIENCE["SPECIFIC"]["key"] == _type
+    
+    @staticmethod
     def for_specific_audience():
         return FeatureFlagConstants.AUDIENCE["SPECIFIC"]["key"]
 

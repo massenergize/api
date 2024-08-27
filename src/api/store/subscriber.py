@@ -2,7 +2,7 @@ from api.utils.filter_functions import get_subscribers_filter_params
 from database.models import Subscriber, UserProfile, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError
 from _main_.utils.context import Context
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 from typing import Tuple
 
 
@@ -17,7 +17,7 @@ class SubscriberStore:
         return None, InvalidResourceError()
       return subscriber, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def list_subscribers(self,context, community_id) -> Tuple[list, MassEnergizeAPIError]:
@@ -38,7 +38,7 @@ class SubscriberStore:
 
       return new_subscriber, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -58,7 +58,7 @@ class SubscriberStore:
           community.save()
       return subscriber, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -71,7 +71,7 @@ class SubscriberStore:
         return None, InvalidResourceError()
       return subscribers_to_delete.first(), None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
   def copy_subscriber(self, subscriber_id) -> Tuple[Subscriber, MassEnergizeAPIError]:
@@ -87,7 +87,7 @@ class SubscriberStore:
       new_subscriber.save()
       return new_subscriber, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -121,7 +121,7 @@ class SubscriberStore:
       return subscribers, None
  
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -131,5 +131,5 @@ class SubscriberStore:
       subscribers = Subscriber.objects.filter(is_deleted=False, *filter_params)
       return subscribers, None
     except Exception as e:
-      capture_message(str(e), level="error")
+      log.exception(e)
       return None, CustomMassenergizeError(e)

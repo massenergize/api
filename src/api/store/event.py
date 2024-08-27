@@ -1,9 +1,12 @@
 import json
 
+from celery.result import AsyncResult
+from django.utils import timezone
+
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from _main_.utils.utils import is_url_valid
-from _main_.utils.common import local_time
+from _main_.utils.common import custom_timezone_info, local_time, parse_datetime_to_aware
 from api.store.common import get_media_info, make_media_info
 from api.tests.common import RESET, makeUserUpload
 from api.utils.api_utils import is_admin_of_community
@@ -14,31 +17,47 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
     NotAuthorizedError
 from django.db.models import Q, F
 from _main_.utils.context import Context
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 
 from database.utils.settings.model_constants.events import EventConstants
+from task_queue.database_tasks.update_recurring_events import update_recurring_event
 from .utils import get_user_from_context, get_user_or_die, get_new_title
 import datetime
 from datetime import timedelta
 import calendar
-import pytz
 from typing import Tuple
+from zoneinfo import ZoneInfo
+
 
 def _local_datetime(date_and_time):
-    # the local date (in Massachusetts) is different than the UTC date
-    # need to also save the location (as a Location) and get the time zone from that.
-    # KLUGE: assume Massachusetts for now
-    dt = datetime.datetime.strptime(str(date_and_time), '%Y-%m-%dT%H:%M:%SZ')
-    local_datetime = dt - timedelta(hours=4)
+    """
+    Converts a UTC datetime string to local datetime in Massachusetts time zone.
+    """    # Parse the datetime string to a datetime object
+    try:
+        # Try parsing the datetime string with the first format
+        dt = datetime.datetime.strptime(str(date_and_time), '%Y-%m-%dT%H:%M:%SZ')
+    except ValueError:
+        # If it fails, try the second format
+        dt = datetime.datetime.strptime(str(date_and_time), '%Y-%m-%d %H:%M:%S%z')
+    # Specify the Massachusetts time zone
+    massachusetts_zone = ZoneInfo('America/New_York')
+
+    # Convert time zone from UTC to Massachusetts time zone
+    local_datetime = dt.replace(tzinfo=ZoneInfo('UTC')).astimezone(massachusetts_zone)
     return local_datetime
 
-
 def _UTC_datetime(date_and_time):
-    # the local date (in Massachusetts) is different than the UTC date
-    # need to also save the location (as a Location) and get the time zone from that.
-    # KLUGE: assume Massachusetts for now
+    """
+    Converts a local Massachusetts datetime string to UTC datetime.
+    """
+    # Parse the datetime string to a datetime object
     dt = datetime.datetime.strptime(str(date_and_time), '%Y-%m-%d %H:%M:%S')
-    UTC_datetime = dt + timedelta(hours=4)
+
+    # Specify the Massachusetts time zone
+    massachusetts_zone = ZoneInfo('America/New_York')
+
+    # Convert time zone from Massachusetts to UTC
+    UTC_datetime = dt.replace(tzinfo=massachusetts_zone).astimezone(ZoneInfo('UTC'))
     return UTC_datetime
 
 
@@ -46,7 +65,6 @@ def _check_recurring_date(start_date_and_time, end_date_and_time, day_of_week, w
     converter = {"first": 1, "second": 2, "third": 3, "fourth": 4}
 
     if start_date_and_time and end_date_and_time:
-
         # the date check below fails because the local date (in Massachusetts) is different than the UTC date
         local_start = _local_datetime(start_date_and_time)
         local_end = _local_datetime(end_date_and_time)
@@ -98,7 +116,7 @@ class EventStore:
                 return None, InvalidResourceError()
             return event, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def copy_event(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -165,7 +183,7 @@ class EventStore:
             # ----------------------------------------------------------------
             return new_event, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def list_recurring_event_exceptions(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
@@ -207,7 +225,7 @@ class EventStore:
 
             return exceptions, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def list_events(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
@@ -216,7 +234,7 @@ class EventStore:
         user_id = args.pop("user_id", None)
         shared = []
 
-        today = datetime.datetime.now()
+        today = parse_datetime_to_aware()
         shared_months = 2
         hosted_months = 6
         earliest_shared = today - timedelta(weeks=4*shared_months)
@@ -275,8 +293,7 @@ class EventStore:
             publicity_selections = args.pop("publicity_selections", [])
 
             if end_date_and_time < start_date_and_time:
-                return None, CustomMassenergizeError(
-                    "Please provide an end date and time that comes after the start date and time.")
+                return None, CustomMassenergizeError("Please provide an end date and time that comes after the start date and time.")
 
             if args.get('is_published', False):
                 args['published_at'] = local_time()
@@ -290,9 +307,9 @@ class EventStore:
 
                 # if specified a different end date from start date, fix this
                 if local_start.date() != local_end.date():
-                    # fix the end_date_and_time to have same date as start
-                    end_datetime = datetime.datetime.combine(local_start.date(), local_end.time())
-                    end_date_and_time = _UTC_datetime(end_datetime).strftime('%Y-%m-%dT%H:%M:%SZ')
+                    end_datetime = datetime.datetime.combine(local_start.date(), local_end.timetz())
+                    end_datetime = end_datetime.replace(tzinfo=local_end.tzinfo)
+                    end_date_and_time = end_datetime.astimezone(timezone.utc)
 
             if separation_count:
                 separation_count = int(separation_count)
@@ -370,13 +387,17 @@ class EventStore:
                 }
 
             new_event.save()
+            
+            # create a task to reschedule event after current end date
+            if new_event.is_recurring:
+                update_recurring_event(new_event.id)
             # ----------------------------------------------------------------
             Spy.create_event_footage(events=[new_event], context=context, actor=new_event.user,
                                      type=FootageConstants.create(), notes=f"Event ID({new_event.id})")
             # ----------------------------------------------------------------
             return new_event, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def update_event(self, context: Context, args, user_submitted) -> Tuple[dict, MassEnergizeAPIError]:
@@ -433,7 +454,7 @@ class EventStore:
             is_published = args.pop('is_published', None)
 
             if is_published:
-                args['published_at'] = datetime.datetime.now()
+                args['published_at'] = parse_datetime_to_aware()
             else:
                 args['published_at'] = None
 
@@ -618,6 +639,7 @@ class EventStore:
                     if rescheduled:
                         rescheduled.rescheduled_event.delete()
                         rescheduled.delete()
+                    
 
             if (is_approved != None and
                 (is_approved != event.is_approved)):  # If changed
@@ -632,6 +654,10 @@ class EventStore:
 
             # successful return
             event.save()
+            
+            # create a task to reschedule event after current end date
+            if event.is_recurring:
+                update_recurring_event(event.id)
 
             # ----------------------------------------------------------------
             Spy.create_event_footage(events=[event], context=context, type=FootageConstants.update(),
@@ -640,7 +666,7 @@ class EventStore:
             return event, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def update_recurring_event_date(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -669,8 +695,7 @@ class EventStore:
         else:
             events = []
 
-        tod = datetime.datetime.utcnow()
-        today = pytz.utc.localize(tod)
+        today =  parse_datetime_to_aware()
 
         for event in events:
             # protect against recurring event with no recurring details saved
@@ -690,7 +715,7 @@ class EventStore:
             if final_date and final_date != 'None':
                 final_date = final_date + ' ' + starttime
                 final_date = datetime.datetime.strptime(final_date, "%Y-%m-%d %H:%M:%S+00:00")
-                final_date = pytz.utc.localize(final_date)
+                final_date = final_date.replace(tzinfo=custom_timezone_info())
                 if today > final_date:
                     continue
 
@@ -723,24 +748,26 @@ class EventStore:
                         for day in obj.itermonthdates(int(new_month.year), int(new_month.month)):
                             if int(day.day) >= 8:
                                 continue
-                            d1 = pytz.utc.localize(datetime.datetime(int(day.year), int(day.month), int(day.day)))
+                            d1 = datetime.datetime(int(day.year), int(day.month), int(day.day), tzinfo=custom_timezone_info())
                             if calendar.day_name[d1.weekday()] == event.recurring_details['day_of_week']:
                                 date_of_first_weekday = int(day.day)
                                 break
 
                         upcoming_date = date_of_first_weekday + (
                                 (converter[event.recurring_details['week_of_month']] - 1) * 7)
-
-                        start_date = pytz.utc.localize(
-                            datetime.datetime(new_month.year, new_month.month, upcoming_date, start_date.hour,
-                                              start_date.minute))
+                        
+                        start_date = datetime.datetime(new_month.year, new_month.month, upcoming_date, start_date.hour,
+                                              start_date.minute,
+                                              tzinfo=custom_timezone_info())
                     event.start_date_and_time = start_date
                     event.end_date_and_time = start_date + duration
 
                 event.save()
                 exception = RecurringEventException.objects.filter(event=event).first()
-                if exception and pytz.utc.localize(exception.former_time) < pytz.utc.localize(
-                    event.start_date_and_time):
+                exception_former_time = exception.former_time.replace(tzinfo=custom_timezone_info()) if exception else None
+                event_start_date_and_time = event.start_date_and_time.replace(tzinfo=custom_timezone_info())
+                
+                if exception and (exception_former_time < event_start_date_and_time):
                     exception.delete()
 
             except Exception as e:
@@ -766,7 +793,7 @@ class EventStore:
                 raise Exception("Rank and ID not provided to events.rank")
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def delete_event(self, context: Context, event_id) -> Tuple[dict, MassEnergizeAPIError]:
@@ -789,7 +816,7 @@ class EventStore:
             # ----------------------------------------------------------------
             return event, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def fetch_other_events_for_cadmin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
@@ -809,7 +836,7 @@ class EventStore:
             filter_params = get_events_filter_params(context.get_params())
 
             user = UserProfile.objects.filter(email=context.user_email).first()
-            today = datetime.datetime.today()
+            today = parse_datetime_to_aware()
             if user:
                 admin_of = [g.community.id for g in user.communityadmingroup_set.all()]
 
@@ -833,7 +860,7 @@ class EventStore:
                                                                             is_global=False)).distinct().order_by("-id")
             return events.filter(*filter_params).distinct(), None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def list_events_for_community_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
@@ -872,7 +899,7 @@ class EventStore:
                 'tags')
             return events, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def list_events_for_super_admin(self, context: Context):
@@ -885,7 +912,7 @@ class EventStore:
                 name__contains=" (rescheduled)").select_related('image', 'community').prefetch_related('tags')
             return events, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def get_rsvp_list(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
@@ -906,7 +933,7 @@ class EventStore:
                 return None, InvalidResourceError()
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def get_rsvp_status(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -924,7 +951,7 @@ class EventStore:
             else:
                 return None, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def rsvp_update(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -951,7 +978,7 @@ class EventStore:
             return event_attendee, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def rsvp_remove(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -972,7 +999,7 @@ class EventStore:
 
             return result, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def share_event(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -990,7 +1017,7 @@ class EventStore:
 
             return event, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
     
     def create_event_reminder_settings(self, context: Context, args) -> Tuple[EventNudgeSetting, MassEnergizeAPIError]:
@@ -1036,7 +1063,7 @@ class EventStore:
         
         
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
 
@@ -1059,5 +1086,5 @@ class EventStore:
             return {"success": True}, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(str(e))

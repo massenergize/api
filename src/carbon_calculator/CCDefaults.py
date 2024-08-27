@@ -25,7 +25,7 @@ def localized_time(time_string):
     else:   # old format 2023-10-01
         time = datetime.strptime(time_string, '%Y-%m-%d  %H:%M')
 
-    return current_tz.localize(time)
+    return time.replace(tzinfo=current_tz)
 
 def date_import(date_string):
     # Airtable changed default time format, unexpectedly.  Make it work but protect iin case it changes backj

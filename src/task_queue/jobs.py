@@ -1,5 +1,6 @@
 
 from task_queue.database_tasks.contents_spacing_correction import process_spacing_data
+from task_queue.database_tasks.translate_db_content import TranslateDBContents
 from task_queue.database_tasks.update_actions_content import update_actions_content
 from task_queue.database_tasks.backfill_data import backfill_data
 from task_queue.nudges.cadmin_events_nudge import send_events_nudge
@@ -26,6 +27,7 @@ FUNCTIONS = {
     "Postmark Sender Signature": collect_and_create_signatures,
     "Process Content Spacing": process_spacing_data,
     "Update Action Content": update_actions_content,
-    "Remove Duplicate Images" : remove_duplicate_images,
+    "Remove Duplicate Images": remove_duplicate_images,
+    "Translate Database Contents": TranslateDBContents().start_translations,
     "Backfill Database Models": backfill_data
 }

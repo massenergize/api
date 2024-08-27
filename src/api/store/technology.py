@@ -1,5 +1,5 @@
 from typing import Tuple
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 from _main_.utils.context import Context
 from _main_.utils.massenergize_errors import CustomMassenergizeError, MassEnergizeAPIError
 from api.store.utils import get_user_from_context
@@ -25,7 +25,7 @@ class TechnologyStore:
             return technology, None
 
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def list_technologies(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
@@ -37,7 +37,7 @@ class TechnologyStore:
             technologies = Technology.objects.filter(Q(campaign_account_id=campaign_account_id)|Q(user__id=context.user_id), is_deleted=False)
             return technologies.distinct(), None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def create_technology(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -55,7 +55,7 @@ class TechnologyStore:
             technology.save()
             return technology, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def update_technology(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -79,7 +79,7 @@ class TechnologyStore:
             technology.save()
             return technology, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def delete_technology(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -96,7 +96,7 @@ class TechnologyStore:
             technology.update(is_deleted=True)
             return technology.first(), None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def list_technologies_for_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
@@ -104,7 +104,7 @@ class TechnologyStore:
             technologies = Technology.objects.filter(is_deleted=False)
             return technologies, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def add_technology_coach(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
@@ -129,7 +129,7 @@ class TechnologyStore:
 
             return coach, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def remove_technology_coach(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
@@ -147,7 +147,7 @@ class TechnologyStore:
 
             return coach.first(), None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def add_technology_vendor(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
@@ -173,7 +173,7 @@ class TechnologyStore:
 
             return created_list, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
         
 
@@ -198,7 +198,7 @@ class TechnologyStore:
         
             return tech_vendor, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
         
 
@@ -209,7 +209,7 @@ class TechnologyStore:
             vendors = TechnologyVendor.objects.filter(technology__id=tech, is_deleted=False)
             return vendors, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def list_technology_coaches(self, context: Context, args) -> Tuple[TechnologyCoach, MassEnergizeAPIError]:
@@ -218,7 +218,7 @@ class TechnologyStore:
             coaches = TechnologyCoach.objects.filter(technology__id=tech, is_deleted=False)
             return coaches, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def list_technology_overviews(self, context: Context, args) -> Tuple[TechnologyOverview, MassEnergizeAPIError]:
@@ -227,7 +227,7 @@ class TechnologyStore:
             overviews = TechnologyOverview.objects.filter(technology__id=tech, is_deleted=False)
             return overviews, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def add_technology_overview(self, context: Context, args) -> Tuple[TechnologyOverview, MassEnergizeAPIError]:
@@ -253,7 +253,7 @@ class TechnologyStore:
         
             return tech_overview, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def update_technology_overview(self, context: Context, args) -> Tuple[TechnologyOverview, MassEnergizeAPIError]:
@@ -276,7 +276,7 @@ class TechnologyStore:
 
             return tech_overview.first(), None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def delete_technology_overview(self, context: Context, args) -> Tuple[TechnologyOverview, MassEnergizeAPIError]:
@@ -294,7 +294,7 @@ class TechnologyStore:
 
             return tech_overview, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def update_technology_coach(self, context: Context, args) -> Tuple[TechnologyCoach, MassEnergizeAPIError]:
@@ -316,7 +316,7 @@ class TechnologyStore:
 
             return coach.first(), None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def create_technology_deal(self, context: Context, args) -> Tuple[TechnologyDeal, MassEnergizeAPIError]:
@@ -332,7 +332,7 @@ class TechnologyStore:
 
             return technology_deal, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def update_technology_deal(self, context: Context, args) -> Tuple[TechnologyDeal, MassEnergizeAPIError]:
@@ -347,7 +347,7 @@ class TechnologyStore:
 
             return technology_deal.first(), None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
 
     def delete_technology_deal(self, context: Context, args) -> Tuple[TechnologyDeal, MassEnergizeAPIError]:
@@ -362,7 +362,7 @@ class TechnologyStore:
 
             return technology_deal, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
         
 
@@ -390,7 +390,7 @@ class TechnologyStore:
 
             return technology_vendor, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
         
 
@@ -423,7 +423,7 @@ class TechnologyStore:
 
             return technology_vendor, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
         
 
@@ -445,7 +445,7 @@ class TechnologyStore:
 
             return technology_action, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
     
     def update_technology_action(self, context: Context, args) -> Tuple[TechnologyAction, MassEnergizeAPIError]:
@@ -464,7 +464,7 @@ class TechnologyStore:
 
             return technology_action.first(), None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
         
     
@@ -480,5 +480,5 @@ class TechnologyStore:
 
             return technology_action, None
         except Exception as e:
-            capture_message(str(e), level="error")
+            log.exception(e)
             return None, CustomMassenergizeError(e)
