@@ -1,7 +1,7 @@
 import datetime
-from datetime import timezone, timedelta
 import json
 import uuid
+from datetime import timezone, timedelta
 
 from _main_.utils.common import item_is_empty
 
@@ -35,6 +35,7 @@ from api.constants import COMMUNITY_NOTIFICATION_TYPES, STANDARD_USER, GUEST_USE
 from django.forms.models import model_to_dict
 from carbon_calculator.models import Action as CCAction
 from carbon_calculator.carbonCalculator import AverageImpact
+from .utils.settings.model_constants.enums import SharingType, LocationType
 
 CHOICES = json_loader("./database/raw_data/other/databaseFieldChoices.json")
 ZIP_CODE_AND_STATES = json_loader("./database/raw_data/other/states.json")
@@ -2566,6 +2567,8 @@ class Testimonial(models.Model):
     other_vendor = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
     more_info = models.JSONField(blank=True, null=True)
     # is_user_submitted = models.BooleanField(default=False, blank=True, null=True)
+    sharing_type = models.CharField( max_length=SHORT_STR_LEN, choices=SharingType.choices(), default=SharingType.OPEN.value[0])
+    shared_with = models.ManyToManyField(Community, related_name="shared_testimonials", blank=True)
 
     def __str__(self):
         return self.title
@@ -4318,15 +4321,32 @@ class CampaignSupportedLanguage(BaseModel):
     language = models.ForeignKey(SupportedLanguage, on_delete=models.CASCADE, db_index=True)
     campaign = models.ForeignKey("apps__campaigns.Campaign", on_delete=models.CASCADE, db_index=True, related_name="supported_languages")
     is_active = models.BooleanField(default=True, blank=True)
-    
+
     def __str__(self):
         return f"{self.campaign.title} - {self.language.name}"
-    
+
     def simple_json(self):
         return {"id": str(self.id), "is_active": self.is_active, "campaign": str(self.id), "code": self.language.code, "name": self.language.name}
-    
+
     def full_json(self):
         return self.simple_json()
-    
+
     class Meta:
         db_table = "campaign_supported_languages"
+
+
+class TestimonialAutoShareSettings(BaseModel):
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
+    share_from_communities = models.ManyToManyField(Community, related_name="share_from_communities", blank=True)
+    share_from_location_type = models.CharField(max_length=SHORT_STR_LEN, choices = LocationType.choices(), default=LocationType.CITY.value[0])
+    share_from_location_value = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+    excluded_tags = models.ManyToManyField(Tag, blank=True)
+
+    def __str__(self):
+        return f"{self.community.name} - {[community.name for community in self.share_from_communities.all()]}"
+
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
