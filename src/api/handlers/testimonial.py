@@ -63,6 +63,9 @@ class TestimonialHandler(RouteHandler):
     self.validator.rename('vendor_id', 'vendor')
     self.validator.rename('preferredName', 'preferred_name')
     self.validator.expect("image", "str_list")
+    self.validator.expect("sharing_type", str, is_required=False)
+    self.validator.expect("approved_for_sharing_by", list, is_required=False)
+    
     args, err = self.validator.verify(args)
 
     if err:
@@ -153,7 +156,10 @@ class TestimonialHandler(RouteHandler):
     self.validator.rename('vendor_id', 'vendor')
     self.validator.expect("image", "str_list")
     self.validator.expect("help_link", str, is_required=False)
-
+    
+    self.validator.expect("sharing_type", str, is_required=False)
+    self.validator.expect("approved_for_sharing_by", list, is_required=False)
+    
     expect_media_fields(self)
     args, err = self.validator.verify(args)
 

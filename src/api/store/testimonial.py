@@ -75,6 +75,7 @@ class TestimonialStore:
       action = args.pop('action', None)
       vendor = args.pop('vendor', None)
       community = args.pop('community', None)
+      approved_for_sharing_by = args.pop('approved_for_sharing_by', [])
       # create(**args) will fail if user_email not removed
       # TODO - check context.user_email exists and use that unless from admin submission on behalf of user
       user_email = args.pop('user_email', None) or context.user_email
@@ -92,10 +93,6 @@ class TestimonialStore:
         user = UserProfile.objects.filter(email=user_email).first()
         if user:
           new_testimonial.user = user
-
-      
-      
-
 
       if action:
         testimonial_action = Action.objects.get(id=action)
@@ -135,6 +132,9 @@ class TestimonialStore:
         new_testimonial.tags.set(tags_to_set)
 
       new_testimonial.save()
+      
+      if approved_for_sharing_by:
+        new_testimonial.approved_for_sharing_by.set(approved_for_sharing_by)
 
       if context.is_admin_site: 
         # ----------------------------------------------------------------
@@ -150,6 +150,7 @@ class TestimonialStore:
     try:
       image_info = make_media_info(args)
       id = args.pop("id", None)
+      
       testimonials = Testimonial.objects.filter(id=id)
       if not testimonials:
         return None, InvalidResourceError()
@@ -181,6 +182,8 @@ class TestimonialStore:
       community = args.pop('community', None)
       rank = args.pop('rank', None)
       is_published = args.pop('is_published', None)
+      approved_for_sharing_by = args.pop('approved_for_sharing_by', [])
+      shared_with = args.pop('shared_with', [])
 
       testimonials.update(**args)
       testimonial = testimonials.first() # refresh after update
@@ -237,6 +240,16 @@ class TestimonialStore:
           tags_to_set.append(tag)
       if tags_to_set:
         testimonial.tags.set(tags_to_set)
+        
+      if approved_for_sharing_by:
+          testimonial.approved_for_sharing_by.set(approved_for_sharing_by)
+      
+      if shared_with:
+        first = shared_with[0]
+        if first == "reset":
+          testimonial.shared_to.clear()
+        else:
+          testimonial.shared_to.set(shared_with)
 
       if context.user_is_super_admin or context.user_is_community_admin:
         if is_published==False:
