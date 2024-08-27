@@ -23,7 +23,6 @@ class MiscellaneousHandler(RouteHandler):
         self.add("/menus.remake", self.remake_navigation_menu)
         self.add("/menus.list", self.navigation_menu_list)
         self.add("/user.portal.menu.list", self.load_menu_items)
-        #make this a task: self.add("/data.backfill", self.backfill)
         self.add("/data.carbonEquivalency.create", self.create_carbon_equivalency)
         self.add("/data.carbonEquivalency.update", self.update_carbon_equivalency)
         self.add("/data.carbonEquivalency.get", self.get_carbon_equivalencies)

@@ -11,7 +11,7 @@ Some are obsolete and not relevant any longer, but kept for posterity in case ne
 """
 import csv
 import datetime
-from sentry_sdk import capture_message
+from _main_.utils.massenergize_logger import log
 import zipcodes
 from django.http import HttpResponse
 from database.models import (
@@ -58,8 +58,7 @@ def backfill_data(task=None):
         return True
     
     except Exception as e:
-        print(str(e))
-        capture_message(str(e), level="error")
+        log.exception(e)
         return False
 
 
@@ -106,7 +105,7 @@ def backfill_teams():
         return data
     
     except Exception as e:
-        capture_message(str(e), level="error")
+        log.exception(e)
         data.append({"Message": "Fatal error", "Error": str(e)})
         return data
 
@@ -141,7 +140,7 @@ def backfill_community_members():
                     )
         return data
     except Exception as e:
-        capture_message(str(e), level="error")
+        log.exception(e)
         data.append({"Message": "Fatal error", "Error": str(e)})
         return data
 
@@ -179,7 +178,7 @@ def backfill_graph_default_data():
 
         return data
     except Exception as e:
-        capture_message(str(e), level="error")
+        log.exception(e)
         data.append({"Message": "Fatal error", "Error": str(e)})
         return data
 
@@ -338,6 +337,6 @@ def backfill_locations():
         return data
     
     except Exception as e:
-        capture_message(str(e), level="error")
+        log.exception(e)
         data.append({"Message": "Fatal error", "Error": str(e)})
         return data
