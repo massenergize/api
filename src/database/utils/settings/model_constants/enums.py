@@ -13,8 +13,8 @@ class LocationType(Enum):
         return [(key.value[0], key.value[1]) for key in cls]
 
 class SharingType(Enum):
-    OPEN = "PUBLIC", "Public"
-    CLOSED = "PRIVATE", "Private"
+    OPEN = "OPEN", "Public"
+    CLOSED = "CLOSED", "Private"
     OPEN_TO = "OPEN_TO", "Open to"
     CLOSED_TO = "CLOSED_TO", "Closed to"
 
