@@ -2595,6 +2595,8 @@ class Testimonial(models.Model):
         res["anonymous"] = self.anonymous
         res["preferred_name"] = self.preferred_name
         res["other_vendor"] = self.other_vendor
+        res["approved_for_sharing_by"] = [c.info() for c in self.approved_for_sharing_by.all()]
+        res["shared_with"] = [c.info() for c in self.shared_with.all()]
         return res
 
     def full_json(self):

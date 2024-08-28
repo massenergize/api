@@ -126,7 +126,12 @@ def makeMedia(**kwargs):
 def makeTestimonial(**kwargs):
     key = round(time.time() * 1000)
     title = kwargs.get("title") or kwargs.get("name") or f"New Testimonial - {key}"
-    return Testimonial.objects.create(**{**kwargs, "title": title})
+    approved_for_sharing_by = kwargs.pop("approved_for_sharing_by", [])
+    
+    testimonial = Testimonial.objects.create(**{**kwargs, "title": title})
+    if approved_for_sharing_by:
+        testimonial.approved_for_sharing_by.set(approved_for_sharing_by)
+    return testimonial
 
 
 def makeEvent(**kwargs):
@@ -183,15 +188,17 @@ def makeAdmin(**kwargs):
     full_name = kwargs.get("full_name") or f"user_full_name{key}"
     email = kwargs.get("email") or f"mrsadmin{key}@email.com"
     is_super_admin = kwargs.get("super_admin") or kwargs.get("is_super_admin")
-    admin = UserProfile.objects.create(
-        **{
-            **kwargs,
-            "full_name": full_name,
-            "email": email,
-            "accepts_terms_and_conditions": True,
-            "is_community_admin": True,
-            "is_super_admin": is_super_admin or False,
-        }
+    admin = kwargs.get("admin")
+    if not admin:
+        admin = UserProfile.objects.create(
+            **{
+                **kwargs,
+                "full_name": full_name,
+                "email": email,
+                "accepts_terms_and_conditions": True,
+                "is_community_admin": True,
+                "is_super_admin": is_super_admin or False,
+            }
     )
     if communities:
         for com in communities:
