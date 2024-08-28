@@ -242,7 +242,7 @@ class TestimonialHandler(RouteHandler):
     if err:
       return err
 
-    testimonial_info, err = self.service.share_testimonial(args, context)
+    testimonial_info, err = self.service.share_testimonial(context, args)
     if err:
       return err
     return MassenergizeResponse(data=testimonial_info)

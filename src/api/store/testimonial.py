@@ -234,7 +234,7 @@ class TestimonialStore:
       is_published = args.pop('is_published', None)
       approved_for_sharing_by = args.pop('approved_for_sharing_by', [])
       shared_with = args.pop('shared_with', [])
-
+      
       testimonials.update(**args)
       testimonial = testimonials.first() # refresh after update
 
@@ -427,9 +427,9 @@ class TestimonialStore:
         if shared_with:
             first = shared_with[0]
             if first == "reset":
-                testimonial.shared_to.clear()
+                testimonial.shared_with.clear()
             else:
-                testimonial.shared_to.set(shared_with)
+                testimonial.shared_with.set(shared_with)
                 
         testimonial.save()
         
