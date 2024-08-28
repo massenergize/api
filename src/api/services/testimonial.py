@@ -15,7 +15,7 @@ class TestimonialService:
   """
   Service Layer for all the testimonials
   """
-  
+
   def __init__(self):
     self.store =  TestimonialStore()
 
@@ -80,7 +80,7 @@ class TestimonialService:
             "message": testimonial.body,
             "url": f"{ADMIN_URL_ROOT}/admin/edit/{testimonial.id}/testimonial",
             "community": community_name
-        }) 
+        })
 
       return serialize(testimonial), None
     except Exception as e:
@@ -121,3 +121,14 @@ class TestimonialService:
       return None, err
     sorted = sort_items(testimonials, context.get_params())
     return paginate(sorted, context.get_pagination_data()), None
+
+
+  def create_auto_share_settings (self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+      auto_share_settings, err = self.store.create_auto_share_settings(context, args)
+      if err:
+        return None, err
+      return serialize(auto_share_settings), None
+    except Exception as e:
+      log.exception(e)
+      return None, CustomMassenergizeError(e)

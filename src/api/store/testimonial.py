@@ -5,13 +5,13 @@ from api.store.common import get_media_info, make_media_info
 from api.tests.common import RESET, makeUserUpload
 from api.utils.api_utils import is_admin_of_community
 from api.utils.filter_functions import get_testimonials_filter_params
-from database.models import Testimonial, UserProfile, Media, Vendor, Action, Community, CommunityAdminGroup, Tag
+from database.models import Testimonial, UserProfile, Media, Vendor, Action, Community, CommunityAdminGroup, Tag, TestimonialAutoShareSettings
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.context import Context
 from .utils import get_community, get_user, unique_media_filename
 from django.db.models import Q
 from _main_.utils.massenergize_logger import log
-from typing import Tuple
+from typing import Tuple, Any
 
 class TestimonialStore:
   def __init__(self):
@@ -26,7 +26,7 @@ class TestimonialStore:
     except Exception as e:
       log.exception(e)
       return None, CustomMassenergizeError(e)
-      
+
   def list_testimonials(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
 
@@ -93,8 +93,8 @@ class TestimonialStore:
         if user:
           new_testimonial.user = user
 
-      
-      
+
+
 
 
       if action:
@@ -114,7 +114,7 @@ class TestimonialStore:
       if images:
         if type(images) == list:
           # from admin portal, using media library
-          image = Media.objects.filter(id = images[0]).first(); 
+          image = Media.objects.filter(id = images[0]).first();
           new_testimonial.image = image
         else:
           # from community portal, image upload
@@ -123,7 +123,7 @@ class TestimonialStore:
           new_testimonial.image = image
 
           user_media_upload = makeUserUpload(media = image,info=image_info, user = user,communities=[testimonial_community])
-          user_media_upload.user = user 
+          user_media_upload.user = user
           user_media_upload.save()
 
       tags_to_set = []
@@ -136,10 +136,10 @@ class TestimonialStore:
 
       new_testimonial.save()
 
-      if context.is_admin_site: 
+      if context.is_admin_site:
         # ----------------------------------------------------------------
         Spy.create_testimonial_footage(testimonials = [new_testimonial], context = context, type = FootageConstants.create(), notes =f"Testimonial ID({new_testimonial.id})")
-        # ---------------------------------------------------------------- 
+        # ----------------------------------------------------------------
 
       return new_testimonial, None
     except Exception as e:
@@ -172,7 +172,7 @@ class TestimonialStore:
         if community:
           if not is_admin_of_community(context, community.id):
             return None, NotAuthorizedError()
-      
+
       user_email = args.pop('user_email', None)      # important: remove user_email from args if present
       images = args.pop('image', None)
       tags = args.pop('tags', [])
@@ -194,10 +194,10 @@ class TestimonialStore:
 
       if images:
             if type(images) == list:
-                if images[0] == RESET: 
+                if images[0] == RESET:
                     testimonial.image = None
                 else:
-                    image = Media.objects.filter(id = images[0]).first(); 
+                    image = Media.objects.filter(id = images[0]).first();
                     testimonial.image = image
             else:
                 if images == RESET:
@@ -206,13 +206,13 @@ class TestimonialStore:
                     image = Media.objects.create(file=images, name=f"ImageFor {testimonial.title} Testimonial")
                     testimonial.image = image
                     makeUserUpload(media = image,info=image_info, user = testimonial.user,communities=[testimonial_community])
-      
+
       if testimonial.image:
         old_image_info, can_save_info = get_media_info(testimonial.image)
-        if can_save_info: 
+        if can_save_info:
           testimonial.image.user_upload.info.update({**old_image_info,**image_info})
           testimonial.image.user_upload.save()
-      
+
       if action:
         testimonial_action = Action.objects.filter(id=action).first()
         testimonial.action = testimonial_action
@@ -250,10 +250,10 @@ class TestimonialStore:
             return None, CustomMassenergizeError("Testimonial needs to be approved before it can be made live")
 
       testimonial.save()
-      if context.is_admin_site: 
+      if context.is_admin_site:
         # ----------------------------------------------------------------
         Spy.create_testimonial_footage(testimonials = [testimonial], context = context, type = FootageConstants.update(), notes =f"Testimonial ID({id})")
-        # ---------------------------------------------------------------- 
+        # ----------------------------------------------------------------
       return testimonial, None
     except Exception as e:
       log.exception(e)
@@ -302,7 +302,7 @@ class TestimonialStore:
       return None, CustomMassenergizeError(e)
 
   def list_testimonials_for_community_admin(self,  context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
-    community_id = args.get("community_id") 
+    community_id = args.get("community_id")
     testimonial_ids = args.get("testimonial_ids")
     try:
       if context.user_is_super_admin:
@@ -312,7 +312,7 @@ class TestimonialStore:
         return None, NotAuthorizedError()
 
       filter_params = get_testimonials_filter_params(context.get_params())
-      if testimonial_ids: 
+      if testimonial_ids:
         testimonials = Testimonial.objects.filter(id__in=testimonial_ids,*filter_params).select_related('image', 'community').prefetch_related('tags')
         return testimonials, None
 
@@ -323,7 +323,7 @@ class TestimonialStore:
 
         testimonials = Testimonial.objects.filter(community__id__in=comm_ids, is_deleted=False, *filter_params).select_related('image', 'community').prefetch_related('tags')
         return testimonials, None
-      
+
       if not is_admin_of_community(context.user_id, community_id):
           return None, NotAuthorizedError()
 
@@ -338,10 +338,10 @@ class TestimonialStore:
       testimonial_ids = args.get("testimonial_ids")
       if not context.user_is_super_admin:
         return None, NotAuthorizedError()
-        
+
       filter_params = get_testimonials_filter_params(context.get_params())
-  
-      if testimonial_ids: 
+
+      if testimonial_ids:
         testimonials = Testimonial.objects.filter(id__in=testimonial_ids,*filter_params).select_related('image', 'community').prefetch_related('tags')
         return testimonials
 
@@ -351,3 +351,32 @@ class TestimonialStore:
     except Exception as e:
       log.exception(e)
       return None, CustomMassenergizeError(e)
+
+  def create_auto_share_settings (self, context: Context, args) -> Tuple[dict, Any]:
+    try:
+      community_id = args.pop("community_id", None)
+      community = Community.objects.filter(id=community_id).first()
+
+      excluded_tags_ids = args.pop("excluded_tags", None)
+      ids_of_communities_to_share_from = args.pop("communities_to_share_from", None)
+      sharing_location_type = args.pop("sharing_location_type", None)
+      sharing_location_value = args.pop("sharing_location_value", None)
+
+      auto_share_settings = TestimonialAutoShareSettings.objects.create(
+        community=community,
+        sharing_location_type=sharing_location_type,
+        sharing_location_value=sharing_location_value,
+      )
+
+      if excluded_tags_ids:
+        auto_share_settings.excluded_tags.set(excluded_tags_ids)
+
+      if ids_of_communities_to_share_from:
+        auto_share_settings.share_from_communities.set(ids_of_communities_to_share_from)
+
+      return auto_share_settings, None
+
+    except Exception as e:
+      log.exception(e)
+      return None, CustomMassenergizeError(e)
+
