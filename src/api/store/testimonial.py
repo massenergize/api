@@ -1,3 +1,4 @@
+from _main_.utils.common import parse_datetime_to_aware
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from _main_.utils.utils import Console
@@ -5,13 +6,62 @@ from api.store.common import get_media_info, make_media_info
 from api.tests.common import RESET, makeUserUpload
 from api.utils.api_utils import is_admin_of_community
 from api.utils.filter_functions import get_testimonials_filter_params
-from database.models import Testimonial, UserProfile, Media, Vendor, Action, Community, CommunityAdminGroup, Tag
+from database.models import Testimonial, TestimonialAutoShareSettings, UserProfile, Media, Vendor, Action, Community, \
+  CommunityAdminGroup, Tag
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.context import Context
-from .utils import get_community, get_user, unique_media_filename
+from database.utils.settings.model_constants.enums import LocationType, SharingType
+from .utils import get_community, get_user, get_user_from_context, unique_media_filename
 from django.db.models import Q
 from _main_.utils.massenergize_logger import log
-from typing import Tuple
+from typing import Any, Tuple, Union
+import zipcodes
+
+
+def get_auto_shared_with_list(admin_communities=[]):
+    communities_list = set()
+    
+    all_auto_share_settings = TestimonialAutoShareSettings.objects.filter(is_deleted=False).prefetch_related('share_from_communities')
+    admin_communities_zipcodes = get_admin_communities_zipcodes(admin_communities)
+    
+    add_communities_by_settings(all_auto_share_settings.filter(share_from_communities__isnull=False), admin_communities,
+                                communities_list)
+    add_communities_by_location(
+      all_auto_share_settings.filter(share_from_location_type__isnull=False, share_from_location_value__isnull=False),
+      admin_communities_zipcodes, communities_list)
+    
+    return Testimonial.objects.filter(community__id__in=communities_list)
+
+
+def get_admin_communities_zipcodes(admin_communities):
+    """Fetch zipcodes of admin communities"""
+    real_admin_communities = Community.objects.filter(id__in=admin_communities, is_deleted=False, is_published=True)
+    return set(real_admin_communities.values_list('locations__zipcode', flat=True))
+
+
+def add_communities_by_settings(settings_with_communities, admin_communities, communities_list):
+    """Add communities based on settings"""
+    for setting in settings_with_communities:
+        if any([comm.id in admin_communities for comm in setting.share_from_communities.all()]):
+            communities_list.add(setting.community.id)
+
+
+def add_communities_by_location(settings_with_location, admin_communities_zipcodes, communities_list):
+    """Add communities based on location"""
+    for setting in settings_with_location:
+        location_zipcode_set = set(get_location_zipcodes(setting))
+      
+        if location_zipcode_set and location_zipcode_set.intersection(admin_communities_zipcodes):
+            communities_list.add(setting.community.id)
+
+
+def get_location_zipcodes(setting):
+    """Fetch zipcodes based on location type"""
+    location_value = setting.share_from_location_value
+    if setting.share_from_location_type == LocationType.STATE.value[0]:
+        location_value = location_value.upper()
+    return zipcodes.filter_by(**{setting.share_from_location_type: location_value})
+
 
 class TestimonialStore:
   def __init__(self):
@@ -364,3 +414,64 @@ class TestimonialStore:
     except Exception as e:
       log.exception(e)
       return None, CustomMassenergizeError(e)
+  
+  def share_testimonial(self, context: Context, args) -> Union[tuple[None, CustomMassenergizeError], tuple[Any, None]]:
+      try:
+        testimonial_id = args.pop("testimonial_id", None)
+        
+        testimonial = Testimonial.objects.filter(id=testimonial_id).first()
+        if not testimonial:
+            return None, CustomMassenergizeError("Testimonial not found")
+        
+        shared_with = args.pop("shared_with", None)
+        if shared_with:
+            first = shared_with[0]
+            if first == "reset":
+                testimonial.shared_to.clear()
+            else:
+                testimonial.shared_to.set(shared_with)
+                
+        testimonial.save()
+        
+        return testimonial, None
+      
+      except Exception as e:
+        log.exception(e)
+        return None, CustomMassenergizeError(e)
+      
+  def list_testimonials_from_other_communities(self, context: Context, args):
+    try:
+        community_ids = args.get("community_ids")
+        category_ids = args.get("category_ids")
+        
+        testimonials = []
+        admin_of = []
+        
+        all_testimonials = Testimonial.objects.filter(is_deleted=False, is_published=True).select_related('image', 'community').prefetch_related('tags')
+        user = get_user_from_context(context)
+        if user:
+            admin_groups = user.communityadmingroup_set.all()
+            admin_of = [ag.community.id for ag in admin_groups]
+        
+        if community_ids:
+            open_to = Q(share_ty=SharingType.OPEN_TO.value[0], approved_for_sharing_by__id__in=admin_of)
+            within_communities = Q(community__id__in=community_ids)
+            _testimonials = all_testimonials.filter(Q(share_ty=SharingType.OPEN.value[0]) | open_to, within_communities)
+            testimonials.extend(_testimonials)
+          
+        if category_ids:
+            _testimonials = all_testimonials.filter(tags__id__in=category_ids)
+            testimonials.extend(_testimonials)
+          
+        testimonials_from_auto_shared = get_auto_shared_with_list(admin_of)
+        
+        if testimonials_from_auto_shared:
+            testimonials.extend(testimonials_from_auto_shared)
+          
+        testimonials = list(set(testimonials))
+        
+        return testimonials, None
+    
+    except Exception as e:
+        log.exception(e)
+        return None, CustomMassenergizeError(e)
