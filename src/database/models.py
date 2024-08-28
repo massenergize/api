@@ -2569,6 +2569,7 @@ class Testimonial(models.Model):
     # is_user_submitted = models.BooleanField(default=False, blank=True, null=True)
     sharing_type = models.CharField( max_length=SHORT_STR_LEN, choices=SharingType.choices(), default=SharingType.OPEN.value[0])
     shared_with = models.ManyToManyField(Community, related_name="shared_testimonials", blank=True)
+    approved_for_sharing_by = models.ManyToManyField(Community, related_name="approved_testimonials", blank=True)
 
     def __str__(self):
         return self.title
