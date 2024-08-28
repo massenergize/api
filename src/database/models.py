@@ -936,7 +936,7 @@ class Role(models.Model):
     class Meta:
         ordering = ("name",)
         db_table = "roles"
-	    
+
     class TranslationMeta:
         fields_to_translate = ["name", "description"]
 
@@ -2569,6 +2569,7 @@ class Testimonial(models.Model):
     # is_user_submitted = models.BooleanField(default=False, blank=True, null=True)
     sharing_type = models.CharField( max_length=SHORT_STR_LEN, choices=SharingType.choices(), default=SharingType.OPEN.value[0])
     shared_with = models.ManyToManyField(Community, related_name="shared_testimonials", blank=True)
+    approved_for_sharing_by = models.ManyToManyField(Community, related_name="approved_testimonials", blank=True)
 
     def __str__(self):
         return self.title
@@ -3863,19 +3864,19 @@ class Message(models.Model):
         ]
         res["created_at"] = self.created_at.strftime("%Y-%m-%d %H:%M")
         return res
-    
+
     def get_scheduled_message_info(self):
         scheduled_info = self.schedule_info or {}
         recipients = scheduled_info.get("recipients", {})
         audience = recipients.get("audience", None)
         audience_type = recipients.get("audience_type", None)
         community_ids = recipients.get("community_ids", None)
-        
+
         real_audience = audience
         if audience and not audience == "all":
             if audience_type == "COMMUNITY_CONTACTS":
                 real_audience = [c.info() for c in Community.objects.filter(id__in=audience.split(","))]
-                
+
             elif audience_type == "ACTIONS":
                 real_audience = [a.info() for a in Action.objects.filter(id__in=audience.split(","))]
             else:
@@ -3884,12 +3885,12 @@ class Message(models.Model):
             community_ids = [c.info() for c in Community.objects.filter(id__in=community_ids.split(","))]
         else:
             community_ids = []
-        
+
         scheduled_info["recipients"]["audience"] = real_audience
         scheduled_info["recipients"]["community_ids"] = community_ids
-        
+
         return scheduled_info
-        
+
 
     def full_json(self):
         res = self.simple_json()
