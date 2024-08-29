@@ -21,15 +21,15 @@ from database.models import (
     FeatureFlag,
     Footage,
     HomePageSettings,
-    Media,
+    Location, Media,
     Menu, Message,
     RealEstateUnit,
     Team,
     Testimonial,
-    UserActionRel,
+    TestimonialAutoShareSettings, UserActionRel,
     UserMediaUpload,
     UserProfile,
-    SupportedLanguage
+    SupportedLanguage, ZIP_CODE_AND_STATES
 )
 from carbon_calculator.models import CalcDefault
 import requests
@@ -244,6 +244,7 @@ def makeHomePageSettings(**kwargs):
 def makeCommunity(**kwargs):
     subdomain = kwargs.get("subdomain") or str(time.time())
     name = kwargs.get("name") or "community_default_name"
+    locations = kwargs.pop("locations", [])
     com = Community.objects.create(
         **{
             "accepted_terms_and_conditions": True,
@@ -254,6 +255,8 @@ def makeCommunity(**kwargs):
             "name": name,
         }
     )
+    if locations:
+        com.locations.set(locations)
 
     return com
 
@@ -436,6 +439,7 @@ def make_campaign_account(**kwargs):
         "subdomain": subdomain,
     })
 
+
 def make_campaign(**kwargs):
     title = kwargs.get("title") or f"New Campaign-{datetime.now().timestamp()}"
     desc = kwargs.get("description") or "New Campaign Description"
@@ -447,4 +451,31 @@ def make_campaign(**kwargs):
         "tagline": kwargs.get("tagline") or "New Campaign Tagline",
         "description": desc,
         "account": account,
+    })
+
+
+def make_testimonial_auto_share_settings(**kwargs):
+    community = kwargs.get("community") or makeCommunity()
+    share_from_communities = kwargs.pop("share_from_communities", [])
+    
+    testimonial_auto_settings = TestimonialAutoShareSettings.objects.create(**{
+        "community": community,
+        "share_from_location_type": kwargs.get("share_from_location_type"),
+        "share_from_location_value": kwargs.get("share_from_location_value"),
+    })
+    if share_from_communities:
+        testimonial_auto_settings.share_from_communities.set(share_from_communities)
+        
+    return testimonial_auto_settings
+
+
+def makeLocation(**kwargs):
+    zipcode = kwargs.get("zipcode") or "02139"
+    state = kwargs.get("state") or "MA"
+    city = kwargs.get("city") or "Wayland"
+    return Location.objects.create(**{
+        **kwargs,
+        "zipcode": zipcode,
+        "state": state,
+        "city": city,
     })

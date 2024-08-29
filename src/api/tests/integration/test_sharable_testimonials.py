@@ -1,8 +1,9 @@
 from django.test import Client, TestCase
 
 from _main_.utils.utils import Console
-from api.tests.common import createUsers, makeAdmin, makeCommunity, makeTestimonial, signinAs
-from database.utils.settings.model_constants.enums import SharingType
+from api.tests.common import createUsers, make_testimonial_auto_share_settings, makeAdmin, makeCommunity, \
+    makeLocation, makeTestimonial, makeUser, signinAs
+from database.utils.settings.model_constants.enums import LocationType, SharingType
 
 
 class SharableTestimonialsIntegrationTest(TestCase):
@@ -11,30 +12,55 @@ class SharableTestimonialsIntegrationTest(TestCase):
         Console.header("Testing Sharable Testimonials")
         cls.user, cls.cadmin, cls.sadmin = createUsers()
         cls.client = Client()
-
+        
+        loc1 = makeLocation(state="MA", zipcode="02112", city="Boston")
+        loc4 = makeLocation(state="NY", zipcode="02115", city="City")
+        
         cls.c1 = makeCommunity(name="Community - test 1" )
         cls.c2 = makeCommunity(name="Community - test 2" )
-        cls.c3 = makeCommunity(name="Community - test 3" )
-        cls.c4 = makeCommunity(name="Community - test 4" )
-        cls.c5 = makeCommunity(name="Community - test 5" )
+        cls.c3 = makeCommunity(name="Community - test 3",locations=[loc1.id])
+        cls.c4 = makeCommunity(name="Community - test 4", locations=[loc4.id])
+        cls.c5 = makeCommunity(name="Community - test 5")
+        cls.c6 = makeCommunity(name="Community - test 6" )
         
-        makeAdmin(communities=[cls.c1, cls.c2, cls.c5], admin=cls.cadmin)
+        make_testimonial_auto_share_settings(community=cls.c6, share_from_communities=[cls.c5.id])
+        make_testimonial_auto_share_settings(community=cls.c1, share_from_location_type=LocationType.STATE.value[0], share_from_location_value= "MA")
+        make_testimonial_auto_share_settings(community=cls.c3, share_from_location_type=LocationType.CITY.value[0], share_from_location_value= "Boston")
+        
+        cls.u1= makeUser(is_community_admin=True)
+        
+        makeAdmin(communities=[cls.c1, cls.c2], admin=cls.cadmin)
+        makeAdmin(communities=[cls.c5, cls.c4], admin=cls.u1)
         
         cls.testimonial_1 = makeTestimonial(
-            community=cls.c5, user=cls.user, title="Testimonial shared to c2 c3",
-            sharing_type=SharingType.OPEN_TO.value[0], approved_for_sharing_by=[cls.c2, cls.c3]
+            community=cls.c1, user=cls.user, title="Testimonial shared to c2 c3",
+            sharing_type=SharingType.OPEN_TO.value[0], approved_for_sharing_by=[cls.c2, cls.c3, cls.c5],
+            is_published=True
         )
         cls.testimonial_2 = makeTestimonial(
             community=cls.c3, user=cls.user, title="Testimonial shared to c2 c4",
-            sharing_type=SharingType.CLOSED_TO.value[0], approved_for_sharing_by=[cls.c2, cls.c4]
+            sharing_type=SharingType.CLOSED_TO.value[0], approved_for_sharing_by=[cls.c2, cls.c3],
+            is_published=True
         )
         cls.testimonial_3 = makeTestimonial(
-            community=cls.c5, user=cls.user, title="Testimonial shared to all",
-            sharing_type=SharingType.OPEN.value[0]
+            community=cls.c6, user=cls.user, title="Testimonial shared to all",
+            sharing_type=SharingType.OPEN.value[0],
+            is_published=True
         )
         cls.testimonial_4 = makeTestimonial(
-            community=cls.c5, user=cls.user, title="Testimonial shared to none",
-            sharing_type=SharingType.CLOSED.value[0]
+            community=cls.c6, user=cls.user, title="Testimonial shared to none",
+            sharing_type=SharingType.CLOSED.value[0],
+            is_published=True
+        )
+        cls.testimonial_5 = makeTestimonial(
+            community=cls.c1, user=cls.user, title="Testimonial shared to none for c1",
+            sharing_type=SharingType.CLOSED.value[0],
+            is_published=True
+        )
+        cls.testimonial_6 = makeTestimonial(
+            community=cls.c3, user=cls.user, title="Testimonial shared to none for c3",
+            sharing_type=SharingType.CLOSED.value[0],
+            is_published=True
         )
     
     @classmethod
@@ -161,3 +187,47 @@ class SharableTestimonialsIntegrationTest(TestCase):
         shared_with_ids = [c['id'] for c in share_with]
         
         self.assertTrue(self.c5.id in shared_with_ids)
+        
+    def test_share_testimonial_no_data(self):
+        args = {}
+        signinAs(self.client, self.cadmin)
+        response = self.make_request('testimonials.share', args)
+        self.assertFalse(response['success'])
+        
+    def test_share_testimonial_no_testimonial_id(self):
+        args = {
+            "shared_with": self.c5.id,
+        }
+        signinAs(self.client, self.cadmin)
+        response = self.make_request('testimonials.share', args)
+        self.assertFalse(response['success'])
+        
+    def test_share_testimonial_no_shared_with(self):
+        args = {
+            "testimonial_id": self.testimonial_2.id,
+        }
+        signinAs(self.client, self.cadmin)
+        response = self.make_request('testimonials.share', args)
+        self.assertFalse(response['success'])
+        
+    def test_list_testimonials_from_other_communities_no_data_passed(self):
+        args = {}
+        signinAs(self.client, self.u1)
+        response = self.make_request('testimonials.other.listForCommunityAdmin', args)
+        self.assertTrue(response['success'])
+        # testimonial1 is shared with c5 and u1 is an admin of and testimonial3 is shared with all, even testimonial4 is
+        # closed, the testimonial community has added community c5 as shared automatically to.
+        self.assertEquals(len(response['data']), 6)
+        
+    def test_list_testimonials_from_other_communities_passing_community_ids(self):
+        args = {
+            "community_ids": self.c3.id
+        }
+        signinAs(self.client, self.u1)
+        response = self.make_request('testimonials.other.listForCommunityAdmin', args)
+        self.assertTrue(response['success'])
+        # testimonial1 is shared with c5 and u1 is an admin of and testimonial3 is shared with all, even testimonial4 is
+        # closed, the testimonial community has added community c5 as shared automatically to.
+        self.assertEquals(len(response['data']), 2)
+        
+    
