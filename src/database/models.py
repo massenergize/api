@@ -4341,8 +4341,8 @@ class CampaignSupportedLanguage(BaseModel):
 class TestimonialAutoShareSettings(BaseModel):
     community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
     share_from_communities = models.ManyToManyField(Community, related_name="share_from_communities", blank=True)
-    share_from_location_type = models.CharField(max_length=SHORT_STR_LEN, choices = LocationType.choices(), default=LocationType.CITY.value[0])
-    share_from_location_value = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+    share_from_location_type = models.CharField(max_length=SHORT_STR_LEN, choices = LocationType.choices(), null=True)
+    share_from_location_value = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
     excluded_tags = models.ManyToManyField(Tag, blank=True)
 
     def __str__(self):
