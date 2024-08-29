@@ -1,20 +1,21 @@
-from _main_.utils.footage.FootageConstants import FootageConstants
-from django.db.models import Q
-
-from _main_.utils.context import Context
+from _main_.utils.common import parse_datetime_to_aware
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
-from _main_.utils.massenergize_errors import CustomMassenergizeError, InvalidResourceError, MassEnergizeAPIError, \
-    NotAuthorizedError
-from _main_.utils.massenergize_logger import log
+from _main_.utils.utils import Console
 from api.store.common import get_media_info, make_media_info
-from api.tests.common import makeUserUpload, RESET
+from api.tests.common import RESET, makeUserUpload
 from api.utils.api_utils import is_admin_of_community
 from api.utils.filter_functions import get_testimonials_filter_params
-from database.models import Action, Community, CommunityAdminGroup, Media, Tag, Testimonial, \
-    TestimonialAutoShareSettings, UserProfile, Vendor
+from database.models import Testimonial, TestimonialAutoShareSettings, UserProfile, Media, Vendor, Action, Community, \
+  CommunityAdminGroup, Tag
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
+from _main_.utils.context import Context
 from database.utils.settings.model_constants.enums import LocationType, SharingType
 from .utils import get_community, get_user, get_user_from_context, unique_media_filename
+from django.db.models import Q
+from _main_.utils.massenergize_logger import log
+from typing import Any, Tuple, Union
+import zipcodes
 
 
 def get_auto_shared_with_list(admin_communities=[]):
@@ -52,6 +53,7 @@ def get_auto_shared_with_list(admin_communities=[]):
                 communities_list.append(setting.community.id)
             
     return Testimonial.objects.filter(community__id__in=communities_list)
+
 
 
 class TestimonialStore:
