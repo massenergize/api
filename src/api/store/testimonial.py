@@ -19,48 +19,40 @@ import zipcodes
 
 
 def get_auto_shared_with_list(admin_communities=[]):
-    communities_list = set()
+    _zipcodes = []
+    communities_list = []
     
-    all_auto_share_settings = TestimonialAutoShareSettings.objects.filter(is_deleted=False).prefetch_related('share_from_communities')
-    admin_communities_zipcodes = get_admin_communities_zipcodes(admin_communities)
+    all_auto_share_settings = TestimonialAutoShareSettings.objects.filter(is_deleted=False).prefetch_related(
+        'share_from_communities')
+    admin_real_communities = Community.objects.filter(id__in=admin_communities, is_deleted=False, is_published=True)
+    admin_communities_zipcodes = set(admin_real_communities.values_list('locations__zipcode', flat=True))
     
-    add_communities_by_settings(all_auto_share_settings.filter(share_from_communities__isnull=False), admin_communities,
-                                communities_list)
-    add_communities_by_location(
-      all_auto_share_settings.filter(share_from_location_type__isnull=False, share_from_location_value__isnull=False),
-      admin_communities_zipcodes, communities_list)
+    all_settings_with_communities = all_auto_share_settings.filter(share_from_communities__isnull=False)
+    all_settings_with_locations = all_auto_share_settings.filter(share_from_location_type__isnull=False,
+                                                                 share_from_location_value__isnull=False)
     
+    for setting in all_settings_with_communities:
+        share_from_communities = setting.share_from_communities.all()
+        if any([comm.id in admin_communities for comm in share_from_communities]):
+            communities_list.append(setting.community.id)
+            
+    for setting in all_settings_with_locations:
+        share_from_location_type = setting.share_from_location_type
+        share_from_location_value = setting.share_from_location_value
+        
+        if share_from_location_type == LocationType.STATE.value[0]:
+            share_from_location_value = share_from_location_value.upper()
+            _zipcodes = zipcodes.filter_by(state=share_from_location_value)
+            
+        elif share_from_location_type == LocationType.CITY.value[0]:
+            _zipcodes = zipcodes.filter_by(city=share_from_location_value)
+            
+        if _zipcodes:
+            state_zipcodes = set([str(zipcode_data["zip_code"]) for zipcode_data in _zipcodes])
+            if state_zipcodes.intersection(admin_communities_zipcodes):
+                communities_list.append(setting.community.id)
+            
     return Testimonial.objects.filter(community__id__in=communities_list)
-
-
-def get_admin_communities_zipcodes(admin_communities):
-    """Fetch zipcodes of admin communities"""
-    real_admin_communities = Community.objects.filter(id__in=admin_communities, is_deleted=False, is_published=True)
-    return set(real_admin_communities.values_list('locations__zipcode', flat=True))
-
-
-def add_communities_by_settings(settings_with_communities, admin_communities, communities_list):
-    """Add communities based on settings"""
-    for setting in settings_with_communities:
-        if any([comm.id in admin_communities for comm in setting.share_from_communities.all()]):
-            communities_list.add(setting.community.id)
-
-
-def add_communities_by_location(settings_with_location, admin_communities_zipcodes, communities_list):
-    """Add communities based on location"""
-    for setting in settings_with_location:
-        location_zipcode_set = set(get_location_zipcodes(setting))
-      
-        if location_zipcode_set and location_zipcode_set.intersection(admin_communities_zipcodes):
-            communities_list.add(setting.community.id)
-
-
-def get_location_zipcodes(setting):
-    """Fetch zipcodes based on location type"""
-    location_value = setting.share_from_location_value
-    if setting.share_from_location_type == LocationType.STATE.value[0]:
-        location_value = location_value.upper()
-    return zipcodes.filter_by(**{setting.share_from_location_type: location_value})
 
 
 class TestimonialStore:
@@ -445,32 +437,34 @@ class TestimonialStore:
         category_ids = args.get("category_ids")
         
         testimonials = []
-        admin_of = []
+        filters = []
         
-        all_testimonials = Testimonial.objects.filter(is_deleted=False, is_published=True).select_related('image', 'community').prefetch_related('tags')
         user = get_user_from_context(context)
-        if user:
-            admin_groups = user.communityadmingroup_set.all()
-            admin_of = [ag.community.id for ag in admin_groups]
+        
+        if not user:
+            return None, NotAuthorizedError()
+        
+        all_testimonials = Testimonial.objects.filter(is_deleted=False, is_published=True, sharing_type__isnull=False).select_related('image', 'community').prefetch_related('tags')
+        admin_groups = user.communityadmingroup_set.all()
+        admin_of = [ag.community.id for ag in admin_groups]
         
         if community_ids:
-            open_to = Q(share_ty=SharingType.OPEN_TO.value[0], approved_for_sharing_by__id__in=admin_of)
-            within_communities = Q(community__id__in=community_ids)
-            _testimonials = all_testimonials.filter(Q(share_ty=SharingType.OPEN.value[0]) | open_to, within_communities)
-            testimonials.extend(_testimonials)
-          
+            filters.append(Q(community__id__in=community_ids))
+        
         if category_ids:
-            _testimonials = all_testimonials.filter(tags__id__in=category_ids)
-            testimonials.extend(_testimonials)
-          
+            filters.append(Q(tags__id__in=category_ids))
+            
+        open_to = Q(sharing_type=SharingType.OPEN_TO.value[0], approved_for_sharing_by__id__in=admin_of)
+        testimonials.extend(all_testimonials.filter(Q(sharing_type=SharingType.OPEN.value[0]) | open_to))
+        
         testimonials_from_auto_shared = get_auto_shared_with_list(admin_of)
         
         if testimonials_from_auto_shared:
             testimonials.extend(testimonials_from_auto_shared)
           
-        testimonials = list(set(testimonials))
+        testimonials_list = all_testimonials.filter(id__in=[t.id for t in testimonials], *filters).distinct()
         
-        return testimonials, None
+        return testimonials_list, None
     
     except Exception as e:
         log.exception(e)
