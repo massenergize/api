@@ -253,7 +253,7 @@ class TestimonialHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     
-    self.validator.expect("community_ids", "str_list", is_required=True)
+    self.validator.expect("community_ids", "str_list", is_required=False)
     self.validator.expect("exclude", bool, is_required=False)
     self.validator.expect("category_ids", "str_list", is_required=False)
     
