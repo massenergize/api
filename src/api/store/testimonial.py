@@ -18,42 +18,51 @@ from typing import Any, Tuple, Union
 import zipcodes
 
 
-def get_auto_shared_with_list(admin_communities=[]):
-    _zipcodes = []
+def get_auto_shared_with_list(admin_community_ids=None):
+    if admin_community_ids is None:
+        return []
+
     communities_list = []
-    
-    all_auto_share_settings = TestimonialAutoShareSettings.objects.filter(is_deleted=False).prefetch_related(
-        'share_from_communities')
-    admin_real_communities = Community.objects.filter(id__in=admin_communities, is_deleted=False, is_published=True)
-    admin_communities_zipcodes = set(admin_real_communities.values_list('locations__zipcode', flat=True))
-    
+
+    all_auto_share_settings = TestimonialAutoShareSettings.objects.filter(is_deleted=False).prefetch_related('share_from_communities')
+    if not all_auto_share_settings.exists():
+        return []
+
+    admin_communities = Community.objects.filter(id__in=admin_community_ids, is_deleted=False, is_published=True)
+    admin_communities_zipcodes = set(admin_communities.values_list('locations__zipcode', flat=True))
+
     all_settings_with_communities = all_auto_share_settings.filter(share_from_communities__isnull=False)
-    all_settings_with_locations = all_auto_share_settings.filter(share_from_location_type__isnull=False,
-                                                                 share_from_location_value__isnull=False)
-    
+    all_settings_with_locations = all_auto_share_settings.filter(
+        share_from_location_type__isnull=False,
+        share_from_location_value__isnull=False
+    )
+
+    if not all_settings_with_communities.exists() and not all_settings_with_locations.exists():
+        return []
+
     for setting in all_settings_with_communities:
         share_from_communities = setting.share_from_communities.all()
-        if any([comm.id in admin_communities for comm in share_from_communities]):
+        if any(comm.id in admin_community_ids for comm in share_from_communities):
             communities_list.append(setting.community.id)
-            
+
     for setting in all_settings_with_locations:
         share_from_location_type = setting.share_from_location_type
         share_from_location_value = setting.share_from_location_value
-        
+
         if share_from_location_type == LocationType.STATE.value[0]:
             share_from_location_value = share_from_location_value.upper()
             _zipcodes = zipcodes.filter_by(state=share_from_location_value)
-            
         elif share_from_location_type == LocationType.CITY.value[0]:
             _zipcodes = zipcodes.filter_by(city=share_from_location_value)
-            
+        else:
+            _zipcodes = []
+
         if _zipcodes:
-            state_zipcodes = set([str(zipcode_data["zip_code"]) for zipcode_data in _zipcodes])
+            state_zipcodes = {str(zipcode_data["zip_code"]) for zipcode_data in _zipcodes}
             if state_zipcodes.intersection(admin_communities_zipcodes):
                 communities_list.append(setting.community.id)
-            
-    return Testimonial.objects.filter(community__id__in=communities_list)
 
+    return Testimonial.objects.filter(community__id__in=communities_list)
 
 
 class TestimonialStore:
