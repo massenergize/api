@@ -866,38 +866,41 @@ class EventStore:
     def list_events_for_community_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
         try:
             community_id = args.pop("community_id", None)
+            community_ids = [community_id] if community_id else []
 
             if context.user_is_super_admin:
                 return self.list_events_for_super_admin(context)
 
             elif not context.user_is_community_admin:
                 return None, NotAuthorizedError()
+            
+            if community_id and not is_admin_of_community(context, community_id):
+                return None, NotAuthorizedError()
 
             if community_id == 0:
                 # return actions from all communities
                 return self.list_events_for_super_admin(context)
-
+            
+            filter_params = get_events_filter_params(context.get_params())
+            filters_to_exclude = []
             # community_id coming from admin portal is 'undefined'
-            elif not community_id:
-                filter_params = get_events_filter_params(context.get_params())
-
+            if not community_id:
                 user = UserProfile.objects.get(pk=context.user_id)
                 admin_groups = user.communityadmingroup_set.all()
-                comm_ids = [ag.community.id for ag in admin_groups]
-                # don't return the events that are rescheduled instances of recurring events - these should be edited by CAdmins in the recurring event's edit form,
-                # not as their own separate events
-                events = Event.objects.filter(Q(community__id__in=comm_ids) | Q(is_global=True), *filter_params,
-                                              is_deleted=False).exclude(name__contains=" (rescheduled)").select_related(
+                community_ids.extend([ag.community.id for ag in admin_groups])
+                filters_to_exclude.append(Q(name__contains=" (rescheduled)"))
+                
+            # don't return the events that are rescheduled instances of recurring events - these should be edited by CAdmins in the recurring event's edit form,
+            # not as their own separate events
+            events = Event.objects.filter(Q(community__id__in=community_ids) | Q(is_global=True), *filter_params,
+                                              is_deleted=False).exclude(*filters_to_exclude).select_related(
                     'image', 'community').prefetch_related('tags')
-                return events, None
-
-            if not is_admin_of_community(context, community_id):
-                return None, NotAuthorizedError()
-
-            events = Event.objects.filter(Q(community__id=community_id) | Q(is_global=True), *filter_params,
-                                          is_deleted=False).select_related('image', 'community').prefetch_related(
-                'tags')
-            return events, None
+            
+            shared = Event.objects.filter(shared_to__id__in=community_ids).select_related('image', 'community').prefetch_related('tags')
+            
+            all_events = events.union(shared)
+            
+            return all_events, None
         except Exception as e:
             log.exception(e)
             return None, CustomMassenergizeError(e)
