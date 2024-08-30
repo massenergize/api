@@ -85,6 +85,7 @@ class TestimonialStore:
       subdomain = args.pop('subdomain', None)
       community_id = args.pop('community_id', None)
       community, _ = get_community(community_id, subdomain)
+      shared = []
 
       user_id = args.pop('user_id', None)
       user_email = args.pop('user_email', None)
@@ -93,6 +94,8 @@ class TestimonialStore:
       if community:
         testimonials = Testimonial.objects.filter(
             community=community, is_deleted=False).prefetch_related('tags__tag_collection', 'action__tags', 'vendor', 'community')
+        
+        shared = community.shared_testimonials.filter(is_published=True, is_deleted=False).prefetch_related('tags__tag_collection', 'action__tags', 'vendor', 'community')
 
       elif user:
         testimonials = Testimonial.objects.filter(user=user, is_deleted=False).prefetch_related('tags__tag_collection', 'action__tags', 'vendor', 'community')
@@ -113,8 +116,10 @@ class TestimonialStore:
           testimonials = testimonials.filter(Q(user__id=context.user_id) | Q(is_published=True))
         else:
           testimonials = testimonials.filter(is_published=True)
+          
+      all_testimonials = list(testimonials) + list(shared)
 
-      return  testimonials, None
+      return  all_testimonials , None
     except Exception as e:
       log.exception(e)
       return None, CustomMassenergizeError(e)
@@ -369,14 +374,20 @@ class TestimonialStore:
   def list_testimonials_for_community_admin(self,  context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     community_id = args.get("community_id") 
     testimonial_ids = args.get("testimonial_ids")
+    community_ids = [community_id] if community_id else []
+
     try:
       if context.user_is_super_admin:
         return self.list_testimonials_for_super_admin(context, args)
 
       elif not context.user_is_community_admin:
         return None, NotAuthorizedError()
+      
+      if community_id and not is_admin_of_community(context.user_id, community_id):
+          return None, NotAuthorizedError()
 
       filter_params = get_testimonials_filter_params(context.get_params())
+      
       if testimonial_ids: 
         testimonials = Testimonial.objects.filter(id__in=testimonial_ids,*filter_params).select_related('image', 'community').prefetch_related('tags')
         return testimonials, None
@@ -384,15 +395,12 @@ class TestimonialStore:
       if not community_id:
         user = UserProfile.objects.get(pk=context.user_id)
         admin_groups = user.communityadmingroup_set.all()
-        comm_ids = [ag.community.id for ag in admin_groups]
-
-        testimonials = Testimonial.objects.filter(community__id__in=comm_ids, is_deleted=False, *filter_params).select_related('image', 'community').prefetch_related('tags')
-        return testimonials, None
+        community_ids.extend([ag.community.id for ag in admin_groups])
+        
+      testimonials = Testimonial.objects.filter(community__id__in=community_ids, is_deleted=False, *filter_params).select_related('image', 'community').prefetch_related('tags')
+      shared = Testimonial.objects.filter(shared_with__id__in=community_ids, is_deleted=False, *filter_params).select_related('image', 'community').prefetch_related('tags')
+      testimonials = testimonials |shared
       
-      if not is_admin_of_community(context.user_id, community_id):
-          return None, NotAuthorizedError()
-
-      testimonials = Testimonial.objects.filter(community__id=community_id, is_deleted=False,*filter_params).select_related('image', 'community').prefetch_related('tags')
       return testimonials.distinct(), None
     except Exception as e:
       log.exception(e)
