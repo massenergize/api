@@ -399,7 +399,7 @@ class TestimonialStore:
         
       testimonials = Testimonial.objects.filter(community__id__in=community_ids, is_deleted=False, *filter_params).select_related('image', 'community').prefetch_related('tags')
       shared = Testimonial.objects.filter(shared_with__id__in=community_ids, is_deleted=False, *filter_params).select_related('image', 'community').prefetch_related('tags')
-      testimonials = testimonials |shared
+      testimonials = testimonials | shared
       
       return testimonials.distinct(), None
     except Exception as e:

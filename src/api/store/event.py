@@ -898,7 +898,7 @@ class EventStore:
             
             shared = Event.objects.filter(shared_to__id__in=community_ids).select_related('image', 'community').prefetch_related('tags')
             
-            all_events = events.union(shared)
+            all_events = events | shared
             
             return all_events, None
         except Exception as e:
