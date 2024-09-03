@@ -434,12 +434,17 @@ class TestimonialStore:
             return None, CustomMassenergizeError("Testimonial not found")
         
         shared_with = args.pop("shared_with", None)
+        is_unshare = args.pop("unshare", False)
+        
         if shared_with:
             first = shared_with[0]
             if first == "reset":
                 testimonial.shared_with.clear()
             else:
-                testimonial.shared_with.set(shared_with)
+                if is_unshare:
+                    testimonial.shared_with.remove(*shared_with)
+                else:
+                    testimonial.shared_with.set(shared_with)
                 
         testimonial.save()
         

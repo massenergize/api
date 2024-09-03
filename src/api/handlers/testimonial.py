@@ -237,6 +237,7 @@ class TestimonialHandler(RouteHandler):
 
     self.validator.expect("testimonial_id", int, is_required=True)
     self.validator.expect("shared_with", "str_list", is_required=True)
+    self.validator.expect("unshare", bool, is_required=False)
 
     args, err = self.validator.verify(args, strict=True)
     if err:
