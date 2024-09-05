@@ -126,11 +126,11 @@ def makeMedia(**kwargs):
 def makeTestimonial(**kwargs):
     key = round(time.time() * 1000)
     title = kwargs.get("title") or kwargs.get("name") or f"New Testimonial - {key}"
-    approved_for_sharing_by = kwargs.pop("approved_for_sharing_by", [])
+    shared_with = kwargs.pop("shared_with", [])
     
     testimonial = Testimonial.objects.create(**{**kwargs, "title": title})
-    if approved_for_sharing_by:
-        testimonial.approved_for_sharing_by.set(approved_for_sharing_by)
+    if shared_with:
+        testimonial.shared_with.set(shared_with)
     return testimonial
 
 
