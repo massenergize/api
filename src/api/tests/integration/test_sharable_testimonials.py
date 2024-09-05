@@ -34,12 +34,12 @@ class SharableTestimonialsIntegrationTest(TestCase):
         
         cls.testimonial_1 = makeTestimonial(
             community=cls.c1, user=cls.user, title="Testimonial shared to c2 c3",
-            sharing_type=SharingType.OPEN_TO.value[0], approved_for_sharing_by=[cls.c2, cls.c3, cls.c5],
+            sharing_type=SharingType.OPEN_TO.value[0], shared_with=[cls.c2, cls.c3, cls.c5],
             is_published=True
         )
         cls.testimonial_2 = makeTestimonial(
             community=cls.c3, user=cls.user, title="Testimonial shared to c2 c4",
-            sharing_type=SharingType.CLOSED_TO.value[0], approved_for_sharing_by=[cls.c2, cls.c3],
+            sharing_type=SharingType.CLOSED_TO.value[0], shared_with=[cls.c2, cls.c3],
             is_published=True
         )
         cls.testimonial_3 = makeTestimonial(
@@ -73,7 +73,7 @@ class SharableTestimonialsIntegrationTest(TestCase):
     def test_create_sharable_by_admin_open_to(self):
         args = {
             "sharing_type": SharingType.OPEN_TO.value[0],
-            "approved_for_sharing_by": f"{str(self.c1.id)},{str(self.c2.id)}",
+            "shared_with": f"{str(self.c1.id)},{str(self.c2.id)}",
             "community_id": str(self.c5.id),
             "title": "Shared Testimonial 1",
         }
@@ -81,8 +81,8 @@ class SharableTestimonialsIntegrationTest(TestCase):
         response = self.make_request('testimonials.create', args)
         self.assertTrue(response['success'])
         self.assertTrue(response['data']['id'])
-        approved_for_sharing_by = response.get('data', {}).get('approved_for_sharing_by', [])
-        only_ids = [c['id'] for c in approved_for_sharing_by]
+        shared_with = response.get('data', {}).get('shared_with', [])
+        only_ids = [c['id'] for c in shared_with]
         self.assertTrue(self.c1.id in only_ids)
         self.assertTrue(self.c2.id in only_ids)
         self.assertEquals(response.get('data', {}).get('sharing_type'), SharingType.OPEN_TO.value[0])
@@ -90,7 +90,7 @@ class SharableTestimonialsIntegrationTest(TestCase):
     def test_create_sharable_by_admin_closed_to(self):
         args = {
             "sharing_type": SharingType.CLOSED_TO.value[0],
-            "approved_for_sharing_by": f"{str(self.c3.id)},{str(self.c4.id)}",
+            "shared_with": f"{str(self.c3.id)},{str(self.c4.id)}",
             "community_id": str(self.c5.id),
             "title": "Shared Testimonial 2",
         }
@@ -98,8 +98,8 @@ class SharableTestimonialsIntegrationTest(TestCase):
         response = self.make_request('testimonials.create', args)
         self.assertTrue(response['success'])
         self.assertTrue(response['data']['id'])
-        approved_for_sharing_by = response.get('data', {}).get('approved_for_sharing_by', [])
-        only_ids = [c['id'] for c in approved_for_sharing_by]
+        shared_with = response.get('data', {}).get('shared_with', [])
+        only_ids = [c['id'] for c in shared_with]
         self.assertTrue(self.c3.id in only_ids)
         self.assertTrue(self.c4.id in only_ids)
         self.assertEquals(response.get('data', {}).get('sharing_type'), SharingType.CLOSED_TO.value[0])
@@ -158,15 +158,15 @@ class SharableTestimonialsIntegrationTest(TestCase):
         args = {
             "id": self.testimonial_1.id,
             "sharing_type": SharingType.OPEN_TO.value[0],
-            "approved_for_sharing_by": f"{str(self.c1.id)},{str(self.c2.id)},{str(self.c3.id)}",
+            "shared_with": f"{str(self.c1.id)},{str(self.c2.id)},{str(self.c3.id)}",
             "community_id": str(self.c5.id),
         }
         signinAs(self.client, self.cadmin)
         response = self.make_request('testimonials.update', args)
         self.assertTrue(response['success'])
         self.assertTrue(response['data']['id'])
-        approved_for_sharing_by = response.get('data', {}).get('approved_for_sharing_by', [])
-        only_ids = [c['id'] for c in approved_for_sharing_by]
+        shared_with = response.get('data', {}).get('shared_with', [])
+        only_ids = [c['id'] for c in shared_with]
         self.assertTrue(self.c1.id in only_ids)
         self.assertTrue(self.c2.id in only_ids)
         self.assertTrue(self.c3.id in only_ids)
@@ -183,7 +183,7 @@ class SharableTestimonialsIntegrationTest(TestCase):
         self.assertTrue(response['success'])
         self.assertTrue(response['data']['id'])
         
-        share_with = response.get('data', {}).get('shared_with', [])
+        share_with = response.get('data', {}).get('approved_for_sharing_by', [])
         shared_with_ids = [c['id'] for c in share_with]
         
         self.assertTrue(self.c5.id in shared_with_ids)

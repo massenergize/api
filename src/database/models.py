@@ -2566,10 +2566,8 @@ class Testimonial(models.Model):
     preferred_name = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
     other_vendor = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
     more_info = models.JSONField(blank=True, null=True)
-    # is_user_submitted = models.BooleanField(default=False, blank=True, null=True)
     sharing_type = models.CharField( max_length=SHORT_STR_LEN, choices=SharingType.choices(), default=SharingType.OPEN.value[0])
-    shared_with = models.ManyToManyField(Community, related_name="shared_testimonials", blank=True)
-    approved_for_sharing_by = models.ManyToManyField(Community, related_name="approved_testimonials", blank=True)
+    shared_with = models.ManyToManyField(Community, related_name="shared_testimonials", blank=True) # communities that can see
 
     def __str__(self):
         return self.title
@@ -2595,7 +2593,7 @@ class Testimonial(models.Model):
         res["anonymous"] = self.anonymous
         res["preferred_name"] = self.preferred_name
         res["other_vendor"] = self.other_vendor
-        res["approved_for_sharing_by"] = [c.info() for c in self.approved_for_sharing_by.all()]
+        res["approved_for_sharing_by"] = [tsc.community.info() for tsc in self.shared_communities.all()]
         res["shared_with"] = [c.info() for c in self.shared_with.all()]
         return res
 
@@ -2611,6 +2609,27 @@ class Testimonial(models.Model):
 
     class TranslationMeta:
         fields_to_translate = ["title", "body"]
+
+
+class TestimonialSharedCommunity(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    testimonial = models.ForeignKey(Testimonial, on_delete=models.CASCADE, related_name="shared_communities")
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name="testimonial_shares")
+    
+    def simple_json(self):
+        data = model_to_dict(self, exclude=["testimonial", "community"])
+        data["community"] = self.community.info()
+        data["testimonial"] = self.testimonial.info()
+        return data
+    
+    def full_json(self):
+        return self.simple_json()
+    
+    class Meta:
+        unique_together = ('community', 'testimonial')
+    
+    class TranslationMeta:
+        fields_to_translate = []
 
 
 class UserActionRel(models.Model):
