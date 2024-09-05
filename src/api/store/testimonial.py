@@ -6,8 +6,9 @@ from api.store.common import get_media_info, make_media_info
 from api.tests.common import RESET, makeUserUpload
 from api.utils.api_utils import is_admin_of_community
 from api.utils.filter_functions import get_testimonials_filter_params
-from database.models import Testimonial, TestimonialAutoShareSettings, UserProfile, Media, Vendor, Action, Community, \
-  CommunityAdminGroup, Tag
+from database.models import Testimonial, TestimonialAutoShareSettings, TestimonialSharedCommunity, UserProfile, Media, \
+    Vendor, Action, Community, \
+    CommunityAdminGroup, Tag
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.context import Context
 from database.utils.settings.model_constants.enums import LocationType, SharingType
@@ -95,7 +96,8 @@ class TestimonialStore:
         testimonials = Testimonial.objects.filter(
             community=community, is_deleted=False).prefetch_related('tags__tag_collection', 'action__tags', 'vendor', 'community')
         
-        shared = community.shared_testimonials.filter(is_published=True, is_deleted=False).prefetch_related('tags__tag_collection', 'action__tags', 'vendor', 'community')
+        shared = community.testimonial_shares.filter(is_published=True, is_deleted=False).prefetch_related('testimonial')
+        shared = [s.testimonial for s in shared]
 
       elif user:
         testimonials = Testimonial.objects.filter(user=user, is_deleted=False).prefetch_related('tags__tag_collection', 'action__tags', 'vendor', 'community')
@@ -132,7 +134,7 @@ class TestimonialStore:
       action = args.pop('action', None)
       vendor = args.pop('vendor', None)
       community = args.pop('community', None)
-      approved_for_sharing_by = args.pop('approved_for_sharing_by', [])
+      shared_with = args.pop('shared_with', [])
       # create(**args) will fail if user_email not removed
       # TODO - check context.user_email exists and use that unless from admin submission on behalf of user
       user_email = args.pop('user_email', None) or context.user_email
@@ -190,8 +192,8 @@ class TestimonialStore:
 
       new_testimonial.save()
       
-      if approved_for_sharing_by:
-        new_testimonial.approved_for_sharing_by.set(approved_for_sharing_by)
+      if shared_with:
+        new_testimonial.shared_with.set(shared_with)
 
       if context.is_admin_site: 
         # ----------------------------------------------------------------
@@ -239,7 +241,6 @@ class TestimonialStore:
       community = args.pop('community', None)
       rank = args.pop('rank', None)
       is_published = args.pop('is_published', None)
-      approved_for_sharing_by = args.pop('approved_for_sharing_by', [])
       shared_with = args.pop('shared_with', [])
       
       testimonials.update(**args)
@@ -298,15 +299,8 @@ class TestimonialStore:
       if tags_to_set:
         testimonial.tags.set(tags_to_set)
         
-      if approved_for_sharing_by:
-          testimonial.approved_for_sharing_by.set(approved_for_sharing_by)
-      
       if shared_with:
-        first = shared_with[0]
-        if first == "reset":
-          testimonial.shared_to.clear()
-        else:
-          testimonial.shared_to.set(shared_with)
+          testimonial.shared_with.set(shared_with)
 
       if context.user_is_super_admin or context.user_is_community_admin:
         if is_published==False:
@@ -398,7 +392,11 @@ class TestimonialStore:
         community_ids.extend([ag.community.id for ag in admin_groups])
         
       testimonials = Testimonial.objects.filter(community__id__in=community_ids, is_deleted=False, *filter_params).select_related('image', 'community').prefetch_related('tags')
-      shared = Testimonial.objects.filter(shared_with__id__in=community_ids, is_deleted=False, *filter_params).select_related('image', 'community').prefetch_related('tags')
+      # shared = Testimonial.objects.filter(shared_with__id__in=community_ids, is_deleted=False, *filter_params).select_related('image', 'community').prefetch_related('tags')
+      _shared = TestimonialSharedCommunity.objects.filter(community__id__in=community_ids).select_related('testimonial').prefetch_related('testimonial__tags', 'testimonial__image', 'testimonial__community')
+      shared_ids = [s.testimonial.id for s in _shared]
+      shared = Testimonial.objects.filter(id__in=shared_ids, is_deleted=False, *filter_params).select_related('image', 'community').prefetch_related('tags')
+      
       testimonials = testimonials | shared
       
       return testimonials.distinct(), None
@@ -433,21 +431,28 @@ class TestimonialStore:
         if not testimonial:
             return None, CustomMassenergizeError("Testimonial not found")
         
-        shared_with = args.pop("shared_with", None)
+        community_ids = args.pop("shared_with", None)
+        
+        if not community_ids:
+            return None, CustomMassenergizeError("No community ids provided")
+        
         is_unshare = args.pop("unshare", False)
         
-        if shared_with:
-            first = shared_with[0]
-            if first == "reset":
-                testimonial.shared_with.clear()
+        if community_ids:
+            if is_unshare:
+                communities_to_unshare = testimonial.shared_communities.filter(community__id__in=community_ids)
+                communities_to_unshare.delete()
             else:
-                if is_unshare:
-                    testimonial.shared_with.remove(*shared_with)
-                else:
-                    testimonial.shared_with.set(shared_with)
+                existing_shared_communities_ids = list(set(testimonial.shared_communities.values_list('community__id', flat=True)))
+                communities = Community.objects.filter(id__in=community_ids).exclude(id__in=existing_shared_communities_ids)
                 
-        testimonial.save()
-        
+                new_items = []
+                for community in communities:
+                    new_item = TestimonialSharedCommunity(testimonial=testimonial, community=community)
+                    new_items.append(new_item)
+                    
+                TestimonialSharedCommunity.objects.bulk_create(new_items)
+                
         return testimonial, None
       
       except Exception as e:
@@ -477,7 +482,7 @@ class TestimonialStore:
         if category_ids:
             filters.append(Q(tags__id__in=category_ids))
             
-        open_to = Q(sharing_type=SharingType.OPEN_TO.value[0], approved_for_sharing_by__id__in=admin_of)
+        open_to = Q(sharing_type=SharingType.OPEN_TO.value[0], shared_with__id__in=admin_of)
         testimonials.extend(all_testimonials.filter(Q(sharing_type=SharingType.OPEN.value[0]) | open_to))
         
         testimonials_from_auto_shared = get_auto_shared_with_list(admin_of)
