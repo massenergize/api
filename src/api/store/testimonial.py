@@ -1,22 +1,23 @@
+from typing import Any, Tuple, Union
+
+import zipcodes
+from django.db.models import Q
+
 from _main_.utils.common import parse_datetime_to_aware
+from _main_.utils.context import Context
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
-from _main_.utils.utils import Console
+from _main_.utils.massenergize_errors import CustomMassenergizeError, InvalidResourceError, MassEnergizeAPIError, \
+    NotAuthorizedError
+from _main_.utils.massenergize_logger import log
 from api.store.common import get_media_info, make_media_info
-from api.tests.common import RESET, makeUserUpload
+from api.tests.common import makeUserUpload, RESET
 from api.utils.api_utils import is_admin_of_community
 from api.utils.filter_functions import get_testimonials_filter_params
-from database.models import Testimonial, TestimonialAutoShareSettings, TestimonialSharedCommunity, UserProfile, Media, \
-    Vendor, Action, Community, \
-    CommunityAdminGroup, Tag
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
-from _main_.utils.context import Context
+from database.models import Action, Community, CommunityAdminGroup, Media, Tag, Testimonial, \
+    TestimonialAutoShareSettings, TestimonialSharedCommunity, UserProfile, Vendor
 from database.utils.settings.model_constants.enums import LocationType, SharingType
 from .utils import get_community, get_user, get_user_from_context, unique_media_filename
-from django.db.models import Q
-from _main_.utils.massenergize_logger import log
-from typing import Any, Tuple, Union
-import zipcodes
 
 
 def get_auto_shared_with_list(admin_community_ids=None):
@@ -62,9 +63,78 @@ def get_auto_shared_with_list(admin_community_ids=None):
             if state_zipcodes.intersection(admin_communities_zipcodes):
                 communities_list.add(setting.community.id)
                 
-    communities_list = list(set(communities_list) - set(admin_community_ids))
-    return Testimonial.objects.filter(community__id__in=communities_list)
+    return Community.objects.filter(id__in=communities_list)
 
+# def get_auto_shared_with_list(admin_community_ids=None):
+#     if admin_community_ids is None:
+#         return []
+#
+#     communities_list = set()
+#
+#     my_auto_share_settings = TestimonialAutoShareSettings.objects.filter(community__id__in=admin_community_ids, is_deleted=False).prefetch_related('share_from_communities')
+#     if not my_auto_share_settings.exists():
+#         return []
+#
+#     admin_communities = Community.objects.filter(id__in=admin_community_ids, is_deleted=False, is_published=True)
+#     admin_communities_zipcodes = set(admin_communities.values_list('locations__zipcode', flat=True))
+#
+#     all_settings_with_communities = my_auto_share_settings.filter(
+#         share_from_location_type__isnull=True,
+#         share_from_location_value__isnull=True
+#     )
+#     all_settings_with_locations = my_auto_share_settings.filter(
+#         share_from_location_type__isnull=False,
+#         share_from_location_value__isnull=False
+#     )
+#
+#     for setting in all_settings_with_communities:
+#         share_from_communities = setting.share_from_communities.all()
+#         communities_list.update([comm.id for comm in share_from_communities])
+#
+#     for setting in all_settings_with_locations:
+#         share_from_location_type = setting.share_from_location_type
+#         share_from_location_value = setting.share_from_location_value
+#
+#         if share_from_location_type == LocationType.STATE.value[0]:
+#             share_from_location_value = share_from_location_value.upper()
+#             _zipcodes = zipcodes.filter_by(state=share_from_location_value)
+#         elif share_from_location_type == LocationType.CITY.value[0]:
+#             _zipcodes = zipcodes.filter_by(city=share_from_location_value)
+#         else:
+#             _zipcodes = []
+#
+#         if _zipcodes:
+#             state_zipcodes = {str(zipcode_data["zip_code"]) for zipcode_data in _zipcodes}
+#             if state_zipcodes.intersection(admin_communities_zipcodes):
+#                 communities_list.add(setting.community.id)
+#
+#     communities_list = list(set(communities_list) - set(admin_community_ids))
+#     open_to = Q(sharing_type=SharingType.OPEN_TO.value[0], audience__id__in=admin_community_ids)
+#     not_closed_to = Q(sharing_type=SharingType.CLOSED_TO.value[0]) & ~Q(audience__id__in=admin_community_ids)
+#     _open = Q(sharing_type=SharingType.OPEN.value[0])
+#
+#     return Testimonial.objects.filter(Q(community__id__in=communities_list) & (_open | open_to | not_closed_to))
+
+
+def add_auto_shared_communities_to_testimonial(testimonial):
+    if not testimonial:
+        return
+    
+    community = testimonial.community
+    if not community:
+        return
+    
+    admin_community_ids = [community.id]
+    auto_shared_with = get_auto_shared_with_list(admin_community_ids)
+    
+    if auto_shared_with:
+        new_items = []
+        for comm in auto_shared_with:
+            new_item = TestimonialSharedCommunity(testimonial=testimonial, community=comm)
+            new_items.append(new_item)
+            
+        TestimonialSharedCommunity.objects.bulk_create(new_items, ignore_conflicts=True)
+        
 
 class TestimonialStore:
   def __init__(self):
@@ -97,9 +167,6 @@ class TestimonialStore:
             community=community, is_deleted=False).prefetch_related('tags__tag_collection', 'action__tags', 'vendor', 'community')
         
         shared = community.testimonial_shares.filter(is_published=True, is_deleted=False).prefetch_related('testimonial')
-        auto_shared_with_community = get_auto_shared_with_list([community.id])
-        shared = list(shared) + list(auto_shared_with_community)
-        
         shared = [s.testimonial for s in shared]
 
       elif user:
@@ -161,6 +228,7 @@ class TestimonialStore:
           
       if is_published:
           new_testimonial.published_at = parse_datetime_to_aware()
+          add_auto_shared_communities_to_testimonial(new_testimonial)
 
       if action:
         testimonial_action = Action.objects.get(id=action)
@@ -254,9 +322,9 @@ class TestimonialStore:
       
       if is_published and not testimonials.first().is_published:
         args["published_at"] = parse_datetime_to_aware()
+        add_auto_shared_communities_to_testimonial(testimonials.first())
       elif not is_published and testimonials.first().is_published:
         args["published_at"] = None
-      
       
       testimonials.update(**args)
       testimonial = testimonials.first() # refresh after update
@@ -406,9 +474,6 @@ class TestimonialStore:
         
       testimonials = Testimonial.objects.filter(community__id__in=community_ids, is_deleted=False, *filter_params).select_related('image', 'community').prefetch_related('tags')
       _shared = TestimonialSharedCommunity.objects.filter(community__id__in=community_ids).select_related('testimonial').prefetch_related('testimonial__tags', 'testimonial__image', 'testimonial__community')
-      
-      auto_shared_with = get_auto_shared_with_list(community_ids)
-      _shared = list(_shared) + list(auto_shared_with)
       
       shared_ids = [s.testimonial.id for s in _shared]
       shared = Testimonial.objects.filter(id__in=shared_ids, is_deleted=False, *filter_params).select_related('image', 'community').prefetch_related('tags')

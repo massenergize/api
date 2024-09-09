@@ -73,13 +73,11 @@ class TestimonialApprovalNudge:
 			today = parse_datetime_to_aware()
 			for community in self.communities:
 				
-				testimonials_auto_shared = get_auto_shared_with_list([community.id])
+				testimonials_auto_shared = community.testimonial_shares.filter(testimonial__is_published=True, testimonial__published_at__date=today.date())
 				if not testimonials_auto_shared:
 					continue
 				
-				list_to_send = testimonials_auto_shared.filter(is_published=True, published_at__date=today)
-				if not list_to_send:
-					continue
+				list_to_send = [t.testimonial for t in testimonials_auto_shared]
 				
 				ok = self.send_nudge(list_to_send, community)
 				if not ok:
