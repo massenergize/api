@@ -2568,7 +2568,7 @@ class Testimonial(models.Model):
     other_vendor = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
     more_info = models.JSONField(blank=True, null=True)
     sharing_type = models.CharField( max_length=SHORT_STR_LEN, choices=SharingType.choices(), default=SharingType.OPEN.value[0])
-    shared_with = models.ManyToManyField(Community, related_name="shared_testimonials", blank=True) # communities that can see
+    audience = models.ManyToManyField(Community, related_name="shared_testimonials", blank=True) # communities that can see
     published_at = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
@@ -2595,8 +2595,8 @@ class Testimonial(models.Model):
         res["anonymous"] = self.anonymous
         res["preferred_name"] = self.preferred_name
         res["other_vendor"] = self.other_vendor
-        res["audience"] = [tsc.community.info() for tsc in self.shared_communities.all()]
-        res["shared_with"] = [c.info() for c in self.shared_with.all()]
+        res["shared_with"] = [tsc.community.info() for tsc in self.shared_communities.all()]
+        res["audience"] = [c.info() for c in self.audience.all()]
         return res
 
     def full_json(self):
