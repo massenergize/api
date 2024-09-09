@@ -64,52 +64,6 @@ def get_auto_shared_with_list(admin_community_ids=None):
                 
     communities_list = list(set(communities_list) - set(admin_community_ids))
     return Testimonial.objects.filter(community__id__in=communities_list)
-    
-
-def get_auto_shared_with_list__v2(admin_community_ids=None):
-    if admin_community_ids is None:
-        return []
-
-    communities_list = []
-
-    all_auto_share_settings = TestimonialAutoShareSettings.objects.filter(is_deleted=False).prefetch_related('share_from_communities')
-    if not all_auto_share_settings.exists():
-        return []
-
-    admin_communities = Community.objects.filter(id__in=admin_community_ids, is_deleted=False, is_published=True)
-    admin_communities_zipcodes = set(admin_communities.values_list('locations__zipcode', flat=True))
-
-    all_settings_with_communities = all_auto_share_settings.filter(share_from_communities__isnull=False)
-    all_settings_with_locations = all_auto_share_settings.filter(
-        share_from_location_type__isnull=False,
-        share_from_location_value__isnull=False
-    )
-
-    if not all_settings_with_communities.exists() and not all_settings_with_locations.exists():
-        return []
-
-    for setting in all_settings_with_communities:
-        share_from_communities = setting.share_from_communities.all()
-        if any(comm.id in admin_community_ids for comm in share_from_communities):
-            communities_list.append(setting.community.id)
-    for setting in all_settings_with_locations:
-        share_from_location_type = setting.share_from_location_type
-        share_from_location_value = setting.share_from_location_value
-
-        if share_from_location_type == LocationType.STATE.value[0]:
-            share_from_location_value = share_from_location_value.upper()
-            _zipcodes = zipcodes.filter_by(state=share_from_location_value)
-        elif share_from_location_type == LocationType.CITY.value[0]:
-            _zipcodes = zipcodes.filter_by(city=share_from_location_value)
-        else:
-            _zipcodes = []
-
-        if _zipcodes:
-            state_zipcodes = {str(zipcode_data["zip_code"]) for zipcode_data in _zipcodes}
-            if state_zipcodes.intersection(admin_communities_zipcodes):
-                communities_list.append(setting.community.id)
-
-    return Testimonial.objects.filter(community__id__in=communities_list)
 
 
 class TestimonialStore:
@@ -183,7 +137,7 @@ class TestimonialStore:
       action = args.pop('action', None)
       vendor = args.pop('vendor', None)
       community = args.pop('community', None)
-      shared_with = args.pop('shared_with', [])
+      audience = args.pop('audience', [])
       is_published = args.get('is_published', None)
       
       
@@ -247,8 +201,8 @@ class TestimonialStore:
 
       new_testimonial.save()
       
-      if shared_with:
-        new_testimonial.shared_with.set(shared_with)
+      if audience:
+        new_testimonial.audience.set(audience)
 
       if context.is_admin_site: 
         # ----------------------------------------------------------------
@@ -296,7 +250,7 @@ class TestimonialStore:
       community = args.pop('community', None)
       rank = args.pop('rank', None)
       is_published = args.pop('is_published', None)
-      shared_with = args.pop('shared_with', [])
+      audience = args.pop('audience', [])
       
       if is_published and not testimonials.first().is_published:
         args["published_at"] = parse_datetime_to_aware()
@@ -358,8 +312,8 @@ class TestimonialStore:
       if tags_to_set:
         testimonial.tags.set(tags_to_set)
         
-      if shared_with:
-          testimonial.shared_with.set(shared_with)
+      if audience:
+          testimonial.audience.set(audience)
 
       if context.user_is_super_admin or context.user_is_community_admin:
         if is_published==False:
@@ -544,8 +498,8 @@ class TestimonialStore:
         if category_ids:
             filters.append(Q(tags__id__in=category_ids))
             
-        open_to = Q(sharing_type=SharingType.OPEN_TO.value[0], shared_with__id__in=admin_of)
-        closed_to = Q(sharing_type=SharingType.CLOSED_TO.value[0]) & ~Q(shared_with__id__in=admin_of)
+        open_to = Q(sharing_type=SharingType.OPEN_TO.value[0], audience__id__in=admin_of)
+        closed_to = Q(sharing_type=SharingType.CLOSED_TO.value[0]) & ~Q(audience__id__in=admin_of)
         testimonials.extend(all_testimonials.filter(Q(sharing_type=SharingType.OPEN.value[0]) | open_to |closed_to))
           
         testimonials_list = all_testimonials.filter(id__in=[t.id for t in testimonials], *filters).distinct()
