@@ -33,12 +33,12 @@ class SharableTestimonialsIntegrationTest(TestCase):
         makeAdmin(communities=[cls.c5, cls.c4], admin=cls.u1)
         
         cls.testimonial_1 = makeTestimonial(
-            community=cls.c1, user=cls.user, title="Testimonial shared to c2 c3",
+            community=cls.c1, user=cls.user, title="Testimonial shared to c2 c3, c5",
             sharing_type=SharingType.OPEN_TO.value[0], shared_with=[cls.c2, cls.c3, cls.c5],
             is_published=True
         )
         cls.testimonial_2 = makeTestimonial(
-            community=cls.c3, user=cls.user, title="Testimonial shared to c2 c4",
+            community=cls.c3, user=cls.user, title="Testimonial shared to c2 c3",
             sharing_type=SharingType.CLOSED_TO.value[0], shared_with=[cls.c2, cls.c3],
             is_published=True
         )
@@ -176,14 +176,14 @@ class SharableTestimonialsIntegrationTest(TestCase):
     def test_share_testimonial(self):
         args = {
             "testimonial_id": self.testimonial_2.id,
-            "shared_with": self.c5.id,
+            "community_ids": self.c5.id,
         }
         signinAs(self.client, self.cadmin)
         response = self.make_request('testimonials.share', args)
         self.assertTrue(response['success'])
         self.assertTrue(response['data']['id'])
         
-        share_with = response.get('data', {}).get('approved_for_sharing_by', [])
+        share_with = response.get('data', {}).get('audience', [])
         shared_with_ids = [c['id'] for c in share_with]
         
         self.assertTrue(self.c5.id in shared_with_ids)
@@ -196,7 +196,7 @@ class SharableTestimonialsIntegrationTest(TestCase):
         
     def test_share_testimonial_no_testimonial_id(self):
         args = {
-            "shared_with": self.c5.id,
+            "community_ids": self.c5.id,
         }
         signinAs(self.client, self.cadmin)
         response = self.make_request('testimonials.share', args)
@@ -215,9 +215,9 @@ class SharableTestimonialsIntegrationTest(TestCase):
         signinAs(self.client, self.u1)
         response = self.make_request('testimonials.other.listForCommunityAdmin', args)
         self.assertTrue(response['success'])
-        # testimonial1 is shared with c5 and u1 is an admin of and testimonial3 is shared with all, even testimonial4 is
-        # closed, the testimonial community has added community c5 as shared automatically to.
-        self.assertEquals(len(response['data']), 6)
+        # testimonial1 is shared with c5 and u1 is an admin of and testimonial3 is shared with all,
+        # testimonial2 is opened to c4,c5.
+        self.assertEquals(len(response['data']), 3)
         
     def test_list_testimonials_from_other_communities_passing_community_ids(self):
         args = {
@@ -228,6 +228,6 @@ class SharableTestimonialsIntegrationTest(TestCase):
         self.assertTrue(response['success'])
         # testimonial1 is shared with c5 and u1 is an admin of and testimonial3 is shared with all, even testimonial4 is
         # closed, the testimonial community has added community c5 as shared automatically to.
-        self.assertEquals(len(response['data']), 2)
+        self.assertEquals(len(response['data']), 1)
         
     
