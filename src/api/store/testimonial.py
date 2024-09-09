@@ -23,6 +23,53 @@ def get_auto_shared_with_list(admin_community_ids=None):
     if admin_community_ids is None:
         return []
 
+    communities_list = set()
+    
+    my_auto_share_settings = TestimonialAutoShareSettings.objects.filter(community__id__in=admin_community_ids, is_deleted=False).prefetch_related('share_from_communities')
+    if not my_auto_share_settings.exists():
+        return []
+    
+    admin_communities = Community.objects.filter(id__in=admin_community_ids, is_deleted=False, is_published=True)
+    admin_communities_zipcodes = set(admin_communities.values_list('locations__zipcode', flat=True))
+    
+    all_settings_with_communities = my_auto_share_settings.filter(
+        share_from_location_type__isnull=True,
+        share_from_location_value__isnull=True
+    )
+    all_settings_with_locations = my_auto_share_settings.filter(
+        share_from_location_type__isnull=False,
+        share_from_location_value__isnull=False
+    )
+    
+    for setting in all_settings_with_communities:
+        share_from_communities = setting.share_from_communities.all()
+        communities_list.update([comm.id for comm in share_from_communities])
+    
+    for setting in all_settings_with_locations:
+        share_from_location_type = setting.share_from_location_type
+        share_from_location_value = setting.share_from_location_value
+        
+        if share_from_location_type == LocationType.STATE.value[0]:
+            share_from_location_value = share_from_location_value.upper()
+            _zipcodes = zipcodes.filter_by(state=share_from_location_value)
+        elif share_from_location_type == LocationType.CITY.value[0]:
+            _zipcodes = zipcodes.filter_by(city=share_from_location_value)
+        else:
+            _zipcodes = []
+        
+        if _zipcodes:
+            state_zipcodes = {str(zipcode_data["zip_code"]) for zipcode_data in _zipcodes}
+            if state_zipcodes.intersection(admin_communities_zipcodes):
+                communities_list.add(setting.community.id)
+                
+    communities_list = list(set(communities_list) - set(admin_community_ids))
+    return Testimonial.objects.filter(community__id__in=communities_list)
+    
+
+def get_auto_shared_with_list__v2(admin_community_ids=None):
+    if admin_community_ids is None:
+        return []
+
     communities_list = []
 
     all_auto_share_settings = TestimonialAutoShareSettings.objects.filter(is_deleted=False).prefetch_related('share_from_communities')
@@ -45,7 +92,6 @@ def get_auto_shared_with_list(admin_community_ids=None):
         share_from_communities = setting.share_from_communities.all()
         if any(comm.id in admin_community_ids for comm in share_from_communities):
             communities_list.append(setting.community.id)
-
     for setting in all_settings_with_locations:
         share_from_location_type = setting.share_from_location_type
         share_from_location_value = setting.share_from_location_value
@@ -97,6 +143,9 @@ class TestimonialStore:
             community=community, is_deleted=False).prefetch_related('tags__tag_collection', 'action__tags', 'vendor', 'community')
         
         shared = community.testimonial_shares.filter(is_published=True, is_deleted=False).prefetch_related('testimonial')
+        auto_shared_with_community = get_auto_shared_with_list([community.id])
+        shared = list(shared) + list(auto_shared_with_community)
+        
         shared = [s.testimonial for s in shared]
 
       elif user:
@@ -135,6 +184,9 @@ class TestimonialStore:
       vendor = args.pop('vendor', None)
       community = args.pop('community', None)
       shared_with = args.pop('shared_with', [])
+      is_published = args.get('is_published', None)
+      
+      
       # create(**args) will fail if user_email not removed
       # TODO - check context.user_email exists and use that unless from admin submission on behalf of user
       user_email = args.pop('user_email', None) or context.user_email
@@ -152,6 +204,9 @@ class TestimonialStore:
         user = UserProfile.objects.filter(email=user_email).first()
         if user:
           new_testimonial.user = user
+          
+      if is_published:
+          new_testimonial.published_at = parse_datetime_to_aware()
 
       if action:
         testimonial_action = Action.objects.get(id=action)
@@ -243,6 +298,12 @@ class TestimonialStore:
       is_published = args.pop('is_published', None)
       shared_with = args.pop('shared_with', [])
       
+      if is_published and not testimonials.first().is_published:
+        args["published_at"] = parse_datetime_to_aware()
+      elif not is_published and testimonials.first().is_published:
+        args["published_at"] = None
+      
+      
       testimonials.update(**args)
       testimonial = testimonials.first() # refresh after update
 
@@ -285,8 +346,6 @@ class TestimonialStore:
         testimonial.vendor = testimonial_vendor
       else:
         testimonial.vendor = None
-
-
 
       if rank:
           testimonial.rank = rank
@@ -392,8 +451,11 @@ class TestimonialStore:
         community_ids.extend([ag.community.id for ag in admin_groups])
         
       testimonials = Testimonial.objects.filter(community__id__in=community_ids, is_deleted=False, *filter_params).select_related('image', 'community').prefetch_related('tags')
-      # shared = Testimonial.objects.filter(shared_with__id__in=community_ids, is_deleted=False, *filter_params).select_related('image', 'community').prefetch_related('tags')
       _shared = TestimonialSharedCommunity.objects.filter(community__id__in=community_ids).select_related('testimonial').prefetch_related('testimonial__tags', 'testimonial__image', 'testimonial__community')
+      
+      auto_shared_with = get_auto_shared_with_list(community_ids)
+      _shared = list(_shared) + list(auto_shared_with)
+      
       shared_ids = [s.testimonial.id for s in _shared]
       shared = Testimonial.objects.filter(id__in=shared_ids, is_deleted=False, *filter_params).select_related('image', 'community').prefetch_related('tags')
       
@@ -431,7 +493,7 @@ class TestimonialStore:
         if not testimonial:
             return None, CustomMassenergizeError("Testimonial not found")
         
-        community_ids = args.pop("shared_with", None)
+        community_ids = args.pop("community_ids", None)
         
         if not community_ids:
             return None, CustomMassenergizeError("No community ids provided")
@@ -483,12 +545,8 @@ class TestimonialStore:
             filters.append(Q(tags__id__in=category_ids))
             
         open_to = Q(sharing_type=SharingType.OPEN_TO.value[0], shared_with__id__in=admin_of)
-        testimonials.extend(all_testimonials.filter(Q(sharing_type=SharingType.OPEN.value[0]) | open_to))
-        
-        testimonials_from_auto_shared = get_auto_shared_with_list(admin_of)
-        
-        if testimonials_from_auto_shared:
-            testimonials.extend(testimonials_from_auto_shared)
+        closed_to = Q(sharing_type=SharingType.CLOSED_TO.value[0]) & ~Q(shared_with__id__in=admin_of)
+        testimonials.extend(all_testimonials.filter(Q(sharing_type=SharingType.OPEN.value[0]) | open_to |closed_to))
           
         testimonials_list = all_testimonials.filter(id__in=[t.id for t in testimonials], *filters).distinct()
         
