@@ -2567,7 +2567,7 @@ class Testimonial(models.Model):
     preferred_name = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
     other_vendor = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
     more_info = models.JSONField(blank=True, null=True)
-    sharing_type = models.CharField( max_length=SHORT_STR_LEN, choices=SharingType.choices(), default=SharingType.OPEN.value[0])
+    sharing_type = models.CharField( max_length=SHORT_STR_LEN, choices=SharingType.choices(), default=SharingType.OPEN.value[0], null=True, blank=True)
     audience = models.ManyToManyField(Community, related_name="shared_testimonials", blank=True) # communities that can see
     published_at = models.DateTimeField(blank=True, null=True)
 
