@@ -3,11 +3,13 @@ This file contains utility functions for interacting with google translate
 """
 import re
 import fnmatch
+import threading
 from datetime import datetime
 from typing import List
 
 from _main_.utils.common import log_sentry_metric
 from _main_.utils.massenergize_logger import log
+from _main_.utils.metrics import put_metric_data
 
 from _main_.utils.translation.translator.providers.google_translate import GoogleTranslate
 from _main_.utils.translation.translator.providers.microsoft_translator import MicrosoftTranslator
@@ -60,16 +62,33 @@ class Translator:
         :return: The translated text
         """
         log.info(f"translating from {source_language} to {target_language}")
-        log_sentry_metric("DISTRIBUTION", {
-            "event": f"TRANSLATE_TEXT_WITH_{self.provider.__name__}",
-            "value": calc_string_list_length(value),
-            "unit": "characters",
-            "tags": {
-                "source_language": source_language,
-                "target_language": target_language,
-                "date": datetime.now().isoformat()
-            }
-        })
+
+        name_space = "LocalizationSystem"
+        metric_data=[
+            {
+                'MetricName': f"TranslateText_With_{self.provider.__name__}",
+                'Dimensions': [
+                    {
+                        'Name': 'SourceLanguage',
+                        'Value': source_language,
+                    },
+                    {
+                        'Name': 'TargetLanguage',
+                        'Value': target_language,
+                    },
+                    {
+                        'Name': 'CharacterCount',
+                        'Value': calc_string_list_length(value),
+                    },
+                ],
+                'Unit': 'Count',
+                'Value': 1,
+                'Timestamp': datetime.utcnow(),
+            },
+        ]
+
+        threading.Thread(target=put_metric_data, args=(name_space, metric_data)).start()
+
         return self.provider.translate(value, target_language, source_language)
 
     def translate_text (self, text: str, target_language: str, source_language:str = 'en') -> str:
