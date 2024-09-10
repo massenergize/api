@@ -564,9 +564,9 @@ class TestimonialStore:
             filters.append(Q(tags__id__in=category_ids))
             
         open_to = Q(sharing_type=SharingType.OPEN_TO.value[0], audience__id__in=admin_of)
-        closed_to = Q(sharing_type=SharingType.CLOSED_TO.value[0]) & ~Q(audience__id__in=admin_of)
-        testimonials.extend(all_testimonials.filter(Q(sharing_type=SharingType.OPEN.value[0]) | open_to |closed_to))
-          
+        not_closed_to = Q(sharing_type=SharingType.CLOSED_TO.value[0]) & ~Q(audience__id__in=admin_of)
+        testimonials.extend(all_testimonials.filter(Q(sharing_type=SharingType.OPEN.value[0]) | open_to | not_closed_to))
+        
         testimonials_list = all_testimonials.filter(id__in=[t.id for t in testimonials], *filters).distinct()
         
         return testimonials_list, None
