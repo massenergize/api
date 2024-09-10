@@ -166,7 +166,7 @@ class TestimonialStore:
         testimonials = Testimonial.objects.filter(
             community=community, is_deleted=False).prefetch_related('tags__tag_collection', 'action__tags', 'vendor', 'community')
         
-        shared = community.testimonial_shares.filter(is_published=True, is_deleted=False).prefetch_related('testimonial')
+        shared = community.testimonial_shares.filter(is_published=True).prefetch_related('testimonial')
         shared = [s.testimonial for s in shared]
 
       elif user:
