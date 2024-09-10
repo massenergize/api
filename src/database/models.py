@@ -2066,7 +2066,8 @@ class Action(models.Model):
             "community":{
                 "id": self.community.id,
                 "name": self.community.name,
-            }
+            },
+            "image": get_json_if_not_none(self.image),
         }
 
     def simple_json(self):
@@ -2566,10 +2567,9 @@ class Testimonial(models.Model):
     preferred_name = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
     other_vendor = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
     more_info = models.JSONField(blank=True, null=True)
-    # is_user_submitted = models.BooleanField(default=False, blank=True, null=True)
-    sharing_type = models.CharField( max_length=SHORT_STR_LEN, choices=SharingType.choices(), default=SharingType.OPEN.value[0])
-    shared_with = models.ManyToManyField(Community, related_name="shared_testimonials", blank=True)
-    approved_for_sharing_by = models.ManyToManyField(Community, related_name="approved_testimonials", blank=True)
+    sharing_type = models.CharField( max_length=SHORT_STR_LEN, choices=SharingType.choices(), default=SharingType.OPEN.value[0], null=True, blank=True)
+    audience = models.ManyToManyField(Community, related_name="shared_testimonials", blank=True) # communities that can see
+    published_at = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
         return self.title
@@ -2595,12 +2595,13 @@ class Testimonial(models.Model):
         res["anonymous"] = self.anonymous
         res["preferred_name"] = self.preferred_name
         res["other_vendor"] = self.other_vendor
+        res["shared_with"] = [tsc.community.info() for tsc in self.shared_communities.all()]
+        res["audience"] = [c.info() for c in self.audience.all()]
         return res
 
     def full_json(self):
         data = self.simple_json()
         data["image"] = data.get("file", None)
-        data["tags"] = [t.simple_json() for t in self.tags.all()]
         return data
 
     class Meta:
@@ -2609,6 +2610,27 @@ class Testimonial(models.Model):
 
     class TranslationMeta:
         fields_to_translate = ["title", "body"]
+
+
+class TestimonialSharedCommunity(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    testimonial = models.ForeignKey(Testimonial, on_delete=models.CASCADE, related_name="shared_communities")
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name="testimonial_shares")
+    
+    def simple_json(self):
+        data = model_to_dict(self, exclude=["testimonial", "community"])
+        data["community"] = self.community.info()
+        data["testimonial"] = self.testimonial.info()
+        return data
+    
+    def full_json(self):
+        return self.simple_json()
+    
+    class Meta:
+        unique_together = ('community', 'testimonial')
+    
+    class TranslationMeta:
+        fields_to_translate = []
 
 
 class UserActionRel(models.Model):
@@ -4337,10 +4359,10 @@ class CampaignSupportedLanguage(BaseModel):
 
 
 class TestimonialAutoShareSettings(BaseModel):
-    community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True, related_name="testimonial_auto_share_settings")
     share_from_communities = models.ManyToManyField(Community, related_name="share_from_communities", blank=True)
-    share_from_location_type = models.CharField(max_length=SHORT_STR_LEN, choices = LocationType.choices(), default=LocationType.CITY.value[0])
-    share_from_location_value = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+    share_from_location_type = models.CharField(max_length=SHORT_STR_LEN, choices = LocationType.choices(), null=True, blank=True)
+    share_from_location_value = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
     excluded_tags = models.ManyToManyField(Tag, blank=True)
 
     def __str__(self):

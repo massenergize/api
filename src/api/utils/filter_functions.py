@@ -389,10 +389,10 @@ def get_sort_params(params):
         sort = "-"+sort
       return sort.lower()
     
-    return "-id"
+    return "-created_at"
   
   except Exception as e:
-    return '-id'
+    return '-created_at'
 
 
 
