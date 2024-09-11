@@ -4338,7 +4338,6 @@ class CampaignSupportedLanguage(BaseModel):
 
 class TestimonialAutoShareSettings(BaseModel):
     community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
-    share_from_communities = models.ManyToManyField(Community, related_name="share_from_communities", blank=True)
     share_from_location_type = models.CharField(max_length=SHORT_STR_LEN, choices = LocationType.choices(), blank = True, null = True)
     share_from_location_value = models.CharField(max_length=SHORT_STR_LEN, blank=True, null = True)
     excluded_tags = models.ManyToManyField(Tag, blank=True)
@@ -4351,3 +4350,18 @@ class TestimonialAutoShareSettings(BaseModel):
 
     def full_json(self):
         return self.simple_json()
+
+class TestimonialAutoShareCommunities(BaseModel):
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
+    testimonial_auto_share_setting = models.ForeignKey(TestimonialAutoShareSettings, on_delete=models.CASCADE, db_index=True)
+
+    def __str__(self):
+        return f"{self.community.name} - {self.testimonial_auto_share_setting.community.name}"
+
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
+
+
