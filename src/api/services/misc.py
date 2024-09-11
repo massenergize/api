@@ -240,3 +240,14 @@ class MiscellaneousService:
             return None, err
         
         return all_languages, None
+    
+    def create_page_block(self, context, args) -> (dict, Exception):
+        """
+        Create a page block
+        """
+        page_block, err = self.store.create_page_block(context, args)
+        
+        if err:
+            return None, err
+        
+        return serialize(page_block), None

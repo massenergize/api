@@ -1,5 +1,6 @@
 from typing import Tuple
 
+from _main_.utils.block import PageBlockEngine
 from _main_.utils.massenergize_logger import log
 
 from _main_.utils.context import Context
@@ -692,4 +693,16 @@ class MiscellaneousStore:
             return all_languages, None
         except Exception as e:
             log.exception(e)
+            return None, CustomMassenergizeError(str(e))
+        
+    def create_page_block(self, context, args) -> (dict, Exception):
+        try:
+            block_data = args.pop("block_data", None)
+            page_block, err = PageBlockEngine().save_block_data(block_data)
+            
+            if err:
+                return None, CustomMassenergizeError(str(err))
+            
+            return page_block, None
+        except Exception as e:
             return None, CustomMassenergizeError(str(e))

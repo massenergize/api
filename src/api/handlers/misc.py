@@ -50,6 +50,7 @@ class MiscellaneousHandler(RouteHandler):
         self.add("/links.internal.get", self.get_internal_links)
         
         self.add("/translations.languages.list", self.list_all_languages)
+        self.add("/page.blocks.create", self.create_page_block)
 
 
     @admins_only
@@ -388,4 +389,20 @@ class MiscellaneousHandler(RouteHandler):
         if err:
             return err
         return MassenergizeResponse(data=all_languages)
+    
+    
+    def create_page_block(self, request):
+        context: Context = request.context
+        args: dict = context.args
+        
+        self.validator.expect("block_data", dict, is_required=True)
+        
+        args, err = self.validator.verify(args)
+        if err:
+            return err
+        
+        page_block, err = self.service.create_page_block(context, args)
+        if err:
+            return err
+        return MassenergizeResponse(data=page_block)
         
