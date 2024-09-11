@@ -1,0 +1,73 @@
+{
+  "HEADING": {
+  "text": "",
+  "level": 1,
+  "style": {},
+  "className": ""
+  },
+  "PARAGRAPH": {
+      "text": "",
+      "style": {},
+      "className": ""
+  },
+  "IMAGE": {
+      "src": "",
+      "alt": "",
+      "style": {},
+      "className": ""
+  },
+  "VIDEO": {
+      "src": "",
+      "style": {},
+      "className": "",
+      "controls": true,
+      "autoplay": false
+  },
+  "BUTTON": {
+   "text": "",
+    "style": {},
+    "className": "",
+   "link": "",
+   "type": ""
+  },
+  "LIST": {
+    "style": {},
+    "className": "",
+    "items": [],
+    "type": "unordered"
+  },
+  "FORM": {
+   "style": {},
+   "className": "",
+   "fields": [{
+       "type": "text",
+       "name": "",
+       "placeholder": "",
+       "label": "",
+       "required": false,
+       "style": {},
+       "className": "",
+       "disabled": false
+   }]
+  },
+  "RICH_TEXT": {
+  "content": "",
+  "style": {},
+  "className": "",
+  "toolbar_options": []
+  },
+  "DIVIDER": {
+  "style": {},
+  "className": ""
+  },
+  "ACCORDION": {
+    "style": {},
+    "className": "",
+    "items": [{
+        "title": "",
+        "content": "",
+        "style": {},
+        "className": ""
+    }]
+  }
+}
