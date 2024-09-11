@@ -2616,19 +2616,19 @@ class TestimonialSharedCommunity(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     testimonial = models.ForeignKey(Testimonial, on_delete=models.CASCADE, related_name="shared_communities")
     community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name="testimonial_shares")
-    
+
     def simple_json(self):
         data = model_to_dict(self, exclude=["testimonial", "community"])
         data["community"] = self.community.info()
         data["testimonial"] = self.testimonial.info()
         return data
-    
+
     def full_json(self):
         return self.simple_json()
-    
+
     class Meta:
         unique_together = ('community', 'testimonial')
-    
+
     class TranslationMeta:
         fields_to_translate = []
 
@@ -4373,3 +4373,39 @@ class TestimonialAutoShareSettings(BaseModel):
 
     def full_json(self):
         return self.simple_json()
+
+
+# Blocks
+class Block(BaseModel):
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+    layout_grid_count = models.IntegerField(default=12)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+class BlockSection(BaseModel):
+    block = models.ForeignKey(Block, related_name='sections', on_delete=models.CASCADE)
+    title = models.CharField(max_length=255)
+    order = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+class BlockRow(BaseModel):
+    block_section = models.ForeignKey(BlockSection, related_name='rows', on_delete=models.CASCADE)
+    order = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+class BlockColumn(BaseModel):
+    block_row = models.ForeignKey(BlockRow, related_name='columns', on_delete=models.CASCADE)
+    column_space = models.IntegerField(default=12)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+class BlockContent(BaseModel):
+    block_column = models.ForeignKey(BlockColumn, related_name='content', on_delete=models.CASCADE)
+    content_type = models.CharField(max_length=255)
+    content_data = models.JSONField()
+    order = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
