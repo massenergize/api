@@ -162,7 +162,7 @@ class CampaignsIntegrationTestCase(TestCase):
         self.assertEqual(response['error'], "permission_denied")
 
     def test_update_campaign(self):
-        payload = {"id": self.CAMPAIGN.id, "title": "UPDATED TITLE", "description": "UPDATED DESCRIPTION", }
+        payload = {"id": self.CAMPAIGN.id, "title": "UPDATED TITLE", "description": "UPDATED DESCRIPTION", "call_to_action" }
         Console.header("Testing the campaigns.update endpoint as a super admin.")
         signinAs(self.client, self.SADMIN)
         response = self.make_request("campaigns.update", payload)
