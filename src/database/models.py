@@ -4373,3 +4373,5 @@ class TestimonialAutoShareSettings(BaseModel):
 
     def full_json(self):
         return self.simple_json()
+        
+    

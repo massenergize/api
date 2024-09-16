@@ -93,6 +93,8 @@ def get_technology_details(technology_id, for_campaign=False):
     vendors = TechnologyVendor.objects.filter(technology__id=technology_id, is_deleted=False).order_by("vendor__name")
     deals = tech.technology_deal.filter(is_deleted=False)
     technology_actions = tech.technology_action.filter(is_deleted=False)
+    faqs = tech.technology_faq.all()
+    
 
     data = {
         "coaches": serialize_all(coaches),
@@ -100,6 +102,7 @@ def get_technology_details(technology_id, for_campaign=False):
         "vendors": serialize_all(vendors),
         "deals": serialize_all(deals),
         "technology_actions": serialize_all(technology_actions),
+        "faqs": serialize_all(faqs),
         **serialize(tech),
     }
     return data
