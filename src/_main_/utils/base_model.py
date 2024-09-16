@@ -39,3 +39,24 @@ class BaseModel(RootModel):
 
     class Meta:
         abstract = True
+        
+        
+class Faq(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    question = models.TextField()
+    answer = models.TextField()
+    
+    def __str__(self):
+        return self.question
+    
+    def to_json(self):
+        return {
+            "id": self.id,
+            "question": self.question,
+            "answer": self.answer
+        }
+    
+    class Meta:
+        verbose_name_plural = "FAQs"
+        abstract = True
+        
