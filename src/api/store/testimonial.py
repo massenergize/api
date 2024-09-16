@@ -189,7 +189,10 @@ class TestimonialStore:
         else:
           testimonials = testimonials.filter(is_published=True)
           
-      all_testimonials = list(testimonials) + list(shared)
+      shared_testimonials = Testimonial.objects.filter(id__in=[t.id for t in shared])
+      
+      all_testimonials = testimonials | shared_testimonials
+      all_testimonials = all_testimonials.order_by('-created_at').distinct()
 
       return  all_testimonials , None
     except Exception as e:
@@ -567,7 +570,7 @@ class TestimonialStore:
         not_closed_to = Q(sharing_type=SharingType.CLOSED_TO.value[0]) & ~Q(audience__id__in=admin_of)
         testimonials.extend(all_testimonials.filter(Q(sharing_type=SharingType.OPEN.value[0]) | open_to | not_closed_to))
         
-        testimonials_list = all_testimonials.filter(id__in=[t.id for t in testimonials], *filters).distinct()
+        testimonials_list = all_testimonials.filter(id__in=[t.id for t in testimonials], *filters).exclude(community__id__in=admin_of).distinct()
         
         return testimonials_list, None
     
