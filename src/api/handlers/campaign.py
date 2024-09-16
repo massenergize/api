@@ -168,7 +168,8 @@ class CampaignHandler(RouteHandler):
       #  self.validator.expect("template_id", str, is_required=False)
        self.validator.expect("campaign_account_id", str, is_required=True)   
        self.validator.expect("title", str, is_required=True) 
-       self.validator.expect("community_ids", "str_list", is_required=True) 
+       self.validator.expect("community_ids", "str_list", is_required=True)
+       self.validator.expect("template_key", str, is_required=False)
 
        args, err = self.validator.verify(args)
        if err:
@@ -222,6 +223,12 @@ class CampaignHandler(RouteHandler):
         .expect("newsletter_section", dict, is_required=False)
         .expect("coaches_section", dict, is_required=False)
         .expect("about_us_title", str, is_required=False)
+         .expect("template_key", str, is_required=False)
+        .expect("banner", "file", is_required=False)
+        .expect("goal_section", dict, is_required=False)
+        .expect("callout_section", dict, is_required=False)
+        .expect("contact_section", dict, is_required=False)
+         .expect("call_to_action", dict, is_required=False)
         )
 
 

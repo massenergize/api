@@ -2,7 +2,8 @@ from datetime import datetime
 from uuid import UUID
 from _main_.utils.common import contains_profane_words, shorten_url
 from api.constants import LOOSED_USER
-from api.utils.api_utils import create_media_file
+from api.utils.api_utils import create_media_file, create_or_update_call_to_action_from_dict, \
+    create_or_update_section_from_dict
 from apps__campaigns.helpers import (
     copy_campaign_data,
     generate_analytics_data,
@@ -167,6 +168,13 @@ class CampaignStore:
             secondary_logo = args.pop("secondary_logo", None)
             campaign_image = args.pop("campaign_image", None)
             campaign_id = args.pop("id", None)
+            
+            banner = args.pop("banner", None)
+            goal_section = args.pop("goal_section", None)
+            callout_section = args.pop("callout_section", None)
+            contact_section = args.pop("contact_section", None)
+            call_to_action = args.pop("call_to_action", None)
+            
 
             campaigns = Campaign.objects.filter(id=campaign_id)
             if not campaigns:
@@ -182,8 +190,6 @@ class CampaignStore:
                     if not campaign_manager:
                         return None, NotAuthorizedError()
 
-
-
             if primary_logo:
                 args["primary_logo"] = create_media_file(primary_logo, f"PrimaryLogoFor {campaign_id} Campaign")
             if secondary_logo:
@@ -192,7 +198,22 @@ class CampaignStore:
                 )
             if campaign_image:
                 args["image"] = create_media_file(campaign_image, f"ImageFor {campaign_id} Campaign")
-
+                
+            if banner:
+                args["banner"] = create_media_file(banner, f"BannerFor {campaign_id} Campaign")
+            
+            if goal_section:
+                args["goal_section"] = create_or_update_section_from_dict(goal_section)
+            
+            if callout_section:
+                args["callout_section"] = create_or_update_section_from_dict(callout_section)
+            
+            if contact_section:
+                args["contact_section"] = create_or_update_section_from_dict(contact_section)
+            
+            if call_to_action:
+                args["call_to_action"] = create_or_update_call_to_action_from_dict(call_to_action)
+                
             campaigns.update(**args)
 
             return campaigns.first(), None
@@ -1212,6 +1233,7 @@ class CampaignStore:
             account_id = args.pop("campaign_account_id", None)
             community_ids = args.pop("community_ids", [])
             title = args.pop("title", None)
+            template_key = args.pop("template_key", None)
 
             user = get_user_from_context(context)
             if not user:
