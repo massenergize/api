@@ -51,7 +51,7 @@ class Faq(models.Model):
     
     def to_json(self):
         return {
-            "id": self.id,
+            "id": str(self.id),
             "question": self.question,
             "answer": self.answer
         }

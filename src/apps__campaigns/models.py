@@ -28,7 +28,11 @@ class CallToAction(models.Model):
         return self.text if self.text else self.url
     
     def simple_json(self):
-        return model_to_dict(self)
+        return {
+            "id": str(self.id),
+            "text": self.text,
+            "url": self.url
+        }
 
 
 class Section(models.Model):
@@ -36,15 +40,16 @@ class Section(models.Model):
     title = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
     description = models.TextField(max_length=LONG_STR_LEN, blank=True, null=True)
     media = models.ForeignKey("database.Media", on_delete=models.SET_NULL, blank=True, null=True)
-    call_to_actions = models.ManyToManyField(CallToAction, related_name="section_cta")
+    call_to_action_items = models.ManyToManyField(CallToAction, related_name="section_cta")
     
     def __str__(self):
         return self.title
     
     def simple_json(self):
         data = model_to_dict(self, exclude=["media"])
+        data["id"] = str(self.id)
         data["media"] = self.media.simple_json() if self.media else None
-        data["call_to_actions"] = [cta.simple_json() for cta in self.call_to_actions.all()]
+        data["call_to_action_items"] = [cta.simple_json() for cta in self.call_to_action_items.all()]
         return data
     
     def full_json(self):
