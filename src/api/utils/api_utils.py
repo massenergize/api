@@ -347,22 +347,23 @@ def create_or_update_section_from_dict(section_dict):
     if not section_dict or not isinstance(section_dict, dict):
         return None
     section_id = section_dict.get("id", None)
-    call_to_action_list = section_dict.get("cta", [])
+    call_to_action_items = section_dict.get("call_to_action_items", [])
+    media = section_dict.get("media", None)
     
     section, _ = Section.objects.update_or_create(
         id=section_id,
         defaults={
             "title": section_dict.get("title", ""),
             "description": section_dict.get("description", ""),
-            "media": create_media_file(section_dict.get("media", None)),
+            "media": create_media_file(media, f"section-{section_dict.get('title','')}") if media else None,
         }
     )
     
-    if call_to_action_list:
-        for cta_dict in call_to_action_list:
+    if call_to_action_items:
+        for cta_dict in call_to_action_items:
             cta = create_or_update_call_to_action_from_dict(cta_dict)
             if cta:
-                section.cta.add(cta)
+                section.call_to_action_items.add(cta)
 
     return section
 
