@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 from _main_.utils.common import contains_profane_words, shorten_url
-from api.constants import LOOSED_USER
+from api.constants import CAMPAIGN_TEMPLATE_KEYS, LOOSED_USER
 from api.utils.api_utils import create_media_file, create_or_update_call_to_action_from_dict, \
     create_or_update_section_from_dict
 from apps__campaigns.helpers import (
@@ -949,7 +949,6 @@ class CampaignStore:
             log.exception(e)
             return None, CustomMassenergizeError(e)
 
-
     def add_campaign_technology_follower(self, context, args):
         try:
             campaign_technology_id = args.pop("campaign_technology_id", None)
@@ -1230,24 +1229,26 @@ class CampaignStore:
 
     def create_campaign_from_template(self, context: Context, args: dict):
         try:
+            print("==  args = ", args)
             account_id = args.pop("campaign_account_id", None)
             community_ids = args.pop("community_ids", [])
             title = args.pop("title", None)
             template_key = args.pop("template_key", None)
-
+            
             user = get_user_from_context(context)
+            
             if not user:
                 return None, CustomMassenergizeError("User not found")
+            
+            if template_key == CAMPAIGN_TEMPLATE_KEYS.get("MULTI_TECHNOLOGY_CAMPAIGN"):
+                if not community_ids:
+                    return None, CustomMassenergizeError("Community ids not provided")
 
             if not account_id:
                 return None, CustomMassenergizeError("Account id not provided")
-
-            if not community_ids:
-                return None, CustomMassenergizeError("Community ids not provided")
-
+    
             if not title:
                 return None, CustomMassenergizeError("Title not provided")
-
 
             account = CampaignAccount.objects.filter(id=account_id).first()
 
@@ -1257,6 +1258,7 @@ class CampaignStore:
             new_campaign.is_global = False
             new_campaign.is_template = False
             new_campaign.owner = user
+            new_campaign.template_key = template_key
             new_campaign.save()
 
             for community_id in community_ids:
