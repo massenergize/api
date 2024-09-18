@@ -1,6 +1,7 @@
 import os
 from django.core.files import File
 from _main_.utils.common import serialize, serialize_all
+from api.constants import CAMPAIGN_TEMPLATE_KEYS
 from apps__campaigns.models import CampaignAccount, CampaignAccountAdmin, CampaignCommunity, CampaignFollow, CampaignLink, CampaignManager, CampaignTechnology, CampaignTechnologyEvent, \
     CampaignTechnologyLike, CampaignTechnologyTestimonial, CampaignTechnologyView, CampaignView, Comment, Technology, \
     TechnologyCoach, TechnologyDeal, TechnologyOverview, TechnologyVendor
@@ -61,16 +62,20 @@ def get_campaign_technology_details(args):
     else:
         testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False,campaign_technology__id=campaign_technology_id, testimonial__is_published=True)
      
-    
-
     if campaign_home:
-        return {
+        data =  {
             "testimonials": serialize_all(testimonials.filter(is_featured=True)),
             "events": serialize_all(events, full=True),
             "coaches": serialize_all(coaches),
             "campaign_id": campaign_tech.campaign.id,
-            **campaign_tech.technology.simple_json()
         }
+        if campaign_tech.campaign.template_key == CAMPAIGN_TEMPLATE_KEYS.get("SINGLE_TECHNOLOGY_CAMPAIGN_SPT"):
+            print("Single technology campaign")
+            data = {**data, **get_technology_details(campaign_tech.technology.id)}
+        else:
+            data = {**data, **serialize(campaign_tech.technology)}
+            
+        return data
     campaign_technology_views = CampaignTechnologyView.objects.filter(campaign_technology__id=campaign_technology_id,is_deleted=False).first()
     likes = CampaignTechnologyLike.objects.filter(campaign_technology__id=campaign_technology_id,is_deleted=False).first()
 
