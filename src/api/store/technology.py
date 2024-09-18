@@ -72,6 +72,7 @@ class TechnologyStore:
             technology_id = args.pop('id', None)
             image = args.pop('image', None)
             faq_section = args.pop('faq_section', None)
+            section_media = args.pop('media', None)
             technology = Technology.objects.filter(id=technology_id)
             if not technology:
                 return None, CustomMassenergizeError("Technology does not exist")
@@ -87,7 +88,7 @@ class TechnologyStore:
                 technology.image = image
                 
             if faq_section:
-                technology.faq_section = create_or_update_section_from_dict(faq_section)
+                technology.faq_section = create_or_update_section_from_dict(faq_section, section_media)
 
             technology.save()
             return technology, None
