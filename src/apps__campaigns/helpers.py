@@ -250,6 +250,17 @@ def copy_campaign_data(new_campaign):
         new_campaign.communities_section = _campaign.get("communities_section")
         new_campaign.save()
         print("Campaign created")
+        
+        #  managers
+        print("")
+        print("Creating managers")
+        manager = CampaignManager()
+        manager.user = new_campaign.owner
+        manager.campaign = new_campaign
+        manager.is_key_contact = True
+        manager.role = "Creator"
+        manager.save()
+        print("Manager created")
 
         # copy technologies
 
@@ -304,17 +315,6 @@ def copy_campaign_data(new_campaign):
             campaign_tech.save()
 
             print("Technology created")
-
-        #  managers
-        print("")
-        print("Creating managers")
-        manager = CampaignManager()
-        manager.user = new_campaign.owner
-        manager.campaign = new_campaign
-        manager.is_key_contact = True
-        manager.role = "Creator"
-        manager.save()
-        print("Manager created")
 
         print("Cloning  Done !!!")
     except Exception as e:
