@@ -11,7 +11,7 @@ from apps__campaigns.helpers import (
     get_campaign_technology_details,
 )
 from apps__campaigns.models import (
-    Campaign,
+    CallToAction, Campaign,
     CampaignAccount,
     CampaignActivityTracking,
     CampaignCommunity,
@@ -170,6 +170,7 @@ class CampaignStore:
             campaign_id = args.pop("id", None)
             
             banner = args.pop("banner", None)
+            section_media = args.pop("media", None)
             goal_section = args.pop("goal_section", None)
             callout_section = args.pop("callout_section", None)
             contact_section = args.pop("contact_section", None)
@@ -203,13 +204,13 @@ class CampaignStore:
                 args["banner"] = create_media_file(banner, f"BannerFor {campaign_id} Campaign")
             
             if goal_section:
-                args["goal_section"] = create_or_update_section_from_dict(goal_section)
+                args["goal_section"] = create_or_update_section_from_dict(goal_section, section_media)
             
             if callout_section:
-                args["callout_section"] = create_or_update_section_from_dict(callout_section)
+                args["callout_section"] = create_or_update_section_from_dict(callout_section, section_media)
             
             if contact_section:
-                args["contact_section"] = create_or_update_section_from_dict(contact_section)
+                args["contact_section"] = create_or_update_section_from_dict(contact_section, section_media)
             
             if call_to_action:
                 args["call_to_action"] = create_or_update_call_to_action_from_dict(call_to_action)
@@ -1575,6 +1576,23 @@ class CampaignStore:
 
 
             return campaign_managers.order_by("-created_at"), None
+        except Exception as e:
+            log.exception(e)
+            return None, CustomMassenergizeError(e)
+        
+        
+    def delete_call_to_action(self, context: Context, args: dict):
+        try:
+            cta_id = args.pop("id", None)
+            if not cta_id:
+                return None, CustomMassenergizeError("id is required !")
+
+            cta = CallToAction.objects.filter(pk=cta_id).first()
+            if not cta:
+                return None, CustomMassenergizeError("Call to action not found!")
+
+            cta.delete()
+            return cta, None
         except Exception as e:
             log.exception(e)
             return None, CustomMassenergizeError(e)

@@ -92,6 +92,7 @@ class CampaignHandler(RouteHandler):
         self.add("/campaigns.communities.events.list", self.list_campaign_communities_events)
         self.add("/campaigns.communities.testimonials.list", self.list_campaign_communities_testimonials)
         self.add("/campaigns.communities.vendors.list", self.list_campaign_communities_vendors)
+        self.add("/call.to.action.delete", self.delete_call_to_action)
 
 
 
@@ -1126,6 +1127,25 @@ class CampaignHandler(RouteHandler):
         return err
 
       res, err = self.service.update_campaign_key_contact(context, args)
+      if err:
+        return err
+      return MassenergizeResponse(data=res)
+    
+
+    @admins_only
+    def delete_call_to_action(self, request):
+      context: Context = request.context
+      args: dict = context.args
+      
+      print(args)
+
+      self.validator.expect("id", str, is_required=True)
+
+      args, err = self.validator.verify(args, strict=True)
+      if err:
+        return err
+
+      res, err = self.service.delete_call_to_action(context, args)
       if err:
         return err
       return MassenergizeResponse(data=res)
