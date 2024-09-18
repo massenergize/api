@@ -3,8 +3,9 @@ from _main_.utils.massenergize_logger import log
 from _main_.utils.context import Context
 from _main_.utils.massenergize_errors import CustomMassenergizeError, MassEnergizeAPIError
 from api.store.utils import get_user_from_context
-from api.utils.api_utils import create_media_file
-from apps__campaigns.models import Technology, TechnologyAction, TechnologyCoach, TechnologyDeal, TechnologyOverview, TechnologyVendor
+from api.utils.api_utils import create_media_file, create_or_update_section_from_dict
+from apps__campaigns.models import Technology, TechnologyAction, TechnologyCoach, TechnologyDeal, TechnologyFaq, \
+    TechnologyOverview, TechnologyVendor
 from database.models import Media, Vendor
 from django.db.models import Q
 
@@ -44,6 +45,8 @@ class TechnologyStore:
         try:
             image = args.pop('image', None)
             campaign_account_id = args.pop('campaign_account_id', None)
+            faq_section = args.pop('faq_section', None)
+            
             technology = Technology.objects.create(**args)
             if image:
                 media = Media.objects.create(file=image, name=f"FileUpload for {technology.id} Technology")
@@ -52,8 +55,14 @@ class TechnologyStore:
             if campaign_account_id:
                 account = CampaignAccount.objects.filter(id=campaign_account_id).first()
                 technology.campaign_account = account
+                
+            if faq_section:
+                technology.faq_section = create_or_update_section_from_dict(faq_section)
+
             technology.save()
+            
             return technology, None
+        
         except Exception as e:
             log.exception(e)
             return None, CustomMassenergizeError(e)
@@ -62,6 +71,8 @@ class TechnologyStore:
         try:
             technology_id = args.pop('id', None)
             image = args.pop('image', None)
+            faq_section = args.pop('faq_section', None)
+            section_media = args.pop('media', None)
             technology = Technology.objects.filter(id=technology_id)
             if not technology:
                 return None, CustomMassenergizeError("Technology does not exist")
@@ -75,6 +86,9 @@ class TechnologyStore:
             if image and not (isinstance(image, str) and image.startswith("http")):
                 image = create_media_file(image, f"FileUpload for {technology.id} Technology")
                 technology.image = image
+                
+            if faq_section:
+                technology.faq_section = create_or_update_section_from_dict(faq_section, section_media)
 
             technology.save()
             return technology, None
@@ -479,6 +493,88 @@ class TechnologyStore:
             technology_action.delete()
 
             return technology_action, None
+        except Exception as e:
+            log.exception(e)
+            return None, CustomMassenergizeError(e)
+        
+        
+    def create_technology_faq(self, context: Context, args) -> Tuple[TechnologyAction, MassEnergizeAPIError]:
+        try:
+            technology_id = args.pop('technology_id', None)
+            
+            if not technology_id:
+                return None, CustomMassenergizeError("technology_id is required")
+            
+            technology = Technology.objects.filter(id=technology_id).first()
+            
+            if not technology:
+                return None, CustomMassenergizeError("technology with id does not exist")
+            
+            args["technology"] = technology
+
+            technology_faq, _ = TechnologyFaq.objects.get_or_create(
+                question=args.get('question'),
+                answer=args.get('answer'),
+                technology=technology
+            )
+
+            return technology_faq, None
+        except Exception as e:
+            log.exception(e)
+            return None, CustomMassenergizeError(e)
+        
+        
+    def update_technology_faq(self, context: Context, args) -> Tuple[TechnologyAction, MassEnergizeAPIError]:
+        try:
+            technology_faq_id = args.pop('id', None)
+            if not technology_faq_id:
+                return None, CustomMassenergizeError("id is required")
+            
+            technology_faq = TechnologyFaq.objects.filter(id=technology_faq_id)
+            
+            if not technology_faq:
+                return None, CustomMassenergizeError("Technology FAQ does not exist")
+            
+            technology_faq.update(**args)
+
+            return technology_faq.first(), None
+        
+        except Exception as e:
+            log.exception(e)
+            return None, CustomMassenergizeError(e)
+        
+        
+    def delete_technology_faq(self, context: Context, args) -> Tuple[TechnologyAction, MassEnergizeAPIError]:
+        try:
+            technology_faq_id = args.pop('id', None)
+            
+            if not technology_faq_id:
+                return None, CustomMassenergizeError("id is required")
+            
+            technology_faq = TechnologyFaq.objects.get(id=technology_faq_id)
+            
+            if not technology_faq:
+                return None, CustomMassenergizeError("Invalid Technology FAQ ID")
+            
+            technology_faq.delete()
+
+            return technology_faq, None
+        except Exception as e:
+            log.exception(e)
+            return None, CustomMassenergizeError(e)
+        
+        
+    def list_technology_faqs(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+        try:
+            technology_id = args.pop('technology_id', None)
+            
+            if not technology_id:
+                return None, CustomMassenergizeError("technology_id is required")
+            
+            technology_faqs = TechnologyFaq.objects.filter(technology__id=technology_id)
+            
+            return technology_faqs, None
+        
         except Exception as e:
             log.exception(e)
             return None, CustomMassenergizeError(e)

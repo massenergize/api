@@ -5,7 +5,8 @@ from django.test import TestCase, Client
 from api.tests.common import signinAs, createUsers, makeCommunity, makeUser, make_technology, createImage, \
     make_vendor
 from _main_.utils.utils import Console
-from apps__campaigns.models import Campaign, CampaignAccount, TechnologyVendor, TechnologyCoach, TechnologyOverview, TechnologyDeal
+from apps__campaigns.models import Campaign, CampaignAccount, TechnologyFaq, TechnologyVendor, TechnologyCoach, \
+    TechnologyOverview, TechnologyDeal
 
 
 class TechnologiesIntegrationTestCase(TestCase):
@@ -59,6 +60,24 @@ class TechnologiesIntegrationTestCase(TestCase):
             "technology": self.tech,
             "title": "Test Overview",
             "description": "Test Overview Description",
+        })
+        
+        self.faq = TechnologyFaq.objects.create(**{
+            "technology": self.tech,
+            "question": "Test FAQ Question?",
+            "answer": "Test FAQ Answer",
+        })
+        
+        self.faq1 = TechnologyFaq.objects.create(**{
+            "technology": self.tech,
+            "question": "Test FAQ Question 1?",
+            "answer": "Test FAQ Answer 1",
+        })
+        
+        self.faq2 = TechnologyFaq.objects.create(**{
+            "technology": self.tech,
+            "question": "Test FAQ Question 2?",
+            "answer": "Test FAQ Answer 2",
         })
 
     def make_request(self, endpoint, data):
@@ -540,6 +559,104 @@ class TechnologiesIntegrationTestCase(TestCase):
         response = self.make_request("technologies.deals.delete", payload)
         self.assertEqual(response['success'], False)
         self.assertEqual(response['error'], 'TechnologyDeal matching query does not exist.')
+        
+    def test_create_technology_faq(self):
+        Console.header("Testing the technologies.faq.create endpoint as a super admin.")
+        payload = {
+            "technology_id": str(self.tech.id),
+            "question": "Test FAQ Question?",
+            "answer": "Test FAQ Answer",
+        }
+        
+        signinAs(self.client, self.SADMIN)
+        response = self.make_request("technologies.faqs.create", payload)
+        self.assertEqual(response['success'], True)
+        self.assertEqual(response['data']['question'], "Test FAQ Question?")
+        self.assertEqual(response['data']['answer'], "Test FAQ Answer")
+
+        Console.header("Testing the technologies.faq.create endpoint as a community admin.")
+        signinAs(self.client, self.CADMIN)
+        response = self.make_request("technologies.faqs.create", payload)
+        self.assertEqual(response['success'], True)
+        self.assertEqual(response['data']['question'], "Test FAQ Question?")
+        self.assertEqual(response['data']['answer'], "Test FAQ Answer")
+
+        Console.header("Testing the technologies.faq.create endpoint as a user.")
+        signinAs(self.client, self.USER)
+        response = self.make_request("technologies.faqs.create", payload)
+        self.assertEqual(response['success'], False)
+        self.assertEqual(response['error'], "permission_denied")
+        
+        
+    def test_update_technology_faq(self):
+        Console.header("Testing the technologies.faq.update endpoint as a super admin.")
+        payload = {
+            "id": str(self.faq.id),
+            "question": "Test FAQ Question Updated?",
+            "answer": "Test FAQ Answer Updated",
+        }
+        
+        signinAs(self.client, self.SADMIN)
+        response = self.make_request("technologies.faqs.update", payload)
+        self.assertEqual(response['success'], True)
+        self.assertEqual(response['data']['question'], "Test FAQ Question Updated?")
+        self.assertEqual(response['data']['answer'], "Test FAQ Answer Updated")
+
+        Console.header("Testing the technologies.faq.update endpoint as a community admin.")
+        signinAs(self.client, self.CADMIN)
+        response = self.make_request("technologies.faqs.update", payload)
+        self.assertEqual(response['success'], True)
+        self.assertEqual(response['data']['question'], "Test FAQ Question Updated?")
+        self.assertEqual(response['data']['answer'], "Test FAQ Answer Updated")
+
+        Console.header("Testing the technologies.faq.update endpoint as a user.")
+        signinAs(self.client, self.USER)
+        response = self.make_request("technologies.faqs.update", payload)
+        self.assertEqual(response['success'], False)
+        self.assertEqual(response['error'], "permission_denied")
+        
+    def test_delete_technology_faq(self):
+        Console.header("Testing the technologies.faq.delete endpoint as a super admin.")
+        payload = {"id": str(self.faq.id)}
+        signinAs(self.client, self.SADMIN)
+        response = self.make_request("technologies.faqs.delete", payload)
+        self.assertEqual(response['success'], True)
+
+        Console.header("Testing the technologies.faq.delete endpoint as a community admin.")
+        signinAs(self.client, self.CADMIN)
+        response = self.make_request("technologies.faqs.delete", payload)
+        self.assertEqual(response['success'], False)
+        self.assertEqual(response['error'], 'TechnologyFaq matching query does not exist.')
+        
+        Console.header("Testing the technologies.faq.delete endpoint as a user.")
+        signinAs(self.client, self.USER)
+        response = self.make_request("technologies.faqs.delete", payload)
+        self.assertEqual(response['success'], False)
+        self.assertEqual(response['error'], "permission_denied")
+        
+    def test_list_technology_faq(self):
+        Console.header("Testing the technologies.faq.list endpoint as a super admin.")
+        args = {"technology_id": str(self.tech.id)}
+        
+        signinAs(self.client, self.SADMIN)
+        response = self.make_request("technologies.faqs.list", args)
+
+        self.assertEqual(response['success'], True)
+        self.assertIsInstance(response['data'], list)
+
+        Console.header("Testing the technologies.faq.list endpoint as a community admin.")
+        signinAs(self.client, self.CADMIN)
+        response = self.make_request("technologies.faqs.list", args)
+        self.assertEqual(response['success'], True)
+        self.assertIsInstance(response['data'], list)
+
+        Console.header("Testing the technologies.faq.list endpoint as a user.")
+        signinAs(self.client, self.USER)
+        response = self.make_request("technologies.faqs.list", args)
+        self.assertEqual(response['success'], True)
+        self.assertIsInstance(response['data'], list)
+        
+    
 
     @classmethod
     def tearDownClass(cls):

@@ -36,7 +36,7 @@ import requests
 from io import BytesIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
-from apps__campaigns.models import Campaign, CampaignAccount, Technology
+from apps__campaigns.models import CallToAction, Campaign, CampaignAccount, Section, Technology
 
 from database.models import Vendor
 from ..utils.api_utils import load_default_menus_from_json
@@ -479,3 +479,22 @@ def makeLocation(**kwargs):
         "state": state,
         "city": city,
     })
+
+def make_call_to_action(**kwargs):
+    return CallToAction.objects.create(**{
+        **kwargs,
+        "text": kwargs.get("text") or "Donate Now",
+        "url": kwargs.get("url") or "https://www.massenergize.org",
+    })
+
+
+def make_section(**kwargs):
+    ctas = kwargs.pop("call_to_action_items", [])
+    section =  Section.objects.create(**{
+        "title": kwargs.get("title") or "New Section",
+        "description": kwargs.get("description") or "New Section Description",
+        "media": kwargs.get("media"),
+    })
+    return section
+    
+    

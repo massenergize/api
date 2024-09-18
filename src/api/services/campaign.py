@@ -420,3 +420,10 @@ class CampaignService:
             return None, err
 
         return serialize_all(res, full=True), None
+    
+    def delete_call_to_action(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        res, err = self.store.delete_call_to_action(context, args)
+        if err:
+            return None, err
+
+        return serialize(res), None

@@ -93,6 +93,8 @@ def get_technology_details(technology_id, for_campaign=False):
     vendors = TechnologyVendor.objects.filter(technology__id=technology_id, is_deleted=False).order_by("vendor__name")
     deals = tech.technology_deal.filter(is_deleted=False)
     technology_actions = tech.technology_action.filter(is_deleted=False)
+    faqs = tech.technology_faq.all()
+    
 
     data = {
         "coaches": serialize_all(coaches),
@@ -100,6 +102,7 @@ def get_technology_details(technology_id, for_campaign=False):
         "vendors": serialize_all(vendors),
         "deals": serialize_all(deals),
         "technology_actions": serialize_all(technology_actions),
+        "faqs": serialize_all(faqs),
         **serialize(tech),
     }
     return data
@@ -247,6 +250,17 @@ def copy_campaign_data(new_campaign):
         new_campaign.communities_section = _campaign.get("communities_section")
         new_campaign.save()
         print("Campaign created")
+        
+        #  managers
+        print("")
+        print("Creating managers")
+        manager = CampaignManager()
+        manager.user = new_campaign.owner
+        manager.campaign = new_campaign
+        manager.is_key_contact = True
+        manager.role = "Creator"
+        manager.save()
+        print("Manager created")
 
         # copy technologies
 
@@ -301,17 +315,6 @@ def copy_campaign_data(new_campaign):
             campaign_tech.save()
 
             print("Technology created")
-
-        #  managers
-        print("")
-        print("Creating managers")
-        manager = CampaignManager()
-        manager.user = new_campaign.owner
-        manager.campaign = new_campaign
-        manager.is_key_contact = True
-        manager.role = "Creator"
-        manager.save()
-        print("Manager created")
 
         print("Cloning  Done !!!")
     except Exception as e:
