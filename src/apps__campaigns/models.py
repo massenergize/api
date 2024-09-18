@@ -6,7 +6,7 @@ from django.forms import model_to_dict
 
 from _main_.utils.base_model import BaseModel, Faq
 from database.utils.common import get_json_if_not_none, get_summary_info
-from database.utils.constants import LONG_STR_LEN, SHORT_STR_LEN
+from database.utils.constants import LONG_STR_LEN, SHORT_STR_LEN, MEDIUM_STR_LEN
 from django.utils.text import slugify
 
 # Create your models here
@@ -169,7 +169,7 @@ class Campaign(BaseModel):
     slug = models.SlugField(max_length=255, unique=True, blank=True, null=True)
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
-    featured_summary = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
+    featured_summary = models.CharField(max_length=MEDIUM_STR_LEN, blank=True, null=True)
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateTimeField(null=True, blank=True)
     primary_logo = models.ForeignKey("database.Media", on_delete=models.CASCADE, null=True, blank=True,
