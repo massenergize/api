@@ -343,20 +343,21 @@ def create_or_update_call_to_action_from_dict(cta_dict):
     return cta
 
 
-def create_or_update_section_from_dict(section_dict):
+def create_or_update_section_from_dict(section_dict, media=None):
     if not section_dict or not isinstance(section_dict, dict):
         return None
     section_id = section_dict.get("id", None)
     call_to_action_items = section_dict.get("call_to_action_items", [])
-    media = section_dict.get("media", None)
     
+    defaults = {
+        "title": section_dict.get("title", ""),
+        "description": section_dict.get("description", ""),
+    }
+    if not is_null(media):
+        defaults["media"] = create_media_file(media, f"section-{section_dict.get('title','')}")
     section, _ = Section.objects.update_or_create(
         id=section_id,
-        defaults={
-            "title": section_dict.get("title", ""),
-            "description": section_dict.get("description", ""),
-            "media": create_media_file(media, f"section-{section_dict.get('title','')}") if media else None,
-        }
+        defaults=defaults
     )
     
     if call_to_action_items:
