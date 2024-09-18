@@ -17,7 +17,7 @@ class CampaignHandler(RouteHandler):
         self.add("/campaigns.create", self.create) #Not used at the moment
 
         self.add("/campaigns.createFromTemplate", self.create_campaign_from_template)
-        
+
         self.add("/campaigns.list", self.list)
         self.add("/campaigns.update", self.update)
         self.add("/campaigns.delete", self.delete)
@@ -80,7 +80,7 @@ class CampaignHandler(RouteHandler):
 
         self.add("/campaigns.technology.view", self.add_campaign_technology_view)
         self.add("/campaigns.view", self.add_campaign_view)
-    
+
         # admin routes
         self.add("/campaigns.listForAdmin", self.list_campaigns_for_admins)
         self.add("/campaigns.ownership.transfer", self.transfer_ownership)
@@ -130,11 +130,11 @@ class CampaignHandler(RouteHandler):
             return err
 
         return MassenergizeResponse(data=campaign_info)
-    
+
     @admins_only
-    def create(self, request): 
+    def create(self, request):
       context: Context = request.context
-      args = context.get_request_body() 
+      args = context.get_request_body()
       (self.validator
             .expect("title", str, is_required=True)
             .expect("tagline", str, is_required=False)
@@ -159,7 +159,7 @@ class CampaignHandler(RouteHandler):
       if err:
         return err
       return MassenergizeResponse(data=campaign_info)
-    
+
 
     @admins_only
     def create_campaign_from_template(self, request):
@@ -167,15 +167,15 @@ class CampaignHandler(RouteHandler):
        args = context.args
 
       #  self.validator.expect("template_id", str, is_required=False)
-       self.validator.expect("campaign_account_id", str, is_required=True)   
-       self.validator.expect("title", str, is_required=True) 
+       self.validator.expect("campaign_account_id", str, is_required=True)
+       self.validator.expect("title", str, is_required=True)
        self.validator.expect("community_ids", "str_list", is_required=True)
        self.validator.expect("template_key", str, is_required=False)
 
        args, err = self.validator.verify(args)
        if err:
           return err
-       
+
        campaign_info, err = self.service.create_campaign_from_template(context, args)
        if err:
           return err
@@ -183,7 +183,7 @@ class CampaignHandler(RouteHandler):
 
 
 
-    def list(self, request): 
+    def list(self, request):
         context: Context = request.context
         args: dict = context.args
 
@@ -201,10 +201,10 @@ class CampaignHandler(RouteHandler):
         return MassenergizeResponse(data=campaign_info)
 
 
-    @admins_only 
-    def update(self, request): 
+    @admins_only
+    def update(self, request):
         context: Context = request.context
-        args = context.get_request_body() 
+        args = context.get_request_body()
         (self.validator
         .expect("id", str, is_required=True)
         .expect("title", str, is_required=False,)
@@ -230,38 +230,39 @@ class CampaignHandler(RouteHandler):
         .expect("callout_section", dict, is_required=False)
         .expect("contact_section", dict, is_required=False)
          .expect("call_to_action", dict, is_required=False)
+         .expect("banner_section", dict, is_required=False)
         )
 
 
         args, err = self.validator.verify(args)
         if err:
             return err
-        
+
         campaign_info, err = self.service.update_campaign(context, args)
         if err:
-           return err      
-        
+           return err
+
         return MassenergizeResponse(data=campaign_info)
-    
+
 
     @admins_only
-    def delete(self, request): 
+    def delete(self, request):
         context: Context = request.context
         args: dict = context.args
 
         self.validator.expect("id", str, is_required=True)
         args, err = self.validator.verify(args)
         if err:
-           return err   
+           return err
 
         campaign_info, err = self.service.delete_campaign(context, args)
         if err:
             return err
         return MassenergizeResponse(data=campaign_info)
-    
+
 
     @admins_only
-    def list_campaigns_for_admins(self, request): 
+    def list_campaigns_for_admins(self, request):
         context: Context = request.context
         args: dict = context.args
 
@@ -269,10 +270,10 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
 
     @admins_only
-    def add_campaign_manager(self, request): 
+    def add_campaign_manager(self, request):
         context: Context = request.context
         args: dict = context.args
 
@@ -286,10 +287,10 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
 
     @admins_only
-    def remove_campaign_manager(self, request): 
+    def remove_campaign_manager(self, request):
         context: Context = request.context
         args: dict = context.args
 
@@ -302,7 +303,7 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
     @admins_only
     def update_campaign_manager(self, request):
         context: Context = request.context
@@ -324,7 +325,7 @@ class CampaignHandler(RouteHandler):
 
 
     @admins_only
-    def add_campaign_community(self, request): 
+    def add_campaign_community(self, request):
         context: Context = request.context
         args: dict = context.args
 
@@ -338,10 +339,10 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
 
     @admins_only
-    def remove_campaign_community(self, request): 
+    def remove_campaign_community(self, request):
         context: Context = request.context
         args: dict = context.args
 
@@ -354,7 +355,7 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
 
     @admins_only
     def update_campaign_community(self, request):
@@ -373,10 +374,10 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
 
     @admins_only
-    def add_campaign_technology(self, request): 
+    def add_campaign_technology(self, request):
         context: Context = request.context
         args: dict = context.args
 
@@ -398,10 +399,10 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
 
     @admins_only
-    def update_campaign_technology(self, request): 
+    def update_campaign_technology(self, request):
         context: Context = request.context
         args: dict = context.args
 
@@ -424,10 +425,10 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
 
     @admins_only
-    def remove_campaign_technology(self, request): 
+    def remove_campaign_technology(self, request):
         context: Context = request.context
         args: dict = context.args
 
@@ -440,9 +441,9 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
 
-    def create_campaign_technology_testimonial(self, request): 
+
+    def create_campaign_technology_testimonial(self, request):
         context: Context = request.context
         args: dict = context.args
 
@@ -465,9 +466,9 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
 
-    def update_campaign_technology_testimonial(self, request): 
+
+    def update_campaign_technology_testimonial(self, request):
         context: Context = request.context
         args: dict = context.args
 
@@ -490,7 +491,7 @@ class CampaignHandler(RouteHandler):
           return err
         return MassenergizeResponse(data=res)
 
-    def create_campaign_technology_comment(self, request): 
+    def create_campaign_technology_comment(self, request):
         context: Context = request.context
         args: dict = context.args
 
@@ -510,9 +511,9 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
     @admins_only
-    def update_campaign_technology_comment(self, request): 
+    def update_campaign_technology_comment(self, request):
         context: Context = request.context
         args: dict = context.args
 
@@ -530,8 +531,8 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
-    
+
+
     def list_campaign_technology_testimonials(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -544,7 +545,7 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
 
     def list_campaign_technology_comments(self, request):
         context: Context = request.context
@@ -559,7 +560,7 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
 
     def list_campaign_technologies(self, request):
         context: Context = request.context
@@ -574,7 +575,7 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
     @admins_only
     def list_campaign_managers(self, request):
         context: Context = request.context
@@ -589,7 +590,7 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
     @admins_only
     def list_campaign_communities(self, request):
         context: Context = request.context
@@ -604,7 +605,7 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
 
     def list_campaign_technology_event(self, request):
         context: Context = request.context
@@ -619,10 +620,10 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
 
     @admins_only
-    def add_campaign_partner(self, request): 
+    def add_campaign_partner(self, request):
         context: Context = request.context
         args: dict = context.args
 
@@ -636,10 +637,10 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
 
     @admins_only
-    def remove_campaign_partner(self, request): 
+    def remove_campaign_partner(self, request):
         context: Context = request.context
         args: dict = context.args
 
@@ -652,10 +653,10 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
 
     @admins_only
-    def add_campaign_technology_event(self, request): 
+    def add_campaign_technology_event(self, request):
         context: Context = request.context
         args: dict = context.args
 
@@ -669,8 +670,8 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
-    
+
+
 
     def generate_campaign_links(self, request):
         context: Context = request.context
@@ -691,7 +692,7 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
 
     def campaign_link_visits_count(self, request):
         context: Context = request.context
@@ -708,7 +709,7 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
 
     def add_campaign_follower(self, request):
         context: Context = request.context
@@ -729,7 +730,7 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
 
     def add_campaign_technology_follower(self, request):
         context: Context = request.context
@@ -750,7 +751,7 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
 
 
     def add_campaign_technology_like(self, request):
@@ -767,7 +768,7 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
 
     def add_campaign_technology_view(self, request):
         context: Context = request.context
@@ -786,7 +787,7 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
 
     @admins_only
     def delete_campaign_technology_testimonial(self, request):
@@ -802,7 +803,7 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
 
     @admins_only
     def get_campaign_analytics(self, request):
@@ -818,7 +819,7 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
 
     def add_campaign_like(self, request):
         context: Context = request.context
@@ -833,7 +834,7 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
     @admins_only
     def transfer_ownership(self, request):
         context: Context = request.context
@@ -851,7 +852,7 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
 
     def get_campaign_technology_info(self, request):
         context: Context = request.context
@@ -867,7 +868,7 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
 
     def get_campaign_config(self, request):
         context: Context = request.context
@@ -882,7 +883,7 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
 
     def create_campaign_config(self, request):
         context: Context = request.context
@@ -900,7 +901,7 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
 
     def update_campaign_config(self, request):
         context: Context = request.context
@@ -917,7 +918,7 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
 
     def get_campaign_technology_testimonial(self, request):
         context: Context = request.context
@@ -932,7 +933,7 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
 
 
     def create_campaign_navigation(self, request):
@@ -947,9 +948,9 @@ class CampaignHandler(RouteHandler):
         res, err = self.service.create_campaign_navigation(context, args)
         if err:
           return err
-        
+
         return MassenergizeResponse(data=res)
-    
+
 
 
     def track_activity(self, request):
@@ -965,15 +966,15 @@ class CampaignHandler(RouteHandler):
       args, err = self.validator.verify(args, strict=True)
       if err:
         return err
-      
+
       res, err = self.service.track_activity(context, args)
       if err:
         return err
-      
+
       return MassenergizeResponse(data=res)
 
-       
-       
+
+
     def add_campaign_view(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -989,7 +990,7 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
 
     def delete_campaign_technology_comment(self, request):
         context: Context = request.context
@@ -1006,7 +1007,7 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
 
     @admins_only
     def create_campaign_technology(self, request):
@@ -1029,7 +1030,7 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
 
 
     @admins_only
@@ -1047,7 +1048,7 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
     @admins_only
     def list_campaign_communities_testimonials(self, request):
         context: Context = request.context
@@ -1063,7 +1064,7 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
     @admins_only
     def list_campaign_communities_vendors(self, request):
         context: Context = request.context
@@ -1079,7 +1080,7 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
     @admins_only
     def add_campaign_technology_testimonial(self, request):
         context: Context = request.context
@@ -1097,7 +1098,7 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
-    
+
     @admins_only
     def remove_campaign_technology_event(self, request):
       context: Context = request.context
@@ -1113,7 +1114,7 @@ class CampaignHandler(RouteHandler):
       if err:
         return err
       return MassenergizeResponse(data=res)
-    
+
     @admins_only
     def update_campaign_key_contact(self, request):
       context: Context = request.context
@@ -1130,13 +1131,13 @@ class CampaignHandler(RouteHandler):
       if err:
         return err
       return MassenergizeResponse(data=res)
-    
+
 
     @admins_only
     def delete_call_to_action(self, request):
       context: Context = request.context
       args: dict = context.args
-      
+
       print(args)
 
       self.validator.expect("id", str, is_required=True)
@@ -1149,10 +1150,10 @@ class CampaignHandler(RouteHandler):
       if err:
         return err
       return MassenergizeResponse(data=res)
-    
 
 
 
-       
-    
+
+
+
 
