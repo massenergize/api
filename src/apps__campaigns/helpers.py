@@ -62,11 +62,7 @@ def get_campaign_technology_details(args):
     else:
         testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False,campaign_technology__id=campaign_technology_id, testimonial__is_published=True)
      
-    
-
     if campaign_home:
-        print("Campaign home")
-        print("===key===", campaign_tech.campaign.template_key)
         data =  {
             "testimonials": serialize_all(testimonials.filter(is_featured=True)),
             "events": serialize_all(events, full=True),
