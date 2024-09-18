@@ -1229,7 +1229,6 @@ class CampaignStore:
 
     def create_campaign_from_template(self, context: Context, args: dict):
         try:
-            print("==  args = ", args)
             account_id = args.pop("campaign_account_id", None)
             community_ids = args.pop("community_ids", [])
             title = args.pop("title", None)
