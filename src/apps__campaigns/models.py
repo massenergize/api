@@ -284,7 +284,7 @@ class Technology(BaseModel):
     """
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
-    summary = models.CharField(max_length = SHORT_STR_LEN, blank=True, null=True)
+    summary = models.CharField(max_length = MEDIUM_STR_LEN, blank=True, null=True)
     image = models.ForeignKey("database.Media", on_delete=models.CASCADE, null=True, blank=True)
     help_link = models.CharField(max_length=255, blank=True, null=True)
     campaign_account = models.ForeignKey(CampaignAccount, on_delete=models.CASCADE, null=True, blank=True, related_name="campaign_account_technology")
