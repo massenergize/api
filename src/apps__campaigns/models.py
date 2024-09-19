@@ -222,6 +222,7 @@ class Campaign(BaseModel):
         res["callout_section"] = self.callout_section.simple_json() if self.callout_section else None
         res["contact_section"] = self.contact_section.simple_json() if self.contact_section else None
         res["call_to_action"] = self.call_to_action.simple_json() if self.call_to_action else None
+        res["banner_section"] = self.banner_section.simple_json() if self.banner_section else None
 
         return res
 
