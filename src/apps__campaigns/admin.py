@@ -10,7 +10,7 @@ admin.site.site_header = GLOBAL_SITE_SETTINGS["ADMIN_SITE_HEADER"]
 
 
 
-sample = ["title", "name", "campaign" "email", "full_name", "id", "updated_at", "template_id"]
+sample = ["title", "name", "campaign" "email", "full_name", "id", "updated_at", "template_id", "question"]
 sample_filter = ["created_at", "is_published", "is_deleted", "is_approved", "is_global"]
 
 

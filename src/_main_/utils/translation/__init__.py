@@ -11,7 +11,7 @@ from _main_.utils.common import log_sentry_metric
 
 JSON_EXCLUDE_KEYS = {
     'id', 'pk', 'file', 'media', 'date', 'link', 'url', 'icon', 'key', 'slug',"created_at", "updated_at", "code",
-    "subdomain", "alias", "full_name", "preferred_name", "username",  "community", "website"
+    "subdomain", "alias", "full_name", "preferred_name", "username",  "community", "website", "template_key"
 }
 
 JSON_EXCLUDE_VALUES = {
