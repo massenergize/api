@@ -1,7 +1,9 @@
 import datetime
-from datetime import timezone, timedelta
 import json
 import uuid
+from datetime import timezone, timedelta
+
+from _main_.utils.common import item_is_empty
 
 from _main_.utils.policy.PolicyConstants import PolicyConstants
 from _main_.utils.base_model import BaseModel
@@ -33,6 +35,7 @@ from api.constants import COMMUNITY_NOTIFICATION_TYPES, STANDARD_USER, GUEST_USE
 from django.forms.models import model_to_dict
 from carbon_calculator.models import Action as CCAction
 from carbon_calculator.carbonCalculator import AverageImpact
+from .utils.settings.model_constants.enums import SharingType, LocationType
 
 CHOICES = json_loader("./database/raw_data/other/databaseFieldChoices.json")
 ZIP_CODE_AND_STATES = json_loader("./database/raw_data/other/states.json")
@@ -584,7 +587,7 @@ class Community(models.Model):
         return str(self.id) + " - " + self.name
 
     def info(self):
-       res = model_to_dict(self, ["id", "name", "subdomain"])
+       res = model_to_dict(self, ["id", "name", "subdomain", "is_geographically_focused"])
        res["logo"] = get_json_if_not_none(self.logo)
        return res
 
@@ -933,6 +936,7 @@ class Role(models.Model):
     class Meta:
         ordering = ("name",)
         db_table = "roles"
+
     class TranslationMeta:
         fields_to_translate = ["name", "description"]
 
@@ -2057,7 +2061,14 @@ class Action(models.Model):
         return f"{str(self.id)} - {self.title}"
 
     def info(self):
-        return model_to_dict(self, ["id", "title"])
+        return {
+            **model_to_dict(self, ["id", "title"]),
+            "community":{
+                "id": self.community.id,
+                "name": self.community.name,
+            },
+            "image": get_json_if_not_none(self.image),
+        }
 
     def simple_json(self):
         data = model_to_dict(
@@ -2556,7 +2567,9 @@ class Testimonial(models.Model):
     preferred_name = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
     other_vendor = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
     more_info = models.JSONField(blank=True, null=True)
-    # is_user_submitted = models.BooleanField(default=False, blank=True, null=True)
+    sharing_type = models.CharField( max_length=SHORT_STR_LEN, choices=SharingType.choices(), default=SharingType.OPEN.value[0], null=True, blank=True)
+    audience = models.ManyToManyField(Community, related_name="shared_testimonials", blank=True) # communities that can see
+    published_at = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
         return self.title
@@ -2582,12 +2595,13 @@ class Testimonial(models.Model):
         res["anonymous"] = self.anonymous
         res["preferred_name"] = self.preferred_name
         res["other_vendor"] = self.other_vendor
+        res["shared_with"] = [tsc.community.info() for tsc in self.shared_communities.all()]
+        res["audience"] = [c.info() for c in self.audience.all()]
         return res
 
     def full_json(self):
         data = self.simple_json()
         data["image"] = data.get("file", None)
-        data["tags"] = [t.simple_json() for t in self.tags.all()]
         return data
 
     class Meta:
@@ -2596,6 +2610,27 @@ class Testimonial(models.Model):
 
     class TranslationMeta:
         fields_to_translate = ["title", "body"]
+
+
+class TestimonialSharedCommunity(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    testimonial = models.ForeignKey(Testimonial, on_delete=models.CASCADE, related_name="shared_communities")
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name="testimonial_shares")
+    
+    def simple_json(self):
+        data = model_to_dict(self, exclude=["testimonial", "community"])
+        data["community"] = self.community.info()
+        data["testimonial"] = self.testimonial.info()
+        return data
+    
+    def full_json(self):
+        return self.simple_json()
+    
+    class Meta:
+        unique_together = ('community', 'testimonial')
+    
+    class TranslationMeta:
+        fields_to_translate = []
 
 
 class UserActionRel(models.Model):
@@ -3852,9 +3887,38 @@ class Message(models.Model):
         res["created_at"] = self.created_at.strftime("%Y-%m-%d %H:%M")
         return res
 
+    def get_scheduled_message_info(self):
+        scheduled_info = self.schedule_info or {}
+        recipients = scheduled_info.get("recipients", {})
+        audience = recipients.get("audience", None)
+        audience_type = recipients.get("audience_type", None)
+        community_ids = recipients.get("community_ids", None)
+
+        real_audience = audience
+        if audience and not audience == "all":
+            if audience_type == "COMMUNITY_CONTACTS":
+                real_audience = [c.info() for c in Community.objects.filter(id__in=audience.split(","))]
+
+            elif audience_type == "ACTIONS":
+                real_audience = [a.info() for a in Action.objects.filter(id__in=audience.split(","))]
+            else:
+                real_audience= [u.info() for u in UserProfile.objects.filter(id__in=audience.split(","))]
+        if not item_is_empty(community_ids):
+            community_ids = [c.info() for c in Community.objects.filter(id__in=community_ids.split(","))]
+        else:
+            community_ids = []
+
+        scheduled_info["recipients"]["audience"] = real_audience
+        scheduled_info["recipients"]["community_ids"] = community_ids
+
+        return scheduled_info
+
+
     def full_json(self):
         res = self.simple_json()
         res["uploaded_file"] = get_json_if_not_none(self.uploaded_file)
+        if self.schedule_info:
+            res["schedule_info"] = self.get_scheduled_message_info()
         return res
 
     class Meta:
@@ -4280,15 +4344,34 @@ class CampaignSupportedLanguage(BaseModel):
     language = models.ForeignKey(SupportedLanguage, on_delete=models.CASCADE, db_index=True)
     campaign = models.ForeignKey("apps__campaigns.Campaign", on_delete=models.CASCADE, db_index=True, related_name="supported_languages")
     is_active = models.BooleanField(default=True, blank=True)
-    
+
     def __str__(self):
         return f"{self.campaign.title} - {self.language.name}"
-    
+
     def simple_json(self):
         return {"id": str(self.id), "is_active": self.is_active, "campaign": str(self.id), "code": self.language.code, "name": self.language.name}
-    
+
     def full_json(self):
         return self.simple_json()
-    
+
     class Meta:
         db_table = "campaign_supported_languages"
+
+
+class TestimonialAutoShareSettings(BaseModel):
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True, related_name="testimonial_auto_share_settings")
+    share_from_communities = models.ManyToManyField(Community, related_name="share_from_communities", blank=True)
+    share_from_location_type = models.CharField(max_length=SHORT_STR_LEN, choices = LocationType.choices(), null=True, blank=True)
+    share_from_location_value = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
+    excluded_tags = models.ManyToManyField(Tag, blank=True)
+
+    def __str__(self):
+        return f"{self.community.name} - {[community.name for community in self.share_from_communities.all()]}"
+
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
+        
+    

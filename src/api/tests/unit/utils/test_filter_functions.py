@@ -44,7 +44,7 @@ class FiltersFunctionTests(TestCase):
 	def test_get_sort_params_none(self):
 		params = {}
 		result = filter_functions.get_sort_params(params)
-		self.assertEqual(result, "-id")
+		self.assertEqual(result, "-created_at")
 	
 	# ------------------------------------------
 

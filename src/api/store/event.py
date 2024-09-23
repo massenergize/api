@@ -1,5 +1,6 @@
 import json
 
+from celery.result import AsyncResult
 from django.utils import timezone
 
 from _main_.utils.footage.FootageConstants import FootageConstants
@@ -19,6 +20,7 @@ from _main_.utils.context import Context
 from _main_.utils.massenergize_logger import log
 
 from database.utils.settings.model_constants.events import EventConstants
+from task_queue.database_tasks.update_recurring_events import update_recurring_event
 from .utils import get_user_from_context, get_user_or_die, get_new_title
 import datetime
 from datetime import timedelta
@@ -26,13 +28,17 @@ import calendar
 from typing import Tuple
 from zoneinfo import ZoneInfo
 
+
 def _local_datetime(date_and_time):
     """
     Converts a UTC datetime string to local datetime in Massachusetts time zone.
-    """
-    # Parse the datetime string to a datetime object
-    dt = datetime.datetime.strptime(str(date_and_time), '%Y-%m-%dT%H:%M:%SZ')
-
+    """    # Parse the datetime string to a datetime object
+    try:
+        # Try parsing the datetime string with the first format
+        dt = datetime.datetime.strptime(str(date_and_time), '%Y-%m-%dT%H:%M:%SZ')
+    except ValueError:
+        # If it fails, try the second format
+        dt = datetime.datetime.strptime(str(date_and_time), '%Y-%m-%d %H:%M:%S%z')
     # Specify the Massachusetts time zone
     massachusetts_zone = ZoneInfo('America/New_York')
 
@@ -59,7 +65,6 @@ def _check_recurring_date(start_date_and_time, end_date_and_time, day_of_week, w
     converter = {"first": 1, "second": 2, "third": 3, "fourth": 4}
 
     if start_date_and_time and end_date_and_time:
-
         # the date check below fails because the local date (in Massachusetts) is different than the UTC date
         local_start = _local_datetime(start_date_and_time)
         local_end = _local_datetime(end_date_and_time)
@@ -288,8 +293,7 @@ class EventStore:
             publicity_selections = args.pop("publicity_selections", [])
 
             if end_date_and_time < start_date_and_time:
-                return None, CustomMassenergizeError(
-                    "Please provide an end date and time that comes after the start date and time.")
+                return None, CustomMassenergizeError("Please provide an end date and time that comes after the start date and time.")
 
             if args.get('is_published', False):
                 args['published_at'] = local_time()
@@ -383,6 +387,10 @@ class EventStore:
                 }
 
             new_event.save()
+            
+            # create a task to reschedule event after current end date
+            if new_event.is_recurring:
+                update_recurring_event(new_event.id)
             # ----------------------------------------------------------------
             Spy.create_event_footage(events=[new_event], context=context, actor=new_event.user,
                                      type=FootageConstants.create(), notes=f"Event ID({new_event.id})")
@@ -631,6 +639,7 @@ class EventStore:
                     if rescheduled:
                         rescheduled.rescheduled_event.delete()
                         rescheduled.delete()
+                    
 
             if (is_approved != None and
                 (is_approved != event.is_approved)):  # If changed
@@ -645,6 +654,10 @@ class EventStore:
 
             # successful return
             event.save()
+            
+            # create a task to reschedule event after current end date
+            if event.is_recurring:
+                update_recurring_event(event.id)
 
             # ----------------------------------------------------------------
             Spy.create_event_footage(events=[event], context=context, type=FootageConstants.update(),
@@ -853,38 +866,41 @@ class EventStore:
     def list_events_for_community_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
         try:
             community_id = args.pop("community_id", None)
+            community_ids = [community_id] if community_id else []
 
             if context.user_is_super_admin:
                 return self.list_events_for_super_admin(context)
 
             elif not context.user_is_community_admin:
                 return None, NotAuthorizedError()
+            
+            if community_id and not is_admin_of_community(context, community_id):
+                return None, NotAuthorizedError()
 
             if community_id == 0:
                 # return actions from all communities
                 return self.list_events_for_super_admin(context)
-
+            
+            filter_params = get_events_filter_params(context.get_params())
+            filters_to_exclude = []
             # community_id coming from admin portal is 'undefined'
-            elif not community_id:
-                filter_params = get_events_filter_params(context.get_params())
-
+            if not community_id:
                 user = UserProfile.objects.get(pk=context.user_id)
                 admin_groups = user.communityadmingroup_set.all()
-                comm_ids = [ag.community.id for ag in admin_groups]
-                # don't return the events that are rescheduled instances of recurring events - these should be edited by CAdmins in the recurring event's edit form,
-                # not as their own separate events
-                events = Event.objects.filter(Q(community__id__in=comm_ids) | Q(is_global=True), *filter_params,
-                                              is_deleted=False).exclude(name__contains=" (rescheduled)").select_related(
+                community_ids.extend([ag.community.id for ag in admin_groups])
+                filters_to_exclude.append(Q(name__contains=" (rescheduled)"))
+                
+            # don't return the events that are rescheduled instances of recurring events - these should be edited by CAdmins in the recurring event's edit form,
+            # not as their own separate events
+            events = Event.objects.filter(Q(community__id__in=community_ids) | Q(is_global=True), *filter_params,
+                                              is_deleted=False).exclude(*filters_to_exclude).select_related(
                     'image', 'community').prefetch_related('tags')
-                return events, None
-
-            if not is_admin_of_community(context, community_id):
-                return None, NotAuthorizedError()
-
-            events = Event.objects.filter(Q(community__id=community_id) | Q(is_global=True), *filter_params,
-                                          is_deleted=False).select_related('image', 'community').prefetch_related(
-                'tags')
-            return events, None
+            
+            shared = Event.objects.filter(shared_to__id__in=community_ids).select_related('image', 'community').prefetch_related('tags')
+            
+            all_events = events | shared
+            
+            return all_events, None
         except Exception as e:
             log.exception(e)
             return None, CustomMassenergizeError(e)

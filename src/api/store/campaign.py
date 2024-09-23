@@ -1,8 +1,9 @@
 from datetime import datetime
 from uuid import UUID
 from _main_.utils.common import contains_profane_words, shorten_url
-from api.constants import LOOSED_USER
-from api.utils.api_utils import create_media_file
+from api.constants import CAMPAIGN_TEMPLATE_KEYS, LOOSED_USER
+from api.utils.api_utils import create_media_file, create_or_update_call_to_action_from_dict, \
+    create_or_update_section_from_dict
 from apps__campaigns.helpers import (
     copy_campaign_data,
     generate_analytics_data,
@@ -10,7 +11,7 @@ from apps__campaigns.helpers import (
     get_campaign_technology_details,
 )
 from apps__campaigns.models import (
-    Campaign,
+    CallToAction, Campaign,
     CampaignAccount,
     CampaignActivityTracking,
     CampaignCommunity,
@@ -168,6 +169,14 @@ class CampaignStore:
             campaign_image = args.pop("campaign_image", None)
             campaign_id = args.pop("id", None)
 
+            banner = args.pop("banner", None)
+            section_media = args.pop("media", None)
+            goal_section = args.pop("goal_section", None)
+            callout_section = args.pop("callout_section", None)
+            contact_section = args.pop("contact_section", None)
+            call_to_action = args.pop("call_to_action", None)
+            banner_section = args.pop("banner_section", None)
+
             campaigns = Campaign.objects.filter(id=campaign_id)
             if not campaigns:
                 return None, CustomMassenergizeError("Campaign with id does not exist")
@@ -182,8 +191,6 @@ class CampaignStore:
                     if not campaign_manager:
                         return None, NotAuthorizedError()
 
-
-
             if primary_logo:
                 args["primary_logo"] = create_media_file(primary_logo, f"PrimaryLogoFor {campaign_id} Campaign")
             if secondary_logo:
@@ -192,6 +199,24 @@ class CampaignStore:
                 )
             if campaign_image:
                 args["image"] = create_media_file(campaign_image, f"ImageFor {campaign_id} Campaign")
+
+            if banner:
+                args["banner"] = create_media_file(banner, f"BannerFor {campaign_id} Campaign")
+
+            if goal_section:
+                args["goal_section"] = create_or_update_section_from_dict(goal_section, section_media)
+
+            if callout_section:
+                args["callout_section"] = create_or_update_section_from_dict(callout_section, section_media)
+
+            if contact_section:
+                args["contact_section"] = create_or_update_section_from_dict(contact_section, section_media)
+
+            if call_to_action:
+                args["call_to_action"] = create_or_update_call_to_action_from_dict(call_to_action)
+
+            if banner_section:
+                args["banner_section"] = create_or_update_section_from_dict(banner_section, section_media)
 
             campaigns.update(**args)
 
@@ -820,7 +845,7 @@ class CampaignStore:
 
             if not event_ids:
                 return None, CustomMassenergizeError("event_ids is required!")
-            
+
             if not context.user_is_super_admin:
                 if context.user_email != campaign_tech.campaign.owner.email:
                     campaign_manager = CampaignManager.objects.filter(user__id=context.user_id,campaign__id=campaign_tech.campaign.id, is_deleted=False)
@@ -898,7 +923,7 @@ class CampaignStore:
 
             if not campaign_id:
                 return None, CustomMassenergizeError("Campaign id not found!")
-            
+
             if not community_id and not is_other:
                 return None, CustomMassenergizeError("Please select a community!")
 
@@ -927,7 +952,6 @@ class CampaignStore:
         except Exception as e:
             log.exception(e)
             return None, CustomMassenergizeError(e)
-
 
     def add_campaign_technology_follower(self, context, args):
         try:
@@ -1212,20 +1236,22 @@ class CampaignStore:
             account_id = args.pop("campaign_account_id", None)
             community_ids = args.pop("community_ids", [])
             title = args.pop("title", None)
+            template_key = args.pop("template_key", None)
 
             user = get_user_from_context(context)
+
             if not user:
                 return None, CustomMassenergizeError("User not found")
+
+            if template_key == CAMPAIGN_TEMPLATE_KEYS.get("MULTI_TECHNOLOGY_CAMPAIGN"):
+                if not community_ids:
+                    return None, CustomMassenergizeError("Community ids not provided")
 
             if not account_id:
                 return None, CustomMassenergizeError("Account id not provided")
 
-            if not community_ids:
-                return None, CustomMassenergizeError("Community ids not provided")
-
             if not title:
                 return None, CustomMassenergizeError("Title not provided")
-
 
             account = CampaignAccount.objects.filter(id=account_id).first()
 
@@ -1235,6 +1261,7 @@ class CampaignStore:
             new_campaign.is_global = False
             new_campaign.is_template = False
             new_campaign.owner = user
+            new_campaign.template_key = template_key
             new_campaign.save()
 
             for community_id in community_ids:
@@ -1505,7 +1532,7 @@ class CampaignStore:
             campaign_technology_event = CampaignTechnologyEvent.objects.filter(pk=tech_event_id).first()
             if not campaign_technology_event:
                 return None, CustomMassenergizeError("Campaign Technology Event not found!")
-            
+
             if not context.user_is_super_admin:
                 if context.user_email != campaign_technology_event.campaign_technology.campaign.owner.email:
                     campaign_manager = CampaignManager.objects.filter(user__id=context.user_id,campaign__id=campaign_technology_event.campaign_technology.campaign.id, is_deleted=False)
@@ -1552,6 +1579,23 @@ class CampaignStore:
 
 
             return campaign_managers.order_by("-created_at"), None
+        except Exception as e:
+            log.exception(e)
+            return None, CustomMassenergizeError(e)
+
+
+    def delete_call_to_action(self, context: Context, args: dict):
+        try:
+            cta_id = args.pop("id", None)
+            if not cta_id:
+                return None, CustomMassenergizeError("id is required !")
+
+            cta = CallToAction.objects.filter(pk=cta_id).first()
+            if not cta:
+                return None, CustomMassenergizeError("Call to action not found!")
+
+            cta.delete()
+            return cta, None
         except Exception as e:
             log.exception(e)
             return None, CustomMassenergizeError(e)

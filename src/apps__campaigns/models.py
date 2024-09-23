@@ -1,10 +1,12 @@
 import random
+import uuid
+
 from django.db import models
 from django.forms import model_to_dict
 
-from _main_.utils.base_model import BaseModel
+from _main_.utils.base_model import BaseModel, Faq
 from database.utils.common import get_json_if_not_none, get_summary_info
-from database.utils.constants import LONG_STR_LEN, SHORT_STR_LEN
+from database.utils.constants import LONG_STR_LEN, SHORT_STR_LEN, MEDIUM_STR_LEN
 from django.utils.text import slugify
 
 # Create your models here
@@ -15,6 +17,47 @@ def generate_rand_between(start=2, end=10):
 def get_comm_alias(campaign, community_id):
     com = campaign.campaign_community.filter(community_id=community_id).first()
     return com.alias if com else None
+
+
+class CallToAction(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    text = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
+    url = models.URLField()
+
+    def __str__(self):
+        return self.text if self.text else self.url
+
+    def simple_json(self):
+        return {
+            "id": str(self.id),
+            "text": self.text,
+            "url": self.url
+        }
+
+
+class Section(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    title = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
+    description = models.TextField(max_length=LONG_STR_LEN, blank=True, null=True)
+    media = models.ForeignKey("database.Media", on_delete=models.SET_NULL, blank=True, null=True)
+    call_to_action_items = models.ManyToManyField(CallToAction, related_name="section_cta")
+
+    def __str__(self):
+        return self.title
+
+    def simple_json(self):
+        data = model_to_dict(self, exclude=["media"])
+        data["id"] = str(self.id)
+        data["media"] = self.media.simple_json() if self.media else None
+        data["call_to_action_items"] = [cta.simple_json() for cta in self.call_to_action_items.all()]
+        return data
+
+    def full_json(self):
+        return self.simple_json()
+
+    class TranslationMeta:
+        fields_to_translate = ["title", "description"]
+
 
 class CampaignAccount(BaseModel):
     '''
@@ -125,7 +168,8 @@ class Campaign(BaseModel):
     account = models.ForeignKey(CampaignAccount, on_delete=models.CASCADE, null=True, blank=True)
     slug = models.SlugField(max_length=255, unique=True, blank=True, null=True)
     title = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
+    description = models.TextField(blank=True, null=True)
+    featured_summary = models.CharField(max_length=MEDIUM_STR_LEN, blank=True, null=True)
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateTimeField(null=True, blank=True)
     primary_logo = models.ForeignKey("database.Media", on_delete=models.CASCADE, null=True, blank=True,
@@ -147,6 +191,14 @@ class Campaign(BaseModel):
     coaches_section = models.JSONField(blank=True, null=True)
     about_us_title = models.CharField(max_length=255, blank=True, null=True)
 
+    call_to_action = models.ForeignKey(CallToAction, on_delete=models.CASCADE, null=True, blank=True)
+    banner = models.ForeignKey("database.Media", on_delete=models.CASCADE, null=True, blank=True)
+    template_key = models.CharField(max_length=255, blank=True, null=True)
+    goal_section = models.ForeignKey(Section, on_delete=models.CASCADE, null=True, blank=True, related_name="goal_section")
+    callout_section = models.ForeignKey(Section, on_delete=models.CASCADE, null=True, blank=True, related_name="callout_section")
+    contact_section = models.ForeignKey(Section, on_delete=models.CASCADE, null=True, blank=True, related_name="contact_section")
+    banner_section = models.ForeignKey(Section, on_delete=models.CASCADE, null=True, blank=True, related_name="banner_section")
+
     def __str__(self):
         return f"{self.account} - {self.title}"
 
@@ -165,6 +217,12 @@ class Campaign(BaseModel):
         res["campaign_image"] = get_json_if_not_none(self.image)
         res["owner"] = get_summary_info(self.owner)
         res["end_date"] = self.end_date.strftime("%Y-%m-%d") if self.end_date else None
+        res["banner"] = get_json_if_not_none(self.banner)
+        res["goal_section"] = self.goal_section.simple_json() if self.goal_section else None
+        res["callout_section"] = self.callout_section.simple_json() if self.callout_section else None
+        res["contact_section"] = self.contact_section.simple_json() if self.contact_section else None
+        res["call_to_action"] = self.call_to_action.simple_json() if self.call_to_action else None
+        res["banner_section"] = self.banner_section.simple_json() if self.banner_section else None
 
         return res
 
@@ -227,7 +285,7 @@ class Technology(BaseModel):
     """
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
-    summary = models.CharField(max_length = SHORT_STR_LEN, blank=True, null=True)
+    summary = models.CharField(max_length = MEDIUM_STR_LEN, blank=True, null=True)
     image = models.ForeignKey("database.Media", on_delete=models.CASCADE, null=True, blank=True)
     help_link = models.CharField(max_length=255, blank=True, null=True)
     campaign_account = models.ForeignKey(CampaignAccount, on_delete=models.CASCADE, null=True, blank=True, related_name="campaign_account_technology")
@@ -238,6 +296,7 @@ class Technology(BaseModel):
     deal_section = models.JSONField(blank=True, null=True)
     vendors_section = models.JSONField(blank=True, null=True)
     more_info_section = models.JSONField(blank=True, null=True)
+    faq_section = models.ForeignKey(Section, on_delete=models.CASCADE, null=True, blank=True, related_name="faq_section")
 
     def __str__(self):
         return self.name
@@ -248,6 +307,8 @@ class Technology(BaseModel):
         res["is_icon"] = False if self.image else True
         res["image"] = get_json_if_not_none(self.image)
         res["user"] = get_summary_info(self.user)
+        res["faq_section"] = self.faq_section.simple_json() if self.faq_section else None
+
         return res
 
     def full_json(self):
@@ -842,3 +903,21 @@ class CampaignActivityTracking(BaseModel):
 
     class TranslationMeta:
         fields_to_translate = []
+
+
+class TechnologyFaq(Faq):
+    technology = models.ForeignKey(Technology, on_delete=models.CASCADE, related_name="technology_faq")
+
+    def __str__(self):
+        return f"{self.technology.name} - {self.question}"
+
+    def simple_json(self)-> dict:
+        res = super().to_json()
+        res.update(model_to_dict(self))
+        return res
+
+    def full_json(self):
+        return self.simple_json()
+
+    class TranslationMeta:
+        fields_to_translate = ["question", "answer"]

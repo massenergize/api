@@ -13,7 +13,7 @@ from _main_.utils.common import log_sentry_metric
 
 JSON_EXCLUDE_KEYS = {
     'id', 'pk', 'file', 'media', 'date', 'link', 'url', 'icon', 'key', 'slug',"created_at", "updated_at", "code",
-    "subdomain", "alias", "full_name", "preferred_name", "username",
+    "subdomain", "alias", "full_name", "preferred_name", "username",  "community", "website", "template_key"
 }
 
 JSON_EXCLUDE_VALUES = {
@@ -39,13 +39,18 @@ EXCLUDED_JSON_VALUE_PATTERNS = [
     re.compile(r"(\w+\sID\((\d+)\))|(\w+\sfrom ID\((\d+)\) to \((\d+)\))")
 ]
 
+EXCLUDED_KEY_PATTERNS = [
+    re.compile(r".*\.community\.name"),
+    re.compile(r".*\.key_contact.name")
+]
+
 
 class JsonTranslator(Translator):
     def __init__ (self, dict_to_translate: Union[dict, list], exclude_keys=None, excluded_key_patterns=None):
         super().__init__()
         self.exclude_keys = set(exclude_keys) if exclude_keys else set()
         self.sep = '.'
-        self.excluded_key_patterns = excluded_key_patterns
+        self.excluded_key_patterns = excluded_key_patterns or []
         self.dict_to_translate = dict_to_translate
         self.translations_cache = TranslationsCache()
         self.cached_translations = None
@@ -80,9 +85,10 @@ class JsonTranslator(Translator):
             return True
 
         # Check if key matches any of the excluded key patterns
-        if self.excluded_key_patterns:
-            if any(pattern.fullmatch(key) for pattern in self.excluded_key_patterns):
-                return True
+        all_keys_to_exclude = self.excluded_key_patterns + EXCLUDED_KEY_PATTERNS
+        
+        if any(pattern.fullmatch(key) for pattern in all_keys_to_exclude):
+            return True
 
         # Check if value is not a string.  For eg. we want to exclude types like bool, int etc
         if not isinstance(_value, str):
@@ -228,6 +234,7 @@ class JsonTranslator(Translator):
         ]
 
         threading.Thread(target=put_metric_data, args=(name_space, metric_data)).start()
+
         return self.unflatten_dict(translated_json), translated_text_entries, untranslated_text_entries
 
     def convert_to_text_blocks(self, text_list, max_block_size=MAX_TEXT_SIZE, magic_text=MAGIC_TEXT):

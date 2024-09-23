@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from _main_.utils.common import parse_datetime_to_aware
+from _main_.utils.constants import AudienceType
 from database.models import Community, Message
 from django.test import TestCase, Client
 from unittest.mock import patch
@@ -55,7 +56,7 @@ class MessagesTestCase(TestCase):
                 "args": {
                     **args,
                     "audience": f"{self.USER.id},{self.CADMIN.id}",
-                    "audience_type": "SUPER_ADMIN",
+                    "audience_type": AudienceType.SUPER_ADMINS.value,
                 },
                 "signedInAs": self.SADMIN,
                 "expected": {"success": True, "error": None},
@@ -65,7 +66,7 @@ class MessagesTestCase(TestCase):
                 "args": {
                     **args,
                     "audience": f"{self.USER.id},{self.CADMIN.id}",
-                    "audience_type": "SUPER_ADMIN",
+                    "audience_type": AudienceType.SUPER_ADMINS.value,
                     "schedule": schedule,
                 },
                 "signedInAs": self.SADMIN,
@@ -76,7 +77,7 @@ class MessagesTestCase(TestCase):
                 "args": {
                     **args,
                     "audience": f"{self.USER.id},{self.CADMIN.id}",
-                    "audience_type": "SUPER_ADMIN",
+                    "audience_type": AudienceType.SUPER_ADMINS.value,
                     "schedule": schedule,
                 },
                 "signedInAs": None,
@@ -87,7 +88,7 @@ class MessagesTestCase(TestCase):
                 "args": {
                     **args,
                     "audience": self.CADMIN.id,
-                    "audience_type": "COMMUNITY_ADMIN",
+                    "audience_type": AudienceType.COMMUNITY_ADMIN.value,
                     "schedule": schedule,
                     "community_ids": self.COMMUNITY.id,
                 },
@@ -99,7 +100,7 @@ class MessagesTestCase(TestCase):
                 "args": {
                     **args,
                     "audience": "1,2,3,4",
-                    "audience_type": "COMMUNITY_ADMIN",
+                    "audience_type": AudienceType.COMMUNITY_ADMIN.value,
                     "schedule": schedule,
                     "community_ids": self.COMMUNITY.id,
                 },
@@ -123,7 +124,7 @@ class MessagesTestCase(TestCase):
                     "id": self.message.id,
                     "schedule": create_schedule("id"),
                     "audience": self.CADMIN.id,
-                    "audience_type": "COMMUNITY_ADMIN",
+                    "audience_type": AudienceType.COMMUNITY_ADMIN.value,
                 },
                 "signedInAs": self.SADMIN,
                 "expected": {"success": True, "error": None},
@@ -142,6 +143,6 @@ class MessagesTestCase(TestCase):
                 urlencode(args),
                 content_type="application/x-www-form-urlencoded",
             ).toDict()
-
+            
             self.assertEqual(response["success"], expected["success"])
             self.assertEqual(response["error"], expected["error"])

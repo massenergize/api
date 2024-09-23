@@ -58,6 +58,7 @@ class Task(models.Model):
     )
     last_run = models.DateField(blank=True, null=True)
     is_archived = models.BooleanField(default=False)
+    is_automatic_task = models.BooleanField(default=False)
 
     def simple_json(self):
         res = model_to_dict(self, exclude=['schedule'])

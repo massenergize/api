@@ -187,7 +187,22 @@ tk:
 	 fi
 	 touch test.sqlite3
 	 DJANGO_ENV=test python3 manage.py migrate
-	 DJANGO_ENV=test python manage.py test api.tests.unit.utils.test_filter_functions
+	 DJANGO_ENV=test python manage.py test api.tests.unit.utils.test_message.TestGetMessageRecipients
 
 	# coverage report --precision=2
 .PHONY: tk
+
+
+update-recurring-schedule-local:
+	DJANGO_ENV=local python manage.py create-initial-recurring-schedule
+
+update-recurring-schedule-dev:
+	DJANGO_ENV=dev python manage.py create-initial-recurring-schedule
+
+update-recurring-schedule-canary:
+	DJANGO_ENV=canary python manage.py create-initial-recurring-schedule
+
+update-recurring-schedule-prod:
+	DJANGO_ENV=prod python manage.py create-initial-recurring-schedule
+
+

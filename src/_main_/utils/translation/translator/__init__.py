@@ -62,7 +62,7 @@ class Translator:
         :return: The translated text
         """
         log.info(f"translating from {source_language} to {target_language}")
-
+        
         name_space = "LocalizationSystem"
         metric_data=[
             {

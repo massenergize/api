@@ -2,14 +2,12 @@ import secrets
 import string
 from math import atan2, cos, radians, sin, sqrt
 
-from _main_.utils.utils import load_json
-from database.models import AboutUsPageSettings, ActionsPageSettings, Community, CommunityAdminGroup, \
-    ContactUsPageSettings, DonatePageSettings, EventsPageSettings, ImpactPageSettings, Media, Menu, \
-    SupportedLanguage, TeamsPageSettings, TestimonialsPageSettings, TranslationsCache, UserProfile, \
-    VendorsPageSettings
-import pyshorteners
-
 from _main_.utils.constants import COMMUNITY_URL_ROOT, DEFAULT_SOURCE_LANGUAGE_CODE
+from _main_.utils.utils import load_json
+from apps__campaigns.models import CallToAction, Section
+from database.models import AboutUsPageSettings, ActionsPageSettings, Community, CommunityAdminGroup, \
+    ContactUsPageSettings, DonatePageSettings, EventsPageSettings, ImpactPageSettings, Media, SupportedLanguage, \
+    TeamsPageSettings, TestimonialsPageSettings, TranslationsCache, UserProfile, VendorsPageSettings
 
 
 def is_admin_of_community(context, community_id):
@@ -327,3 +325,47 @@ def get_supported_language(language_code):
     if supported_language:
         return supported_language.code
     return DEFAULT_SOURCE_LANGUAGE_CODE
+
+
+def create_or_update_call_to_action_from_dict(cta_dict):
+    if not cta_dict or not isinstance(cta_dict, dict):
+        return None
+    cta_id = cta_dict.get("id", None)
+    
+    cta, _ = CallToAction.objects.update_or_create(
+        id=cta_id,
+        defaults={
+            "text": cta_dict.get("text", ""),
+            "url": cta_dict.get("url", ""),
+        }
+    )
+
+    return cta
+
+
+def create_or_update_section_from_dict(section_dict, media=None):
+    if not section_dict or not isinstance(section_dict, dict):
+        return None
+    section_id = section_dict.get("id", None)
+    call_to_action_items = section_dict.get("call_to_action_items", [])
+    
+    defaults = {
+        "title": section_dict.get("title", ""),
+        "description": section_dict.get("description", ""),
+    }
+    if not is_null(media):
+        defaults["media"] = create_media_file(media, f"section-{section_dict.get('title','')}")
+    section, _ = Section.objects.update_or_create(
+        id=section_id,
+        defaults=defaults
+    )
+    
+    if call_to_action_items:
+        for cta_dict in call_to_action_items:
+            cta = create_or_update_call_to_action_from_dict(cta_dict)
+            if cta:
+                section.call_to_action_items.add(cta)
+
+    return section
+
+    

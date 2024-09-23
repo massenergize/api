@@ -384,6 +384,15 @@ def to_django_date(date):
     return parsed_date.date()
 
 
+
+def item_is_empty(item):
+    if isinstance(item, str) and item.strip() in {"", "null", "undefined"}:
+        return True
+    elif (isinstance(item, dict) or isinstance(item, list)) and len(item) == 0:
+        return True
+    return False
+
+
 METRIC_TYPE: Tuple[str, str, str, str] = ("COUNT", "GAUGE", "DISTRIBUTION", "SET")
 
 @run_in_background

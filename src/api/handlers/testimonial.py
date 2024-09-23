@@ -25,10 +25,12 @@ class TestimonialHandler(RouteHandler):
     self.add("/testimonials.delete", self.delete)
     self.add("/testimonials.remove", self.delete)
     self.add("/testimonials.rank", self.rank)
+    self.add("/testimonials.share", self.share_testimonial)
 
     # admin routes
     self.add("/testimonials.listForCommunityAdmin", self.community_admin_list)
     self.add("/testimonials.listForSuperAdmin", self.super_admin_list)
+    self.add("/testimonials.other.listForCommunityAdmin", self.list_testimonials_from_other_communities)
 
   def info(self, request):
     context: Context = request.context
@@ -63,6 +65,9 @@ class TestimonialHandler(RouteHandler):
     self.validator.rename('vendor_id', 'vendor')
     self.validator.rename('preferredName', 'preferred_name')
     self.validator.expect("image", "str_list")
+    self.validator.expect("sharing_type", str, is_required=False)
+    self.validator.expect("audience", list, is_required=False)
+    
     args, err = self.validator.verify(args)
 
     if err:
@@ -153,7 +158,10 @@ class TestimonialHandler(RouteHandler):
     self.validator.rename('vendor_id', 'vendor')
     self.validator.expect("image", "str_list")
     self.validator.expect("help_link", str, is_required=False)
-
+    
+    self.validator.expect("sharing_type", str, is_required=False)
+    self.validator.expect("audience", list, is_required=False)
+    
     expect_media_fields(self)
     args, err = self.validator.verify(args)
 
@@ -221,3 +229,42 @@ class TestimonialHandler(RouteHandler):
     if err:
       return err
     return MassenergizeResponse(data=testimonials)
+  
+  @admins_only
+  def share_testimonial(self, request):
+    context: Context = request.context
+    args: dict = context.args
+
+    self.validator.expect("testimonial_id", int, is_required=True)
+    self.validator.expect("community_ids", "str_list", is_required=True)
+    self.validator.expect("unshare", bool, is_required=False)
+
+    args, err = self.validator.verify(args, strict=True)
+    if err:
+      return err
+
+    testimonial_info, err = self.service.share_testimonial(context, args)
+    if err:
+      return err
+    return MassenergizeResponse(data=testimonial_info)
+  
+  
+  @admins_only
+  def list_testimonials_from_other_communities(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    
+    self.validator.expect("community_ids", "str_list", is_required=False)
+    self.validator.expect("exclude", bool, is_required=False)
+    self.validator.expect("category_ids", "str_list", is_required=False)
+    
+    args, err = self.validator.verify(args, strict=True)
+    if err:
+      return err
+
+    testimonial_info, err = self.service.list_testimonials_from_other_communities(context, args)
+
+    if err:
+      return err
+    return MassenergizeResponse(data=testimonial_info)
+    

@@ -1,4 +1,6 @@
 import datetime
+import re
+
 from dateutil.relativedelta import relativedelta
 
 WEEKLY = "EVERY_WEEK"
@@ -66,3 +68,13 @@ def get_event_location(event):
 	if event.get("location"): return "In-Person"
 	if event.get("online_location"): return "Online"
 	return "N/A"
+
+
+def get_summary(text, word_limit):
+	clean_text = re.sub('<[^<]+?>', '', text)
+	words = clean_text.split()
+	
+	if len(words) <= word_limit:
+		return clean_text
+	summary = ' '.join(words[:word_limit]) + '...'
+	return summary

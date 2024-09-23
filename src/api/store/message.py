@@ -1,12 +1,13 @@
 from datetime import datetime, timedelta
 from _main_.utils.common import parse_datetime_to_aware
-from _main_.utils.constants import ME_LOGO_PNG
+from _main_.utils.constants import AudienceType, ME_LOGO_PNG, SubAudienceType
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from api.tasks import send_scheduled_email
 from api.utils.api_utils import is_admin_of_community, is_null
 from api.utils.filter_functions import get_messages_filter_params
-from database.models import Community, CommunityMember, Message, Media, Team, CommunityAdminGroup, UserProfile
+from database.models import Community, CommunityMember, Message, Media, Team, CommunityAdminGroup, UserActionRel, \
+    UserProfile
 from _main_.utils.massenergize_errors import (
     MassEnergizeAPIError,
     InvalidResourceError,
@@ -24,6 +25,9 @@ from celery.result import AsyncResult
 from django.utils import timezone
 
 
+ALL = "all"
+
+
 def get_schedule(schedule):
     if  not is_null(schedule):
        parsed_datetime = datetime.strptime(schedule, '%a, %d %b %Y %H:%M:%S %Z')
@@ -38,16 +42,71 @@ def get_logo(id):
         if com:
             return com.logo.file.url if com.logo else None
         
+
+def get_message_recipients(audience, audience_type, community_ids,sub_audience_type):
+    """
+    This function is designed to return a list of recipients(emails) for a message based on the various parameters provided.
     
+    Parameters:
+    - audience (str): A string representing the audience to which the message will be delivered.
+        It can have values like `COMMUNITY_CONTACTS`, `SUPER_ADMINS`, `COMMUNITY_ADMIN`, `USERS`, `ACTION_TAKERS`.
+    - audience_type (str): A string that further categorizes the audience. It can alternate between
+        `COMPLETED`, `TODO`, and `BOTH`.
+    - community_ids (list): A list of community IDs that represent the communities targeted by the message.
+    - sub_audience_type (str): This represents the type of users within the audience who will receive the message.
+    
+    Returns:
+    A list of sets containing recipient email addresses. The sets are populated based on the `audience` and `audience_type`.
 
+    """
+    
+    if is_null(audience): return None
+    if community_ids and not isinstance(community_ids, list):
+        community_ids = community_ids.split(",")
 
-def get_message_recipients(audience, audience_type):
-    if not is_null(audience):
+    if audience_type.lower() == AudienceType.COMMUNITY_CONTACTS.value.lower():
+        communities = Community.objects.all()
+        if audience.lower() != ALL.lower():
+            audience = audience.split(",")
+            communities = communities.filter(id__in=audience)
+        return list(set(communities.values_list("owner_email", flat=True)))
+    
+    elif audience_type.lower() == AudienceType.SUPER_ADMINS.value.lower():
+        if audience.lower() == ALL.lower():
+            return list(set(UserProfile.objects.filter(is_super_admin=True).values_list("email", flat=True)))
         audience = audience.split(",")
-        if audience_type == "COMMUNITY_CONTACTS":
-            return Community.objects.filter(id__in=audience).only("owner_email", "id", "name")
+    
+    elif audience_type.lower() == AudienceType.COMMUNITY_ADMIN.value.lower():
+        if audience.lower() == ALL.lower():
+            if not community_ids:
+                return list(set(CommunityAdminGroup.objects.all().values_list("members__email", flat=True)))
+            return list(set(CommunityAdminGroup.objects.filter(community__id__in=community_ids).values_list("members__email", flat=True)))
+    
+        audience = audience.split(",")
         
-        return UserProfile.objects.filter(id__in=audience)
+    elif audience_type.lower() == AudienceType.USERS.value.lower():
+        if audience.lower() == ALL.lower():
+            if not community_ids:
+                return list(set(UserProfile.objects.filter(is_super_admin=False, is_community_admin=False).values_list("email", flat=True)))
+            return list(set(CommunityMember.objects.filter(community__id__in=community_ids).values_list("user__email", flat=True)))
+        audience = audience.split(",")
+        
+    elif audience_type.lower() == AudienceType.ACTION_TAKERS.value.lower():
+        audience = audience.split(",")
+        user_action_rel = []
+        if sub_audience_type.lower() == SubAudienceType.COMPLETED.value.lower():
+            user_action_rel = UserActionRel.objects.filter(status=SubAudienceType.COMPLETED.value, action__id__in=audience).values_list("user__email", flat=True)
+        elif sub_audience_type.lower() == SubAudienceType.TODO.value.lower():
+            user_action_rel = UserActionRel.objects.filter(status=SubAudienceType.TODO.value, action__id__in=audience).values_list("user__email", flat=True)
+            
+        elif sub_audience_type.lower() == SubAudienceType.BOTH.value.lower():
+            status = [SubAudienceType.COMPLETED.value, SubAudienceType.TODO.value]
+            user_action_rel = UserActionRel.objects.filter(action__id__in=audience, status__in=status).values_list("user__email", flat=True)
+            
+        return list(set(user_action_rel))
+        
+    return list(set(UserProfile.objects.filter(id__in=audience).values_list("email", flat=True)))
+
 
 class MessageStore:
     def __init__(self):
@@ -374,12 +433,12 @@ class MessageStore:
             schedule = get_schedule(args.get("schedule", None))
             communities = args.get("community_ids", None)
 
-            recipients = get_message_recipients(audience, audience_type)
+            email_list = get_message_recipients(audience, audience_type, communities, sub_audience_type)
 
             logo = ME_LOGO_PNG
             
             associated_community = None
-            if not recipients:
+            if not email_list:
                 return None, InvalidResourceError()
             
             user = get_user_from_context(context)
@@ -389,8 +448,6 @@ class MessageStore:
             if not context.user_is_super_admin:
                 associated_community = Community.objects.filter(id=communities[0]).first()
                 logo = get_logo(communities[0])
-
-            email_list =  list(recipients.values_list("owner_email" if audience_type == "COMMUNITY_CONTACTS" else "email", flat=True))
         
             if message_id:
                 messages = Message.objects.filter(pk=message_id)
