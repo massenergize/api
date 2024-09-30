@@ -20,7 +20,7 @@ from apps__campaigns.models import (
     CampaignLike,
     CampaignLink,
     CampaignManager,
-    CampaignPartner,
+    CampaignMedia, CampaignPartner,
     CampaignTechnology,
     CampaignTechnologyEvent,
     CampaignTechnologyLike,
@@ -1596,6 +1596,76 @@ class CampaignStore:
 
             cta.delete()
             return cta, None
+        except Exception as e:
+            log.exception(e)
+            return None, CustomMassenergizeError(e)
+        
+        
+    def add_campaign_media(self, context: Context, args: dict):
+        try:
+            campaign_id = args.pop("campaign_id", None)
+            media = args.pop("media", None)
+            order = args.pop("order", 1)
+            
+            if not campaign_id:
+                return None, CustomMassenergizeError("campaign_id is required !")
+            
+            if not media:
+                return None, CustomMassenergizeError("media_id is required !")
+
+            campaign = Campaign.objects.get(pk=campaign_id, is_deleted=False)
+            
+            if not campaign:
+                return None, CustomMassenergizeError("Campaign not found!")
+
+            media = create_media_file(media, f"section-{campaign.title}-media-{order}")
+
+            campaign_media, _ = CampaignMedia.objects.get_or_create(campaign=campaign, media=media, order=order)
+
+            return campaign_media, None
+        except Exception as e:
+            log.exception(e)
+            return None, CustomMassenergizeError(e)
+        
+        
+    def delete_campaign_media(self, context: Context, args: dict):
+        try:
+            media_id = args.pop("id", None)
+            if not media_id:
+                return None, CustomMassenergizeError("id is required !")
+
+            media = CampaignMedia.objects.filter(pk=media_id).first()
+            if not media:
+                return None, CustomMassenergizeError("Campaign Media not found!")
+
+            media.delete()
+            return media, None
+        except Exception as e:
+            log.exception(e)
+            return None, CustomMassenergizeError(e)
+        
+        
+    def update_campaign_media(self, context: Context, args: dict):
+        try:
+            campaign_media_id = args.pop("id", None)
+            order = args.pop("order", None)
+            media = args.pop("media", None)
+            
+            if not campaign_media_id:
+                return None, CustomMassenergizeError("id is required !")
+
+            campaign_media = CampaignMedia.objects.filter(pk=campaign_media_id).first()
+            if not campaign_media:
+                return None, CustomMassenergizeError("Campaign Media not found!")
+            
+            if media:
+                media = create_media_file(media, f"section-{campaign_media.campaign.title}-media-{order}")
+                if media:
+                    campaign_media.media = media
+                    
+            campaign_media.order = order
+            campaign_media.save()
+            return campaign_media, None
         except Exception as e:
             log.exception(e)
             return None, CustomMassenergizeError(e)
