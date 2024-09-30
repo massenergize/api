@@ -439,7 +439,6 @@ class CampaignService:
     def delete_campaign_media(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
         res, err = self.store.delete_campaign_media(context, args)
         if err:
-            print("==ERROR==", err)
             return None,  err
         return serialize(res), None
     
