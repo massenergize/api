@@ -93,7 +93,10 @@ class CampaignHandler(RouteHandler):
         self.add("/campaigns.communities.testimonials.list", self.list_campaign_communities_testimonials)
         self.add("/campaigns.communities.vendors.list", self.list_campaign_communities_vendors)
         self.add("/call.to.action.delete", self.delete_call_to_action)
-
+        
+        self.add("/campaigns.media.add", self.add_campaign_media)
+        self.add("/campaigns.media.delete", self.delete_campaign_media)
+        self.add("/campaigns.media.update", self.update_campaign_media)
 
 
     @admins_only
@@ -1147,6 +1150,61 @@ class CampaignHandler(RouteHandler):
         return err
 
       res, err = self.service.delete_call_to_action(context, args)
+      if err:
+        return err
+      return MassenergizeResponse(data=res)
+    
+    
+    @admins_only
+    def add_campaign_media(self, request):
+      context: Context = request.context
+      args: dict = context.args
+
+      self.validator.expect("campaign_id", str, is_required=True)
+      self.validator.expect("media", "file", is_required=True)
+      self.validator.expect("order", int, is_required=True)
+
+      args, err = self.validator.verify(args, strict=True)
+      if err:
+        return err
+
+      res, err = self.service.add_campaign_media(context, args)
+      if err:
+        return err
+      return MassenergizeResponse(data=res)
+    
+    
+    @admins_only
+    def delete_campaign_media(self, request):
+      context: Context = request.context
+      args: dict = context.args
+
+      self.validator.expect("id", str, is_required=True)
+
+      args, err = self.validator.verify(args, strict=True)
+      if err:
+        return err
+
+      res, err = self.service.delete_campaign_media(context, args)
+      if err:
+        return err
+      return MassenergizeResponse(data=res)
+    
+    
+    @admins_only
+    def update_campaign_media(self, request):
+      context: Context = request.context
+      args: dict = context.args
+
+      self.validator.expect("id", str, is_required=True)
+      self.validator.expect("order", int, is_required=False)
+      self.validator.expect("media", "file", is_required=False)
+
+      args, err = self.validator.verify(args, strict=True)
+      if err:
+        return err
+
+      res, err = self.service.update_campaign_media(context, args)
       if err:
         return err
       return MassenergizeResponse(data=res)

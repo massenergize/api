@@ -223,6 +223,7 @@ class Campaign(BaseModel):
         res["contact_section"] = self.contact_section.simple_json() if self.contact_section else None
         res["call_to_action"] = self.call_to_action.simple_json() if self.call_to_action else None
         res["banner_section"] = self.banner_section.simple_json() if self.banner_section else None
+        res["media"] = [item.simple_json() for item in self.campaign_media.all()]
 
         return res
 
@@ -921,3 +922,26 @@ class TechnologyFaq(Faq):
 
     class TranslationMeta:
         fields_to_translate = ["question", "answer"]
+        
+        
+
+class  CampaignMedia(BaseModel):
+    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, related_name="campaign_media")
+    media = models.ForeignKey("database.Media", on_delete=models.CASCADE)
+    order = models.PositiveIntegerField(default=1)
+
+    def __str__(self):
+        return f"{self.campaign} - {self.media}"
+    
+    def simple_json(self)-> dict:
+        return{
+            "id": str(self.id),
+            "order": self.order,
+            "media": self.media.simple_json()
+        }
+
+    def full_json(self):
+        return self.simple_json()
+
+    class TranslationMeta:
+        fields_to_translate = []
