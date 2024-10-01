@@ -116,6 +116,7 @@ class TechnologyHandler(RouteHandler):
         self.validator.expect("vendors_section", dict, is_required=False)
         self.validator.expect("more_info_section", dict, is_required=False)
         self.validator.expect("faq_section", dict, is_required=False)
+        self.validator.expect("call_to_action", dict, is_required=False)
 
         args, err = self.validator.verify(args, strict=True)
 
