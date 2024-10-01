@@ -298,6 +298,7 @@ class Technology(BaseModel):
     vendors_section = models.JSONField(blank=True, null=True)
     more_info_section = models.JSONField(blank=True, null=True)
     faq_section = models.ForeignKey(Section, on_delete=models.CASCADE, null=True, blank=True, related_name="faq_section")
+    call_to_action = models.ForeignKey(CallToAction, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -309,6 +310,7 @@ class Technology(BaseModel):
         res["image"] = get_json_if_not_none(self.image)
         res["user"] = get_summary_info(self.user)
         res["faq_section"] = self.faq_section.simple_json() if self.faq_section else None
+        res["call_to_action"] = self.call_to_action.simple_json() if self.call_to_action else None
 
         return res
 

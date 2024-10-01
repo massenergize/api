@@ -4356,6 +4356,7 @@ class CampaignSupportedLanguage(BaseModel):
 
     class Meta:
         db_table = "campaign_supported_languages"
+        unique_together = ["language", "campaign"]
 
 
 class TestimonialAutoShareSettings(BaseModel):
