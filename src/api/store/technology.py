@@ -3,7 +3,8 @@ from _main_.utils.massenergize_logger import log
 from _main_.utils.context import Context
 from _main_.utils.massenergize_errors import CustomMassenergizeError, MassEnergizeAPIError
 from api.store.utils import get_user_from_context
-from api.utils.api_utils import create_media_file, create_or_update_section_from_dict
+from api.utils.api_utils import create_media_file, create_or_update_call_to_action_from_dict, \
+    create_or_update_section_from_dict
 from apps__campaigns.models import Technology, TechnologyAction, TechnologyCoach, TechnologyDeal, TechnologyFaq, \
     TechnologyOverview, TechnologyVendor
 from database.models import Media, Vendor
@@ -73,6 +74,9 @@ class TechnologyStore:
             image = args.pop('image', None)
             faq_section = args.pop('faq_section', None)
             section_media = args.pop('media', None)
+            call_to_action = args.pop('call_to_action', None)
+            
+            
             technology = Technology.objects.filter(id=technology_id)
             if not technology:
                 return None, CustomMassenergizeError("Technology does not exist")
@@ -89,6 +93,9 @@ class TechnologyStore:
                 
             if faq_section:
                 technology.faq_section = create_or_update_section_from_dict(faq_section, section_media)
+                
+            if call_to_action:
+                technology.call_to_action = create_or_update_call_to_action_from_dict(call_to_action)
 
             technology.save()
             return technology, None
