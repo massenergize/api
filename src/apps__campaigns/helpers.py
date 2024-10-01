@@ -69,8 +69,7 @@ def get_campaign_technology_details(args):
             "coaches": serialize_all(coaches),
             "campaign_id": campaign_tech.campaign.id,
         }
-        if campaign_tech.campaign.template_key == CAMPAIGN_TEMPLATE_KEYS.get("SINGLE_TECHNOLOGY_CAMPAIGN_SPT"):
-            print("Single technology campaign")
+        if campaign_tech.campaign.template_key != CAMPAIGN_TEMPLATE_KEYS.get("MULTI_TECHNOLOGY_CAMPAIGN"):
             data = {**data, **get_technology_details(campaign_tech.technology.id)}
         else:
             data = {**data, **serialize(campaign_tech.technology)}
