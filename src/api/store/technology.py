@@ -73,9 +73,9 @@ class TechnologyStore:
             technology_id = args.pop('id', None)
             image = args.pop('image', None)
             faq_section = args.pop('faq_section', None)
-            section_media = args.pop('media', None)
             call_to_action = args.pop('call_to_action', None)
-            
+            deal_section = args.pop('deal_section', None)
+            section_media = args.pop('media', None)
             
             technology = Technology.objects.filter(id=technology_id)
             if not technology:
@@ -96,6 +96,9 @@ class TechnologyStore:
                 
             if call_to_action:
                 technology.call_to_action = create_or_update_call_to_action_from_dict(call_to_action)
+            
+            if deal_section:
+                technology.new_deal_section = create_or_update_section_from_dict(deal_section,section_media)
 
             technology.save()
             return technology, None
