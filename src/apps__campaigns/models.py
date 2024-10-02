@@ -198,7 +198,14 @@ class Campaign(BaseModel):
     callout_section = models.ForeignKey(Section, on_delete=models.CASCADE, null=True, blank=True, related_name="callout_section")
     contact_section = models.ForeignKey(Section, on_delete=models.CASCADE, null=True, blank=True, related_name="contact_section")
     banner_section = models.ForeignKey(Section, on_delete=models.CASCADE, null=True, blank=True, related_name="banner_section")
-
+    
+    get_in_touch_section = models.ForeignKey(Section, on_delete=models.CASCADE, null=True, blank=True, related_name="get_in_touch_section")
+    about_us_section = models.ForeignKey(Section, on_delete=models.CASCADE, null=True, blank=True, related_name="about_us_section")
+    eligibility_section = models.ForeignKey(Section, on_delete=models.CASCADE, null=True, blank=True, related_name="eligibility_section")
+    
+    
+    
+    
     def __str__(self):
         return f"{self.account} - {self.title}"
 
@@ -224,6 +231,9 @@ class Campaign(BaseModel):
         res["call_to_action"] = self.call_to_action.simple_json() if self.call_to_action else None
         res["banner_section"] = self.banner_section.simple_json() if self.banner_section else None
         res["media"] = [item.simple_json() for item in self.campaign_media.all()]
+        res["get_in_touch_section"] = self.get_in_touch_section.simple_json() if self.get_in_touch_section else None
+        res["about_us_section"] = self.about_us_section.simple_json() if self.about_us_section else None
+        res["eligibility_section"] = self.eligibility_section.simple_json() if self.eligibility_section else None
 
         return res
 
@@ -299,9 +309,16 @@ class Technology(BaseModel):
     more_info_section = models.JSONField(blank=True, null=True)
     faq_section = models.ForeignKey(Section, on_delete=models.CASCADE, null=True, blank=True, related_name="faq_section")
     call_to_action = models.ForeignKey(CallToAction, on_delete=models.CASCADE, null=True, blank=True)
+    
+    new_deal_section = models.ForeignKey(Section, on_delete=models.CASCADE, null=True, blank=True, related_name="new_deals_section")
 
     def __str__(self):
         return self.name
+    
+    def get_deals_section_data(self):
+        if self.new_deal_section:
+            return self.new_deal_section.simple_json()
+        return self.deal_section
 
     def simple_json(self)-> dict:
         res = super().to_json()
@@ -311,6 +328,7 @@ class Technology(BaseModel):
         res["user"] = get_summary_info(self.user)
         res["faq_section"] = self.faq_section.simple_json() if self.faq_section else None
         res["call_to_action"] = self.call_to_action.simple_json() if self.call_to_action else None
+        res["deal_section"] = self.get_deals_section_data()
 
         return res
 
