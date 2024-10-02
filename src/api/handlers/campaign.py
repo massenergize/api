@@ -234,6 +234,9 @@ class CampaignHandler(RouteHandler):
         .expect("contact_section", dict, is_required=False)
          .expect("call_to_action", dict, is_required=False)
          .expect("banner_section", dict, is_required=False)
+        .expect("get_in_touch_section", dict, is_required=False)
+         .expect("about_us_section", dict, is_required=False )
+         .expect("eligibility_section", dict, is_required=False)
         )
 
 
