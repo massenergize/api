@@ -965,3 +965,28 @@ class  CampaignMedia(BaseModel):
 
     class TranslationMeta:
         fields_to_translate = []
+        
+
+class CampaignContact(BaseModel):
+    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, related_name="campaign_contact")
+    email = models.EmailField(blank=True, null=True)
+    full_name = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
+    phone_number = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
+    language = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
+    message = models.TextField(blank=True, null=True)
+    community = models.ForeignKey("database.Community", on_delete=models.CASCADE, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.campaign.title} - {self.email}"
+
+    def simple_json(self)-> dict:
+        res = super().to_json()
+        res.update(model_to_dict(self))
+        res["campaign"] = get_summary_info(self.campaign)
+        return res
+
+    def full_json(self):
+        return self.simple_json()
+
+    class TranslationMeta:
+        fields_to_translate = []
