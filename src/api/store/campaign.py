@@ -1698,10 +1698,10 @@ class CampaignStore:
             community = None
             
             if not campaign_id:
-                return None, CustomMassenergizeError("campaign_id is required !")
+                return None, CustomMassenergizeError("campaign_id is required!")
             
             if not email:
-                return None, CustomMassenergizeError("email is required !")
+                return None, CustomMassenergizeError("email is required!")
             
             campaign = None
             try:
@@ -1720,7 +1720,7 @@ class CampaignStore:
                 community, _ = Community.objects.get_or_create(name="Other")
 
             if language:
-                supported_language = campaign.supported_languages.filter(code=language).first()
+                supported_language = campaign.supported_languages.filter(language__code=language).first()
                 language = supported_language.language.name if supported_language else "English"
                 
             campaign_contact = CampaignContact(
@@ -1750,7 +1750,9 @@ class CampaignStore:
             )
             
             # send email to admin
-            admin = campaign.campaign_manager.filter(is_key_contact=True).first().user
+            campaign_admin = campaign.campaign_manager.filter(is_key_contact=True).first()
+            admin = campaign_admin.user if campaign_admin else None
+            admin_email = admin.email if admin else ""
             send_massenergize_email_with_attachments(
                 CAMPAIGN_CONTACT_MESSAGE_TEMPLATE,
                 {
@@ -1763,7 +1765,7 @@ class CampaignStore:
                     "year": datetime.now().year,
                 },
                 
-                [admin.email],
+                [admin_email],
                 None,
                 None,
             )
