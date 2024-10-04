@@ -1718,6 +1718,10 @@ class CampaignStore:
                 community = Community.objects.get(pk=community_id, is_deleted=False)
             else:
                 community, _ = Community.objects.get_or_create(name="Other")
+
+            if language:
+                supported_language = campaign.supported_languages.filter(code=language).first()
+                language = supported_language.language.name if supported_language else "English"
                 
             campaign_contact = CampaignContact(
                 campaign=campaign,
