@@ -1,6 +1,7 @@
 from django.apps import apps
 from django.utils import timezone
 
+from _main_.utils.constants import DEFAULT_SOURCE_LANGUAGE_CODE
 from _main_.utils.massenergize_logger import log
 from _main_.utils.metrics import timed
 from _main_.utils.translation import JsonTranslator
@@ -39,7 +40,7 @@ class TranslateDBContents:
 			supported_languages = self.get_supported_languages()
 			for lang in supported_languages:
 				log.info(f"Task: Translating DB contents to {lang}")
-				self.translator({"data": data}).translate("en", lang)
+				self.translator({"data": data}).translate(DEFAULT_SOURCE_LANGUAGE_CODE, lang)
 				
 			log.info("Task: Finished translating all DB contents")
 			return True
@@ -48,7 +49,7 @@ class TranslateDBContents:
 			return False
 	
 	@timed
-	def start_translations(self) -> bool:
+	def start_translations(self, task=None) -> bool:
 		try:
 			start_time = timezone.now()
 			log.info("Starting translation process for {}".format(start_time))
