@@ -86,7 +86,7 @@ class CampaignStore:
                 campaigns = Campaign.objects.filter(account__subdomain=subdomain)
 
             else:
-                campaigns = Campaign.objects.filter(Q(owner__id=context.user_id)| Q(owner__email=context.user_email)| Q(is_global=True))
+                campaigns = Campaign.objects.filter(Q(owner__id=context.user_id)| Q(owner__email=context.user_email)| Q(is_global=True) | Q(is_published=True), is_deleted=False)
 
             return campaigns.distinct().order_by("-created_at"), None
         except Exception as e:
