@@ -118,7 +118,7 @@ class TechnologyHandler(RouteHandler):
         self.validator.expect("faq_section", dict, is_required=False)
         self.validator.expect("call_to_action", dict, is_required=False)
         self.validator.expect("overview_title", str, is_required=False)
-
+        self.validator.expect("media", "file", is_required=False)
         args, err = self.validator.verify(args, strict=True)
 
         if err:

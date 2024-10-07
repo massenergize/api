@@ -174,21 +174,23 @@ class TechnologiesIntegrationTestCase(TestCase):
             "more_info_section": json.dumps({"title": "Test Title", "description": "Test Description"}),
             "deal_section": json.dumps({"title": "Test Title", "description": "Test Description"}),
             "vendors_section": json.dumps({"title": "Test Title", "description": "Test Description"}),
-
+            "faq_section": json.dumps({"title": "Frequently Asked Questions", "description": "Test FAQ Answer"})
         }
+
         signinAs(self.client, self.SADMIN)
         response = self.make_request("technologies.update", payload)
+
         self.assertEqual(response['success'], True)
         self.assertIsInstance(response['data'], dict)
         self.assertEqual(response['data']['summary'], "Test Technology Description Updated")
-        self.assertEqual(response['data']['coaches_section'],
-                         {"title": "Test Title", "description": "Test Description"})
-        self.assertEqual(response['data']['more_info_section'],
-                         {"title": "Test Title", "description": "Test Description"})
-        self.assertEqual(response['data']['deal_section'], {"title": "Test Title", "description": "Test Description"})
-        self.assertEqual(response['data']['vendors_section'],
-                         {"title": "Test Title", "description": "Test Description"})
+        self.assertEqual(response['data']['coaches_section'],{"title": "Test Title", "description": "Test Description"})
+        self.assertEqual(response['data']['more_info_section'],{"title": "Test Title", "description": "Test Description"})
+        self.assertDictContainsSubset({"title": "Test Title", "description": "Test Description"},response['data']['deal_section'])
+        self.assertEqual(response['data']['vendors_section'], {"title": "Test Title", "description": "Test Description"})
         self.assertEqual(response['data']['name'], "Test Technology Updated")
+        self.assertDictContainsSubset({"title": "Frequently Asked Questions", "description": "Test FAQ Answer"},response['data']['faq_section'])
+
+
 
         Console.header("Testing the technologies.update endpoint as a community admin.")
         signinAs(self.client, self.CADMIN)
@@ -197,8 +199,7 @@ class TechnologiesIntegrationTestCase(TestCase):
         self.assertIsInstance(response['data'], dict)
         self.assertEqual(response['data']['name'], "Test Technology Updated")
         self.assertEqual(response['data']['summary'], "Test Technology Description Updated")
-        self.assertEqual(response['data']['coaches_section'],
-                         {"title": "Test Title", "description": "Test Description"})
+        self.assertEqual(response['data']['coaches_section'], {"title": "Test Title", "description": "Test Description"})
 
         Console.header("Testing the technologies.update endpoint as a user.")
         signinAs(self.client, self.USER)

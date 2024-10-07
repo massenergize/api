@@ -948,6 +948,54 @@ class CampaignsIntegrationTestCase(TestCase):
         response = self.make_request("campaigns.communities.vendors.list", payload)
         self.assertEqual(response['success'], False)
         self.assertEqual(response['error'], "permission_denied")
+
+
+    def test_campaign_contact_us(self):
+        payload = {
+            "campaign_id": str(self.CAMPAIGN.id),
+            "email":"test@me.com", 
+            "language":"es-ES",
+            "full_name":"Test User",
+            "phone_number":"1234567890",
+            "community_id": str(self.COMMUNITY_1.id),
+        }
+        Console.header("Testing the campaigns.contact.us endpoint Good data")
+        signinAs(self.client, self.USER)
+
+        response = self.make_request("campaigns.contact.us", payload)
+
+        self.assertEqual(response['success'], True)
+        self.assertIsInstance(response['data'], dict)
+        self.assertIn("message", response['data'])
+
+
+        Console.header("Testing the campaigns.contact.us endpoint NO campaign_id")
+        payload = {
+            "email":"xyz@gmail.com",
+            "language":"es-ES",
+            "full_name":"Test User",
+            "phone_number":"1234567890",
+            "other": json.dumps({"community_name": "New York"}),
+        }
+        response = self.make_request("campaigns.contact.us", payload)
+        self.assertEqual(response['success'], False)
+        self.assertEqual(response['error'], "You are Missing a Required Input: Campaign Id")
+
+
+        Console.header("Testing the campaigns.contact.us endpoint NO email")
+        payload = {
+            "campaign_id": str(self.CAMPAIGN.id),
+            "language":"es-ES",
+            "full_name":"Test User",
+            "phone_number":"1234567890",
+            "other": json.dumps({"community_name": "New York"}),
+        }
+        response = self.make_request("campaigns.contact.us", payload)
+        self.assertEqual(response['success'], False)
+        self.assertEqual(response['error'], "You are Missing a Required Input: Email")
+
+
+
         
         
 

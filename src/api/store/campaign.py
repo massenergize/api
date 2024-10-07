@@ -1,6 +1,8 @@
 from datetime import datetime
 from uuid import UUID
 from _main_.utils.common import contains_profane_words, shorten_url
+from _main_.utils.constants import CAMPAIGN_URL_ROOT
+from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
 from api.constants import CAMPAIGN_TEMPLATE_KEYS, LOOSED_USER
 from api.utils.api_utils import create_media_file, create_or_update_call_to_action_from_dict, \
     create_or_update_section_from_dict
@@ -16,7 +18,7 @@ from apps__campaigns.models import (
     CampaignActivityTracking,
     CampaignCommunity,
     CampaignConfiguration,
-    CampaignFollow,
+    CampaignContact, CampaignFollow,
     CampaignLike,
     CampaignLink,
     CampaignManager,
@@ -44,7 +46,7 @@ from _main_.utils.massenergize_logger import log
 from typing import Tuple
 from django.db import transaction
 
-
+from ..utils.constants import CAMPAIGN_CONTACT_MESSAGE_TEMPLATE, THANK_YOU_FOR_GETTING_IN_TOUCH_TEMPLATE
 
 
 class CampaignStore:
@@ -176,6 +178,9 @@ class CampaignStore:
             contact_section = args.pop("contact_section", None)
             call_to_action = args.pop("call_to_action", None)
             banner_section = args.pop("banner_section", None)
+            get_in_touch_section = args.pop("get_in_touch_section", None)
+            about_us_section = args.pop("about_us_section", None)
+            eligibility_section = args.pop("eligibility_section", None)
 
             campaigns = Campaign.objects.filter(id=campaign_id)
             if not campaigns:
@@ -217,7 +222,15 @@ class CampaignStore:
 
             if banner_section:
                 args["banner_section"] = create_or_update_section_from_dict(banner_section, section_media)
-
+                
+            if get_in_touch_section:
+                args["get_in_touch_section"] = create_or_update_section_from_dict(get_in_touch_section, section_media)
+            
+            if about_us_section:
+                args["about_us_section"] = create_or_update_section_from_dict(about_us_section, section_media)
+                
+            if eligibility_section:
+                args["eligibility_section"] = create_or_update_section_from_dict(eligibility_section, section_media)
             campaigns.update(**args)
 
             return campaigns.first(), None
@@ -1666,6 +1679,98 @@ class CampaignStore:
             campaign_media.order = order
             campaign_media.save()
             return campaign_media, None
+        except Exception as e:
+            log.exception(e)
+            return None, CustomMassenergizeError(e)
+        
+        
+    def campaign_contact_us(self, context: Context, args: dict):
+        try:
+            campaign_id = args.pop("campaign_id", None)
+            email = args.pop("email", None)
+            message = args.pop("message", None)
+            full_name = args.pop("full_name", None)
+            phone_number = args.pop("phone_number", None)
+            language = args.pop("language", None)
+            community_id = args.pop("community_id", None)
+            other = args.pop("other", None)
+            
+            community = None
+            
+            if not campaign_id:
+                return None, CustomMassenergizeError("campaign_id is required!")
+            
+            if not email:
+                return None, CustomMassenergizeError("email is required!")
+            
+            campaign = None
+            try:
+                uuid_id = UUID(campaign_id, version=4)
+                campaign = Campaign.objects.filter(id=uuid_id, is_deleted=False).first()
+            except ValueError:
+                campaign = Campaign.objects.filter(slug=campaign_id, is_deleted=False).first()
+            
+            if not campaign:
+                return None, CustomMassenergizeError("Campaign with id does not exist")
+
+        
+            if community_id:
+                community = Community.objects.get(pk=community_id, is_deleted=False)
+            else:
+                community, _ = Community.objects.get_or_create(name="Other")
+
+            if language:
+                supported_language = campaign.supported_languages.filter(language__code=language).first()
+                language = supported_language.language.name if supported_language else "English"
+                
+            campaign_contact = CampaignContact(
+                campaign=campaign,
+                email=email,
+                message=message,
+                full_name=full_name,
+                phone_number=phone_number,
+                language=language,
+                community=community
+            )
+            if other:
+                campaign_contact.info = other
+            campaign_contact.save()
+                
+            #  send email to user
+            send_massenergize_email_with_attachments(
+                THANK_YOU_FOR_GETTING_IN_TOUCH_TEMPLATE,
+                {
+                    "campaign_name": campaign.title,
+                    "campaign_url": f"{CAMPAIGN_URL_ROOT}/campaign/{campaign.slug}",
+                    "year": datetime.now().year,
+                },
+                [email],
+                None,
+                None,
+            )
+            
+            # send email to admin
+            campaign_admin = campaign.campaign_manager.filter(is_key_contact=True).first()
+            admin = campaign_admin.user if campaign_admin else None
+            admin_email = admin.email if admin else ""
+            send_massenergize_email_with_attachments(
+                CAMPAIGN_CONTACT_MESSAGE_TEMPLATE,
+                {
+                    "admin_name": admin.full_name if admin else "Admin",
+                    "campaign_name": campaign.title,
+                    "full_name": full_name,
+                    "email": email,
+                    "phone_number": phone_number,
+                    "language":language,
+                    "year": datetime.now().year,
+                },
+                
+                [admin_email],
+                None,
+                None,
+            )
+            
+            return {"message": "Email sent successfully"}, None
         except Exception as e:
             log.exception(e)
             return None, CustomMassenergizeError(e)

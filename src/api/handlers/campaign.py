@@ -97,6 +97,7 @@ class CampaignHandler(RouteHandler):
         self.add("/campaigns.media.add", self.add_campaign_media)
         self.add("/campaigns.media.delete", self.delete_campaign_media)
         self.add("/campaigns.media.update", self.update_campaign_media)
+        self.add("/campaigns.contact.us", self.campaign_contact_us)
 
 
     @admins_only
@@ -234,6 +235,9 @@ class CampaignHandler(RouteHandler):
         .expect("contact_section", dict, is_required=False)
          .expect("call_to_action", dict, is_required=False)
          .expect("banner_section", dict, is_required=False)
+        .expect("get_in_touch_section", dict, is_required=False)
+         .expect("about_us_section", dict, is_required=False )
+         .expect("eligibility_section", dict, is_required=False)
         )
 
 
@@ -1205,6 +1209,29 @@ class CampaignHandler(RouteHandler):
         return err
 
       res, err = self.service.update_campaign_media(context, args)
+      if err:
+        return err
+      return MassenergizeResponse(data=res)
+    
+    
+    def campaign_contact_us(self, request):
+      context: Context = request.context
+      args: dict = context.args
+
+      self.validator.expect("campaign_id", str, is_required=True)
+      self.validator.expect("email", str, is_required=True)
+      self.validator.expect("phone_number", str, is_required=False)
+      self.validator.expect("full_name", str, is_required=False)
+      self.validator.expect("language", str, is_required=False)
+      self.validator.expect("message", str, is_required=False)
+      self.validator.expect("community_id", str, is_required=False)
+      self.validator.expect("other", dict, is_required=False)
+
+      args, err = self.validator.verify(args, strict=True)
+      if err:
+        return err
+
+      res, err = self.service.campaign_contact_us(context, args)
       if err:
         return err
       return MassenergizeResponse(data=res)
