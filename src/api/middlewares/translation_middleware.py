@@ -27,10 +27,11 @@ class TranslationMiddleware:
 	
 	def __init__(self, get_response):
 		self.get_response = get_response
+		self.metric_tracker = TranslationMetrics()
 	
 	def __call__(self, request):
 		response = self.get_response(request)
-		metric_tracker = TranslationMetrics()
+		
 
 		if 'application/json' in response['Content-Type']:  #TODO: create an HTML translator
 			original_content = response.content.decode('utf-8')
@@ -50,8 +51,8 @@ class TranslationMiddleware:
 
 			site_id = str(platform_id).lower() + "|" + str(page_id).lower()
 				
-			metric_tracker.track_language_usage_count(target_language_code)
-			metric_tracker.track_language_usage_per_site(target_language_code, site_id)
+			self.metric_tracker.track_language_usage_count(target_language_code)
+			self.metric_tracker.track_language_usage_per_site(target_language_code, site_id)
 		
 			request_path = request.get_full_path()
 			if request_path.startswith('/api'):
@@ -64,7 +65,7 @@ class TranslationMiddleware:
 			
 			translated_dict, _, __ = translator.translate('en', target_language_code)
 			duration = time.time() - start_time
-			metric_tracker.track_translation_latency("en",target_language,duration)
+			self.metric_tracker.track_translation_latency("en",target_language,duration)
 
 			response.content = json.dumps(translated_dict).encode('utf-8')
 		
