@@ -1,8 +1,11 @@
 from datetime import datetime
 from uuid import UUID
 from _main_.utils.common import contains_profane_words, shorten_url
-from api.constants import LOOSED_USER
-from api.utils.api_utils import create_media_file
+from _main_.utils.constants import CAMPAIGN_URL_ROOT
+from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
+from api.constants import CAMPAIGN_TEMPLATE_KEYS, LOOSED_USER
+from api.utils.api_utils import create_media_file, create_or_update_call_to_action_from_dict, \
+    create_or_update_section_from_dict
 from apps__campaigns.helpers import (
     copy_campaign_data,
     generate_analytics_data,
@@ -10,16 +13,16 @@ from apps__campaigns.helpers import (
     get_campaign_technology_details,
 )
 from apps__campaigns.models import (
-    Campaign,
+    CallToAction, Campaign,
     CampaignAccount,
     CampaignActivityTracking,
     CampaignCommunity,
     CampaignConfiguration,
-    CampaignFollow,
+    CampaignContact, CampaignFollow,
     CampaignLike,
     CampaignLink,
     CampaignManager,
-    CampaignPartner,
+    CampaignMedia, CampaignPartner,
     CampaignTechnology,
     CampaignTechnologyEvent,
     CampaignTechnologyLike,
@@ -43,7 +46,7 @@ from _main_.utils.massenergize_logger import log
 from typing import Tuple
 from django.db import transaction
 
-
+from ..utils.constants import CAMPAIGN_CONTACT_MESSAGE_TEMPLATE, THANK_YOU_FOR_GETTING_IN_TOUCH_TEMPLATE
 
 
 class CampaignStore:
@@ -83,7 +86,7 @@ class CampaignStore:
                 campaigns = Campaign.objects.filter(account__subdomain=subdomain)
 
             else:
-                campaigns = Campaign.objects.filter(Q(owner__id=context.user_id)| Q(owner__email=context.user_email)| Q(is_global=True))
+                campaigns = Campaign.objects.filter(Q(owner__id=context.user_id)| Q(owner__email=context.user_email)| Q(is_global=True) | Q(is_published=True), is_deleted=False)
 
             return campaigns.distinct().order_by("-created_at"), None
         except Exception as e:
@@ -168,6 +171,17 @@ class CampaignStore:
             campaign_image = args.pop("campaign_image", None)
             campaign_id = args.pop("id", None)
 
+            banner = args.pop("banner", None)
+            section_media = args.pop("media", None)
+            goal_section = args.pop("goal_section", None)
+            callout_section = args.pop("callout_section", None)
+            contact_section = args.pop("contact_section", None)
+            call_to_action = args.pop("call_to_action", None)
+            banner_section = args.pop("banner_section", None)
+            get_in_touch_section = args.pop("get_in_touch_section", None)
+            about_us_section = args.pop("about_us_section", None)
+            eligibility_section = args.pop("eligibility_section", None)
+
             campaigns = Campaign.objects.filter(id=campaign_id)
             if not campaigns:
                 return None, CustomMassenergizeError("Campaign with id does not exist")
@@ -182,8 +196,6 @@ class CampaignStore:
                     if not campaign_manager:
                         return None, NotAuthorizedError()
 
-
-
             if primary_logo:
                 args["primary_logo"] = create_media_file(primary_logo, f"PrimaryLogoFor {campaign_id} Campaign")
             if secondary_logo:
@@ -193,6 +205,32 @@ class CampaignStore:
             if campaign_image:
                 args["image"] = create_media_file(campaign_image, f"ImageFor {campaign_id} Campaign")
 
+            if banner:
+                args["banner"] = create_media_file(banner, f"BannerFor {campaign_id} Campaign")
+
+            if goal_section:
+                args["goal_section"] = create_or_update_section_from_dict(goal_section, section_media)
+
+            if callout_section:
+                args["callout_section"] = create_or_update_section_from_dict(callout_section, section_media)
+
+            if contact_section:
+                args["contact_section"] = create_or_update_section_from_dict(contact_section, section_media)
+
+            if call_to_action:
+                args["call_to_action"] = create_or_update_call_to_action_from_dict(call_to_action)
+
+            if banner_section:
+                args["banner_section"] = create_or_update_section_from_dict(banner_section, section_media)
+                
+            if get_in_touch_section:
+                args["get_in_touch_section"] = create_or_update_section_from_dict(get_in_touch_section, section_media)
+            
+            if about_us_section:
+                args["about_us_section"] = create_or_update_section_from_dict(about_us_section, section_media)
+                
+            if eligibility_section:
+                args["eligibility_section"] = create_or_update_section_from_dict(eligibility_section, section_media)
             campaigns.update(**args)
 
             return campaigns.first(), None
@@ -820,7 +858,7 @@ class CampaignStore:
 
             if not event_ids:
                 return None, CustomMassenergizeError("event_ids is required!")
-            
+
             if not context.user_is_super_admin:
                 if context.user_email != campaign_tech.campaign.owner.email:
                     campaign_manager = CampaignManager.objects.filter(user__id=context.user_id,campaign__id=campaign_tech.campaign.id, is_deleted=False)
@@ -898,7 +936,7 @@ class CampaignStore:
 
             if not campaign_id:
                 return None, CustomMassenergizeError("Campaign id not found!")
-            
+
             if not community_id and not is_other:
                 return None, CustomMassenergizeError("Please select a community!")
 
@@ -927,7 +965,6 @@ class CampaignStore:
         except Exception as e:
             log.exception(e)
             return None, CustomMassenergizeError(e)
-
 
     def add_campaign_technology_follower(self, context, args):
         try:
@@ -1212,20 +1249,22 @@ class CampaignStore:
             account_id = args.pop("campaign_account_id", None)
             community_ids = args.pop("community_ids", [])
             title = args.pop("title", None)
+            template_key = args.pop("template_key", None)
 
             user = get_user_from_context(context)
+
             if not user:
                 return None, CustomMassenergizeError("User not found")
+
+            if template_key == CAMPAIGN_TEMPLATE_KEYS.get("MULTI_TECHNOLOGY_CAMPAIGN"):
+                if not community_ids:
+                    return None, CustomMassenergizeError("Community ids not provided")
 
             if not account_id:
                 return None, CustomMassenergizeError("Account id not provided")
 
-            if not community_ids:
-                return None, CustomMassenergizeError("Community ids not provided")
-
             if not title:
                 return None, CustomMassenergizeError("Title not provided")
-
 
             account = CampaignAccount.objects.filter(id=account_id).first()
 
@@ -1235,6 +1274,7 @@ class CampaignStore:
             new_campaign.is_global = False
             new_campaign.is_template = False
             new_campaign.owner = user
+            new_campaign.template_key = template_key
             new_campaign.save()
 
             for community_id in community_ids:
@@ -1505,7 +1545,7 @@ class CampaignStore:
             campaign_technology_event = CampaignTechnologyEvent.objects.filter(pk=tech_event_id).first()
             if not campaign_technology_event:
                 return None, CustomMassenergizeError("Campaign Technology Event not found!")
-            
+
             if not context.user_is_super_admin:
                 if context.user_email != campaign_technology_event.campaign_technology.campaign.owner.email:
                     campaign_manager = CampaignManager.objects.filter(user__id=context.user_id,campaign__id=campaign_technology_event.campaign_technology.campaign.id, is_deleted=False)
@@ -1552,6 +1592,185 @@ class CampaignStore:
 
 
             return campaign_managers.order_by("-created_at"), None
+        except Exception as e:
+            log.exception(e)
+            return None, CustomMassenergizeError(e)
+
+
+    def delete_call_to_action(self, context: Context, args: dict):
+        try:
+            cta_id = args.pop("id", None)
+            if not cta_id:
+                return None, CustomMassenergizeError("id is required !")
+
+            cta = CallToAction.objects.filter(pk=cta_id).first()
+            if not cta:
+                return None, CustomMassenergizeError("Call to action not found!")
+
+            cta.delete()
+            return cta, None
+        except Exception as e:
+            log.exception(e)
+            return None, CustomMassenergizeError(e)
+        
+        
+    def add_campaign_media(self, context: Context, args: dict):
+        try:
+            campaign_id = args.pop("campaign_id", None)
+            media = args.pop("media", None)
+            order = args.pop("order", 1)
+            
+            if not campaign_id:
+                return None, CustomMassenergizeError("campaign_id is required !")
+            
+            if not media:
+                return None, CustomMassenergizeError("media_id is required !")
+
+            campaign = Campaign.objects.get(pk=campaign_id, is_deleted=False)
+            
+            if not campaign:
+                return None, CustomMassenergizeError("Campaign not found!")
+
+            media = create_media_file(media, f"section-{campaign.title}-media-{order}")
+
+            campaign_media, _ = CampaignMedia.objects.get_or_create(campaign=campaign, media=media, order=order)
+
+            return campaign_media, None
+        except Exception as e:
+            log.exception(e)
+            return None, CustomMassenergizeError(e)
+        
+        
+    def delete_campaign_media(self, context: Context, args: dict):
+        try:
+            media_id = args.pop("id", None)
+            if not media_id:
+                return None, CustomMassenergizeError("id is required !")
+
+            media = CampaignMedia.objects.filter(pk=media_id).first()
+            if not media:
+                return None, CustomMassenergizeError("Campaign Media not found!")
+
+            media.delete()
+            return media, None
+        except Exception as e:
+            log.exception(e)
+            return None, CustomMassenergizeError(e)
+        
+        
+    def update_campaign_media(self, context: Context, args: dict):
+        try:
+            campaign_media_id = args.pop("id", None)
+            order = args.pop("order", None)
+            media = args.pop("media", None)
+            
+            if not campaign_media_id:
+                return None, CustomMassenergizeError("id is required !")
+
+            campaign_media = CampaignMedia.objects.filter(pk=campaign_media_id).first()
+            if not campaign_media:
+                return None, CustomMassenergizeError("Campaign Media not found!")
+            
+            if media:
+                media = create_media_file(media, f"section-{campaign_media.campaign.title}-media-{order}")
+                if media:
+                    campaign_media.media = media
+                    
+            campaign_media.order = order
+            campaign_media.save()
+            return campaign_media, None
+        except Exception as e:
+            log.exception(e)
+            return None, CustomMassenergizeError(e)
+        
+        
+    def campaign_contact_us(self, context: Context, args: dict):
+        try:
+            campaign_id = args.pop("campaign_id", None)
+            email = args.pop("email", None)
+            message = args.pop("message", None)
+            full_name = args.pop("full_name", None)
+            phone_number = args.pop("phone_number", None)
+            language = args.pop("language", None)
+            community_id = args.pop("community_id", None)
+            other = args.pop("other", None)
+            
+            community = None
+            
+            if not campaign_id:
+                return None, CustomMassenergizeError("campaign_id is required!")
+            
+            if not email:
+                return None, CustomMassenergizeError("email is required!")
+            
+            campaign = None
+            try:
+                uuid_id = UUID(campaign_id, version=4)
+                campaign = Campaign.objects.filter(id=uuid_id, is_deleted=False).first()
+            except ValueError:
+                campaign = Campaign.objects.filter(slug=campaign_id, is_deleted=False).first()
+            
+            if not campaign:
+                return None, CustomMassenergizeError("Campaign with id does not exist")
+
+        
+            if community_id:
+                community = Community.objects.get(pk=community_id, is_deleted=False)
+            else:
+                community, _ = Community.objects.get_or_create(name="Other")
+
+            if language:
+                supported_language = campaign.supported_languages.filter(language__code=language).first()
+                language = supported_language.language.name if supported_language else "English"
+                
+            campaign_contact = CampaignContact(
+                campaign=campaign,
+                email=email,
+                message=message,
+                full_name=full_name,
+                phone_number=phone_number,
+                language=language,
+                community=community
+            )
+            if other:
+                campaign_contact.info = other
+            campaign_contact.save()
+                
+            #  send email to user
+            send_massenergize_email_with_attachments(
+                THANK_YOU_FOR_GETTING_IN_TOUCH_TEMPLATE,
+                {
+                    "campaign_name": campaign.title,
+                    "campaign_url": f"{CAMPAIGN_URL_ROOT}/campaign/{campaign.slug}",
+                    "year": datetime.now().year,
+                },
+                [email],
+                None,
+                None,
+            )
+            
+            # send email to admin
+            campaign_admin = campaign.campaign_manager.filter(is_key_contact=True).first()
+            admin = campaign_admin.user if campaign_admin else None
+            admin_email = admin.email if admin else ""
+            send_massenergize_email_with_attachments(
+                CAMPAIGN_CONTACT_MESSAGE_TEMPLATE,
+                {
+                    "admin_name": admin.full_name if admin else "Admin",
+                    "campaign_name": campaign.title,
+                    "full_name": full_name,
+                    "email": email,
+                    "phone_number": phone_number,
+                    "language":language,
+                    "year": datetime.now().year,
+                },
+                
+                [admin_email],
+                None,
+                None,
+            )
+            
+            return {"message": "Email sent successfully"}, None
         except Exception as e:
             log.exception(e)
             return None, CustomMassenergizeError(e)

@@ -420,3 +420,39 @@ class CampaignService:
             return None, err
 
         return serialize_all(res, full=True), None
+    
+    def delete_call_to_action(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        res, err = self.store.delete_call_to_action(context, args)
+        if err:
+            return None, err
+
+        return serialize(res), None
+    
+    
+    def add_campaign_media(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        res, err = self.store.add_campaign_media(context, args)
+        if err:
+            return None, err
+
+        return serialize(res), None
+    
+    def delete_campaign_media(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        res, err = self.store.delete_campaign_media(context, args)
+        if err:
+            return None,  err
+        return serialize(res), None
+    
+    
+    def update_campaign_media(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        res, err = self.store.update_campaign_media(context, args)
+        if err:
+            return None, err
+
+        return serialize(res), None
+    
+    def campaign_contact_us(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        res, err = self.store.campaign_contact_us(context, args)
+        if err:
+            return None, err
+        
+        return res, None

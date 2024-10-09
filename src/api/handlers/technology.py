@@ -42,6 +42,11 @@ class TechnologyHandler(RouteHandler):
         self.add("/technologies.actions.create", self.create_technology_action)
         self.add("/technologies.actions.update", self.update_technology_action)
         self.add("/technologies.actions.delete", self.delete_technology_action)
+        
+        self.add("/technologies.faqs.create", self.create_technology_faq)
+        self.add("/technologies.faqs.update", self.update_technology_faq)
+        self.add("/technologies.faqs.delete", self.delete_technology_faq)
+        self.add("/technologies.faqs.list", self.list_technology_faqs)
 
     def info(self, request):
         context: Context = request.context
@@ -110,7 +115,10 @@ class TechnologyHandler(RouteHandler):
         self.validator.expect("deal_section", dict, is_required=False)
         self.validator.expect("vendors_section", dict, is_required=False)
         self.validator.expect("more_info_section", dict, is_required=False)
-
+        self.validator.expect("faq_section", dict, is_required=False)
+        self.validator.expect("call_to_action", dict, is_required=False)
+        self.validator.expect("overview_title", str, is_required=False)
+        self.validator.expect("media", "file", is_required=False)
         args, err = self.validator.verify(args, strict=True)
 
         if err:
@@ -508,4 +516,78 @@ class TechnologyHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=res)
     
+    
+    @admins_only
+    def create_technology_faq(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("technology_id", str, is_required=True)
+        self.validator.expect("question", str, is_required=True)
+        self.validator.expect("answer", str, is_required=True)
+
+        args, err = self.validator.verify(args, strict=True)
+
+        if err:
+            return err
+        
+        res, err = self.service.create_technology_faq(context, args)
+        if err:
+            return err
+        return MassenergizeResponse(data=res)
+    
+    
+    @admins_only
+    def update_technology_faq(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("id", str, is_required=True)
+        self.validator.expect("question", str, is_required=False)
+        self.validator.expect("answer", str, is_required=False)
+
+        args, err = self.validator.verify(args)
+
+        if err:
+            return err
+        
+        res, err = self.service.update_technology_faq(context, args)
+        if err:
+            return err
+        return MassenergizeResponse(data=res)
+    
+    
+    @admins_only
+    def delete_technology_faq(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("id", str, is_required=True)
+
+        args, err = self.validator.verify(args, strict=True)
+
+        if err:
+            return err
+        
+        res, err = self.service.delete_technology_faq(context, args)
+        if err:
+            return err
+        return MassenergizeResponse(data=res)
+    
+    def list_technology_faqs(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("technology_id", str, is_required=True)
+
+        args, err = self.validator.verify(args, strict=True)
+
+        if err:
+            return err
+        
+        res, err = self.service.list_technology_faqs(context, args)
+        if err:
+            return err
+        
+        return MassenergizeResponse(data=res)
 

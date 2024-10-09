@@ -21,22 +21,22 @@ from database.models import (
     FeatureFlag,
     Footage,
     HomePageSettings,
-    Media,
+    Location, Media,
     Menu, Message,
     RealEstateUnit,
     Team,
     Testimonial,
-    UserActionRel,
+    TestimonialAutoShareSettings, UserActionRel,
     UserMediaUpload,
     UserProfile,
-    SupportedLanguage
+    SupportedLanguage, ZIP_CODE_AND_STATES
 )
 from carbon_calculator.models import CalcDefault
 import requests
 from io import BytesIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
-from apps__campaigns.models import Campaign, CampaignAccount, Technology
+from apps__campaigns.models import CallToAction, Campaign, CampaignAccount, Section, Technology
 
 from database.models import Vendor
 from ..utils.api_utils import load_default_menus_from_json
@@ -126,7 +126,12 @@ def makeMedia(**kwargs):
 def makeTestimonial(**kwargs):
     key = round(time.time() * 1000)
     title = kwargs.get("title") or kwargs.get("name") or f"New Testimonial - {key}"
-    return Testimonial.objects.create(**{**kwargs, "title": title})
+    audience = kwargs.pop("audience", [])
+    
+    testimonial = Testimonial.objects.create(**{**kwargs, "title": title})
+    if audience:
+        testimonial.audience.set(audience)
+    return testimonial
 
 
 def makeEvent(**kwargs):
@@ -183,15 +188,17 @@ def makeAdmin(**kwargs):
     full_name = kwargs.get("full_name") or f"user_full_name{key}"
     email = kwargs.get("email") or f"mrsadmin{key}@email.com"
     is_super_admin = kwargs.get("super_admin") or kwargs.get("is_super_admin")
-    admin = UserProfile.objects.create(
-        **{
-            **kwargs,
-            "full_name": full_name,
-            "email": email,
-            "accepts_terms_and_conditions": True,
-            "is_community_admin": True,
-            "is_super_admin": is_super_admin or False,
-        }
+    admin = kwargs.get("admin")
+    if not admin:
+        admin = UserProfile.objects.create(
+            **{
+                **kwargs,
+                "full_name": full_name,
+                "email": email,
+                "accepts_terms_and_conditions": True,
+                "is_community_admin": True,
+                "is_super_admin": is_super_admin or False,
+            }
     )
     if communities:
         for com in communities:
@@ -237,6 +244,7 @@ def makeHomePageSettings(**kwargs):
 def makeCommunity(**kwargs):
     subdomain = kwargs.get("subdomain") or str(time.time())
     name = kwargs.get("name") or "community_default_name"
+    locations = kwargs.pop("locations", [])
     com = Community.objects.create(
         **{
             "accepted_terms_and_conditions": True,
@@ -247,6 +255,8 @@ def makeCommunity(**kwargs):
             "name": name,
         }
     )
+    if locations:
+        com.locations.set(locations)
 
     return com
 
@@ -429,6 +439,7 @@ def make_campaign_account(**kwargs):
         "subdomain": subdomain,
     })
 
+
 def make_campaign(**kwargs):
     title = kwargs.get("title") or f"New Campaign-{datetime.now().timestamp()}"
     desc = kwargs.get("description") or "New Campaign Description"
@@ -441,3 +452,49 @@ def make_campaign(**kwargs):
         "description": desc,
         "account": account,
     })
+
+
+def make_testimonial_auto_share_settings(**kwargs):
+    community = kwargs.get("community") or makeCommunity()
+    share_from_communities = kwargs.pop("share_from_communities", [])
+    
+    testimonial_auto_settings = TestimonialAutoShareSettings.objects.create(**{
+        "community": community,
+        "share_from_location_type": kwargs.get("share_from_location_type"),
+        "share_from_location_value": kwargs.get("share_from_location_value"),
+    })
+    if share_from_communities:
+        testimonial_auto_settings.share_from_communities.set(share_from_communities)
+        
+    return testimonial_auto_settings
+
+
+def makeLocation(**kwargs):
+    zipcode = kwargs.get("zipcode") or "02139"
+    state = kwargs.get("state") or "MA"
+    city = kwargs.get("city") or "Wayland"
+    return Location.objects.create(**{
+        **kwargs,
+        "zipcode": zipcode,
+        "state": state,
+        "city": city,
+    })
+
+def make_call_to_action(**kwargs):
+    return CallToAction.objects.create(**{
+        **kwargs,
+        "text": kwargs.get("text") or "Donate Now",
+        "url": kwargs.get("url") or "https://www.massenergize.org",
+    })
+
+
+def make_section(**kwargs):
+    ctas = kwargs.pop("call_to_action_items", [])
+    section =  Section.objects.create(**{
+        "title": kwargs.get("title") or "New Section",
+        "description": kwargs.get("description") or "New Section Description",
+        "media": kwargs.get("media"),
+    })
+    return section
+    
+    

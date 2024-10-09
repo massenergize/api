@@ -1,7 +1,10 @@
 import datetime
+import json
 
 from django.test import TestCase, Client
-from api.tests.common import signinAs, createUsers, makeCommunity, makeUser, make_technology, createImage, \
+from api.tests.common import make_call_to_action, make_section, signinAs, createUsers, makeCommunity, makeUser, \
+    make_technology, \
+    createImage, \
     makeTestimonial, makeEvent
 from _main_.utils.utils import Console
 from apps__campaigns.models import Campaign, CampaignAccount, CampaignManager, CampaignCommunity, CampaignTechnology, CampaignTechnologyEvent, \
@@ -162,13 +165,33 @@ class CampaignsIntegrationTestCase(TestCase):
         self.assertEqual(response['error'], "permission_denied")
 
     def test_update_campaign(self):
-        payload = {"id": self.CAMPAIGN.id, "title": "UPDATED TITLE", "description": "UPDATED DESCRIPTION", }
+        goal_section = {"title":"Goal Section", "description":"Goal Section Body"}
+        callout_section = {"title":"Callout Section", "description":"Callout Section Body",  "call_to_action_items":[{"text": "Call Us", "url": "https://www.google.com"}, {"text": "Email Us", "url": "mailto:info@me.com"}]}
+        contact_section = {"title":"Contact Section", "description":"Contact Section Body",  "call_to_action_items":[{"text": "Schedule A Call", "url": "https://www.google.com"}]}
+        call_to_action = {"text": "Watch Vide0", "url": "https://www.youtube.com"}
+        
+        new_args = {"call_to_action": json.dumps(call_to_action), "banner": self.IMAGE,
+                    "goal_section": json.dumps(goal_section), "callout_section": json.dumps(callout_section), "contact_section": json.dumps(contact_section)}
+        
+        payload = {"id": self.CAMPAIGN.id, "title": "UPDATED TITLE", "description": "UPDATED DESCRIPTION", **new_args}
+        
         Console.header("Testing the campaigns.update endpoint as a super admin.")
         signinAs(self.client, self.SADMIN)
         response = self.make_request("campaigns.update", payload)
+        
         self.assertEqual(response['success'], True)
         self.assertEqual(response['data']['title'], "UPDATED TITLE")
         self.assertEqual(response['data']['description'], "UPDATED DESCRIPTION")
+        self.assertIn("banner", response['data'])
+        self.assertIsInstance(response['data']['banner'], dict)
+        self.assertIn("goal_section", response['data'])
+        self.assertIsInstance(response['data']['goal_section'], dict)
+        self.assertIn("callout_section", response['data'])
+        self.assertIsInstance(response['data']['callout_section'], dict)
+        self.assertIn("contact_section", response['data'])
+        self.assertIsInstance(response['data']['contact_section'], dict)
+        self.assertIn("call_to_action", response['data'])
+        self.assertIsInstance(response['data']['call_to_action'], dict)
 
         Console.header("Testing the campaigns.update endpoint as a community admin.")
         signinAs(self.client, self.CADMIN)
@@ -925,6 +948,54 @@ class CampaignsIntegrationTestCase(TestCase):
         response = self.make_request("campaigns.communities.vendors.list", payload)
         self.assertEqual(response['success'], False)
         self.assertEqual(response['error'], "permission_denied")
+
+
+    def test_campaign_contact_us(self):
+        payload = {
+            "campaign_id": str(self.CAMPAIGN.id),
+            "email":"test@me.com", 
+            "language":"es-ES",
+            "full_name":"Test User",
+            "phone_number":"1234567890",
+            "community_id": str(self.COMMUNITY_1.id),
+        }
+        Console.header("Testing the campaigns.contact.us endpoint Good data")
+        signinAs(self.client, self.USER)
+
+        response = self.make_request("campaigns.contact.us", payload)
+
+        self.assertEqual(response['success'], True)
+        self.assertIsInstance(response['data'], dict)
+        self.assertIn("message", response['data'])
+
+
+        Console.header("Testing the campaigns.contact.us endpoint NO campaign_id")
+        payload = {
+            "email":"xyz@gmail.com",
+            "language":"es-ES",
+            "full_name":"Test User",
+            "phone_number":"1234567890",
+            "other": json.dumps({"community_name": "New York"}),
+        }
+        response = self.make_request("campaigns.contact.us", payload)
+        self.assertEqual(response['success'], False)
+        self.assertEqual(response['error'], "You are Missing a Required Input: Campaign Id")
+
+
+        Console.header("Testing the campaigns.contact.us endpoint NO email")
+        payload = {
+            "campaign_id": str(self.CAMPAIGN.id),
+            "language":"es-ES",
+            "full_name":"Test User",
+            "phone_number":"1234567890",
+            "other": json.dumps({"community_name": "New York"}),
+        }
+        response = self.make_request("campaigns.contact.us", payload)
+        self.assertEqual(response['success'], False)
+        self.assertEqual(response['error'], "You are Missing a Required Input: Email")
+
+
+
         
         
 
