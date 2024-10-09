@@ -1,25 +1,19 @@
+import base64
+import datetime
 import io
 import json
+from datetime import timedelta
+from zoneinfo import ZoneInfo
+
+import pyshorteners
+from better_profanity import profanity
+from dateutil import tz
+from django.utils import timezone
+from openpyxl import Workbook
 from querystring_parser import parser
 
-from _main_.settings import EnvConfig
 from _main_.utils.massenergize_errors import CustomMassenergizeError
-from zoneinfo import ZoneInfo
-from django.utils import timezone
-from datetime import timedelta
-from dateutil import tz
 from _main_.utils.massenergize_logger import log
-import base64
-import pyshorteners
-from openpyxl import Workbook
-from better_profanity import profanity
-import datetime
-from typing import Literal, Tuple
-
-from sentry_sdk.metrics import incr, gauge, distribution, set
-from _main_.utils.utils import run_in_background
-
-from _main_.utils.stage import MassEnergizeApiEnvConfig
 
 
 def custom_timezone_info(zone="UTC"):
@@ -393,75 +387,4 @@ def item_is_empty(item):
     return False
 
 
-METRIC_TYPE: Tuple[str, str, str, str] = ("COUNT", "GAUGE", "DISTRIBUTION", "SET")
-
-@run_in_background
-def log_sentry_metric(type: Literal[METRIC_TYPE] = METRIC_TYPE[2], options: dict = {}):
-
-    """
-    Log a metric to Sentry
-
-    :param type: The type of metric to log. One of "count", "gauge", "distribution", "summary", or "set".
-    :param options: The options to pass to the metric logger. The options are different for each metric type.
-
-    for the different types of metrics, the options are:
-
-    count: {
-                key="button_click",
-                value=1,
-                tags={
-                    "browser": "Firefox",
-                     "app_version": "1.0.0"
-                  }
-            }
-    gauge: {
-            key="page_load",
-            value=15.0,
-            unit="millisecond",
-            tags={
-                "page": "/home"
-            }
-        }
-    distribution: {
-                key="page_load",
-                value=15.0,
-                unit="millisecond",
-                tags= {
-                    "page": "/home"
-                    }
-                }
-    set: {
-        key="user_view",
-        value="jane",
-        unit="username",
-        tags={
-            "page": "/home"
-        }
-    }
-
-    :return: None
-    """
-    if EnvConfig.is_test() or EnvConfig.is_local():
-        return
-
-    SENTRY_METRIC_TYPES = {
-        "COUNT": incr,
-        "INCR": incr,
-        "GAUGE": gauge,
-        "DISTRIBUTION": distribution,
-        "SET": set,
-    }
-
-    try:
-        type = type.lower()
-        if type not in SENTRY_METRIC_TYPES:
-            return
-
-        log_metric = SENTRY_METRIC_TYPES[type]
-        log_metric(**options)
-
-
-    except Exception as e:
-        log.exception(e)
-        return None
 
