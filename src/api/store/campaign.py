@@ -1336,7 +1336,7 @@ class CampaignStore:
                             
             view = CampaignView.objects.filter(campaign=campaign).first()
             if not view:
-                view, _ = CampaignView.objects.create(campaign=campaign)
+                view = CampaignView.objects.create(campaign=campaign)
                 
             with transaction.atomic():
                 view.increase_count()
