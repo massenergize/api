@@ -1333,9 +1333,11 @@ class CampaignStore:
                     if campaign_link:
                         with transaction.atomic():
                             campaign_link.increase_count()
-
-            view, _ = CampaignView.objects.get_or_create(campaign=campaign, is_deleted=False)
-            # lock transaction
+                            
+            view = CampaignView.objects.filter(campaign=campaign).first()
+            if not view:
+                view, _ = CampaignView.objects.create(campaign=campaign)
+                
             with transaction.atomic():
                 view.increase_count()
             return view, None
