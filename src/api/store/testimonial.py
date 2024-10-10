@@ -536,6 +536,7 @@ class TestimonialStore:
 
       excluded_tags_ids = args.pop("excluded_tags", None)
       ids_of_communities_to_share_from = args.pop("communities_to_share_from", None)
+      print("===IDS OF COMMUNITIES TO SHARE FROM===", ids_of_communities_to_share_from)
       sharing_location_type = args.pop("sharing_location_type", None)
       sharing_location_value = args.pop("sharing_location_value", None)
       
@@ -560,8 +561,8 @@ class TestimonialStore:
 
   def update_auto_share_settings(self, context: Context, args) -> Tuple[dict, Any]:
     try:
-      auto_share_settings_id = args.pop("id", None)
-      auto_share_settings = TestimonialAutoShareSettings.objects.filter(id=auto_share_settings_id).first()
+      community_id = args.pop("community_id", None)
+      auto_share_settings = TestimonialAutoShareSettings.objects.filter(community__id=community_id).first()
       if not auto_share_settings:
         return None, CustomMassenergizeError("Testimonial Auto share settings not found")
       
@@ -590,7 +591,7 @@ class TestimonialStore:
   def get_community_auto_share_settings(self, context: Context, args) -> Tuple[dict, Any]:
     try:
       community_id = args.pop("community_id", None)
-      
+
       community = Community.objects.filter(id=community_id).first()
       if not community:
         return None, CustomMassenergizeError("Community not found")

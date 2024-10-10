@@ -54,10 +54,10 @@ class TestimonialHandler(RouteHandler):
   def create_auto_share_settings(self, request):
     context: Context = request.context
     args: dict = context.args
-
+    
     self.validator.expect("community_id", int, is_required=True)
     self.validator.expect("excluded_tags", list, is_required=False)
-    self.validator.expect("communities_to_share_from", list, is_required=False)
+    self.validator.expect("communities_to_share_from", "str_list", is_required=False)
     self.validator.expect("sharing_location_type", str, is_required=False)
     self.validator.expect("sharing_location_value", str, is_required=False)
 
@@ -298,7 +298,7 @@ class TestimonialHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
 
-    self.validator.expect("id", str, is_required=True)
+    self.validator.expect("community_id", int, is_required=True)
     self.validator.expect("excluded_tags", list, is_required=False)
     self.validator.expect("communities_to_share_from", list, is_required=False)
     self.validator.expect("sharing_location_type", str, is_required=False)
