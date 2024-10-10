@@ -536,7 +536,6 @@ class TestimonialStore:
 
       excluded_tags_ids = args.pop("excluded_tags", None)
       ids_of_communities_to_share_from = args.pop("communities_to_share_from", None)
-      print("===IDS OF COMMUNITIES TO SHARE FROM===", ids_of_communities_to_share_from)
       sharing_location_type = args.pop("sharing_location_type", None)
       sharing_location_value = args.pop("sharing_location_value", None)
       
