@@ -77,10 +77,7 @@ def prepare_testimonials_for_community_admins(task=None):
 		communities = Community.objects.filter(is_published=True, is_deleted=False)
 		communities = flag.enabled_communities(communities)
 
-		print(f"Found {len(communities)} communities to send nudge to")
-
 		for community in communities:
-			
 			testimonials_auto_shared = community.testimonial_shares.filter(testimonial__is_published=True, testimonial__published_at__date=today.date())
 			if not testimonials_auto_shared:
 				continue

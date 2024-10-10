@@ -32,6 +32,8 @@ class TestimonialHandler(RouteHandler):
     self.add("/testimonials.listForSuperAdmin", self.super_admin_list)
     self.add("/testimonials.other.listForCommunityAdmin", self.list_testimonials_from_other_communities)
     self.add("/testimonials.autoshare.settings.create", self.create_auto_share_settings)
+    self.add("/testimonials.autoshare.settings.update", self.update_auto_share_settings)
+    self.add("/community.testimonial.autoshare.settings.info", self.get_community_auto_share_settings)
 
   def info(self, request):
     context: Context = request.context
@@ -63,10 +65,6 @@ class TestimonialHandler(RouteHandler):
 
     if err:
       return err
-
-    communities_to_share_from = args.get("communities_to_share_from", [])
-    if len(communities_to_share_from) == 0:
-      return MassenergizeResponse(error="Please provide communities to share from")
 
     auto_share_settings, err = self.service.create_auto_share_settings(context, args)
 
@@ -294,4 +292,44 @@ class TestimonialHandler(RouteHandler):
     if err:
       return err
     return MassenergizeResponse(data=testimonial_info)
+  
+  @admins_only
+  def update_auto_share_settings(self, request):
+    context: Context = request.context
+    args: dict = context.args
+
+    self.validator.expect("id", str, is_required=True)
+    self.validator.expect("excluded_tags", list, is_required=False)
+    self.validator.expect("communities_to_share_from", list, is_required=False)
+    self.validator.expect("sharing_location_type", str, is_required=False)
+    self.validator.expect("sharing_location_value", str, is_required=False)
+
+    args, err = self.validator.verify(args)
+
+    if err:
+      return err
+
+    auto_share_settings, err = self.service.update_auto_share_settings(context, args)
+
+    if err:
+      return err
+    return MassenergizeResponse(data=auto_share_settings)
+  
+
+  @admins_only
+  def get_community_auto_share_settings(self, request):
+    context: Context = request.context
+    args: dict = context.args
+
+    self.validator.expect("community_id", int, is_required=True)
+    args, err = self.validator.verify(args)
+
+    if err:
+      return err
+
+    auto_share_settings, err = self.service.get_community_auto_share_settings(context, args)
+
+    if err:
+      return err
+    return MassenergizeResponse(data=auto_share_settings)
     

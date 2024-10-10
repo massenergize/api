@@ -150,3 +150,31 @@ class TestimonialService:
     except Exception as e:
       log.exception(e)
       return None, CustomMassenergizeError(e)
+    
+
+  def update_auto_share_settings(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+        auto_share_settings, err = self.store.update_auto_share_settings(context, args)
+
+        if err:
+          return None, err
+        
+        return serialize(auto_share_settings), None
+    
+    except Exception as e:
+      log.exception(e)
+      return None, CustomMassenergizeError(e)
+    
+
+  def get_community_auto_share_settings(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+        auto_share_settings, err = self.store.get_community_auto_share_settings(context, args)
+
+        if err:
+          return None, err
+        
+        return serialize(auto_share_settings), None
+    
+    except Exception as e:
+      log.exception(e)
+      return None, CustomMassenergizeError(e)
