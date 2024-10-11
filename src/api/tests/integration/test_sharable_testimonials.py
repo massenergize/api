@@ -230,4 +230,74 @@ class SharableTestimonialsIntegrationTest(TestCase):
         # closed, the testimonial community has added community c5 as shared automatically to.
         self.assertEquals(len(response['data']), 1)
         
+
+    def test_create_auto_share_settings(self):
+
+        # create with location
+        args = {
+            "community_id": self.c1.id,
+            "sharing_location_type": LocationType.STATE.value[0],
+            "sharing_location_value": "MA",
+        }
+        signinAs(self.client, self.cadmin)
+        response = self.make_request('testimonials.autoshare.settings.create', args)
+        self.assertTrue(response['success'])
+        self.assertTrue(response['data']['id'])
+        self.assertEquals(response.get('data', {}).get('share_from_location_type'), LocationType.STATE.value[0])
+        self.assertEquals(response.get('data', {}).get('share_from_location_value'), "MA")
+
+
+        # create with list of communities
+        args = {
+            "community_id": self.c6.id,
+            "communities_to_share_from": f"{self.c5.id}, {self.c4.id}",
+        }
+        signinAs(self.client, self.cadmin)
+        response = self.make_request('testimonials.autoshare.settings.create', args)
+        self.assertTrue(response['success'])
+        self.assertTrue(response['data']['id'])
+        shared_communities = response.get('data', {}).get('share_from_communities')
+        only_ids = [c['id'] for c in shared_communities]
+        self.assertTrue(self.c5.id in only_ids)
+        self.assertTrue(self.c4.id in only_ids)
+
+
+    def test_get_auto_share_settings(self):
+        # with community id
+        args = {
+            "community_id": self.c1.id,
+        }
+        signinAs(self.client, self.cadmin)
+        response = self.make_request('community.testimonial.autoshare.settings.info', args)
+        self.assertTrue(response['success'])
+        self.assertTrue(response['data']['id'])
+
+        # without community id
+        args = {}
+        signinAs(self.client, self.cadmin)
+        response = self.make_request('community.testimonial.autoshare.settings.info', args)
+        self.assertFalse(response['success'])
+
+        # access as a user
+        args = {
+            "community_id": self.c1.id,
+        }
+        signinAs(self.client, self.user)
+        response = self.make_request('community.testimonial.autoshare.settings.info', args)
+        self.assertFalse(response['success'])
+
+
+    def test_update_auto_share_settings(self):
+        args = {
+            "community_id": self.c1.id,
+            "sharing_location_type": LocationType.CITY.value[0],
+            "sharing_location_value": "Boston",
+        }
+        signinAs(self.client, self.cadmin)
+        response = self.make_request('testimonials.autoshare.settings.update', args)
+        self.assertTrue(response['success'])
+        self.assertTrue(response['data']['id'])
+        self.assertEquals(response.get('data', {}).get('share_from_location_type'), LocationType.CITY.value[0])
+        self.assertEquals(response.get('data', {}).get('share_from_location_value'), "Boston")
+    
     

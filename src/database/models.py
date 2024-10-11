@@ -4367,10 +4367,14 @@ class TestimonialAutoShareSettings(BaseModel):
     excluded_tags = models.ManyToManyField(Tag, blank=True)
 
     def __str__(self):
-        return f"{self.community.name} - {[community.name for community in self.share_from_communities.all()]}"
+        return f"{self.community.name}-TestimonialAutoShareSettings"
 
     def simple_json(self):
-        return model_to_dict(self)
+        res = super().to_json()
+        res.update(model_to_dict(self))
+        res["community"] = get_summary_info(self.community)
+        res["share_from_communities"] = [get_summary_info(community) for community in self.share_from_communities.all()]
+        return res
 
     def full_json(self):
         return self.simple_json()

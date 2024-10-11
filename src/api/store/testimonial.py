@@ -65,56 +65,6 @@ def get_auto_shared_with_list(admin_community_ids=None):
                 
     return Community.objects.filter(id__in=communities_list)
 
-# def get_auto_shared_with_list(admin_community_ids=None):
-#     if admin_community_ids is None:
-#         return []
-#
-#     communities_list = set()
-#
-#     my_auto_share_settings = TestimonialAutoShareSettings.objects.filter(community__id__in=admin_community_ids, is_deleted=False).prefetch_related('share_from_communities')
-#     if not my_auto_share_settings.exists():
-#         return []
-#
-#     admin_communities = Community.objects.filter(id__in=admin_community_ids, is_deleted=False, is_published=True)
-#     admin_communities_zipcodes = set(admin_communities.values_list('locations__zipcode', flat=True))
-#
-#     all_settings_with_communities = my_auto_share_settings.filter(
-#         share_from_location_type__isnull=True,
-#         share_from_location_value__isnull=True
-#     )
-#     all_settings_with_locations = my_auto_share_settings.filter(
-#         share_from_location_type__isnull=False,
-#         share_from_location_value__isnull=False
-#     )
-#
-#     for setting in all_settings_with_communities:
-#         share_from_communities = setting.share_from_communities.all()
-#         communities_list.update([comm.id for comm in share_from_communities])
-#
-#     for setting in all_settings_with_locations:
-#         share_from_location_type = setting.share_from_location_type
-#         share_from_location_value = setting.share_from_location_value
-#
-#         if share_from_location_type == LocationType.STATE.value[0]:
-#             share_from_location_value = share_from_location_value.upper()
-#             _zipcodes = zipcodes.filter_by(state=share_from_location_value)
-#         elif share_from_location_type == LocationType.CITY.value[0]:
-#             _zipcodes = zipcodes.filter_by(city=share_from_location_value)
-#         else:
-#             _zipcodes = []
-#
-#         if _zipcodes:
-#             state_zipcodes = {str(zipcode_data["zip_code"]) for zipcode_data in _zipcodes}
-#             if state_zipcodes.intersection(admin_communities_zipcodes):
-#                 communities_list.add(setting.community.id)
-#
-#     communities_list = list(set(communities_list) - set(admin_community_ids))
-#     open_to = Q(sharing_type=SharingType.OPEN_TO.value[0], audience__id__in=admin_community_ids)
-#     not_closed_to = Q(sharing_type=SharingType.CLOSED_TO.value[0]) & ~Q(audience__id__in=admin_community_ids)
-#     _open = Q(sharing_type=SharingType.OPEN.value[0])
-#
-#     return Testimonial.objects.filter(Q(community__id__in=communities_list) & (_open | open_to | not_closed_to))
-
 
 def add_auto_shared_communities_to_testimonial(testimonial):
     if not testimonial:
@@ -233,6 +183,7 @@ class TestimonialStore:
           new_testimonial.published_at = parse_datetime_to_aware()
           add_auto_shared_communities_to_testimonial(new_testimonial)
 
+
       if action:
         testimonial_action = Action.objects.get(id=action)
         new_testimonial.action = testimonial_action
@@ -289,7 +240,6 @@ class TestimonialStore:
     try:
       image_info = make_media_info(args)
       id = args.pop("id", None)
-      
       testimonials = Testimonial.objects.filter(id=id)
       if not testimonials:
         return None, InvalidResourceError()
@@ -371,6 +321,8 @@ class TestimonialStore:
         testimonial.vendor = testimonial_vendor
       else:
         testimonial.vendor = None
+
+
 
       if rank:
           testimonial.rank = rank
@@ -465,7 +417,6 @@ class TestimonialStore:
           return None, NotAuthorizedError()
 
       filter_params = get_testimonials_filter_params(context.get_params())
-      
       if testimonial_ids: 
         testimonials = Testimonial.objects.filter(id__in=testimonial_ids,*filter_params).select_related('image', 'community').prefetch_related('tags')
         return testimonials, None
@@ -577,3 +528,79 @@ class TestimonialStore:
     except Exception as e:
         log.exception(e)
         return None, CustomMassenergizeError(e)
+
+  def create_auto_share_settings (self, context: Context, args) -> Tuple[dict, Any]:
+    try:
+      community_id = args.pop("community_id", None)
+      community = Community.objects.filter(id=community_id).first()
+
+      excluded_tags_ids = args.pop("excluded_tags", None)
+      ids_of_communities_to_share_from = args.pop("communities_to_share_from", None)
+      sharing_location_type = args.pop("sharing_location_type", None)
+      sharing_location_value = args.pop("sharing_location_value", None)
+      
+      auto_share_settings, _ = TestimonialAutoShareSettings.objects.get_or_create(
+        community=community,
+        share_from_location_type=sharing_location_type,
+        share_from_location_value=sharing_location_value,
+      )
+
+      if excluded_tags_ids:
+        auto_share_settings.excluded_tags.set(excluded_tags_ids)
+
+      if ids_of_communities_to_share_from:
+        auto_share_settings.share_from_communities.set(ids_of_communities_to_share_from)
+
+      return auto_share_settings, None
+
+    except Exception as e:
+      log.exception(e)
+      return None, CustomMassenergizeError(e)
+    
+
+  def update_auto_share_settings(self, context: Context, args) -> Tuple[dict, Any]:
+    try:
+      community_id = args.pop("community_id", None)
+      auto_share_settings = TestimonialAutoShareSettings.objects.filter(community__id=community_id).first()
+      if not auto_share_settings:
+        return None, CustomMassenergizeError("Testimonial Auto share settings not found")
+      
+      excluded_tags_ids = args.pop("excluded_tags", None)
+      ids_of_communities_to_share_from = args.pop("communities_to_share_from", None)
+      sharing_location_type = args.pop("sharing_location_type", None)
+      sharing_location_value = args.pop("sharing_location_value", None)
+      
+      auto_share_settings.share_from_location_type = sharing_location_type
+      auto_share_settings.share_from_location_value = sharing_location_value
+      
+      if excluded_tags_ids:
+        auto_share_settings.excluded_tags.set(excluded_tags_ids)
+
+      if ids_of_communities_to_share_from:
+        auto_share_settings.share_from_communities.set(ids_of_communities_to_share_from)
+
+      auto_share_settings.save()
+      return auto_share_settings, None
+
+    except Exception as e:
+      log.exception(e)
+      return None, CustomMassenergizeError(e)
+    
+
+  def get_community_auto_share_settings(self, context: Context, args) -> Tuple[dict, Any]:
+    try:
+      community_id = args.pop("community_id", None)
+
+      community = Community.objects.filter(id=community_id).first()
+      if not community:
+        return None, CustomMassenergizeError("Community not found")
+      
+      auto_share_settings = TestimonialAutoShareSettings.objects.filter(community=community).first()
+      if not auto_share_settings:
+        auto_share_settings = TestimonialAutoShareSettings.objects.create(community=community)
+
+      return auto_share_settings, None
+    except Exception as e:
+      log.exception(e)
+      return None, CustomMassenergizeError(e)
+
