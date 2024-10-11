@@ -123,7 +123,7 @@ def get_summary_info(obj) -> dict:
   """
   try:
     if obj:
-      return obj.info()
+      return obj.info() if obj.info else {"id": obj.pk}
     return None
   except Exception as e:
     log.exception(e)
