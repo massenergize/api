@@ -75,62 +75,6 @@ def get_auto_shared_with_list(testimonial):
        communities_list.update(setting.community.id for setting in category_settings)
 
     return Community.objects.filter(id__in=communities_list)
-   
-   
-
-
-
-   
-
-
-# def get_auto_shared_with_list(admin_community_ids=None):
-#     if admin_community_ids is None:
-#         return []
-
-#     communities_list = set()
-    
-#     my_auto_share_settings = TestimonialAutoShareSettings.objects.filter(community__id__in=admin_community_ids, is_deleted=False).prefetch_related('share_from_communities')
-#     if not my_auto_share_settings.exists():
-#         return []
-    
-#     admin_communities = Community.objects.filter(id__in=admin_community_ids, is_deleted=False, is_published=True)
-#     admin_communities_zipcodes = set(admin_communities.values_list('locations__zipcode', flat=True))
-    
-#     all_settings_with_communities = my_auto_share_settings.filter(
-#         share_from_location_type__isnull=True,
-#         share_from_location_value__isnull=True
-#     )
-#     all_settings_with_locations = my_auto_share_settings.filter(
-#         share_from_location_type__isnull=False,
-#         share_from_location_value__isnull=False
-#     )
-
-#     # TODO: optimize this and add support for categories the relationship should be with community
-#     # testimonials from communities having these categories.
-    
-#     for setting in all_settings_with_communities:
-#         share_from_communities = setting.share_from_communities.all()
-#         communities_list.update([comm.id for comm in share_from_communities])
-    
-#     for setting in all_settings_with_locations:
-#         share_from_location_type = setting.share_from_location_type
-#         share_from_location_value = setting.share_from_location_value
-        
-#         if share_from_location_type == LocationType.STATE.value[0]:
-#             share_from_location_value = share_from_location_value.upper()
-#             _zipcodes = zipcodes.filter_by(state=share_from_location_value)
-#         elif share_from_location_type == LocationType.CITY.value[0]:
-#             _zipcodes = zipcodes.filter_by(city=share_from_location_value)
-#         else:
-#             _zipcodes = []
-        
-#         if _zipcodes:
-#             state_zipcodes = {str(zipcode_data["zip_code"]) for zipcode_data in _zipcodes}
-#             if state_zipcodes.intersection(admin_communities_zipcodes):
-#                 communities_list.add(setting.community.id)
-                
-#     return Community.objects.filter(id__in=communities_list)
-
 
 def add_auto_shared_communities_to_testimonial(testimonial):
     if not testimonial:
