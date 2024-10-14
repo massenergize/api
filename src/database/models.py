@@ -4370,7 +4370,11 @@ class TestimonialAutoShareSettings(BaseModel):
         return f"{self.community.name}"
 
     def simple_json(self):
-        return model_to_dict(self)
+        res =  model_to_dict(self)
+        res["community"] = get_summary_info(self.community)
+        res["share_from_communities"] = [c.info() for c in self.share_from_communities.all()]
+        res["excluded_tags"] = [t.info() for t in self.excluded_tags.all()]
+        return res
 
     def full_json(self):
         return self.simple_json()

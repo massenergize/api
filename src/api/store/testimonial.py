@@ -655,7 +655,7 @@ class TestimonialStore:
       return None, CustomMassenergizeError(e)
     
 
-  def get_community_auto_share_settings(self, context: Context, args) -> Tuple[dict, Any]:
+  def get_community_auto_share_settings(self, context: Context, args) -> Tuple[TestimonialAutoShareSettings, Any]:
     try:
       community_id = args.pop("community_id", None)
 
