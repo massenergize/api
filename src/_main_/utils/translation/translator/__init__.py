@@ -1,19 +1,13 @@
 """
 This file contains utility functions for interacting with google translate
 """
-import re
-import fnmatch
-import threading
-from datetime import datetime
+import time
 from typing import List
 
-from _main_.utils.common import log_sentry_metric
 from _main_.utils.massenergize_logger import log
-from _main_.utils.metrics import put_metric_data
-
+from _main_.utils.translation.metrics_tracker import TranslationMetrics
 from _main_.utils.translation.translator.providers.google_translate import GoogleTranslate
 from _main_.utils.translation.translator.providers.microsoft_translator import MicrosoftTranslator
-from _main_.utils.utils import calc_string_list_length
 
 # We use MAGIC_TEXT to separate text items or sentences within a block during translation, allowing us to split them back afterward.
 # Translation APIs, like Google Translate, have a maximum text length they can handle. The idea of a block here
@@ -35,6 +29,7 @@ class Translator:
         self.__init_provider(provider, use_fallback)
         self.MAX_TEXT_SIZE = self.provider.MAX_TEXT_SIZE
         self.BATCH_LIMIT = BATCH_LIMIT
+        self.metrics_recorder = TranslationMetrics()
 
     def __init_provider (self, provider = None, use_fallback = True):
         provider = provider or TRANSLATION_PROVIDER
@@ -63,33 +58,12 @@ class Translator:
         """
         log.info(f"translating from {source_language} to {target_language}")
         
-        name_space = "LocalizationSystem"
-        metric_data=[
-            {
-                'MetricName': f"TranslateText_With_{self.provider.__name__}",
-                'Dimensions': [
-                    {
-                        'Name': 'SourceLanguage',
-                        'Value': source_language,
-                    },
-                    {
-                        'Name': 'TargetLanguage',
-                        'Value': target_language,
-                    },
-                    {
-                        'Name': 'CharacterCount',
-                        'Value': calc_string_list_length(value),
-                    },
-                ],
-                'Unit': 'Count',
-                'Value': 1,
-                'Timestamp': datetime.utcnow(),
-            },
-        ]
-
-        threading.Thread(target=put_metric_data, args=(name_space, metric_data)).start()
-
-        return self.provider.translate(value, target_language, source_language)
+        try:
+            return  self.provider.translate(value, target_language, source_language)        
+        except Exception as e:
+            self.metrics_recorder.track_error_rate(source_language, target_language)
+            log.error(f"Translation failed: {str(e)}")
+            raise RuntimeError(f"Failed to translate: {str(e)}")
 
     def translate_text (self, text: str, target_language: str, source_language:str = 'en') -> str:
         """

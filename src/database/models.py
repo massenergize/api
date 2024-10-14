@@ -4360,21 +4360,6 @@ class CampaignSupportedLanguage(BaseModel):
 
 
 class TestimonialAutoShareSettings(BaseModel):
-    """
-    TestimonialAutoShareSettings model represents the settings for automatically sharing testimonials within a community and from other communities.
-
-    Attributes:
-        community (ForeignKey): A reference to the Community model. Represents the community to which these settings belong.
-        share_from_communities (ManyToManyField): A many-to-many relationship with the Community model. Represents communities from which testimonials can be shared.
-        share_from_location_type (CharField): A character field to specify the type of location from which testimonials can be shared. Choices are defined in LocationType.
-        share_from_location_value (CharField): A character field to specify the value of the location from which testimonials can be shared.
-        excluded_tags (ManyToManyField): A many-to-many relationship with the Tag model. Represents tags that should be excluded from sharing.
-
-    Methods:
-        __str__(): Returns a string representation of the instance, specifically the name of the community.
-        simple_json(): Returns a simplified JSON representation of the instance, including related community and tag information.
-        full_json(): Returns a full JSON representation of the instance. Currently, it is the same as simple_json().
-    """
     community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True, related_name="testimonial_auto_share_settings")
     share_from_communities = models.ManyToManyField(Community, related_name="share_from_communities", blank=True)
     share_from_location_type = models.CharField(max_length=SHORT_STR_LEN, choices = LocationType.choices(), null=True, blank=True)
@@ -4385,12 +4370,7 @@ class TestimonialAutoShareSettings(BaseModel):
         return f"{self.community.name}"
 
     def simple_json(self):
-        res = super().to_json()
-        res.update(model_to_dict(self))
-        res["community"] = get_summary_info(self.community)
-        res["share_from_communities"] = [get_summary_info(community) for community in self.share_from_communities.all()]
-        res["excluded_tags"] = [get_summary_info(tag) for tag in self.excluded_tags.all()]
-        return res
+        return model_to_dict(self)
 
     def full_json(self):
         return self.simple_json()

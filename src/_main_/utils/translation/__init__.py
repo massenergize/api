@@ -1,15 +1,14 @@
-import json
 import re
-import threading
-from typing import Union, Tuple, List
+import time
+from typing import List, Tuple, Union
+
+import json_flatten
+
 from _main_.utils.massenergize_logger import log
-from _main_.utils.metrics import send_metric, put_metric_data
-from _main_.utils.translation.translator import Translator, MAX_TEXT_SIZE, MAGIC_TEXT
+from _main_.utils.translation.metrics_tracker import TranslationMetrics
+from _main_.utils.translation.translator import MAGIC_TEXT, MAX_TEXT_SIZE, Translator
 from _main_.utils.utils import make_hash, run_in_background
 from database.models import TranslationsCache
-import json_flatten
-from datetime import datetime
-from _main_.utils.common import log_sentry_metric
 
 JSON_EXCLUDE_KEYS = {
     'id', 'pk', 'file', 'media', 'date', 'link', 'url', 'icon', 'key', 'slug',"created_at", "updated_at", "code",
@@ -216,24 +215,6 @@ class JsonTranslator(Translator):
 
         if len(untranslated_text_entries) > 0:
             self.cache_translations(untranslated_text_entries, translated_text_entries, destination_language, source_language)
-
-        name_space = "LocalizationSystem"
-        metric_data=[
-            {
-                'MetricName': "LanguageUsageCount",
-                'Dimensions': [
-                    {
-                        'Name': 'Language',  # Dimension name representing the language
-                        'Value': destination_language  # Dimension value as the language code
-                    },
-                ],
-                'Unit': 'Count',
-                'Value': 1,
-                'Timestamp': datetime.utcnow(),
-            },
-        ]
-
-        threading.Thread(target=put_metric_data, args=(name_space, metric_data)).start()
 
         return self.unflatten_dict(translated_json), translated_text_entries, untranslated_text_entries
 
