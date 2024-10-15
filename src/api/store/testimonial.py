@@ -197,11 +197,6 @@ class TestimonialStore:
         user = UserProfile.objects.filter(email=user_email).first()
         if user:
           new_testimonial.user = user
-          
-      if is_published:
-          new_testimonial.published_at = parse_datetime_to_aware()
-          add_auto_shared_communities_to_testimonial(new_testimonial)
-
 
       if action:
         testimonial_action = Action.objects.get(id=action)
@@ -240,6 +235,11 @@ class TestimonialStore:
       if tags_to_set:
         new_testimonial.tags.set(tags_to_set)
 
+      new_testimonial.save()
+      
+      if is_published:
+          new_testimonial.published_at = parse_datetime_to_aware()
+          add_auto_shared_communities_to_testimonial(new_testimonial)
       new_testimonial.save()
       
       if audience:
