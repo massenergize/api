@@ -22,6 +22,13 @@ from .utils import get_community, get_user, get_user_from_context, unique_media_
 
 
 def get_auto_shared_with_list(testimonial):
+    """
+        This function processes a recently published testimonial and checks for all auto-share settings from other communities that meet the following criteria:
+        1. The community that created the testimonial is included in their `share_from_communities` list, or
+        2. The community that created the testimonial falls within their defined geographical range, or
+        3. The auto-share settings contain tags that match the tags of the testimonial.
+        The function collects these matching communities and returns a list of them. This list will be used to share the testimonial with those communities.
+    """
     if not testimonial:
         return []
     
@@ -34,21 +41,20 @@ def get_auto_shared_with_list(testimonial):
 
     all_auto_share_settings = TestimonialAutoShareSettings.objects.filter(is_deleted=False)
 
-    # Filter settings that share from communities
-    community_settings = all_auto_share_settings.filter(
+    auto_share_settings_with_share_from_communities_values = all_auto_share_settings.filter(
         share_from_location_type__isnull=True,
         share_from_location_value__isnull=True,
         share_from_communities__id=testimonial_community.id
     )
-    communities_list.update(setting.community.id for setting in community_settings)
+    communities_list.update(setting.community.id for setting in auto_share_settings_with_share_from_communities_values)
 
     # Filter settings that share from specific locations
-    location_settings = all_auto_share_settings.filter(
+    auto_share_settings_with_geographical_range_values = all_auto_share_settings.filter(
         share_from_location_type__isnull=False,
         share_from_location_value__isnull=False
     )
 
-    for setting in location_settings:
+    for setting in auto_share_settings_with_geographical_range_values:
         share_from_location_type = setting.share_from_location_type
         share_from_location_value = setting.share_from_location_value
 
@@ -66,15 +72,16 @@ def get_auto_shared_with_list(testimonial):
                 communities_list.add(setting.community.id)
 
 
-    category_settings = all_auto_share_settings.filter(
+    auto_share_settings_with_category_values = all_auto_share_settings.filter(
         excluded_tags__isnull=False,
         excluded_tags__in=testimonial.tags.all()
     )
 
-    if category_settings.exists():
-       communities_list.update(setting.community.id for setting in category_settings)
+    if auto_share_settings_with_category_values.exists():
+       communities_list.update(setting.community.id for setting in auto_share_settings_with_category_values)
 
     return Community.objects.filter(id__in=communities_list)
+
 
 def add_auto_shared_communities_to_testimonial(testimonial):
     if not testimonial:
