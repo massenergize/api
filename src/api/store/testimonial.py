@@ -20,36 +20,44 @@ from database.utils.settings.model_constants.enums import LocationType, SharingT
 from .utils import get_community, get_user, get_user_from_context, unique_media_filename
 
 
-def get_auto_shared_with_list(admin_community_ids=None):
-    if admin_community_ids is None:
-        return []
 
-    communities_list = set()
-    
-    my_auto_share_settings = TestimonialAutoShareSettings.objects.filter(community__id__in=admin_community_ids, is_deleted=False).prefetch_related('share_from_communities')
-    if not my_auto_share_settings.exists():
+def get_auto_shared_with_list(testimonial):
+    """
+        This function processes a recently published testimonial and checks for all auto-share settings from other communities that meet the following criteria:
+        1. The community that created the testimonial is included in their `share_from_communities` list, or
+        2. The community that created the testimonial falls within their defined geographical range, or
+        3. The auto-share settings contain tags that match the tags of the testimonial.
+        The function collects these matching communities and returns a list of them. This list will be used to share the testimonial with those communities.
+    """
+    if not testimonial:
         return []
     
-    admin_communities = Community.objects.filter(id__in=admin_community_ids, is_deleted=False, is_published=True)
-    admin_communities_zipcodes = set(admin_communities.values_list('locations__zipcode', flat=True))
+    testimonial_community = testimonial.community 
+    if not testimonial_community:
+        return []
     
-    all_settings_with_communities = my_auto_share_settings.filter(
+    community_zip_codes = set(testimonial_community.locations.values_list('zipcode', flat=True))
+    communities_list = set()
+
+    all_auto_share_settings = TestimonialAutoShareSettings.objects.filter(is_deleted=False)
+
+    auto_share_settings_with_share_from_communities_values = all_auto_share_settings.filter(
         share_from_location_type__isnull=True,
-        share_from_location_value__isnull=True
+        share_from_location_value__isnull=True,
+        share_from_communities__id=testimonial_community.id
     )
-    all_settings_with_locations = my_auto_share_settings.filter(
+    communities_list.update(setting.community.id for setting in auto_share_settings_with_share_from_communities_values)
+
+    # Filter settings that share from specific locations
+    auto_share_settings_with_geographical_range_values = all_auto_share_settings.filter(
         share_from_location_type__isnull=False,
         share_from_location_value__isnull=False
     )
-    
-    for setting in all_settings_with_communities:
-        share_from_communities = setting.share_from_communities.all()
-        communities_list.update([comm.id for comm in share_from_communities])
-    
-    for setting in all_settings_with_locations:
+
+    for setting in auto_share_settings_with_geographical_range_values:
         share_from_location_type = setting.share_from_location_type
         share_from_location_value = setting.share_from_location_value
-        
+
         if share_from_location_type == LocationType.STATE.value[0]:
             share_from_location_value = share_from_location_value.upper()
             _zipcodes = zipcodes.filter_by(state=share_from_location_value)
@@ -57,12 +65,21 @@ def get_auto_shared_with_list(admin_community_ids=None):
             _zipcodes = zipcodes.filter_by(city=share_from_location_value)
         else:
             _zipcodes = []
-        
+
         if _zipcodes:
             state_zipcodes = {str(zipcode_data["zip_code"]) for zipcode_data in _zipcodes}
-            if state_zipcodes.intersection(admin_communities_zipcodes):
+            if state_zipcodes.intersection(community_zip_codes):
                 communities_list.add(setting.community.id)
-                
+
+
+    auto_share_settings_with_category_values = all_auto_share_settings.filter(
+        excluded_tags__isnull=False,
+        excluded_tags__in=testimonial.tags.all()
+    )
+
+    if auto_share_settings_with_category_values.exists():
+       communities_list.update(setting.community.id for setting in auto_share_settings_with_category_values)
+
     return Community.objects.filter(id__in=communities_list)
 
 
@@ -71,15 +88,17 @@ def add_auto_shared_communities_to_testimonial(testimonial):
         return
     
     community = testimonial.community
-    if not community:
+    if not community or testimonial.sharing_type == SharingType.CLOSED.value[0]:
         return
     
-    admin_community_ids = [community.id]
-    auto_shared_with = get_auto_shared_with_list(admin_community_ids)
+    auto_shared_with = get_auto_shared_with_list(testimonial)
     
     if auto_shared_with:
         new_items = []
+        audience =testimonial.audience.all() 
         for comm in auto_shared_with:
+            if testimonial.sharing_type == SharingType.CLOSED_TO.value[0] and comm.id in audience :
+                continue
             new_item = TestimonialSharedCommunity(testimonial=testimonial, community=comm)
             new_items.append(new_item)
             
@@ -566,7 +585,7 @@ class TestimonialStore:
         return None, CustomMassenergizeError("Testimonial Auto share settings not found")
       
       excluded_tags_ids = args.pop("excluded_tags", None)
-      ids_of_communities_to_share_from = args.pop("communities_to_share_from", None)
+      ids_of_communities_to_share_from = args.pop("share_from_communities", None)
       sharing_location_type = args.pop("sharing_location_type", None)
       sharing_location_value = args.pop("sharing_location_value", None)
       
@@ -587,7 +606,7 @@ class TestimonialStore:
       return None, CustomMassenergizeError(e)
     
 
-  def get_community_auto_share_settings(self, context: Context, args) -> Tuple[dict, Any]:
+  def get_community_auto_share_settings(self, context: Context, args) -> Tuple[TestimonialAutoShareSettings, Any]:
     try:
       community_id = args.pop("community_id", None)
 
