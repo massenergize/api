@@ -24,6 +24,7 @@ from database.models import (
     Location, Media,
     Menu, Message,
     RealEstateUnit,
+    Tag,
     Team,
     Testimonial,
     TestimonialAutoShareSettings, UserActionRel,
@@ -496,5 +497,12 @@ def make_section(**kwargs):
         "media": kwargs.get("media"),
     })
     return section
+
+
+def make_tag(**kwargs):
+    return Tag.objects.create(**{
+        **kwargs,
+        "name": kwargs.get("name") or f"New Tag-{datetime.now().timestamp()}",
+    })
     
     
