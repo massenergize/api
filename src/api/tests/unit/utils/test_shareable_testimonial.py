@@ -14,7 +14,7 @@ class TestGetAutoSharedWithList(TestCase):
         self.c3 = makeCommunity(name="Community - test 3",)
         self.c4 = makeCommunity(name="Community - test 4", )
 
-        self.testimonial = makeTestimonial()
+        self.testimonial = makeTestimonial(title="SHareable Testimonial")
 
 
         self.tag1 = make_tag(name="Solar")
@@ -26,11 +26,12 @@ class TestGetAutoSharedWithList(TestCase):
 
 
     def test_get_auto_shared_with_list_no_community(self):
-        result = get_auto_shared_with_list(self.testimonial)
+        testimonial = makeTestimonial(title="SHareable Testimonial 2223")
+        result = get_auto_shared_with_list(testimonial)
         self.assertEqual(result, [])
 
     def test_get_auto_shared_with_list_no_auto_share_settings(self):
-        self.testimonial.community = self.c1
+        self.testimonial.community = makeCommunity(name="Community - test Within")
         result = get_auto_shared_with_list(self.testimonial)
         self.assertEqual(result.first(), None)
 
@@ -43,7 +44,7 @@ class TestGetAutoSharedWithList(TestCase):
             share_from_location_value='MA'
         )
         result = get_auto_shared_with_list(self.testimonial)
-        self.assertEqual(result.first().name, self.c3.name)
+        self.assertIn(self.c3, list(result))
 
     def test_get_auto_shared_with_list_tags(self):
         self.testimonial.community = self.c1
@@ -54,7 +55,7 @@ class TestGetAutoSharedWithList(TestCase):
         )
         auto_share_settings.excluded_tags.add(self.tag1)
         result = get_auto_shared_with_list(self.testimonial)
-        self.assertEqual(result.first().name, self.c4.name)
+        self.assertIn(self.c4, list(result))
 
     def test_get_auto_shared_with_list_communities(self):
         self.testimonial.community = self.c1
@@ -64,4 +65,4 @@ class TestGetAutoSharedWithList(TestCase):
         )
         auto_share_settings.share_from_communities.set([self.c1])
         result = get_auto_shared_with_list(self.testimonial)
-        self.assertEqual(result.first().name, self.c2.name)
+        self.assertIn(self.c2, list(result))

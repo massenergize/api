@@ -29,12 +29,11 @@ def get_auto_shared_with_list(testimonial):
         3. The auto-share settings contain tags that match the tags of the testimonial.
         The function collects these matching communities and returns a list of them. This list will be used to share the testimonial with those communities.
     """
-    if not testimonial:
+    if not testimonial or not testimonial.community:
+        print("No testimonial or community")
         return []
     
     testimonial_community = testimonial.community 
-    if not testimonial_community:
-        return []
     
     community_zip_codes = set(testimonial_community.locations.values_list('zipcode', flat=True))
     communities_list = set()
