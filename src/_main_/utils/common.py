@@ -91,7 +91,7 @@ def parse_list(d):
     try:
         tmp = []
         if isinstance(d, str):
-            tmp = d.strip().split(",") if d else []
+            return d.strip().split(",") if d else []
         elif isinstance(d, dict):
             tmp = list(d.values())
 
