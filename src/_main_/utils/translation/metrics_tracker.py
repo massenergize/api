@@ -2,6 +2,7 @@ import threading
 from _main_.utils.common import parse_datetime_to_aware
 from _main_.utils.metrics import put_metric_data
 from _main_.utils.utils import calc_string_list_length
+from _main_.settings import EnvConfig
 
 class TranslationMetrics:
     """
@@ -23,7 +24,9 @@ class TranslationMetrics:
         Args:
             metric_data (list): A list of dictionaries containing metric data to be recorded.
         """
-        threading.Thread(target=put_metric_data, args=(self.name_space, metric_data)).start()
+        env_name_space = f"{EnvConfig.name.title()}/{self.name_space}"
+
+        threading.Thread(target=put_metric_data, args=(env_name_space, metric_data)).start()
 
     def track_language_usage_count(self, destination_language):
         """
@@ -99,7 +102,7 @@ class TranslationMetrics:
                     },
                 ],
                 "Value": duration,
-                'Unit': 'Seconds',
+                'Unit': 'Milliseconds',
                 'Timestamp': self.time_stamp,
             },
         ]
