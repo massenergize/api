@@ -21,7 +21,7 @@ zipcodes==1.1.2
 termcolor==1.1.0
 django-hosts==6.0
 html2text==2020.1.16
-black==21.7b0
+black==24.3.0
 geoip2==4.4.0
 user_agents==2.2.0
 pystmark==0.5.1
