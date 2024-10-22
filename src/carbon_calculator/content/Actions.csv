@@ -14,15 +14,15 @@ environmental_stewardship,Protect the environment,Get involved with environmenta
 environmental_justice,Environmental justice,Get involved in environmental justice and equity,Behavioral,Activism & Education,Activism,,,,,,
 activities_for_kids,Activities for kids,Fun environmental sustainable activities for children,Multiple,Activism & Education,Education,,,,,,
 help_community,Help our community effort,Get involved with the group hosting this website,Behavioral,Activism & Education,Activism,,,,,,
-renewable_elec,Renewable electricity,Switch to renewable electricity,Annual,Electricity and Solar,Renewable grid,Choosing renewable electricity reduces or eliminates greenhouse gas emissions from the power you use.,3714.0,"monthly_elec,electric_utility",,,"Electricity_Use_1,All_Actions_ME"
-community_solar,Community solar,Sign up for community solar,Annual,Electricity and Solar,Solar,Joining a community solar project can save on your electric bill and lower greenhouse gas emissions.,3714.0,"monthly_elec,electric_utility",,,"Solar_1,Solar_CCH,All_Actions_ME"
-install_solarPV,Install solar PV,Install a solar PV array,Home actions,Electricity and Solar,Solar,"Installing a solar PV array  can reduce your carbon footprint dramatically, and save considerable money over time.",5494.0,solar_potential,,,"Solar_1,Solar_CCH,All_Actions_ME"
-solar_assessment,Solar assessment,Request a solar assessment,Home actions,Electricity and Solar,Solar,Getting a solar assessment can help you plan for a solar PV or solar hot water system to reduce emissions and lower cost.,15.0,solar_potential,,,"Solar_1,Solar_CCH,All_Actions_ME"
-EV_charger,EV charger,Install an EV charger,Home actions,Electricity and Solar,Time of use,,,,,,
-opt_up_RE,Opt-up renewable electricity,Opt up to purchase more renewable electricity,Annual,Electricity and Solar,Renewable grid,,,,,,
-muni_aggregation,Municipal aggregation,Your community has community choice electricity,Home actions,Electricity and Solar,Renewable grid,,,,,,
-shave_peak,Shave the peak,Reduce peak electric loads.,"Behavioral,Daily",Electricity and Solar,Time of use,,,,,,
-battery,Battery storage,Battery storage for your home or business,Home actions,Electricity and Solar,Renewable grid,,,,,,
+renewable_elec,Renewable electricity,Switch to renewable electricity,Annual,Electricity & Solar,Renewable grid,Choosing renewable electricity reduces or eliminates greenhouse gas emissions from the power you use.,3714.0,"monthly_elec,electric_utility",,,"Electricity_Use_1,All_Actions_ME"
+community_solar,Community solar,Sign up for community solar,Annual,Electricity & Solar,Solar,Joining a community solar project can save on your electric bill and lower greenhouse gas emissions.,3714.0,"monthly_elec,electric_utility",,,"Solar_1,Solar_CCH,All_Actions_ME"
+install_solarPV,Install solar PV,Install a solar PV array,Home actions,Electricity & Solar,Solar,"Installing a solar PV array  can reduce your carbon footprint dramatically, and save considerable money over time.",5494.0,solar_potential,,,"Solar_1,Solar_CCH,All_Actions_ME"
+solar_assessment,Solar assessment,Request a solar assessment,Home actions,Electricity & Solar,Solar,Getting a solar assessment can help you plan for a solar PV or solar hot water system to reduce emissions and lower cost.,15.0,solar_potential,,,"Solar_1,Solar_CCH,All_Actions_ME"
+EV_charger,EV charger,Install an EV charger,Home actions,Electricity & Solar,Time of use,,,,,,
+opt_up_RE,Opt-up renewable electricity,Opt up to purchase more renewable electricity,Annual,Electricity & Solar,Renewable grid,,,,,,
+muni_aggregation,Municipal aggregation,Your community has community choice electricity,Home actions,Electricity & Solar,Renewable grid,,,,,,
+shave_peak,Shave the peak,Reduce peak electric loads.,"Behavioral,Daily",Electricity & Solar,Time of use,,,,,,
+battery,Battery storage,Battery storage for your home or business,Home actions,Electricity & Solar,Renewable grid,,,,,,
 low_carbon_diet,Low carbon diet,Adopt a lower carbon diet,"Behavioral,Daily",Food,Low carbon diet,Adopting a diet with less or no meat lowers emissions and can improve your health.,1417.0,"eating_switch_meals,family_size,meat_frequency,eating_switch_meals_amount",,,"Eating_1,Eating_CCH,All_Actions_ME"
 eat_locally,Eat locally,Join a CSA or grow your own food,"Behavioral,Monthly",Food,Eat local,Eating locally sourced food has many benefits for community resiliency and reducing emissions,42.5,,,,All_Actions_ME
 grow_local,Grow local,Grow food in a yard or community garden plot,Annual,Food,Grow local,,,,,,
@@ -75,9 +75,9 @@ buy_e_bike,Purchase e-bike,Buy an e-bike for local errands,"Behavioral,Daily",Tr
 public_transit,Public transit,Take public transportation,"Behavioral,Daily",Transportation,Alternative transit,,,,,,
 people_power,Cycle or walk,Walk or bike for transportation,"Behavioral,Daily",Transportation,Alternative transit,,,,,,
 reduce_pollution,Reduce vehicle pollution,Reduce pollution from your car or other vehicles,Behavioral,Transportation,Vehicles,,,,,,
-compost,Compost,Compost food waste,"Behavioral,Weekly",Waste,Reuse and recycling,"Composting food waste reduces emissions, turning garbage into valuable organic matter.",189.0,compost_pickup,,,"Reduce_Reuse_1,Reduce_Reuse_CCH,All_Actions_ME"
-reduce_waste,Reduce waste,Reduce waste in consumption and packaging,"Behavioral,Weekly",Waste,Reduce purchasing,Reducing packaging and unnecessary consumption saves money and lowers your impact.,481.0,"reduce_waste,reuse_containers,buy_sell_used,buy_bulk,buy_recycled",,,"Reduce_Reuse_1,Reduce_Reuse_CCH,All_Actions_ME"
-avoid_purchase,Avoid a purchase,Avoid a purchase,"Behavioral,Daily",Waste,Reduce purchasing,,,,,,
-borrow_buy_used,Buy used or borrow,Buy used or borrow,"Behavioral,Daily",Waste,Reduce purchasing,,,,,,
-swap_donate,Swap or donate,Donate or swap items,"Behavioral,Daily",Waste,Donate,,,,,,
-recycling,Recycle everything,Recycle whatever you can,Behavioral,Waste,Reuse and recycling,,,,,,
+compost,Compost,Compost food waste,"Behavioral,Weekly",Waste & Recycling,Reuse and recycling,"Composting food waste reduces emissions, turning garbage into valuable organic matter.",189.0,compost_pickup,,,"Reduce_Reuse_1,Reduce_Reuse_CCH,All_Actions_ME"
+reduce_waste,Reduce waste,Reduce waste in consumption and packaging,"Behavioral,Weekly",Waste & Recycling,Reduce purchasing,Reducing packaging and unnecessary consumption saves money and lowers your impact.,481.0,"reduce_waste,reuse_containers,buy_sell_used,buy_bulk,buy_recycled",,,"Reduce_Reuse_1,Reduce_Reuse_CCH,All_Actions_ME"
+avoid_purchase,Avoid a purchase,Avoid a purchase,"Behavioral,Daily",Waste & Recycling,Reduce purchasing,,,,,,
+borrow_buy_used,Buy used or borrow,Buy used or borrow,"Behavioral,Daily",Waste & Recycling,Reduce purchasing,,,,,,
+swap_donate,Swap or donate,Donate or swap items,"Behavioral,Daily",Waste & Recycling,Donate,,,,,,
+recycling,Recycle everything,Recycle whatever you can,Behavioral,Waste & Recycling,Reuse and recycling,,,,,,

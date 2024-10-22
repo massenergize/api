@@ -1,14 +1,14 @@
 Community,Live,Action,Impact,Cost,Category,Carbon Calculator Action
 Agawam,Yes,Action Adventure Starts Here!,High,0,Activism & Education,learn
-Agawam,Yes,Be Water Wise! Age 4+,Low,0,"Land, Soil & Water",conserve_water
+Agawam,Yes,Be Water Wise! Age 4+,Low,0,Land & Water,conserve_water
 Agawam,Yes,Being Comfy at Home ,Medium,$,Home Energy,weatherization
 Agawam,Yes,Clean Up Agawam,Low,0,Waste & Recycling,community_cleanup
 Agawam,No,Donate Building Materials,Low,0,Waste & Recycling,swap_donate
-Agawam,Yes,Earth-Friendly Gardening Age 6+,Low,$,"Land, Soil & Water",grow_local
+Agawam,Yes,Earth-Friendly Gardening Age 6+,Low,$,Land & Water,grow_local
 Agawam,Yes,Eat for the Earth - Age 8+,High,0,Food,low_carbon_diet
-Agawam,Yes,Energize Your Roof,High,$$$,Solar,install_solarPV
+Agawam,Yes,Energize Your Roof,High,$$$,Electricity & Solar,install_solarPV
 Agawam,Yes,EVs: Drive and Save,High,$$$,Transportation,replace_car
-Agawam,Yes,Get Paid for Solar,Medium,0,Solar,community_solar
+Agawam,Yes,Get Paid for Solar,Medium,0,Electricity & Solar,community_solar
 Agawam,Yes,Home Composting Age 6+,Low,0,Food,compost
 Agawam,Yes,Less Plastic Is Good! Age 6+,Low,0,Activism & Education,reduce_waste
 Agawam,Yes,"Litter Free Agawam, Age 4+",Low,0,Waste & Recycling,community_cleanup
@@ -17,75 +17,53 @@ Agawam,Yes,Save on Appliances,High,$$,Home Energy,energystar_fridge
 Agawam,Yes,Saving Energy Age 6+,Low,0,Home Energy,conserve_electricity
 Agawam,Yes,Say Good Bye to Junk Mail,Medium,0,Waste & Recycling,reduce_waste
 Agawam,Yes,Smart Thermostats,Medium,$,Home Energy,prog_thermostats
-Agawam,Yes,Solar Oven Age 6+,Low,0,Solar,solar_oven
+Agawam,Yes,Solar Oven Age 6+,Low,0,Electricity & Solar,solar_oven
 Agawam,Yes,What's Your Carbon Footprint? Age 14+,Low,0,Activism & Education,carbon_footprint
 AimeeTest1x2,Yes,Heat Pumps are Hard,High,$$$,Home Energy,air_source_hp
 AimeeTest1x2,Yes,Roombas Save kWh not therms,Low,$,Home Energy,conserve_electricity
-Bedford,No,Community Garden plot-BedfordMA,Medium,$$,Food,DELETE
-Bedford,No,Electricity Use Monitor-BedfordMA,Low,$,Home Energy,DELETE
 Bedford,No,Mini-Split Heat Pumps Are For You,High,$$$,Home Energy,air_source_hp
 Boxborough,No,Buy Food from a Local Farm,Medium,$,Food,eat_locally
 Boxborough,No,Calculate your Carbon Footprint,Low,0,Activism & Education,carbon_footprint
-Boxborough,No,Change Thermostat Settings-BoxboroughMA,Medium,$$$,Home Energy,DELETE
 Boxborough,No,Climate Action Crew,Medium,0,Home Energy,activism
-Boxborough,No,Climate Action Crew-Copy,Medium,0,Home Energy,DELETE
-Boxborough,No,Community Solar-BoxboroughMA,Medium,0,Solar,DELETE
 Boxborough,No,Compost Food Waste with Black Earth,Low,0,Waste & Recycling,compost
 Boxborough,No,Eat More Plant-Based Meals,Medium,0,Food,low_carbon_diet
-Boxborough,No,FreeBee Market,Low,$$,"Land, Soil & Water",swap_donate
+Boxborough,No,FreeBee Market,Low,$$,Land & Water,swap_donate
 Boxborough,No,Green Heating & Cooling ,High,$$$,Home Energy,air_source_hp
-Boxborough,No,Heat my water with Solar!-BoxboroughMA,Medium,$$$,Solar,DELETE
 Boxborough,Yes,Install a Heat Pump Water Heater,Medium,$$$,Home Energy,hp_water_heater
-Boxborough,No,Insulate and Air Seal Your Home-BoxboroughMA,High,$$,Home Energy,DELETE
 Boxborough,Yes,Join 2040 Handbook Book Club,Low,0,Activism & Education,learn
-Boxborough,No,Join 2040 Handbook Book Club-Copy,Low,0,Activism & Education,DELETE
-Boxborough,No,Landlord Near Free Property Upgrades-BoxboroughMA,Low,0,Home Energy,DELETE
-Boxborough,No,No-cost Home Energy Assessment-BoxboroughMA,Low,0,Home Energy,DELETE
-Boxborough,No,Not: Green Your Electricity-BoxboroughMA,High,0,Home Energy,DELETE
-Boxborough,No,People Power Your Errands-BoxboroughMA,High,0,Transportation,DELETE
-Boxborough,No,Pledge to Vote-BoxboroughMA,Medium,0,Activism & Education,DELETE
 Boxborough,No,Recycle Your Clothing!,Low,0,Waste & Recycling,reduce_waste
-Boxborough,No,Refer a Friend-BoxboroughMA,Low,0,Activism & Education,DELETE
 Boxborough,No,Repurpose Used Goods,Medium,0,Waste & Recycling,swap_donate
-Boxborough,No,Rooftop solar-BoxboroughMA,High,$$$,Solar,DELETE
-Boxborough,No,Savings for Renters-BoxboroughMA,Low,0,Home Energy,DELETE
-Boxborough,No,START HERE for Energy Savings-BoxboroughMA,Low,0,Home Energy,DELETE
-Boxborough,No,Suggest a New Action-BoxboroughMA,Low,0,Activism & Education,DELETE
-Boxborough,No,TEM Buy or Lease an Electric Car-BoxboroughMA,High,$$$,Transportation,DELETE
 Bushwick,Yes,Bushwick 9,Medium,$,Transportation,people_power
-Bushwick,No,Dogs as bed-warmers CCC,Low,$$$,Home Energy,DELETE
-Bushwick,No,Dogszzzzzy as bed-warmers Copy 7344,Low,$$$,Home Energy,DELETE
 Bushwick,Yes,Testy Waters,,,Home Energy,low_carbon_diet
-Cooler Communities,Yes,3 Ways to Choose Solar Power,High,,Solar,solar_assessment
+Cooler Communities,Yes,3 Ways to Choose Solar Power,High,,Electricity & Solar,solar_assessment
 Cooler Communities,No,Air Dry Your Clothes ,Low,$,Home Energy,line_dry
-Cooler Communities,No,Air Dry Your Clothes  Copy 1642,Low,$,Home Energy,DELETE
 Cooler Communities,No,An Environment for All People,High,0,Activism & Education,environmental_stewardship
 Cooler Communities,Yes,Backyard Compost or Service,Low,0,Waste & Recycling,compost
 Cooler Communities,Yes,Buy or Lease an Electric Car,High,$$,Transportation,replace_car
-Cooler Communities,No,Catch the Sun on your roof,High,$$$,Solar,install_solarPV
+Cooler Communities,No,Catch the Sun on your roof,High,$$$,Electricity & Solar,install_solarPV
 Cooler Communities,No,Compost at Home - All Ages,Low,0,Waste & Recycling,compost
 Cooler Communities,Yes,Drive Electric -Buy or Lease ,High,$$$,Transportation,replace_car
 Cooler Communities,No,Drive less / Walk more Berkshires,High,0,Transportation,people_power
 Cooler Communities,Yes,Earth-Friendly Meals - Age 8+,High,0,Food,low_carbon_diet
-Cooler Communities,Yes,Energize Your Roof,High,$$$,Solar,install_solarPV
+Cooler Communities,Yes,Energize Your Roof,High,$$$,Electricity & Solar,install_solarPV
 Cooler Communities,No,Finding Edible Plants - All Ages,Low,0,Activism & Education,eat_locally
 Cooler Communities,Yes,Free Home Energy Assessment,Low,0,Home Energy,energy_audit
-Cooler Communities,No,Gardening for Life Age 6+,Low,$,"Land, Soil & Water",grow_local
+Cooler Communities,No,Gardening for Life Age 6+,Low,$,Land & Water,grow_local
 Cooler Communities,Yes,Heat Pumps,Medium,$,Home Energy,air_source_hp
 Cooler Communities,No,Keeping your Home Cozy or Cool,Medium,$,Home Energy,weatherization
 Cooler Communities,No,Reduce Waste with Eco-Building Bargains,Low,0,Waste & Recycling,reduce_waste
 Cooler Communities,No,Shave the Peak - Age 10+,Medium,0,Home Energy,shave_peak
 Cooler Communities,Yes,Start Here: Joining the Challenge,Low,0,Activism & Education,get_involved
 Cooler Communities,No,Stay Warm - Keep Cool = Heat Pumps,High,$$,Home Energy,air_source_hp
-Cooler Communities,Yes,Sun for Everyone -- Community Solar,High,$$,Solar,community_solar
-Cooler Communities,No,Sun Power,High,$$$,Solar,install_solarPV
+Cooler Communities,Yes,Sun for Everyone -- Community Solar,High,$$,Electricity & Solar,community_solar
+Cooler Communities,No,Sun Power,High,$$$,Electricity & Solar,install_solarPV
 Cooler Communities,No,Support Access to Local Food,Low,$,Food,eat_locally
 Cooler Communities,No,Walk for a Viable Future,Low,0,Activism & Education,people_power
 Cooler Communities,No,Wireless Programmable Thermostats,Medium,$,Home Energy,prog_thermostats
 Cooler Communities,No,Your Voice for the Climate Age 12+,High,0,Activism & Education,activism
 Cooler Concord,No,Attend a Climate Festival,Low,0,Activism & Education,energy_fair
 Cooler Concord,No,Attend an Earth Day Climate Festival,Low,0,Activism & Education,energy_fair
-Cooler Concord,Yes,Be Water Wise! Age 4+,Medium,0,"Land, Soil & Water",conserve_water
+Cooler Concord,Yes,Be Water Wise! Age 4+,Medium,0,Land & Water,conserve_water
 Cooler Concord,Yes,Bike-to-school Concord,Medium,$,Transportation,people_power
 Cooler Concord,Yes,Buy/Lease an EV or Plug-in Hybrid,High,$$$,Transportation,replace_car
 Cooler Concord,Yes,Calculate your Carbon Footprint!,Low,0,Activism & Education,carbon_footprint
@@ -93,7 +71,7 @@ Cooler Concord,Yes,Calculate your Carbon Footprint!,Low,0,Activism & Education,e
 Cooler Concord,Yes,Change to LED lighting,Medium,$,Home Energy,led_lighting
 Cooler Concord,Yes,Eat a More Plant-Based Diet ,Medium,0,Food,low_carbon_diet
 Cooler Concord,No,Eat Local with a CSA,Medium,$,Food,eat_locally
-Cooler Concord,Yes,Ecological Landscaping  ,Low,$$,"Land, Soil & Water",plant_natives
+Cooler Concord,Yes,Ecological Landscaping  ,Low,$$,Land & Water,plant_natives
 Cooler Concord,Yes,Energy-Efficient Appliances ,High,$$,Home Energy,energystar_fridge
 Cooler Concord,Yes,Food scraps pickup ,Medium,$$,Waste & Recycling,compost
 Cooler Concord,Yes,Get rid of junk mail ,Low,0,Waste & Recycling,reduce_waste
@@ -104,16 +82,14 @@ Cooler Concord,Yes,Invest Like a Climate Activist ,Medium,0,Activism & Education
 Cooler Concord,Yes,Market my Green Home,Low,$$,Home Energy,market_green_home
 Cooler Concord,Yes,No-cost Home Energy Assessment ,Low,0,Home Energy,energy_audit
 Cooler Concord,Yes,Offset your air travel ,High,$$,Transportation,offset_flights
-Cooler Concord,Yes,Plant a Native Tree,Low,$,"Land, Soil & Water",plant_trees
-Cooler Concord,Yes,Put Solar on Your Rooftop ,High,$$$,Solar,install_solarPV
-Cooler Concord,Yes,Switch to Electric Lawn Equipment,Low,$,"Land, Soil & Water",electric_mower
+Cooler Concord,Yes,Plant a Native Tree,Low,$,Land & Water,plant_trees
+Cooler Concord,Yes,Put Solar on Your Rooftop ,High,$$$,Electricity & Solar,install_solarPV
+Cooler Concord,Yes,Switch to Electric Lawn Equipment,Low,$,Land & Water,electric_mower
 Cooler Concord,Yes,Switch to Induction Cooking,Medium,$$,Home Energy,induction_stove
 Cooler Concord,Yes,Use Your Car Less Challenge ,High,0,Transportation,reduce_car_miles
-Cooler Concord!,Yes,Community Solar,Medium,$,Solar,community_solar
+Cooler Concord!,Yes,Community Solar,Medium,$,Electricity & Solar,community_solar
 Cooler Concord!,No,Electric bike,Medium,$$,Transportation,buy_e_bike
-Cooler Concord!,Yes,Electric lawncare,Medium,$$,"Land, Soil & Water",electric_mower
-Cooler Concord!,No,New action,Low,0,Activism & Education,DELETE
-Cooler Concord!,No,Pick invasive weeds,,,,DELETE
+Cooler Concord!,Yes,Electric lawncare,Medium,$$,Land & Water,electric_mower
 Cooler Concord!,No,Solar assist water heater,,,,install_solarHW
 Cooler Concord!,Yes,Use a low carbon bank,Low,0,Activism & Education,investing
 Cooler GCVS,Yes,Buy or Lease Electric Car,High,$$,Transportation,replace_car
@@ -127,95 +103,51 @@ Cooler GCVS,Yes,Free Home Energy Assessment,Low,0,Home Energy,energy_audit
 Cooler GCVS,No,Heat my water with Solar! GCVS,,,,install_solarHW
 Cooler GCVS,Yes,Heat Pumps,Medium,$,Home Energy,air_source_hp
 Cooler GCVS,No,Invest in the Climate,Medium,0,Activism & Education,investing
-Cooler GCVS,Yes,Make Exploding Seed Balls,Medium,$,"Land, Soil & Water",activities_for_kids
+Cooler GCVS,Yes,Make Exploding Seed Balls,Medium,$,Land & Water,activities_for_kids
 Cooler GCVS,No,Monitor My Electricity Usage,,,,electricity_monitor
 Cooler GCVS,No,Pass on used goods,Medium,0,Waste & Recycling,swap_donate
-Cooler GCVS,Yes,Protect our Rainforests,High,$,"Land, Soil & Water",environmental_stewardship
+Cooler GCVS,Yes,Protect our Rainforests,High,$,Land & Water,environmental_stewardship
 Cooler GCVS,No,Renovating? Improve Efficiency too! GCVS,,,,efficient_renovations
-Cooler GCVS,Yes,Sun for Everyone - Community Solar,High,$$,Solar,community_solar
+Cooler GCVS,Yes,Sun for Everyone - Community Solar,High,$$,Electricity & Solar,community_solar
 Cooler GCVS,No,Switch to LED Lighting,Medium,$,Home Energy,led_lighting
 Cooler GCVS,Yes,The Challenge Starts Here!,Low,0,Activism & Education,get_involved
-Cooler Greenfield,Yes,Be a Lazy Gardener,Medium,$,"Land, Soil & Water",plant_natives
+Cooler Greenfield,Yes,Be a Lazy Gardener,Medium,$,Land & Water,plant_natives
 Cooler Greenfield,Yes,Become a Playwright,Medium,0,Activism & Education,activism
 Cooler Greenfield,No,Buy food from a local farm-GreenfieldMA,Medium,$,Food,eat_locally
-Cooler Greenfield,No,Earth-Friendly Gardening ,Low,$,"Land, Soil & Water",plant_natives
-Cooler Greenfield,No,Ecological Landscaping Tree Planting-GreenfieldMA,Low,$$,"Land, Soil & Water",plant_trees
+Cooler Greenfield,No,Earth-Friendly Gardening ,Low,$,Land & Water,plant_natives
+Cooler Greenfield,No,Ecological Landscaping Tree Planting-GreenfieldMA,Low,$$,Land & Water,plant_trees
 Cooler Greenfield,No,Food scraps pickup-GreenfieldMA,Low,$,Waste & Recycling,compost
 Cooler Greenfield,No,Get rid of junk mail-GreenfieldMA,Low,0,Waste & Recycling,reduce_waste
 Cooler Greenfield,Yes,Getting Off Fossil Fuels,High,,Home Energy,zero_emissions
 Cooler Greenfield,Yes,Go Vegetarian or Vegan,High,0,Food,low_carbon_diet
-Cooler Greenfield,Yes,Indoor Plants,Low,$,"Land, Soil & Water",grow_local
-Cooler Greenfield,Yes,Invest in Solar Panels,High,$$$,Solar,install_solarPV
+Cooler Greenfield,Yes,Indoor Plants,Low,$,Land & Water,grow_local
+Cooler Greenfield,Yes,Invest in Solar Panels,High,$$$,Electricity & Solar,install_solarPV
 Cooler Greenfield,Yes,Join Your School's Environmental Club,Medium,0,Activism & Education,get_involved
 Cooler Greenfield,No,Less Meat = Less Greenhouse Gases,High,0,Food,low_carbon_diet
 Cooler Greenfield,No,No-cost Home Energy Assessment,Low,0,Home Energy,energy_audit
 Cooler Greenfield,No,Pass on used goods-GreenfieldMA,Medium,0,Waste & Recycling,swap_donate
-Cooler Greenfield,Yes,Plant a Native Tree,High,$,"Land, Soil & Water",plant_trees
-Cooler Greenfield,Yes,Plant Native Plants,Medium,$,"Land, Soil & Water",plant_natives
-Cooler Greenfield,No,START HERE for Energy Savings-GreenfieldMA,Low,0,Home Energy,DELETE
+Cooler Greenfield,Yes,Plant a Native Tree,High,$,Land & Water,plant_trees
+Cooler Greenfield,Yes,Plant Native Plants,Medium,$,Land & Water,plant_natives
 Cooler Greenfield,Yes,Start Here: Join Cooler Greenfield,Low,0,Activism & Education,get_involved
-Cooler Greenfield,No,Sustainable Household Goods-GreenfieldMA,Low,$,Waste & Recycling,DELETE
 Cooler Greenfield,Yes,Use Walking or Biking for Transportation,High,,Transportation,people_power
 Cooler Greenfield,No,"Walk, Bike, or Bus",High,0,Transportation,people_power
-Cooler Greenfield  (GCVS),No,Backyard compost or service-GCVS,Low,0,Food,DELETE
-Cooler Greenfield  (GCVS),No,Change Thermostat Settings-GCVS,Medium,$$$,Home Energy,DELETE
-Cooler Greenfield  (GCVS),No,Change to LED Lighting-GCVS,Medium,$,Home Energy,DELETE
-Cooler Greenfield  (GCVS),No,Clean Up Your Community-GCVS,Low,0,Activism & Education,DELETE
-Cooler Greenfield  (GCVS),No,Community Solar-GCVS,Medium,0,Solar,DELETE
-Cooler Greenfield  (GCVS),No,Donate Building Materials-GCVS,Low,0,Waste & Recycling,DELETE
-Cooler Greenfield  (GCVS),No,Ecological Landscaping Tree Planting-GCVS,Low,$$,"Land, Soil & Water",DELETE
-Cooler Greenfield  (GCVS),No,Energy-Efficient Appliances-GCVS,High,$$,Home Energy,DELETE
-Cooler Greenfield  (GCVS),No,Get Hot & Cool with Mini-Splits-GCVS,High,$$$,Home Energy,DELETE
-Cooler Greenfield  (GCVS),No,Green Your Electricity-GCVS,High,0,Home Energy,DELETE
-Cooler Greenfield  (GCVS),No,Heat my water with Solar!-GCVS,Medium,$$$,Solar,DELETE
-Cooler Greenfield  (GCVS),No,Heating & Cooling with Heat Pumps-GCVS,High,$$,Home Energy,DELETE
-Cooler Greenfield  (GCVS),No,Invest Like a Climate Activist Copy-GCVS,Medium,0,Activism & Education,DELETE
-Cooler Greenfield  (GCVS),No,Market my Green Home-GCVS,Low,0,Home Energy,DELETE
-Cooler Greenfield  (GCVS),No,Monitor My Electricity Usage-GCVS,Low,$$,Home Energy,DELETE
-Cooler Greenfield  (GCVS),No,No-cost Home Energy Assessment-GCVS,Low,0,Home Energy,DELETE
-Cooler Greenfield  (GCVS),No,"NOT: Community Solar, No Installation-GCVS",Medium,$,Solar,DELETE
-Cooler Greenfield  (GCVS),No,Offset your air travel-GCVS,Medium,$,Transportation,DELETE
-Cooler Greenfield  (GCVS),No,Pass on used goods-GCVS,Medium,0,Waste & Recycling,DELETE
-Cooler Greenfield  (GCVS),No,Renovating? Improve Efficiency too! -GCVS,High,$$,Home Energy,DELETE
-Cooler Greenfield  (GCVS),No,TEM Buy or Lease an Electric Car-GCVS,High,$$$,Transportation,DELETE
 Cooler Northampton,Yes,Backyard compost or service,Medium,$,Waste & Recycling,compost
-Cooler Northampton,No,Backyard compost or service-northampton,Low,0,Food,DELETE
 Cooler Northampton,Yes,Buy or Lease an Electric Car,Medium,$$,Transportation,replace_car
-Cooler Northampton,No,Change Thermostat Settings-northampton,Medium,$$$,Home Energy,DELETE
 Cooler Northampton,No,Change to LED Lighting-Noho,,,,led_lighting
-Cooler Northampton,No,Change to LED Lighting-northampton,Medium,$,Home Energy,DELETE
 Cooler Northampton,No,Clean Green Power,Medium,$$,Home Energy,renewable_elec
-Cooler Northampton,No,Clean Up Your Community-northampton,Low,0,Activism & Education,DELETE
-Cooler Northampton,No,Community Solar-northampton,Medium,0,Solar,DELETE
 Cooler Northampton,No,Donate Building Materials,Low,0,Waste & Recycling,swap_donate
-Cooler Northampton,No,Donate Building Materials-northampton,Low,0,Waste & Recycling,DELETE
-Cooler Northampton,Yes,Ecological Landscaping Tree Planting ,Medium,$,"Land, Soil & Water",plant_trees
-Cooler Northampton,No,Ecological Landscaping Tree Planting-northampton,Low,$$,"Land, Soil & Water",DELETE
+Cooler Northampton,Yes,Ecological Landscaping Tree Planting ,Medium,$,Land & Water,plant_trees
 Cooler Northampton,Yes,Energize Your Roof,,,,install_solarPV
 Cooler Northampton,No,Energy-Efficient Appliances,High,$$,Home Energy,energystar_fridge
-Cooler Northampton,No,Energy-Efficient Appliances-northampton,High,$$,Home Energy,DELETE
-Cooler Northampton,No,Get Hot & Cool with Mini-Splits-northampton,High,$$$,Home Energy,DELETE
-Cooler Northampton,No,Green Your Electricity-northampton,High,0,Home Energy,DELETE
-Cooler Northampton,No,Heat my water with Solar!,Medium,$$$,Solar,install_solarHW
-Cooler Northampton,No,Heat my water with Solar!-northampton,Medium,$$$,Solar,DELETE
+Cooler Northampton,No,Heat my water with Solar!,Medium,$$$,Home Energy,install_solarHW
 Cooler Northampton,Yes,Heat Pumps,Medium,$,Home Energy,air_source_hp
-Cooler Northampton,No,Heating & Cooling with Heat Pumps-northampton,High,$$,Home Energy,DELETE
-Cooler Northampton,No,Invest Like a Climate Activist Copy-northampton,Medium,0,Activism & Education,DELETE
 Cooler Northampton,No,Invest Like a Climate Activist- Noho,,,Activism & Education,investing
 Cooler Northampton,Yes,Make Exploding Seed Balls,Medium,$,Food,activities_for_kids
-Cooler Northampton,No,Market my Green Home-northampton,Low,0,Home Energy,DELETE
 Cooler Northampton,No,Monitor My Electricity Usage,Low,$,Home Energy,electricity_monitor
-Cooler Northampton,No,Monitor My Electricity Usage-northampton,Low,$$,Home Energy,DELETE
 Cooler Northampton,Yes,No-cost Home Energy Assessment,Low,0,Home Energy,energy_audit
-Cooler Northampton,No,No-cost Home Energy Assessment-northampton,Low,0,Home Energy,DELETE
-Cooler Northampton,No,"NOT: Community Solar, No Installation-northampton",Medium,$,Solar,DELETE
 Cooler Northampton,No,Offset your air travel,Medium,$,Transportation,offset_flights
-Cooler Northampton,No,Offset your air travel-northampton,Medium,$,Transportation,DELETE
 Cooler Northampton,No,Pass on used goods,Medium,0,Waste & Recycling,swap_donate
-Cooler Northampton,No,Pass on used goods-northampton,Medium,0,Waste & Recycling,DELETE
-Cooler Northampton,No,Renovating? Improve Efficiency too! -northampton,High,$$,Home Energy,DELETE
-Cooler Northampton,No,TEM Buy or Lease an Electric Car-northampton,High,$$$,Transportation,DELETE
-Cooler Northampton,Yes,The Adventure Starts Here!,Low,0,Activism & Education,get_involved
+ooler Northampton,Yes,The Adventure Starts Here!,Low,0,Activism & Education,get_involved
 Cooler SICS,No,Change to LED Lighting- SICS,,,,led_lighting
 Cooler SICS,No,Heat Pumps-SICS,High,$$$,Home Energy,air_source_hp
 Cooler SICS,No,Invest Like a Climate Activist,,,Activism & Education,investing
@@ -223,12 +155,11 @@ Cooler SICS,No,Monitor My Electricity Usage,,,,electricity_monitor
 Cooler SICS,Yes,No-cost Home Energy Assessment,Low,0,Activism & Education,energy_audit
 Cooler SICS,Yes,The Adventure Starts Here!,,0,Activism & Education,learn
 Cooler Springfield,Yes,Action Adventure Starts Here!,High,0,Activism & Education,get_involved
-Cooler Springfield,No,Backyard compost or service-Springfield,Low,0,"Land, Soil & Water",compost
+Cooler Springfield,No,Backyard compost or service-Springfield,Low,0,Land & Water,compost
 Cooler Springfield,No,Change to LED Lights,,,,led_lighting
 Cooler Springfield,Yes,Food For Thought,High,0,Food,low_carbon_diet
 Cooler Springfield,Yes,Get Rid Of Junk Mail In One Go,Medium,0,Waste & Recycling,reduce_waste
 Cooler Springfield,Yes,Getting Around (Without) Driving,High,0,Transportation,reduce_car_miles
-Cooler Springfield,No,Getting Around (Without) Driving Copy 4291,High,0,Transportation,DELETE
 Cooler Springfield,No,Heat Pumps Springfield,High,$$$,Home Energy,air_source_hp
 Cooler Springfield,No,Invest Like a Climate Activist,,,Activism & Education,investing
 Cooler Springfield,Yes,Love Your Home,Medium,$,Home Energy,weatherization
@@ -238,77 +169,26 @@ Cooler Springfield,Yes,Save Your Power ,Medium,$,Home Energy,conserve_electricit
 Cooler Springfield,Yes,Shrink My Carbon Footprint,Low,0,Activism & Education,carbon_footprint
 Cooler Springfield,Yes,Start A New Action!,Low,0,Activism & Education,help_community
 Cooler Springfield,Yes,Waste Less,Low,0,Waste & Recycling,reduce_waste
-Cooler Springfield,Yes,Water Wise,Low,0,"Land, Soil & Water",conserve_water
-Cooler Springfield (SICS),No,Backyard compost or service-SICS,Low,0,Food,DELETE
-Cooler Springfield (SICS),No,Change Thermostat Settings-SICS,Medium,$$$,Home Energy,DELETE
-Cooler Springfield (SICS),No,Change to LED Lighting-SICS,Medium,$,Home Energy,DELETE
-Cooler Springfield (SICS),No,Clean Up Your Community-SICS,Low,0,Activism & Education,DELETE
-Cooler Springfield (SICS),No,Community Solar-SICS,Medium,0,Solar,DELETE
-Cooler Springfield (SICS),No,Donate Building Materials-SICS,Low,0,Waste & Recycling,DELETE
-Cooler Springfield (SICS),No,Ecological Landscaping Tree Planting-SICS,Low,$$,"Land, Soil & Water",DELETE
-Cooler Springfield (SICS),No,Energy-Efficient Appliances-SICS,High,$$,Home Energy,DELETE
-Cooler Springfield (SICS),No,Get Hot & Cool with Mini-Splits-SICS,High,$$$,Home Energy,DELETE
-Cooler Springfield (SICS),No,Green Your Electricity-SICS,High,0,Home Energy,DELETE
-Cooler Springfield (SICS),No,Heat my water with Solar!-SICS,Medium,$$$,Solar,DELETE
-Cooler Springfield (SICS),No,Heating & Cooling with Heat Pumps-SICS,High,$$,Home Energy,DELETE
-Cooler Springfield (SICS),No,Invest Like a Climate Activist Copy-SICS,Medium,0,Activism & Education,DELETE
-Cooler Springfield (SICS),No,Market my Green Home-SICS,Low,0,Home Energy,DELETE
-Cooler Springfield (SICS),No,Monitor My Electricity Usage-SICS,Low,$$,Home Energy,DELETE
-Cooler Springfield (SICS),No,No-cost Home Energy Assessment-SICS,Low,0,Home Energy,DELETE
-Cooler Springfield (SICS),No,"NOT: Community Solar, No Installation-SICS",Medium,$,Solar,DELETE
-Cooler Springfield (SICS),No,Offset your air travel-SICS,Medium,$,Transportation,DELETE
-Cooler Springfield (SICS),No,Pass on used goods-SICS,Medium,0,Waste & Recycling,DELETE
-Cooler Springfield (SICS),No,Renovating? Improve Efficiency too! -SICS,High,$$,Home Energy,DELETE
-Cooler Springfield (SICS),No,TEM Buy or Lease an Electric Car-SICS,High,$$$,Transportation,DELETE
-Cooler Westhampton,No,Backyard compost or service-westhampton,Low,0,Food,DELETE
-Cooler Westhampton,No,Change Thermostat Settings-westhampton,Medium,$$$,Home Energy,DELETE
-Cooler Westhampton,No,Change to LED Lighting-westhampton,Medium,$,Home Energy,DELETE
-Cooler Westhampton,No,Clean Up Your Community-westhampton,Low,0,Activism & Education,DELETE
-Cooler Westhampton,No,Community Solar-westhampton,Medium,0,Solar,DELETE
-Cooler Westhampton,No,Donate Building Materials-westhampton,Low,0,Waste & Recycling,DELETE
-Cooler Westhampton,No,Ecological Landscaping Tree Planting-westhampton,Low,$$,"Land, Soil & Water",DELETE
-Cooler Westhampton,No,Energy-Efficient Appliances-westhampton,High,$$,Home Energy,DELETE
-Cooler Westhampton,No,Get Hot & Cool with Mini-Splits-westhampton,High,$$$,Home Energy,DELETE
-Cooler Westhampton,No,Green Your Electricity-westhampton,High,0,Home Energy,DELETE
-Cooler Westhampton,No,Heat my water with Solar!-westhampton,Medium,$$$,Solar,DELETE
-Cooler Westhampton,No,Heating & Cooling with Heat Pumps-westhampton,High,$$,Home Energy,DELETE
-Cooler Westhampton,No,Invest Like a Climate Activist Copy-westhampton,Medium,0,Activism & Education,DELETE
-Cooler Westhampton,No,Market my Green Home-westhampton,Low,0,Home Energy,DELETE
-Cooler Westhampton,No,Monitor My Electricity Usage-westhampton,Low,$$,Home Energy,DELETE
-Cooler Westhampton,No,No-cost Home Energy Assessment-westhampton,Low,0,Home Energy,DELETE
-Cooler Westhampton,No,"NOT: Community Solar, No Installation-westhampton",Medium,$,Solar,DELETE
-Cooler Westhampton,No,Offset your air travel-westhampton,Medium,$,Transportation,DELETE
-Cooler Westhampton,No,Pass on used goods-westhampton,Medium,0,Waste & Recycling,DELETE
-Cooler Westhampton,No,Renovating? Improve Efficiency too! -westhampton,High,$$,Home Energy,DELETE
-Cooler Westhampton,No,TEM Buy or Lease an Electric Car-westhampton,High,$$$,Transportation,DELETE
-creationYO,No,Community Garden plot-creation,Medium,$$,Food,DELETE
-creationYO,No,Electricity Use Monitor-creation,Low,$,Home Energy,DELETE
-creationYO,No,Mini-Split Heat Pumps Are For You-creation,High,$$$,Home Energy,DELETE
+Cooler Springfield,Yes,Water Wise,Low,0,Land & Water,conserve_water
 CSNDC Community,Yes,"""Support"" HERO Legislation",High,0,Activism & Education,activism
-CSNDC Community,No,"""Support"" HERO Legislation-Copy",High,0,Activism & Education,DELETE
 CSNDC Community,Yes,"Bring a bag, save the Earth and 10¢-Copy",Low,0,Waste & Recycling,community_cleanup
 CSNDC Community,Yes,Curbside & Backyard Composting-Copy,Low,0,Waste & Recycling,compost
 CSNDC Community,Yes,Eat Less Meat and Dairy-Copy,High,0,Food,low_carbon_diet
 CSNDC Community,Yes,HERO Bill - Send Email,High,0,Activism & Education,activism
 CSNDC Community,Yes,May Line Drying Challenge-Copy,Low,$,Home Energy,line_dry
 CSNDC Community,Yes,Sign up for our HERO Newsletter!  ,High,0,Activism & Education,activism
-CSNDC Community,No,TMP Change to LED Lighting-Copy,Medium,$,Home Energy,DELETE
 CSNDC Community,Yes,Want to Volunteer?-Copy,Low,0,Activism & Education,activism
-Demo 2022,No,An Action You Want to Show Up First-Copy-Copy,Low,0,Food,DELETE
-Demo 2022,No,An Action You Want to Show Up First-Copy-Copy-Copy,Low,0,Food,DELETE
 Demo 2022,Yes,Calculate Your Carbon Footprint,Low,0,Activism & Education,carbon_footprint
 Demo 2022,Yes,Change Thermostat Settings,Medium,$$$,Home Energy,prog_thermostats
-Demo 2022,Yes,Community Solar,Medium,0,Solar,community_solar
+Demo 2022,Yes,Community Solar,Medium,0,Electricity & Solar,community_solar
 Demo 2022,Yes,Compost at Home or with a Service,Low,0,Waste & Recycling,compost
 Demo 2022,Yes,Eat a More Plant-Based Diet,High,0,Food,low_carbon_diet
-Demo 2022,No,Ecological Landscaping Tree Planting,Low,$$,"Land, Soil & Water",plant_trees
+Demo 2022,No,Ecological Landscaping Tree Planting,Low,$$,Land & Water,plant_trees
 Demo 2022,Yes,Electrify Your Ride ,High,$$$,Waste & Recycling,replace_car
 Demo 2022,Yes,Insulate and Air Seal Your Home,High,$$,Home Energy,weatherization
 Demo 2022,Yes,No-cost Home Energy Assessment,Low,0,Home Energy,energy_audit
 Demo 2022,Yes,Reduce Always-On Wasted Electricity,Low,0,Home Energy,conserve_electricity
 Demo 2022,Yes,Refer a Friend ,Low,0,Activism & Education,help_community
-Demo 2022,No,Sample Action 1,Low,0,Home Energy,DELETE
-Demo 2022,No,Sample Action 1-Copy,Low,0,Home Energy,DELETE
 Demo 2022,Yes,Suggest a New Action,Low,0,Activism & Education,help_community
 Demo 2022,No,Suggested action,,,,help_community
 Demo 2022,Yes,Suggested action-Copy,,,,help_community
@@ -318,11 +198,11 @@ Demo 2023,Yes,An Action You Want to Show Up First,Low,0,Food,help_community
 Demo 2023,Yes,Calculate Your Carbon Footprint,Low,0,Activism & Education,carbon_footprint
 Demo 2023,Yes,Change Thermostat Settings,Medium,$$$,Home Energy,electricity_monitor
 Demo 2023,Yes,Change Thermostat Settings,Medium,$$$,Home Energy,prog_thermostats
-Demo 2023,Yes,Community Solar,Medium,0,Solar,community_solar
+Demo 2023,Yes,Community Solar,Medium,0,Electricity & Solar,community_solar
 Demo 2023,Yes,Compost at Home or with a Service,Low,0,Waste & Recycling,compost
 Demo 2023,Yes,Eat a More Plant-Based Diet,High,0,Food,low_carbon_diet
-Demo 2023,Yes,Ecological Landscaping Tree Planting,Low,$$,"Land, Soil & Water",plant_trees
-Demo 2023,Yes,Ecological Landscaping Tree Planting,Low,$$,"Land, Soil & Water",reduce_lawn_size
+Demo 2023,Yes,Ecological Landscaping Tree Planting,Low,$$,Land & Water,plant_trees
+Demo 2023,Yes,Ecological Landscaping Tree Planting,Low,$$,Land & Water,reduce_lawn_size
 Demo 2023,Yes,Electrify Your Ride ,High,$$$,Transportation,replace_car
 Demo 2023,Yes,Insulate and Air Seal Your Home,High,$$,Home Energy,weatherization
 Demo 2023,Yes,Invest Like a Climate Activist,Medium,0,Activism & Education,investing
@@ -337,44 +217,36 @@ EcoNatick,No,An Environment for All People-MW,High,0,Activism & Education,enviro
 EcoNatick,No,Avoid Bottled Water-MW,Low,0,Waste & Recycling,reduce_waste
 EcoNatick,Yes,Backyard compost or food scrap service,Low,$,Waste & Recycling,compost
 EcoNatick,Yes,Backyard Composting,Low,0,Waste & Recycling,compost
-EcoNatick,Yes,Be Water Wise,Low,0,"Land, Soil & Water",conserve_water
+EcoNatick,Yes,Be Water Wise,Low,0,Land & Water,conserve_water
 EcoNatick,No,Buy food from a local farm-EcoNatick,Medium,$,Food,eat_locally
 EcoNatick,No,Buy food from local farms,Medium,$,Food,eat_locally
 EcoNatick,No,Buy Less Stuff-MW,Medium,$,Waste & Recycling,reduce_waste
-EcoNatick,No,Buy Naked Stuff-MW,Low,0,Waste & Recycling,DELETE
 EcoNatick,No,Buy or Lease an EV,High,$$$,Transportation,replace_car
-EcoNatick,No,Calculate ur Carbon Footprint 6668-EcoNatick,Low,0,Activism & Education,DELETE
 EcoNatick,No,Calculate your Carbon Footprint-EcoNatick,Low,0,Activism & Education,carbon_footprint
-EcoNatick,No,Change Thermostat Settings-EcoNatick,Medium,$$$,Home Energy,DELETE
-EcoNatick,Yes,Clean Water - Clear Choices,Low,0,"Land, Soil & Water",environmental_stewardship
-EcoNatick,No,Community Garden Plots-MW,Low,$,"Land, Soil & Water",plant_natives
-EcoNatick,No,Community Solar-EcoNatick,Medium,0,Solar,community_solar
+EcoNatick,Yes,Clean Water - Clear Choices,Low,0,Land & Water,environmental_stewardship
+EcoNatick,No,Community Garden Plots-MW,Low,$,Land & Water,plant_natives
+EcoNatick,No,Community Solar-EcoNatick,Medium,0,Electricity & Solar,community_solar
 EcoNatick,No,Compost at Home or with a Service,High,0,Waste & Recycling,compost
 EcoNatick,Yes,Composting Curbside Pick-up,Medium,$,Waste & Recycling,compost
-EcoNatick,No,Controlling Invasive Plant Species -MW,Low,0,"Land, Soil & Water",plant_natives
-EcoNatick,No,Controlling Invasive Plant Species -MW,Low,0,"Land, Soil & Water",reduce_lawn_size
+EcoNatick,No,Controlling Invasive Plant Species -MW,Low,0,Land & Water,plant_natives
+EcoNatick,No,Controlling Invasive Plant Species -MW,Low,0,Land & Water,reduce_lawn_size
 EcoNatick,No,Ditch Disposables-MW,Low,0,Waste & Recycling,reduce_waste
 EcoNatick,No,"Donate, Borrow and Buy Used -MW",Low,0,Waste & Recycling,swap_donate
 EcoNatick,Yes,Drive Electric,High,$$$,Transportation,replace_car
 EcoNatick,Yes,Earth Day All Around Natick,Low,0,Activism & Education,energy_fair
-EcoNatick,Yes,Earth-Friendly Gardening,Low,$,"Land, Soil & Water",plant_natives
+EcoNatick,Yes,Earth-Friendly Gardening,Low,$,Land & Water,plant_natives
 EcoNatick,No,Eat for the Earth - Age 8+-MW,High,0,Food,low_carbon_diet
 EcoNatick,No,Eat More Plant-Based Meals-MW,Medium,$,Food,low_carbon_diet
-EcoNatick,No,Ecological Landscaping -MW,Low,$$,"Land, Soil & Water",DELETE
-EcoNatick,No,Ecological Landscaping Tree Planting-EcoNatick,Low,$$,"Land, Soil & Water",plant_trees
+EcoNatick,No,Ecological Landscaping Tree Planting-EcoNatick,Low,$$,Land & Water,plant_trees
 EcoNatick,No,Enviro Justice Is Racial Justice,High,0,Activism & Education,environmental_justice
-EcoNatick,No,Environmental Justice: Racial Justice-MW,High,0,Activism & Education,DELETE
 EcoNatick,No,Environmentally Friendly Kitchen-MW,Medium,$,Activism & Education,compost
 EcoNatick,No,Food scraps pickup-EcoNatick,Low,$,Waste & Recycling,compost
-EcoNatick,No,Get Dirty in the Garden-MW,Low,$,"Land, Soil & Water",DELETE
 EcoNatick,No,Get rid of junk mail-EcoNatick,Low,0,Waste & Recycling,reduce_waste
 EcoNatick,No,Get rid of junk mail-MW,Low,0,Waste & Recycling,reduce_waste
 EcoNatick,Yes,Grab a good book!,Low,0,Activism & Education,learn
 EcoNatick,No,Green Your Electricity-EcoNatick,High,0,Home Energy,renewable_elec
-EcoNatick,No,Grow herbs and vegetables,Medium,$,Food,DELETE
 EcoNatick,No,Grow your own food,Medium,$,Food,grow_local
-EcoNatick,No,Heat my water with Solar!-EcoNatick,Medium,$$$,Solar,install_solarHW
-EcoNatick,No,Heating & Cooling with Heat Pumps-EcoNatick,High,$$,Home Energy,DELETE
+EcoNatick,No,Heat my water with Solar!-EcoNatick,Medium,$$$,Home Energy,install_solarHW
 EcoNatick,Yes,HUGE Heat Pump rebates!,High,$$,Home Energy,air_source_hp
 EcoNatick,No,Insulate and Air Seal Your Home-EcoNatick,High,$$,Home Energy,weatherization
 EcoNatick,Yes,Invest Like a Climate Activist,Medium,0,Activism & Education,investing
@@ -384,69 +256,56 @@ EcoNatick,Yes,Join Natick’s Electricity Aggregation!,Medium,$,Home Energy,rene
 EcoNatick,Yes,Keep Natick Beautiful,Low,0,Waste & Recycling,community_cleanup
 EcoNatick,No,Litter-Free Natick,Low,0,Waste & Recycling,community_cleanup
 EcoNatick,Yes,No-cost Home Energy Assessment,Low,0,Home Energy,energy_audit
-EcoNatick,No,No-cost Home Energy Assessment-EcoNatick,Low,0,Home Energy,DELETE
 EcoNatick,No,No-cost Home Energy Assessment-MW,Low,0,Home Energy,energy_audit
 EcoNatick,No,Pass It On-MW,Medium,0,Waste & Recycling,swap_donate
 EcoNatick,No,Pass on used goods-EcoNatick,Medium,0,Waste & Recycling,swap_donate
 EcoNatick,No,People Power Your Errands-EcoNatick,High,0,Transportation,people_power
-EcoNatick,No,Plant a Native Tree-MW,Low,$,"Land, Soil & Water",plant_trees
-EcoNatick,No,Plant Native Grasses,Low,0,"Land, Soil & Water",plant_natives
-EcoNatick,Yes,Plant native grasses instead of lawns,Low,$$,"Land, Soil & Water",plant_natives
-EcoNatick,No,Planting the Future,Low,0,"Land, Soil & Water",plant_trees
+EcoNatick,No,Plant a Native Tree-MW,Low,$,Land & Water,plant_trees
+EcoNatick,No,Plant Native Grasses,Low,0,Land & Water,plant_natives
+EcoNatick,Yes,Plant native grasses instead of lawns,Low,$$,Land & Water,plant_natives
+EcoNatick,No,Planting the Future,Low,0,Land & Water,plant_trees
 EcoNatick,No,Pledge to Vote-EcoNatick,Medium,0,Activism & Education,local_decision
 EcoNatick,No,Pledge to Vote-MW,Medium,0,Activism & Education,local_decision
 EcoNatick,No,Promote Sustainability in Our Schools-MW,Low,0,Activism & Education,sustain_school
 EcoNatick,No,Promote Sustainability in Our Schools-MW,Low,0,Activism & Education,sustain_school
 EcoNatick,Yes,Read Natick's Net Zero Plan,Low,0,Activism & Education,learn
-EcoNatick,No,RECYCLE Right -MW,Low,0,Waste & Recycling,DELETE
 EcoNatick,No,Reduce Light Pollution-MW,Medium,0,Activism & Education,light_pollution
 EcoNatick,No,Refer a Friend-EcoNatick  - it's great!,Low,0,Activism & Education,help_community
 EcoNatick,No,Repair it-MW,Low,0,Waste & Recycling,avoid_purchase
-EcoNatick,Yes,Restore the River,Medium,0,"Land, Soil & Water",environmental_stewardship
-EcoNatick,Yes,Restoring the River,Medium,0,"Land, Soil & Water",environmental_stewardship
-EcoNatick,No,Rooftop solar-EcoNatick,High,$$$,Solar,install_solarPV
-EcoNatick,No,Save Water-MW,Low,0,"Land, Soil & Water",conserve_water
+EcoNatick,Yes,Restore the River,Medium,0,Land & Water,environmental_stewardship
+EcoNatick,Yes,Restoring the River,Medium,0,Land & Water,environmental_stewardship
+EcoNatick,No,Rooftop solar-EcoNatick,High,$$$,Electricity & Solar,install_solarPV
+EcoNatick,No,Save Water-MW,Low,0,Land & Water,conserve_water
 EcoNatick,No,Savings for Renters,Low,0,Home Energy,savings_for_renters
 EcoNatick,No,Shop Local: Farmers Market-MW,High,0,Food,eat_locally
 EcoNatick,No,Shop Local: Farmers Market-MW,High,0,Food,low_carbon_diet
 EcoNatick,Yes,Sign up and be counted!,Low,0,Activism & Education,energy_fair
 EcoNatick,Yes,Sign up and be counted!,Low,0,Activism & Education,help_community
 EcoNatick,No,Smart Thermostats-MW,Medium,$,Home Energy,prog_thermostats
-EcoNatick,No,START HERE for Energy Savings-EcoNatick,Low,0,Home Energy,DELETE
 EcoNatick,No,Suggest a New Action for this Site,Low,0,Activism & Education,help_community
-EcoNatick,No,Sustainable Household Goods-EcoNatick,Low,$,Waste & Recycling,DELETE
 EcoNatick,No,Sustainable Household Goods-EcoNatick,Low,$,Waste & Recycling,reduce_waste
-EcoNatick,No,TEM Buy or Lease an Electric Car-EcoNatick,High,$$$,Transportation,DELETE
 EcoNatick,Yes,Try the Seed Library!,Low,0,Food,grow_local
 EcoNatick,Yes,View & VOTE: School Committee Candidates,Medium,0,Activism & Education,local_decision
 EcoNatick,Yes,View & VOTE: Select Board Candidates ,Medium,0,Activism & Education,local_decision
-EcoNatick,Yes,What's the buzz about No Mow May?,Low,,"Land, Soil & Water",reduce_lawn_care
-Ellen Test,No,Aimee Herb,Medium,$,Transportation,people_power
-Ellen Test,No,Aimee Herb Copy 4962,Medium,$,Transportation,DELETE
-Ellen Test,Yes,Community Garden plot Copy 8419,Medium,$$,Food,grow_local
-Ellen Test,No,Community Garden plot Copy 8655,Medium,$$,Food,DELETE
-Ellen Test,Yes,Dual Fuel Heat Pump,Medium,$$$,Home Energy,air_source_hp
-Ellen Test,Yes,Green Heating & AC - Heat Pumps ,High,$$$,Home Energy,air_source_hp
-Ellen Test,Yes,snow balls,Medium,,Home Energy,prog_thermostats
+EcoNatick,Yes,What's the buzz about No Mow May?,Low,,Land & Water,reduce_lawn_care
 Energize Acton,Yes,Buy Less Stuff,Medium,$,Waste & Recycling,avoid_purchase
 Energize Acton,Yes,Calculate Your Carbon Footprint,Low,0,Activism & Education,carbon_footprint
 Energize Acton,Yes,Choose 100% Green Electricity,High,$,Home Energy,muni_aggregation
 Energize Acton,Yes,Consider Climate-driven Investments,Low,0,Activism & Education,investing
 Energize Acton,Yes,Drive Electric,High,$$,Transportation,replace_car
 Energize Acton,Yes,Eat More Plant-Based Meals,Medium,$,Food,low_carbon_diet
-Energize Acton,Yes,Garden Ecologically,Low,$,"Land, Soil & Water",plant_natives
+Energize Acton,Yes,Garden Ecologically,Low,$,Land & Water,plant_natives
 Energize Acton,Yes,Get Dirty in the Garden,Low,$,Waste & Recycling,grow_local
 Energize Acton,Yes,Heat & Cool: Heat Pumps ,High,$$$,Home Energy,air_source_hp
 Energize Acton,No,How can you help? Join us! Sign up now.,Low,0,Activism & Education,help_community
-Energize Acton,Yes,Install Solar,High,$$$,Solar,install_solarPV
+Energize Acton,Yes,Install Solar,High,$$$,Electricity & Solar,install_solarPV
 Energize Acton,Yes,Insulate & Weatherize to the Max,High,$$,Home Energy,weatherization
-Energize Acton,Yes,Make Magic: Compost,Low,0,"Land, Soil & Water",compost
+Energize Acton,Yes,Make Magic: Compost,Low,0,Land & Water,compost
 Energize Acton,No,NOT: Buy Energy-Efficient Appliances,Medium,$,Home Energy,energystar_fridge
 Energize Acton,No,NOT: Get an Energy Audit or Coaching,Low,0,Home Energy,energy_audit
 Energize Acton,No,NOT: Join Climate Advocacy Group,Low,0,Activism & Education,get_involved
 Energize Acton,No,NOT: Monitor Electricity Use,Low,$,Home Energy,electricity_monitor
-Energize Acton,No,NOT: Opt Up to APC Green Copy 117,High,$,Home Energy,DELETE
-Energize Acton,No,NOT: Subscribe to Community Solar,Medium,0,Solar,community_solar
+Energize Acton,No,NOT: Subscribe to Community Solar,Medium,0,Electricity & Solar,community_solar
 Energize Acton,Yes,Renters: Save $$,Low,0,Home Energy,savings_for_renters
 Energize Acton,Yes,Stay Current with Coalition Initiatives,High,0,Activism & Education,local_decision
 Energize Acton,Yes,Switch to Induction Cooking,Low,$,Food,induction_stove
@@ -456,138 +315,74 @@ Energize Boxborough,Yes,Adopt Specialized Stretch Code,High,$$,Home Energy,local
 Energize Boxborough,Yes,Buy Food from a Local Farm,Medium,$,Food,eat_locally
 Energize Boxborough,Yes,Buy Less Stuff,Low,0,Waste & Recycling,avoid_purchase
 Energize Boxborough,Yes,Calculate your Carbon Footprint,Low,0,Activism & Education,carbon_footprint
-Energize Boxborough,No,Calculate Your Carbon Footprint-Copy,,,,DELETE
 Energize Boxborough,No,Celebrate Boxborough Bill,Low,0,Home Energy,local_decision
 Energize Boxborough,Yes,Climate Action Crew,Medium,0,Home Energy,energy_audit
 Energize Boxborough,Yes,Climate Action Crew - Book Discussion,Medium,0,Home Energy,energy_audit
-Energize Boxborough,No,Climate Action Crew-Copy,Medium,0,Home Energy,DELETE
-Energize Boxborough,No,Community Solar-BoxboroughMA,Medium,0,Solar,DELETE
 Energize Boxborough,Yes,Consider Plant-Based Foods,Medium,0,Food,low_carbon_diet
 Energize Boxborough,Yes,Drive Electric Vehicle (EV),High,$$$,Transportation,replace_car
 Energize Boxborough,No,Eat a Plant-Based Diet,Low,$,Food,low_carbon_diet
-Energize Boxborough,No,Eat More Plant-Based Meals-Copy,,,,DELETE
 Energize Boxborough,Yes,Free Home Energy Audit,Low,0,Home Energy,energy_audit
-Energize Boxborough,Yes,Get Dirty in the Garden,Medium,$,"Land, Soil & Water",grow_local
-Energize Boxborough,No,Get Dirty in the Garden-Copy,,,,DELETE
+Energize Boxborough,Yes,Get Dirty in the Garden,Medium,$,Land & Water,grow_local
 Energize Boxborough,Yes,Get Started,Low,0,Activism & Education,energy_fair
 Energize Boxborough,Yes,Green Heating & Cooling ,High,$$$,Home Energy,air_source_hp
-Energize Boxborough,No,Heat & Cool: Heat Pumps -Copy,,,,DELETE
-Energize Boxborough,No,Heat my water with Solar!-BoxboroughMA,Medium,$$$,Solar,install_solarHW
+Energize Boxborough,No,Heat my water with Solar!-BoxboroughMA,Medium,$$$,Home Energy,install_solarHW
 Energize Boxborough,No,Install a Heat Pump Water Heater,Medium,$$$,Home Energy,hp_water_heater
-Energize Boxborough,Yes,Install Solar,High,$$$,Home Energy,install_solarPV
+Energize Boxborough,Yes,Install Solar,High,$$$,Electricity & Solar,install_solarPV
 Energize Boxborough,Yes,Insulate & Weatherize to the Max,High,$$$,Home Energy,weatherization
 Energize Boxborough,No,Insulate and Air Seal Your Home-BoxboroughMA,High,$$,Home Energy,weatherization
 Energize Boxborough,Yes,Join the Boxborough Conservation Trust,Low,0,Activism & Education,get_involved
-Energize Boxborough,No,Landlord Near Free Property Upgrades-BoxboroughMA,Low,0,Home Energy,DELETE
 Energize Boxborough,Yes,Make Magic: Compost,Low,0,Waste & Recycling,compost
 Energize Boxborough,No,Not: Green Your Electricity-BoxboroughMA,High,0,Home Energy,renewable_elec
-Energize Boxborough,No,Pledge to Vote-BoxboroughMA,Medium,0,Activism & Education,DELETE
 Energize Boxborough,Yes,Recycle Your Clothing,Low,0,Waste & Recycling,recycling
 Energize Boxborough,Yes,Refer a Friend,Low,0,Activism & Education,help_community
 Energize Boxborough,Yes,Renters: Save $$,Low,$$,Activism & Education,savings_for_renters
 Energize Boxborough,No,Repurpose Used Goods,Medium,0,Waste & Recycling,reduce_waste
-Energize Boxborough,No,Rooftop solar-BoxboroughMA,High,$$$,Solar,install_solarPV
-Energize Boxborough,Yes,Support the FreeBee Market,Low,$$,"Land, Soil & Water",swap_donate
-Energize Boxborough,Yes,Switch to Electric Lawn Equipment,Medium,$,"Land, Soil & Water",electric_mower
-Energize Boxborough,No,TEM Buy or Lease an Electric Car-BoxboroughMA,High,$$$,Transportation,DELETE
-Energize Carlisle,No,Backyard compost or service-CarlisleMA,Low,0,Food,DELETE
-Energize Carlisle,No,Change Thermostat Settings-CarlisleMA,Medium,$$$,Home Energy,DELETE
-Energize Carlisle,No,Change to LED Lighting-CarlisleMA,Medium,$,Home Energy,DELETE
-Energize Carlisle,No,Clean Up Your Community-CarlisleMA,Low,0,Activism & Education,DELETE
-Energize Carlisle,No,Community Solar-CarlisleMA,Medium,0,Solar,DELETE
-Energize Carlisle,No,Donate Building Materials-CarlisleMA,Low,0,Waste & Recycling,DELETE
-Energize Carlisle,No,Ecological Landscaping Tree Planting-CarlisleMA,Low,$$,"Land, Soil & Water",DELETE
-Energize Carlisle,No,Energy-Efficient Appliances-CarlisleMA,High,$$,Home Energy,DELETE
-Energize Carlisle,No,Get Hot & Cool with Mini-Splits-CarlisleMA,High,$$$,Home Energy,DELETE
-Energize Carlisle,No,Green Your Electricity-CarlisleMA,High,0,Home Energy,DELETE
-Energize Carlisle,No,Heat my water with Solar!-CarlisleMA,Medium,$$$,Solar,DELETE
-Energize Carlisle,No,Heating & Cooling with Heat Pumps-CarlisleMA,High,$$,Home Energy,DELETE
-Energize Carlisle,No,Install A Heat Pump Water Heater ,Medium,$$,Home Energy,hp_water_heater
-Energize Carlisle,No,Invest Like a Climate Activist Copy-CarlisleMA,Medium,0,Activism & Education,DELETE
-Energize Carlisle,No,Market my Green Home-CarlisleMA,Low,0,Home Energy,DELETE
-Energize Carlisle,No,Monitor My Electricity Usage-CarlisleMA,Low,$$,Home Energy,DELETE
-Energize Carlisle,No,No-cost Home Energy Assessment-CarlisleMA,Low,0,Home Energy,DELETE
-Energize Carlisle,No,"NOT: Community Solar, No Installation-CarlisleMA",Medium,$,Solar,DELETE
-Energize Carlisle,No,Offset your air travel-CarlisleMA,Medium,$,Transportation,DELETE
-Energize Carlisle,No,Pass on used goods-CarlisleMA,Medium,0,Waste & Recycling,DELETE
-Energize Carlisle,No,Renovating? Improve Efficiency too! -CarlisleMA,High,$$,Home Energy,DELETE
-Energize Carlisle,No,TEM Buy or Lease an Electric Car-CarlisleMA,High,$$$,Transportation,DELETE
-Energize Chelmsford,No,Backyard compost or servic-ChelmsfordMA,Low,0,Food,DELETE
-Energize Chelmsford,No,bla action for templat-ChelmsfordMA,Low,0,Solar,DELETE
-Energize Chelmsford,No,blabl-ChelmsfordMA,Low,$,Solar,DELETE
-Energize Chelmsford,No,Change Thermostat Setting-ChelmsfordMA,Medium,$$$,Home Energy,DELETE
-Energize Chelmsford,No,Change to LED Lightin-ChelmsfordMA,Medium,$,Home Energy,DELETE
-Energize Chelmsford,No,Clean Up Your Communit-ChelmsfordMA,Low,0,Activism & Education,DELETE
-Energize Chelmsford,No,Community Sola-ChelmsfordMA,Medium,0,Solar,DELETE
-Energize Chelmsford,Yes,Donate Building Material-ChelmsfordMA,Low,0,Waste & Recycling,DELETE
-Energize Chelmsford,No,Ecological Landscaping Tree Plantin-ChelmsfordMA,Low,$$,"Land, Soil & Water",DELETE
-Energize Chelmsford,No,Energy-Efficient Appliance-ChelmsfordMA,High,$$,Home Energy,DELETE
-Energize Chelmsford,No,Get Hot & Cool with Mini-Split-ChelmsfordMA,High,$$$,Home Energy,DELETE
-Energize Chelmsford,No,Green Your Electricit-ChelmsfordMA,High,0,Home Energy,DELETE
-Energize Chelmsford,No,Heat my water with Solar-ChelmsfordMA,Medium,$$$,Solar,DELETE
-Energize Chelmsford,No,Heating & Cooling with Heat Pump-ChelmsfordMA,High,$$,Home Energy,DELETE
-Energize Chelmsford,No,Invest Like a Climate Activist Cop-ChelmsfordMA,Medium,0,Activism & Education,DELETE
-Energize Chelmsford,Yes,Market my Green Hom-ChelmsfordMA,Low,0,Home Energy,DELETE
-Energize Chelmsford,No,Monitor My Electricity Usag-ChelmsfordMA,Low,$$,Home Energy,DELETE
-Energize Chelmsford,No,New template actio-ChelmsfordMA,High,$$$,Home Energy,DELETE
-Energize Chelmsford,No,No-cost Home Energy Assessmen-ChelmsfordMA,Low,0,Home Energy,DELETE
-Energize Chelmsford,No,"NOT: Community Solar, No Installatio-ChelmsfordMA",Medium,$,Solar,DELETE
-Energize Chelmsford,No,Offset your air trave-ChelmsfordMA,Medium,$,Transportation,DELETE
-Energize Chelmsford,No,Pass on used good-ChelmsfordMA,Medium,0,Waste & Recycling,DELETE
-Energize Chelmsford,No,Renovating? Improve Efficiency too!-ChelmsfordMA,High,$$,Home Energy,DELETE
-Energize Chelmsford,No,TEM Buy or Lease an Electric Ca-ChelmsfordMA,High,$$$,Transportation,DELETE
-Energize Chelmsford,Yes,Test templat-ChelmsfordMA,Medium,$,Solar,DELETE
+Energize Boxborough,No,Rooftop solar-BoxboroughMA,High,$$$,Electricity & Solar,install_solarPV
+Energize Boxborough,Yes,Support the FreeBee Market,Low,$$,Land & Water,swap_donate
+Energize Boxborough,Yes,Switch to Electric Lawn Equipment,Medium,$,Land & Water,electric_mower
 Energize Framingham,No,$$$ to Buy Electric Lawn Equipment,Low,$,Home Energy,electric_mower
 Energize Framingham,No,$$$ to Buy Electric Lawn Equipment,Low,$,Home Energy,electric_mower
 Energize Framingham,No,Ask City to support curbside composting,Low,0,Activism & Education,energy_fair
-Energize Framingham,No,Avoid Bottled Water-Copy,,,,DELETE
 Energize Framingham,No,"Bring a bag, save the Earth and 10¢",Low,0,Waste & Recycling,community_cleanup
-Energize Framingham,Yes,"Bring a bag, save the Earth and 10¢-Copy",Low,0,Waste & Recycling,DELETE
-Energize Framingham,No,Buy Local Seedlings,Low,$,"Land, Soil & Water",plant_trees
-Energize Framingham,No,Buy Naked Stuff-Copy,,,,DELETE
-Energize Framingham,Yes,Community Garden Plots,Low,$,"Land, Soil & Water",grow_local
-Energize Framingham,No,Conservation-Copy,,,,DELETE
+Energize Framingham,No,Buy Local Seedlings,Low,$,Land & Water,plant_trees
+Energize Framingham,Yes,Community Garden Plots,Low,$,Land & Water,grow_local
 Energize Framingham,No,Consider Climate-driven Investing,,,,investing
-Energize Framingham,Yes,Controlling Invasive Plant Species ,Low,0,"Land, Soil & Water",plant_natives
+Energize Framingham,Yes,Controlling Invasive Plant Species ,Low,0,Land & Water,plant_natives
 Energize Framingham,Yes,Curbside & Backyard Composting,Low,0,Waste & Recycling,compost
 Energize Framingham,Yes,Curbside Composting,Low,0,Waste & Recycling,compost
 Energize Framingham,Yes,"Donate, Borrow and Buy Used ",Low,0,Waste & Recycling,swap_donate
 Energize Framingham,Yes,Drive Electric ,High,$$$,Transportation,replace_car
 Energize Framingham,Yes,Eat Less Meat and Dairy,High,0,Food,low_carbon_diet
 Energize Framingham,Yes,Eat Local with a FarmShare,Low,$$,Food,eat_locally
-Energize Framingham,No,Ecological Landscaping ,Low,$$,"Land, Soil & Water",plant_natives
+Energize Framingham,No,Ecological Landscaping ,Low,$$,Land & Water,plant_natives
 Energize Framingham,No,Environmental Justice Is Racial Justice,High,0,Activism & Education,environmental_justice
 Energize Framingham,Yes,Framingham Electricity Aggregation,Medium,0,Home Energy,muni_aggregation
 Energize Framingham,Yes,Get Cool with Mini-Splits,High,$$$,Home Energy,air_source_hp
 Energize Framingham,No,Go Geothermal!,High,$$$,Home Energy,ground_source_hp
-Energize Framingham,Yes,Go Solar! ,High,$$$,Solar,install_solarPV
+Energize Framingham,Yes,Go Solar! ,High,$$$,Electricity & Solar,install_solarPV
 Energize Framingham,No,Green Your Electricity ,Medium,0,Home Energy,renewable_elec
 Energize Framingham,Yes,Heat and Cool with Mini-Split Heat Pumps,High,$$$,Home Energy,air_source_hp
-Energize Framingham,No,Heat my water with Solar!,Medium,$$,Solar,install_solarHW
-Energize Framingham,No,Heating & Cooling with Heat Pumps-Copy,High,$$,Home Energy,DELETE
+Energize Framingham,No,Heat my water with Solar!,Medium,$$,Home Energy,install_solarHW
 Energize Framingham,No,Host a vegan Thanksgiving,Low,$,Food,low_carbon_diet
 Energize Framingham,No,How does this website work? ,Low,0,Activism & Education,energy_fair
 Energize Framingham,Yes,How does this website work? ,Low,0,Activism & Education,learn
-Energize Framingham,No,How to pick the right solar provider,High,$$$,Solar,solar_assessment
+Energize Framingham,No,How to pick the right solar provider,High,$$$,Electricity & Solar,solar_assessment
 Energize Framingham,No,Join Metrowest 350MA Node ,Low,0,Activism & Education,get_involved
 Energize Framingham,Yes,Landlords - Free Insulation,Low,0,Home Energy,energy_audit
 Energize Framingham,Yes,Landlords - Limited Time Free Insulation,Low,0,Home Energy,weatherization
 Energize Framingham,No,May Line Drying Challenge,Low,$,Home Energy,line_dry
 Energize Framingham,Yes,Meatless Monday,High,0,Food,low_carbon_diet
 Energize Framingham,Yes,Participate in a Framingham Clean-Up!,Low,0,Activism & Education,community_cleanup
-Energize Framingham,No,Participate in a Framingham Clean-Up!-Copy,Low,0,Activism & Education,DELETE
-Energize Framingham,No,Plant a Native Tree,Low,0,"Land, Soil & Water",plant_trees
-Energize Framingham,No,Pledge to Vote-Copy,Medium,0,Activism & Education,DELETE
+Energize Framingham,No,Plant a Native Tree,Low,0,Land & Water,plant_trees
 Energize Framingham,No,RECYCLE Right ,Low,0,Waste & Recycling,recycling
 Energize Framingham,Yes,Recycling hard-to-recycle items,Low,$,Waste & Recycling,recycling
 Energize Framingham,Yes,Reduce Your Heating & Cooling Costs!,Medium,0,Home Energy,weatherization
 Energize Framingham,No,Refer a Friend,Low,0,Activism & Education,help_community
 Energize Framingham,No,Register to VOTE,Medium,0,Activism & Education,local_decision
-Energize Framingham,No,Save 5-10% and Support Solar Development,Medium,0,Solar,community_solar
+Energize Framingham,No,Save 5-10% and Support Solar Development,Medium,0,Electricity & Solar,community_solar
 Energize Framingham,No,Saving Soil & Society!,Medium,0,Activism & Education,energy_fair
 Energize Framingham,Yes,Savings for Renters ,Low,0,Home Energy,savings_for_renters
-Energize Framingham,No,Savings for Renters -Copy,Low,0,Home Energy,DELETE
-Energize Framingham,No,Solar Subscription - No Roof Required,Medium,$,Solar,community_solar
+Energize Framingham,No,Solar Subscription - No Roof Required,Medium,$,Electricity & Solar,community_solar
 Energize Framingham,No,START HERE for Energy Savings,Low,0,Home Energy,energy_audit
 Energize Framingham,No,Stay Informed! Subscribe Today.,Low,0,Activism & Education,get_involved
 Energize Framingham,No,Suggest a New Action,Low,0,Activism & Education,help_community
@@ -595,8 +390,6 @@ Energize Framingham,No,Summer Scavenger Hunt,Low,0,Activism & Education,activiti
 Energize Framingham,No,Sustainable Household Goods,Low,$,Waste & Recycling,reduce_waste
 Energize Framingham,No,Take the MWRTA! and other public transit,Medium,$,Transportation,reduce_car_miles
 Energize Framingham,Yes,testing out this,,,,help_community
-Energize Framingham,No,TMP Clean Up Your Community-Copy,Low,0,Activism & Education,DELETE
-Energize Framingham,No,TMP Landlord Near Free Property Upgrades,Low,0,Home Energy,DELETE
 Energize Framingham,Yes,Use heat pumps for asthma,Medium,0,Home Energy,air_source_hp
 Energize Framingham,No,Want to Volunteer?,Low,0,Activism & Education,help_community
 Energize Franklin,Yes,Attend an Earth Day or Climate Festival,Low,0,Activism & Education,energy_fair
@@ -605,13 +398,13 @@ Energize Franklin,Yes,Buy Local Food,Medium,$,Food,eat_locally
 Energize Franklin,Yes,Buy/Lease an Electric or Hybrid Vehicle,High,$$$,Transportation,replace_car
 Energize Franklin,Yes,Calculate Your Carbon Footprint,Low,0,Activism & Education,carbon_footprint
 Energize Franklin,Yes,Change to LED Lighting,Medium,$,Home Energy,led_lighting
-Energize Franklin,Yes,Community Aggregation,Medium,0,Solar,muni_aggregation
+Energize Franklin,Yes,Community Aggregation,Medium,0,Electricity & Solar,muni_aggregation
 Energize Franklin,Yes,Eat a More Plant-Based Diet,High,$,Food,low_carbon_diet
-Energize Franklin,Yes,Electrify your landscaping equipment,Medium,$,"Land, Soil & Water",electric_mower
+Energize Franklin,Yes,Electrify your landscaping equipment,Medium,$,Land & Water,electric_mower
 Energize Franklin,Yes,Energy Steps for Renters,Low,0,Home Energy,savings_for_renters
 Energize Franklin,Yes,Engage in the Climate Conversation,Low,0,Activism & Education,get_involved
 Energize Franklin,Yes,Get a Free Home Energy Assessment,Low,0,Home Energy,energy_audit
-Energize Franklin,Yes,Go Solar,High,$$$,Solar,install_solarPV
+Energize Franklin,Yes,Go Solar,High,$$$,Electricity & Solar,install_solarPV
 Energize Franklin,Yes,Green Heating and AC,High,$$$,Home Energy,air_source_hp
 Energize Franklin,Yes,Green Hot Water,Medium,$$,Home Energy,install_solarHW
 Energize Franklin,Yes,How does this website work?,Low,0,Activism & Education,learn
@@ -621,7 +414,7 @@ Energize Franklin,No,Invest Like a Climate Activist,Medium,0,Activism & Educatio
 Energize Franklin,Yes,Join 350 Mass Franklin Node,Low,0,Activism & Education,get_involved
 Energize Franklin,Yes,Monitor Your Electrical Usage,Low,$,Home Energy,electricity_monitor
 Energize Franklin,Yes,New or Replacement Windows,Low,$$$,Home Energy,windows
-Energize Franklin,Yes,Plant a Native Tree or Garden,Low,$,"Land, Soil & Water",plant_natives
+Energize Franklin,Yes,Plant a Native Tree or Garden,Low,$,Land & Water,plant_natives
 Energize Franklin,Yes,Switch to Energy Efficient Appliances,High,$$,Home Energy,energystar_fridge
 Energize Franklin,Yes,Switch to Induction Cooking,Low,$,Home Energy,induction_stove
 Energize Franklin,Yes,Try Composting!,Medium,$,Waste & Recycling,compost
@@ -634,15 +427,15 @@ Energize Lexington,Yes,Change Your Thermostat Settings,Low,0,Home Energy,prog_th
 Energize Lexington,Yes,Compost Kitchen Waste ,Medium,$,Waste & Recycling,compost
 Energize Lexington,Yes,Cool Climate Carbon Calculator,Low,0,Activism & Education,carbon_footprint
 Energize Lexington,Yes,Ditch Disposables,Low,0,Waste & Recycling,reduce_waste
-Energize Lexington,Yes,Do a Lazy Fall Garden Clean Up,Low,0,"Land, Soil & Water",grow_local
+Energize Lexington,Yes,Do a Lazy Fall Garden Clean Up,Low,0,Land & Water,grow_local
 Energize Lexington,Yes,"Donate, Borrow and Buy Used",Low,0,Waste & Recycling,swap_donate
 Energize Lexington,Yes,Eat Less Meat and Dairy,High,$,Food,low_carbon_diet
 Energize Lexington,Yes,Eat Local,Medium,$,Food,eat_locally
 Energize Lexington,Yes,Environmental Justice: Racial Justice,High,0,Activism & Education,environmental_justice
 Energize Lexington,Yes,Environmentally Friendly Kitchen,Medium,$,Activism & Education,energystar_fridge
 Energize Lexington,Yes,Get Hot! Get Cool: Heat Pumps Do Both! ,High,$$$,Home Energy,air_source_hp
-Energize Lexington,Yes,Go Solar,High,$$$,Solar,install_solarPV
-Energize Lexington,Yes,Heat Your Water with Solar,High,$$,Solar,install_solarHW
+Energize Lexington,Yes,Go Solar,High,$$$,Electricity & Solar,install_solarPV
+Energize Lexington,Yes,Heat Your Water with Solar,High,$$,Home Energy,install_solarHW
 Energize Lexington,Yes,Help the Grid- Shave the Peak!,Low,0,Home Energy,shave_peak
 Energize Lexington,Yes,How Can You Help? Sign Up!,Low,0,Activism & Education,activism
 Energize Lexington,Yes,Install a Heat Pump Water Heater,Medium,$,Home Energy,hp_water_heater
@@ -655,12 +448,11 @@ Energize Lexington,Yes,Join Lexington Living Landscapes,High,0,Activism & Educat
 Energize Lexington,Yes,Join Lexington Zero Waste Collaborative ,High,0,Waste & Recycling,get_involved
 Energize Lexington,Yes,Join LPS Green Teams,Low,0,Activism & Education,get_involved
 Energize Lexington,No,Join Mothers Out Front/Lexington ,Medium,0,Activism & Education,get_involved
-Energize Lexington,Yes,Landscaping without Fossil Fuels ,Medium,$$,"Land, Soil & Water",reduce_lawn_care
+Energize Lexington,Yes,Landscaping without Fossil Fuels ,Medium,$$,Land & Water,reduce_lawn_care
 Energize Lexington,Yes,Lexington's 100% Green Electricity,Medium,0,Home Energy,muni_aggregation
-Energize Lexington,Yes,Make Your Yard A Living Landscape,Medium,$,"Land, Soil & Water",plant_natives
+Energize Lexington,Yes,Make Your Yard A Living Landscape,Medium,$,Land & Water,plant_natives
 Energize Lexington,Yes,Offset Your Air Travel,High,$,Transportation,offset_flights
-Energize Lexington,Yes,Plant A Tree,Low,$,"Land, Soil & Water",plant_trees
-Energize Lexington,No,Plant A Tree-Copy,Low,$,"Land, Soil & Water",DELETE
+Energize Lexington,Yes,Plant A Tree,Low,$,Land & Water,plant_trees
 Energize Lexington,Yes,RECYCLE Right,Low,0,Waste & Recycling,recycling
 Energize Lexington,Yes,"Reduce ""Always On"" Electricity Use",Low,0,Home Energy,conserve_electricity
 Energize Lexington,Yes,Renovating? Go for High Efficiency ,High,$$$,Home Energy,efficient_renovations
@@ -693,92 +485,18 @@ Energize Littleton,Yes,Invest Like a Climate Activis-LittnMA,Medium,0,Activism &
 Energize Littleton,Yes,Reduce Always-On Wasted Electricity,Low,0,Home Energy,conserve_electricity
 Energize Littleton,Yes,Refer a Frien-LittletonMA,Low,0,Activism & Education,energy_fair
 Energize Littleton,Yes,Schedule No-Cost Home Energy-LittletonMA,Low,0,Home Energy,energy_audit
-Energize Littleton,Yes,Start Ecological Landscaping,Low,$$,"Land, Soil & Water",reduce_lawn_size
+Energize Littleton,Yes,Start Ecological Landscaping,Low,$$,Land & Water,reduce_lawn_size
 Energize Littleton,Yes,Suggest a New Action,Low,0,Activism & Education,help_community
 Energize Littleton,Yes,Sustainable Household Good-LittletonMA,Low,$,Waste & Recycling,reduce_waste
-Energize MORE!,No,Backyard compost or servic-blaMA,Low,0,Food,DELETE
-Energize MORE!,No,Change Thermostat Setting-blaMA,Medium,$$$,Home Energy,DELETE
-Energize MORE!,No,Change to LED Lightin-blaMA,Medium,$,Home Energy,DELETE
-Energize MORE!,No,Clean Up Your Communit-blaMA,Low,0,Activism & Education,DELETE
-Energize MORE!,No,Community Sola-blaMA,Medium,0,Solar,DELETE
-Energize MORE!,No,Donate Building Material-blaMA,Low,0,Waste & Recycling,DELETE
-Energize MORE!,No,Ecological Landscaping Tree Plantin-blaMA,Low,$$,"Land, Soil & Water",DELETE
-Energize MORE!,Yes,Energy-Efficient Appliance-blaMA,High,$$,Home Energy,DELETE
-Energize MORE!,No,Get Hot & Cool with Mini-Split-blaMA,High,$$$,Home Energy,DELETE
-Energize MORE!,No,Green Your Electricit-blaMA,High,0,Home Energy,DELETE
-Energize MORE!,No,Heat my water with Solar-blaMA,Medium,$$$,Solar,DELETE
-Energize MORE!,No,Heating & Cooling with Heat Pump-blaMA,High,$$,Home Energy,DELETE
-Energize MORE!,Yes,Invest Like a Climate Activist Cop-blaMA,Medium,0,Activism & Education,DELETE
-Energize MORE!,No,Market my Green Hom-blaMA,Low,0,Home Energy,DELETE
-Energize MORE!,No,Monitor My Electricity Usag-blaMA,Low,$$,Home Energy,DELETE
-Energize MORE!,Yes,No-cost Home Energy Assessmen-blaMA,Low,0,Home Energy,DELETE
-Energize MORE!,No,"NOT: Community Solar, No Installatio-blaMA",Medium,$,Solar,DELETE
-Energize MORE!,No,Offset your air trave-blaMA,Medium,$,Transportation,DELETE
-Energize MORE!,No,Pass on used good-blaMA,Medium,0,Waste & Recycling,DELETE
-Energize MORE!,No,Renovating? Improve Efficiency too!-blaMA,High,$$,Home Energy,DELETE
-Energize MORE!,No,TEM Buy or Lease an Electric Ca-blaMA,High,$$$,Transportation,DELETE
 Energize MORE!,Yes,testing again,Low,0,Home Energy,help_community
 Energize MORE!,Yes,testing this again-Copy,Medium,$,Home Energy,help_community
 Energize MORE!,Yes,testing this again-Copycopy,Medium,$,Home Energy,help_community
 Energize Natick,Yes,hratpumps!,High,$$$,Home Energy,air_source_hp
-Energize Springfield,No,Community Garden plot-SpringfieldMA,Medium,$$,Food,DELETE
-Energize Springfield,No,Electricity Use Monitor-SpringfieldMA,Low,$,Home Energy,DELETE
-Energize Springfield,No,Mini-Split Heat Pumps Are For You-SpringfieldMA,High,$$$,Home Energy,DELETE
-Energize Stow,Yes,Change Thermostat Settings-Copy,Low,$$$,"Land, Soil & Water",prog_thermostats
+Energize Stow,Yes,Change Thermostat Settings-Copy,Low,$$$,Land & Water,prog_thermostats
 Energize Stow,Yes,Green Your Electricity-Copy,High,0,Home Energy,renewable_elec
 Energize Stow,No,Invest Like a Climate Activis-StowMA,Medium,0,Activism & Education,investing
 Energize Stow,Yes,Join this site,High,0,Activism & Education,energy_fair
 Energize Stow,Yes,Join this site,High,0,Activism & Education,help_community
-Energize Test,No,Backyard compost or servic-new_subdomain,Low,0,Food,DELETE
-Energize Test,No,bla action for templat-new_subdomain,Low,0,Solar,DELETE
-Energize Test,No,blabl-new_subdomain,Low,$,Solar,DELETE
-Energize Test,No,Change Thermostat Setting-new_subdomain,Medium,$$$,Home Energy,DELETE
-Energize Test,No,Change to LED Lightin-new_subdomain,Medium,$,Home Energy,DELETE
-Energize Test,No,Clean Up Your Communit-new_subdomain,Low,0,Activism & Education,DELETE
-Energize Test,No,Community Sola-new_subdomain,Medium,0,Solar,DELETE
-Energize Test,No,Donate Building Material-new_subdomain,Low,0,Waste & Recycling,DELETE
-Energize Test,No,Ecological Landscaping Tree Plantin-new_subdomain,Low,$$,"Land, Soil & Water",DELETE
-Energize Test,No,Energy-Efficient Appliance-new_subdomain,High,$$,Home Energy,DELETE
-Energize Test,No,Get Hot & Cool with Mini-Split-new_subdomain,High,$$$,Home Energy,DELETE
-Energize Test,No,Green Your Electricit-new_subdomain,High,0,Home Energy,DELETE
-Energize Test,No,Heat my water with Solar-new_subdomain,Medium,$$$,Solar,DELETE
-Energize Test,No,Heating & Cooling with Heat Pump-new_subdomain,High,$$,Home Energy,DELETE
-Energize Test,No,Invest Like a Climate Activist Cop-new_subdomain,Medium,0,Activism & Education,DELETE
-Energize Test,No,Knit your own sweaters -new_subdomain,Low,$,Home Energy,DELETE
-Energize Test,No,Market my Green Hom-new_subdomain,Low,0,Home Energy,DELETE
-Energize Test,No,Monitor My Electricity Usag-new_subdomain,Low,$$,Home Energy,DELETE
-Energize Test,No,New template actio-new_subdomain,High,$$$,Home Energy,DELETE
-Energize Test,No,"NOT: Community Solar, No Installatio-new_subdomain",Medium,$,Solar,DELETE
-Energize Test,No,Offset your air trave-new_subdomain,Medium,$,Transportation,DELETE
-Energize Test,No,Pass on used good-new_subdomain,Medium,0,Waste & Recycling,DELETE
-Energize Test,No,Renovating? Improve Efficiency too!-new_subdomain,High,$$,Home Energy,DELETE
-Energize Test,No,TEM Buy or Lease an Electric Ca-new_subdomain,High,$$$,Transportation,DELETE
-Energize Test,No,Test templat-new_subdomain,Medium,$,Solar,DELETE
-Energize Vineyard,No,Backyard compost or servic-theVineyard,Low,0,Food,DELETE
-Energize Vineyard,No,bla action for templat-theVineyard,Low,0,Solar,DELETE
-Energize Vineyard,No,blabl-theVineyard,Low,$,Solar,DELETE
-Energize Vineyard,No,Change Thermostat Setting-theVineyard,Medium,$$$,Home Energy,DELETE
-Energize Vineyard,No,Change to LED Lightin-theVineyard,Medium,$,Home Energy,DELETE
-Energize Vineyard,No,Clean Up Your Communit-theVineyard,Low,0,Activism & Education,DELETE
-Energize Vineyard,No,Community Sola-theVineyard,Medium,0,Solar,DELETE
-Energize Vineyard,No,Donate Building Material-theVineyard,Low,0,Waste & Recycling,DELETE
-Energize Vineyard,No,Ecological Landscaping Tree Plantin-theVineyard,Low,$$,"Land, Soil & Water",DELETE
-Energize Vineyard,No,Energy-Efficient Appliance-theVineyard,High,$$,Home Energy,DELETE
-Energize Vineyard,No,Get Hot & Cool with Mini-Split-theVineyard,High,$$$,Home Energy,DELETE
-Energize Vineyard,No,Green Your Electricit-theVineyard,High,0,Home Energy,DELETE
-Energize Vineyard,No,Heat my water with Solar-theVineyard,Medium,$$$,Solar,DELETE
-Energize Vineyard,No,Heating & Cooling with Heat Pump-theVineyard,High,$$,Home Energy,DELETE
-Energize Vineyard,No,Invest Like a Climate Activist Cop-theVineyard,Medium,0,Activism & Education,DELETE
-Energize Vineyard,No,Knit your own sweaters -theVineyard,Low,$,Home Energy,DELETE
-Energize Vineyard,No,Market my Green Hom-theVineyard,Low,0,Home Energy,DELETE
-Energize Vineyard,No,Monitor My Electricity Usag-theVineyard,Low,$$,Home Energy,DELETE
-Energize Vineyard,No,New template actio-theVineyard,High,$$$,Home Energy,DELETE
-Energize Vineyard,No,"NOT: Community Solar, No Installatio-theVineyard",Medium,$,Solar,DELETE
-Energize Vineyard,No,Offset your air trave-theVineyard,Medium,$,Transportation,DELETE
-Energize Vineyard,No,Pass on used good-theVineyard,Medium,0,Waste & Recycling,DELETE
-Energize Vineyard,No,Renovating? Improve Efficiency too!-theVineyard,High,$$,Home Energy,DELETE
-Energize Vineyard,No,TEM Buy or Lease an Electric Ca-theVineyard,High,$$$,Transportation,DELETE
-Energize Vineyard,No,Test templat-theVineyard,Medium,$,Solar,DELETE
 Energize Wayland,No,Annual roadside trash Clean Up!,Low,0,Waste & Recycling,community_cleanup
 Energize Wayland,No,Busy Parents Zero waste,Low,0,Waste & Recycling,reduce_waste
 Energize Wayland,Yes,Buy food from local farms,Medium,$,Food,eat_locally
@@ -789,21 +507,19 @@ Energize Wayland,Yes,Change to LED Lighting,Medium,$,Home Energy,led_lighting
 Energize Wayland,Yes,Cleaning house?  Donate or pass on,Low,0,Waste & Recycling,swap_donate
 Energize Wayland,No,Community Garden Plot,Medium,$,Food,grow_local
 Energize Wayland,No,Declare a Climate Emergency!,Medium,0,Activism & Education,activism
-Energize Wayland,No,Discount compost bins,Low,0,"Land, Soil & Water",compost
-Energize Wayland,No,Discount compost bins-Copy,Low,0,"Land, Soil & Water",DELETE
-Energize Wayland,No,Discount compost bins!,Low,0,"Land, Soil & Water",compost
-Energize Wayland,Yes,Discounted Rain Barrels (ends 4/10!),Low,0,"Land, Soil & Water",rain_barrel
-Energize Wayland,Yes,Discounted Rain Barrels (ends 6/25),Low,0,"Land, Soil & Water",rain_barrels
-Energize Wayland,No,Discounted Rain Barrels: SOLD OUT,Low,0,"Land, Soil & Water",rain_barrel
+Energize Wayland,No,Discount compost bins,Low,0,Land & Water,compost
+Energize Wayland,No,Discount compost bins!,Low,0,Land & Water,compost
+Energize Wayland,Yes,Discounted Rain Barrels (ends 4/10!),Low,0,Land & Water,rain_barrel
+Energize Wayland,Yes,Discounted Rain Barrels (ends 6/25),Low,0,Land & Water,rain_barrels
+Energize Wayland,No,Discounted Rain Barrels: SOLD OUT,Low,0,Land & Water,rain_barrel
 Energize Wayland,No,Donate building materials,Low,0,Waste & Recycling,swap_donate
-Energize Wayland,No,Donate children’s items,Medium,0,Waste & Recycling,DELETE
 Energize Wayland,No,Donate fresh food to food bank,Low,0,Food,eat_locally
 Energize Wayland,Yes,Drive less / Walk more!,High,0,Transportation,people_power
 Energize Wayland,Yes,Eat less meat and dairy,High,0,Food,low_carbon_diet
-Energize Wayland,Yes,Ecological Landscaping,Low,$$,"Land, Soil & Water",plant_natives
+Energize Wayland,Yes,Ecological Landscaping,Low,$$,Land & Water,plant_natives
 Energize Wayland,No,Electricity Use Monitor,Medium,$,Home Energy,electricity_monitor
-Energize Wayland,Yes,Electrify your landscaping equipment,Medium,$$,"Land, Soil & Water",electric_mower
-Energize Wayland,No,Electrify your Lawn (Mower)!,Medium,$$,"Land, Soil & Water",electric_mower
+Energize Wayland,Yes,Electrify your landscaping equipment,Medium,$$,Land & Water,electric_mower
+Energize Wayland,No,Electrify your Lawn (Mower)!,Medium,$$,Land & Water,electric_mower
 Energize Wayland,Yes,Energy-efficient appliances,Medium,$$,Home Energy,energystar_fridge
 Energize Wayland,Yes,Expand your activism with an app,Low,0,Activism & Education,activism
 Energize Wayland,No,Food scraps pickup,Low,$,Waste & Recycling,compost
@@ -811,22 +527,20 @@ Energize Wayland,Yes,Get rid of junk mail,Low,0,Waste & Recycling,reduce_waste
 Energize Wayland,Yes,Green heating and AC,High,$$$,Home Energy,air_source_hp
 Energize Wayland,Yes,Green your electricity,High,$,Home Energy,renewable_elec
 Energize Wayland,Yes,Grow your own food,Medium,$,Food,grow_local
-Energize Wayland,Yes,Heat my water with Solar!,Medium,$$$,Solar,install_solarHW
+Energize Wayland,Yes,Heat my water with Solar!,Medium,$$$,Home Energy,install_solarHW
 Energize Wayland,Yes,Help the grid - shave the peak!,Low,0,Home Energy,shave_peak
 Energize Wayland,Yes,Home Battery Storage,Medium,$$,Home Energy,battery
-Energize Wayland,No,images,Low,,Home Energy,DELETE
 Energize Wayland,Yes,Install a Heat Pump Water Heater,Medium,$,Home Energy,hp_water_heater
-Energize Wayland,Yes,Install rooftop solar,High,$$$,Solar,install_solarPV
+Energize Wayland,Yes,Install rooftop solar,High,$$$,Electricity & Solar,install_solarPV
 Energize Wayland,Yes,Insulate and air seal your home,High,$$,Home Energy,weatherization
 Energize Wayland,Yes,Invest like a climate activist,Medium,$$,Activism & Education,investing
 Energize Wayland,Yes,Join Metrowest 350MA Node,Low,0,Activism & Education,get_involved
 Energize Wayland,Yes,Join the Climate Mobilization!,Low,0,Activism & Education,get_involved
 Energize Wayland,Yes,Join this site and be counted!,Low,0,Activism & Education,help_community
-Energize Wayland,Yes,Make Magic: Compost,Low,0,"Land, Soil & Water",compost
+Energize Wayland,Yes,Make Magic: Compost,Low,0,Land & Water,compost
 Energize Wayland,No,Market my Green Home,Low,0,Home Energy,market_green_home
 Energize Wayland,No,Mobilize for a better future! ,Medium,0,Activism & Education,activism
 Energize Wayland,Yes,Monitor your electricity,Medium,$$,Home Energy,electricity_monitor
-Energize Wayland,No,new action,Low,0,Home Energy,DELETE
 Energize Wayland,Yes,NO COST home energy assessment,Low,0,Home Energy,energy_audit
 Energize Wayland,No,No idling at or near schools,Low,0,Transportation,reduce_pollution
 Energize Wayland,Yes,No-cost home energy assessment,Low,0,Home Energy,energy_audit
@@ -834,26 +548,17 @@ Energize Wayland,No,Offset your air travel,Medium,$,Transportation,offset_flight
 Energize Wayland,No,Opt Up to APC Green for your Electricity,High,0,Home Energy,renewable_elec
 Energize Wayland,No,Pass on used goods,Medium,0,Waste & Recycling,swap_donate
 Energize Wayland,No,Recycle Textiles,Low,0,Waste & Recycling,recycling
-Energize Wayland,Yes,Reduce/Replace your Lawn,Medium,$$,"Land, Soil & Water",reduce_lawn_care
+Energize Wayland,Yes,Reduce/Replace your Lawn,Medium,$$,Land & Water,reduce_lawn_care
 Energize Wayland,No,Renovating? Improve efficiency too!,High,$$,Home Energy,efficient_renovations
 Energize Wayland,No,Riverside Commute Shuttle,Medium,0,Transportation,reduce_car_miles
 Energize Wayland,No,Shop Local: Farmers Market,High,$,Food,eat_locally
-Energize Wayland,Yes,Sign up for community solar,Medium,$,Solar,community_solar
+Energize Wayland,Yes,Sign up for community solar,Medium,$,Electricity & Solar,community_solar
 Energize Wayland,No,SUCCESS for Green Town Meeting Articles,High,0,Activism & Education,local_decision
 Energize Wayland,No,Suggest a new action!,Low,0,Activism & Education,help_community
 Energize Wayland,Yes,Switch to Induction Cooking,Low,$,Food,induction_stove
 Energize Wayland,No,Take a local class on climate change,Low,,Activism & Education,learn
 Energize Wayland,No,Take the Survey on Climate Change,Low,0,Activism & Education,help_community
-Energize Wayland,No,test,,,,DELETE
-Energize Wayland,No,Testing,,,,DELETE
-Energize Wayland,No,Testing this action,Low,0,Home Energy,DELETE
-Energize Wayland,No,TMP Change to LED Lighting-Copy,Medium,$,Home Energy,DELETE
-Energize Wayland,No,TMP Insulate and Air Seal Your Home-Copy,High,$$,Home Energy,DELETE
-Energize Wayland,No,TMP Invest Like a Climate Activist Copy-Copy,Medium,0,Activism & Education,DELETE
-Energize Wayland,No,TMP Monitor My Electricity Usage-Copy,Low,$$,Home Energy,DELETE
-Energize Wayland,No,TMP Renovating? Improve Efficiency too! -Copy,High,$$,Home Energy,DELETE
 Energize Wayland,No,What is the Town doing,Medium,0,Activism & Education,local_decision
-Energize Wayland,No,What is the Town doing-Copy,Medium,0,Activism & Education,DELETE
 Energize Wayland,Yes,What to do with food scraps?,Low,$,Waste & Recycling,compost
 EnergizeNewburyport,No,Buy Less Stuff...Share More,Medium,0,Waste & Recycling,avoid_purchase
 EnergizeNewburyport,Yes,Buy/Lease an Electric Car/Hybrid,High,$$$,Transportation,replace_car
@@ -869,12 +574,11 @@ EnergizeNewburyport,Yes,Energy-efficient Appliances,High,$$,Home Energy,energyst
 EnergizeNewburyport,Yes,Get Rid of Junk Mail!,Medium,0,Waste & Recycling,reduce_waste
 EnergizeNewburyport,No,Heat My Water with Solar!,,,,install_solarHW
 EnergizeNewburyport,Yes,Heating and Cooling with Heat Pumps,High,$$$,Home Energy,air_source_hp
-EnergizeNewburyport,Yes,Install Rooftop Solar ,High,$$$,Solar,install_solarPV
+EnergizeNewburyport,Yes,Install Rooftop Solar ,High,$$$,Electricity & Solar,install_solarPV
 EnergizeNewburyport,Yes,Insulate and Weatherize ,High,0,Home Energy,weatherization
-EnergizeNewburyport,No,Insulate and Weatherize -Copy,High,0,Home Energy,DELETE
 EnergizeNewburyport,Yes,Invest Like a Climate Activist,Medium,0,Activism & Education,investing
 EnergizeNewburyport,Yes,Schedule a No-Cost Energy Assessment,High,0,Home Energy,energy_audit
-EnergizeNewburyport,Yes,Sign Up for Community Solar,Medium,$,Solar,community_solar
+EnergizeNewburyport,Yes,Sign Up for Community Solar,Medium,$,Electricity & Solar,community_solar
 EnergizeNewburyport,Yes,Switch to Induction Cooking,Medium,$$,Home Energy,induction_stove
 EnergizeNewburyport,Yes,Walk More: Drive Less,Medium,0,Transportation,people_power
 EnergizeNewburyport,Yes,Walk More: Drive Less,Medium,0,Transportation,reduce_car_miles
@@ -882,9 +586,6 @@ EnergizeUs,Yes,Air-Dry Your Clothes,Low,$,Home Energy,line_dry
 EnergizeUs,Yes,Compost at Home or with a Service,Low,0,Waste & Recycling,compost
 EnergizeUs,Yes,Drive an Electric Vehicle,High,$$$,Transportation,replace_car
 EnergizeUs,Yes,Eat a Plant-Based Diet,High,0,Food,low_carbon_diet
-EnergizeUs,No,Get Hot & Cool with Mini-Splits-Copy,High,$$$,Home Energy,DELETE
-EnergizeUs,No,Get Hot & Cool with Mini-Splits-Copy,High,$$$,Home Energy,DELETE
-EnergizeUs,No,Green Your Electricity-Copy,High,0,Home Energy,DELETE
 EnergizeUs,Yes,Heat Your Water With Solar,Medium,$$,Home Energy,install_solarHW
 EnergizeUs,Yes,Refer a Friend,Low,0,Activism & Education,help_community
 Fairmount Indigo Collab.,Yes,Cosponsorship email to your lawmakers!,High,0,Transportation,local_decision
@@ -897,16 +598,9 @@ Fairmount Indigo Collab.,No,Support the HERO Bill,High,0,Activism & Education,lo
 Fairmount Indigo Collab.,No,Tell Gov. Baker to Sign the Climate Bill,High,0,Activism & Education,activism
 Framingham Demo,Yes,Heat Pumps are Hard Copy 939,High,$$$,Home Energy,air_source_hp
 Framingham Demo,Yes,Why do I need slippers in September?,,,,prog_thermostats
-Global,No,create compost  dup,Low,$,Waste & Recycling,DELETE
-Global,No,Kaat's Action,Low,$,,DELETE
 Global,No,landscaping,Medium,$$,Home Energy,grow_local
 Global,No,Solar Hot Water,High,$$$,Solar PV,install_solarHW
-Global,No,transit app - Aimee test,Medium,$,Transportation,DELETE
-Global,No,transit app - Aimee test Copy 7093,Medium,$,Transportation,DELETE
-Global Climate Corps,Yes,Change Thermostat Settings,Low,$$$,"Land, Soil & Water",electricity_monitor
-Global Climate Corps,No,Community Solar-Copy,Medium,0,Solar,DELETE
-Global Climate Corps,No,Eat a More Plant-Based Diet-Copy,High,0,Food,DELETE
-Global Climate Corps,No,Electrify Your Ride -Copy,High,$$$,Transportation,DELETE
+Global Climate Corps,Yes,Change Thermostat Settings,Low,$$$,Land & Water,electricity_monitor
 Global Climate Corps,No,Invest Like a Climate Activis-ExpressTraining,Medium,0,Activism & Education,investing
 Global Climate Corps,Yes,Suggest a New Action-Copy,Low,0,Activism & Education,help_community
 Global Climate Corps,Yes,Update Heating and Cooling-Copy,High,$$$,Home Energy,air_source_hp
@@ -922,72 +616,44 @@ Green Newton,Yes,Electrify Your Ride,High,$$$,Transportation,replace_car
 Green Newton,No,Get a Virtual Home Energy Assessment,High,0,Home Energy,energy_audit
 Green Newton,Yes,Go for High Efficiency Renovations,Medium,$$$,Home Energy,efficient_renovations
 Green Newton,Yes,Install A Heat Pump Water Heater,Medium,$$,Home Energy,hp_water_heater
-Green Newton,No,Install A Heat Pump Water Heater Copy 6127,Medium,0,Home Energy,DELETE
 Green Newton,Yes,"Insulate ""To The Max""",High,0,Home Energy,weatherization
-Green Newton,No,Insulate and Air Seal Your Home Copy 2269,High,0,Home Energy,DELETE
 Green Newton,Yes,Invest Like a Climate Activist,Medium,0,Activism & Education,investing
 Green Newton,Yes,Join Action Alert Team,High,0,Activism & Education,get_involved
 Green Newton,Yes,Organize A Neighborhood Tree Planting,Low,0,Activism & Education,plant_trees
 Green Newton,Yes,Promote Sustainability in Our Schools,Low,0,Activism & Education,sustain_school
-Green Newton,Yes,Put Solar on Your Rooftop,High,$$$,Solar,install_solarPV
+Green Newton,Yes,Put Solar on Your Rooftop,High,$$$,Electricity & Solar,install_solarPV
 Green Newton,Yes,Reduce Always-On Wasted Electricity,Low,0,Home Energy,conserve_electricity
-Green Newton,No,Saving Water Saves Energy,Low,0,"Land, Soil & Water",conserve_water
+Green Newton,No,Saving Water Saves Energy,Low,0,Land & Water,conserve_water
 Green Newton,Yes,Update Heating & Cooling,High,$$$,Home Energy,air_source_hp
-Green Newton,No,Use Energy Efficient Appliances Copy 293,High,$$,Home Energy,DELETE
 Green Newton,No,Use More Public Transit,High,0,Transportation,reduce_car_miles
 Green Newton,Yes,Use Your Car Less Challenge,High,0,Transportation,reduce_car_miles
 Green Pepperell,Yes,Backyard Composting,Low,0,Waste & Recycling,compost
-Green Pepperell,No,Change Thermostat Setting-PepperellMA,Medium,$$$,Home Energy,DELETE
-Green Pepperell,No,Change to LED Lightin-PepperellMA,Medium,$,Home Energy,DELETE
-Green Pepperell,No,Clean Up Your Communit-PepperellMA,Low,0,Activism & Education,DELETE
-Green Pepperell,No,Community Sola-PepperellMA,Medium,0,Solar,DELETE
-Green Pepperell,Yes,Community Solar on Pepperell's Landfill,High,0,Solar,community_solar
-Green Pepperell,No,Conserve Water - Critical Drought,High,0,"Land, Soil & Water",conserve_water
-Green Pepperell,No,Donate Building Material-PepperellMA,Low,0,Waste & Recycling,DELETE
-Green Pepperell,Yes,Earth-Friendly Yard & Garden: Go Native!,Medium,$,"Land, Soil & Water",plant_natives
-Green Pepperell,No,Ecological Landscaping Tree Plantin-PepperellMA,Low,$$,"Land, Soil & Water",DELETE
-Green Pepperell,No,Energy-Efficient Appliance-PepperellMA,High,$$,Home Energy,DELETE
-Green Pepperell,No,Get Hot & Cool with Mini-Split-PepperellMA,High,$$$,Home Energy,DELETE
-Green Pepperell,No,Get involved in Town's Climate Action-PepperellMA,Medium,0,Activism & Education,DELETE
-Green Pepperell,No,Green Your Electricit-PepperellMA,High,0,Home Energy,DELETE
-Green Pepperell,No,Heat my water with Solar-PepperellMA,Medium,$$$,Solar,DELETE
-Green Pepperell,No,Heating & Cooling with Heat Pump-PepperellMA,High,$$,Home Energy,DELETE
+Green Pepperell,Yes,Community Solar on Pepperell's Landfill,High,0,Electricity & Solar,community_solar
+Green Pepperell,No,Conserve Water - Critical Drought,High,0,Land & Water,conserve_water
+Green Pepperell,Yes,Earth-Friendly Yard & Garden: Go Native!,Medium,$,Land & Water,plant_natives
 Green Pepperell,Yes,Heating & Cooling with Heat Pumps,High,$$,Home Energy,air_source_hp
-Green Pepperell,No,Market my Green Hom-PepperellMA,Low,0,Home Energy,DELETE
 Green Pepperell,No,Mass Save Residential New Construction,High,$$$,Home Energy,efficient_renovations
-Green Pepperell,No,Monitor My Electricity Usag-PepperellMA,Low,$$,Home Energy,DELETE
 Green Pepperell,Yes,No-cost Home Energy Assessment,Low,0,Home Energy,energy_audit
-Green Pepperell,No,"NOT: Community Solar, No Installatio-PepperellMA",Medium,$,Solar,DELETE
-Green Pepperell,No,Offset your air trave-PepperellMA,Medium,$,Transportation,DELETE
 Green Pepperell,No,Outdoor Lighting Bylaw,Medium,$,Home Energy,light_pollution
 Green Pepperell,Yes,Participate in Pepperell Net Zero Plan,High,0,Activism & Education,local_decision
-Green Pepperell,No,Pass on used good-PepperellMA,Medium,0,Waste & Recycling,DELETE
 Green Pepperell,Yes,Pepperell Community Electricity,High,$,Home Energy,muni_aggregation
 Green Pepperell,Yes,Preserve Our Starry Starry Nights ,Medium,$,Home Energy,light_pollution
-Green Pepperell,Yes,Protect Our Land & Water,Medium,$,"Land, Soil & Water",environmental_stewardship
-Green Pepperell,No,Renovating? Improve Efficiency too!-PepperellMA,High,$$,Home Energy,DELETE
-Green Pepperell,No,TEM Buy or Lease an Electric Ca-PepperellMA,High,$$$,Transportation,DELETE
+Green Pepperell,Yes,Protect Our Land & Water,Medium,$,Land & Water,environmental_stewardship
 Green Pepperell,No,"Vote on April 24, 2023",,0,Activism & Education,local_decision
 Green Pepperell,Yes,"Vote on Nov 8, 2022",,0,Activism & Education,local_decision
-Hampshire Regional HS,No,Backyard compost or service-westhampton,Low,0,"Land, Soil & Water",compost
+Hampshire Regional HS,No,Backyard compost or service-westhampton,Low,0,Land & Water,compost
 Hampshire Regional HS,No,Buy or Lease an Electric Car,High,$$$,Transportation,replace_car
-Hampshire Regional HS,No,Change Thermostat Settings-westhampton,Medium,$$$,Home Energy,DELETE
 Hampshire Regional HS,No,Change to LED Lighting,Medium,$,Home Energy,led_lighting
 Hampshire Regional HS,Yes,Clean Green Power,High,$,Home Energy,renewable_elec
-Hampshire Regional HS,No,Clean Up Your Community-westhampton,Low,0,Activism & Education,DELETE
-Hampshire Regional HS,No,Donate Building Materials-westhampton,Low,0,Waste & Recycling,DELETE
-Hampshire Regional HS,No,Ecological Landscaping Tree Planting-westhampton,Low,$$,"Land, Soil & Water",DELETE
 Hampshire Regional HS,No,Energy-Efficient Appliances,High,$$,Home Energy,energystar_fridge
 Hampshire Regional HS,Yes,Free Home Energy Assessment,,,,energy_audit
-Hampshire Regional HS,No,Green Your Electricity-westhampton,High,0,Home Energy,DELETE
-Hampshire Regional HS,No,Heat my water with Solar!,Medium,$$$,Solar,install_solarHW
+Hampshire Regional HS,No,Heat my water with Solar!,Medium,$$$,Home Energy,install_solarHW
 Hampshire Regional HS,Yes,Heat Pumps,High,$$,Home Energy,air_source_hp
 Hampshire Regional HS,No,Invest Like a Climate Activist,Medium,0,Activism & Education,investing
 Hampshire Regional HS,No,Market my Green Home-westhampton,Low,0,Home Energy,market_green_home
 Hampshire Regional HS,No,Monitor My Electricity Usage,Low,$$,Home Energy,electricity_monitor
 Hampshire Regional HS,No,Offset your air travel,Medium,$,Transportation,offset_flights
 Hampshire Regional HS,No,Pass on used goods,Medium,0,Waste & Recycling,swap_donate
-Hampshire Regional HS,No,Renovating? Improve Efficiency too! -westhampton,High,$$,Home Energy,DELETE
 Hampshire Regional HS,Yes,The Adventure Starts Here!,,0,Activism & Education,energy_fair
 HarvardEnergize,Yes,Advocate for Action on Climate,Medium,0,Activism & Education,get_involved
 HarvardEnergize,Yes,Backyard Composting,Low,0,Food,compost
@@ -996,13 +662,11 @@ HarvardEnergize,Yes,Buy or Lease an Electric Car,High,$$$,Transportation,replace
 HarvardEnergize,Yes,Carbon Offset for Travel,Low,0,Transportation,offset_flights
 HarvardEnergize,Yes,Convert to LED Lighting,Medium,$,Home Energy,led_lighting
 HarvardEnergize,Yes,E-Bikes,Medium,$$,Transportation,buy_e_bike
-HarvardEnergize,No,E-Bikes-Copy,Medium,$$,Transportation,DELETE
-HarvardEnergize,Yes,Ecological Landscaping ,Low,$$,"Land, Soil & Water",plant_natives
+HarvardEnergize,Yes,Ecological Landscaping ,Low,$$,Land & Water,plant_natives
 HarvardEnergize,Yes,Electric Energy Efficient Appliances,Medium,$$,,energystar_fridge
-HarvardEnergize,Yes,Get Solar for your House!,High,$$$,Solar,install_solarPV
+HarvardEnergize,Yes,Get Solar for your House!,High,$$$,Electricity & Solar,install_solarPV
 HarvardEnergize,Yes,Heat Your Water With Solar,Medium,$$,Home Energy,install_solarHW
 HarvardEnergize,Yes,Heating & Cooling with Heat Pumps,High,$$,Home Energy,air_source_hp
-HarvardEnergize,No,Heating & Cooling with Heat Pumps Fram,High,$$,Home Energy,DELETE
 HarvardEnergize,Yes,Insulate and Air Seal Your Home,High,$$,Home Energy,weatherization
 HarvardEnergize,Yes,Invest Like a Climate Activist ,Medium,$$,Activism & Education,investing
 HarvardEnergize,Yes,No-cost Home Energy Assessment,Low,0,Home Energy,energy_audit
@@ -1011,104 +675,80 @@ HarvardEnergize,Yes,Switch to Electric Lawn Equipment,Low,$,Home Energy,electric
 HarvardEnergize,Yes,Water heating with Heat Pumps,Medium,$$,Home Energy,hp_water_heater
 JCAN,Yes,Buy or Lease Electric Car,High,$$$,Transportation,replace_car
 JCAN,Yes,Change to LED Lighting,Low,0,Home Energy,led_lighting
-JCAN,Yes,"Community Solar, No Installation ",Medium,$,Solar,community_solar
+JCAN,Yes,"Community Solar, No Installation ",Medium,$,Electricity & Solar,community_solar
 JCAN,Yes,Compost at Home or With a Service,Low,0,Waste & Recycling,compost
 JCAN,Yes,Dayenu: A Jewish Call to Climate Action,Medium,0,Activism & Education,activism
 JCAN,Yes,Eat Less Meat and Dairy,High,0,Food,low_carbon_diet
-JCAN,Yes,Ecological Landscaping & Tree Planting,Low,$$,"Land, Soil & Water",plant_natives
+JCAN,Yes,Ecological Landscaping & Tree Planting,Low,$$,Land & Water,plant_natives
 JCAN,Yes,Energy-Efficient Appliances ,Medium,$$,Home Energy,energystar_fridge
-JCAN,Yes,Go Solar! ,High,$$$,Solar,install_solarPV
+JCAN,Yes,Go Solar! ,High,$$$,Electricity & Solar,install_solarPV
 JCAN,Yes,Green Heating and AC,High,$$$,Home Energy,air_source_hp
 JCAN,Yes,Green Your Electricity,High,0,Home Energy,renewable_elec
-JCAN,No,Green Your Electricity-Copy,High,0,Home Energy,DELETE
-JCAN,Yes,Heat my water with Solar!,Medium,$$,Solar,install_solarHW
+JCAN,Yes,Heat my water with Solar!,Medium,$$,Home Energy,install_solarHW
 JCAN,Yes,Insulate and Air Seal Your Home,Medium,0,Home Energy,weatherization
-JCAN,No,Insulate and Air Seal Your Home-Copy,Medium,0,Home Energy,DELETE
 JCAN,Yes,Learn about JCAN-MA,Medium,0,Activism & Education,learn
 JCAN,Yes,Local Farmshare or Farmstand,Medium,0,Food,eat_locally
 JCAN,Yes,No-cost Home Energy Assessment,Low,0,Home Energy,energy_audit
 JCAN,Yes,People Power Your Errands,High,0,Transportation,people_power
-JCAN,No,People Power Your Errands Copy 3050,High,0,Transportation,DELETE
 JCAN,Yes,Pledge to Vote,Medium,0,Activism & Education,local_decision
 JCAN,Yes,Renovating? Improve Efficiency too! ,High,$$,Home Energy,efficient_renovations
 JCAN,Yes,Shop Local: Farmers Market,High,0,Food,eat_locally
-JCAN,No,test for lynne,Medium,$,Home Energy,DELETE
-Jewish Climate Action Network -- JCAN-MA,Yes,Be Water Wise! Age 4+,Low,0,"Land, Soil & Water",conserve_water
+Jewish Climate Action Network -- JCAN-MA,Yes,Be Water Wise! Age 4+,Low,0,Land & Water,conserve_water
 Jewish Climate Action Network -- JCAN-MA,Yes,Buy Less Stuff,Low,0,Waste & Recycling,avoid_purchase
 Jewish Climate Action Network -- JCAN-MA,Yes,Buy Naked Stuff,Low,0,Waste & Recycling,reduce_waste
 Jewish Climate Action Network -- JCAN-MA,Yes,Buy or Lease Electric Car,High,$$$,Transportation,replace_car
 Jewish Climate Action Network -- JCAN-MA,Yes,Change to LED Lighting,Low,0,Home Energy,led_lighting
-Jewish Climate Action Network -- JCAN-MA,Yes,"Community Solar, No Installation ",Medium,$,Solar,community_solar
+Jewish Climate Action Network -- JCAN-MA,Yes,"Community Solar, No Installation ",Medium,$,Electricity & Solar,community_solar
 Jewish Climate Action Network -- JCAN-MA,Yes,Compost at Home or With a Service,Low,0,Waste & Recycling,compost
 Jewish Climate Action Network -- JCAN-MA,Yes,Dayenu: A Jewish Call to Climate Action,Medium,0,Activism & Education,activism
 Jewish Climate Action Network -- JCAN-MA,Yes,Ditch Disposables,Low,0,Waste & Recycling,reduce_waste
 Jewish Climate Action Network -- JCAN-MA,Yes,Eat Less Meat and Dairy,High,0,Food,low_carbon_diet
-Jewish Climate Action Network -- JCAN-MA,Yes,Ecological Landscaping & Tree Planting,Low,$$,"Land, Soil & Water",plant_natives
+Jewish Climate Action Network -- JCAN-MA,Yes,Ecological Landscaping & Tree Planting,Low,$$,Land & Water,plant_natives
 Jewish Climate Action Network -- JCAN-MA,Yes,Energy-Efficient Appliances ,Medium,$$,Home Energy,energystar_fridge
 Jewish Climate Action Network -- JCAN-MA,Yes,Get rid of junk mail,Low,0,Waste & Recycling,reduce_waste
-Jewish Climate Action Network -- JCAN-MA,Yes,Go Solar! ,High,$$$,Solar,install_solarPV
+Jewish Climate Action Network -- JCAN-MA,Yes,Go Solar! ,High,$$$,Electricity & Solar,install_solarPV
 Jewish Climate Action Network -- JCAN-MA,Yes,Green Heating and AC,High,$$$,Home Energy,air_source_hp
 Jewish Climate Action Network -- JCAN-MA,No,Green heating and AC,High,$$$,Home Energy,air_source_hp
 Jewish Climate Action Network -- JCAN-MA,Yes,Green Your Electricity,High,0,Home Energy,renewable_elec
-Jewish Climate Action Network -- JCAN-MA,No,Green Your Electricity-Copy,High,0,Home Energy,DELETE
-Jewish Climate Action Network -- JCAN-MA,Yes,Heat my water with Solar!,Medium,$$,Solar,install_solarHW
+Jewish Climate Action Network -- JCAN-MA,Yes,Heat my water with Solar!,Medium,$$,Home Energy,install_solarHW
 Jewish Climate Action Network -- JCAN-MA,Yes,Help the Grid- Shave the Peak!,Low,0,Home Energy,energy_fair
 Jewish Climate Action Network -- JCAN-MA,Yes,Install a Heat Pump Water Heater,Medium,$,Home Energy,hp_water_heater
 Jewish Climate Action Network -- JCAN-MA,Yes,Insulate and Air Seal Your Home,Medium,0,Home Energy,weatherization
-Jewish Climate Action Network -- JCAN-MA,No,Insulate and Air Seal Your Home-Copy,Medium,0,Home Energy,DELETE
 Jewish Climate Action Network -- JCAN-MA,Yes,Invest Like a Climate Activist ,Low,0,Activism & Education,investing
 Jewish Climate Action Network -- JCAN-MA,Yes,Learn about JCAN-MA,Medium,0,Activism & Education,learn
 Jewish Climate Action Network -- JCAN-MA,Yes,Local Farmshare or Farmstand,Medium,0,Food,eat_locally
 Jewish Climate Action Network -- JCAN-MA,Yes,Monitor Electricity Usage,Low,$,Home Energy,electricity_monitor
 Jewish Climate Action Network -- JCAN-MA,Yes,No-cost Home Energy Assessment,Low,0,Home Energy,energy_audit
-Jewish Climate Action Network -- JCAN-MA,No,"NOT: Community Solar, No Installation-Copy",Medium,$,Solar,DELETE
 Jewish Climate Action Network -- JCAN-MA,Yes,Offset Your Air Travel,Low,$,Transportation,offset_flights
 Jewish Climate Action Network -- JCAN-MA,Yes,People Power Your Errands,High,0,Transportation,people_power
-Jewish Climate Action Network -- JCAN-MA,No,People Power Your Errands Copy 3050,High,0,Transportation,DELETE
-Jewish Climate Action Network -- JCAN-MA,Yes,Plant a Native Tree,Low,$,"Land, Soil & Water",plant_trees
+Jewish Climate Action Network -- JCAN-MA,Yes,Plant a Native Tree,Low,$,Land & Water,plant_trees
 Jewish Climate Action Network -- JCAN-MA,Yes,Pledge to Vote,Medium,0,Activism & Education,local_decision
 Jewish Climate Action Network -- JCAN-MA,Yes,Renovating? Improve Efficiency too! ,High,$$,Home Energy,efficient_renovations
 Jewish Climate Action Network -- JCAN-MA,Yes,Saving Energy Age 6+,Low,$,Home Energy,conserve_electricity
 Jewish Climate Action Network -- JCAN-MA,Yes,Shop Local: Farmers Market,High,0,Food,eat_locally
 Jewish Climate Action Network -- JCAN-MA,Yes,Smart Thermostats,Medium,$,Home Energy,prog_thermostats
-Jewish Climate Action Network -- JCAN-MA,No,test for lynne,Medium,$,Home Energy,DELETE
 Jewish Climate Action Network -- JCAN-MA,Yes,What's Your Carbon Footprint? Age 14+,Low,0,Activism & Education,carbon_footprint
-Kaat's Test Community,Yes,350MA Metrowest Node,Medium,$,Activism & Community,get_involved
-Kaat's Test Community,No,Community Garden Plot,Medium,$$,Food,grow_local
-Kaat's Test Community,Yes,Electricity Use Monitor,Low,$$,Home Energy,electricity_monitor
-Kaat's Test Community,No,Electricity Use Monitor Copy 466,Low,$$,Home Energy,DELETE
-Kaat's Test Community,No,Food scraps pickup,Medium,$,Waste & Recycling,compost
-Kaat's Test Community,No,Food scraps pickup Copy 1042,Medium,$,Waste & Recycling,DELETE
-Kaat's Test Community,No,Heat Pumps ,High,$$$,Home Energy,air_source_hp
-Kaat's Test Community,No,Heat Pumps  Copy 7093,High,$$$,Home Energy,DELETE
-Kaat's Test Community,Yes,testing 11/6/2019 trial 3,,,,DELETE
-Kaat's Test Community,Yes,testing 11/6/2019 trial 4,,,,DELETE
-Kaat's Test Community,Yes,testing 11/6/2019 trial 5,,,,DELETE
-Kaat's Test Community,No,Textiles recycling,Low,$,Waste & Recycling,recycling
-Kaat's Test Community,No,trying again on 11/6 - test 2,,,,DELETE
-Kaat's Test Community,Yes,trying to create an action,,,,help_community
-Kaat's Test Community,No,Wayland Cleans Up!,Low,$$,Transportation,community_cleanup
 LexCAN Toolkit,Yes,Buy a Reusable Water Bottle,Low,0,Waste & Recycling,reduce_waste
 LexCAN Toolkit,Yes,Buy Fewer Products in Plastic  ,Low,0,Waste & Recycling,reduce_waste
 LexCAN Toolkit,No,Buy Naked Stuff,Low,0,Waste & Recycling,reduce_waste
 LexCAN Toolkit,Yes,Buy or Lease an Electric Car,High,$$$,Transportation,replace_car
 LexCAN Toolkit,No,Buy Secondhand Clothing ,Low,0,Waste & Recycling,reduce_waste
-LexCAN Toolkit,Yes,"Cleaner, Quieter Landscaping ",Medium,$$,"Land, Soil & Water",rake_elec_blower
+LexCAN Toolkit,Yes,"Cleaner, Quieter Landscaping ",Medium,$$,Land & Water,rake_elec_blower
 LexCAN Toolkit,Yes,Compost Kitchen Waste ,Medium,$,Waste & Recycling,compost
 LexCAN Toolkit,Yes,Cool Climate Carbon Calculator,Low,0,Activism & Education,carbon_footprint
 LexCAN Toolkit,Yes,Ditch Disposables,Low,0,Waste & Recycling,reduce_waste
-LexCAN Toolkit,Yes,Do a Lazy Fall Garden Clean Up,Low,0,"Land, Soil & Water",reduce_lawn_care
+LexCAN Toolkit,Yes,Do a Lazy Fall Garden Clean Up,Low,0,Land & Water,reduce_lawn_care
 LexCAN Toolkit,Yes,"Donate, Borrow and Buy Used",Low,0,Waste & Recycling,reduce_waste
 LexCAN Toolkit,Yes,Drive Less; Ride A Bike,Medium,$,Transportation,reduce_car_miles
 LexCAN Toolkit,Yes,Drive Less; Take Public Transportation,High,0,Transportation,reduce_car_miles
 LexCAN Toolkit,Yes,Drive Less: Walk More,Medium,0,Transportation,reduce_car_miles
 LexCAN Toolkit,Yes,Eat Less Meat and Dairy,High,$,Food,low_carbon_diet
 LexCAN Toolkit,Yes,Eat Local,Medium,$,Food,low_carbon_diet
-LexCAN Toolkit,Yes,Eco-Friendly Backyard,Medium,$,"Land, Soil & Water",reduce_lawn_care
+LexCAN Toolkit,Yes,Eco-Friendly Backyard,Medium,$,Land & Water,reduce_lawn_care
 LexCAN Toolkit,Yes,Environmental Justice,High,0,Activism & Education,energy_fair
 LexCAN Toolkit,Yes,Environmentally Friendly Kitchen,Medium,$,Activism & Education,compost
-LexCAN Toolkit,Yes,Go Solar,High,$$$,Solar,install_solarPV
-LexCAN Toolkit,Yes,Heat Your Water with Solar,High,$$,Solar,install_solarHW
+LexCAN Toolkit,Yes,Go Solar,High,$$$,Electricity & Solar,install_solarPV
+LexCAN Toolkit,Yes,Heat Your Water with Solar,High,$$,Home Energy,install_solarHW
 LexCAN Toolkit,Yes,Help the Grid- Shave the Peak!,Low,0,Home Energy,energy_fair
 LexCAN Toolkit,Yes,Install a Heat Pump Water Heater,Medium,$,Home Energy,hp_water_heater
 LexCAN Toolkit,Yes,Install Energy Efficient Appliances,High,$$,Home Energy,energystar_fridge
@@ -1122,8 +762,7 @@ LexCAN Toolkit,Yes,Join LPS Green Teams,Low,0,Activism & Education,energy_fair
 LexCAN Toolkit,No,Join Mothers Out Front/Lexington ,Medium,0,Activism & Education,energy_fair
 LexCAN Toolkit,Yes,Lexington's 100% Green Electricity,Medium,0,Home Energy,renewable_elec
 LexCAN Toolkit,Yes,Offset Your Air Travel,High,$,Transportation,offset_flights
-LexCAN Toolkit,Yes,Plant A Tree,Low,$,"Land, Soil & Water",plant_trees
-LexCAN Toolkit,No,Plant A Tree-Copy,Low,$,"Land, Soil & Water",DELETE
+LexCAN Toolkit,Yes,Plant A Tree,Low,$,Land & Water,plant_trees
 LexCAN Toolkit,Yes,Recycle Smart ,Low,0,Waste & Recycling,reduce_waste
 LexCAN Toolkit,Yes,Renovating? Go for High Efficiency ,High,$$$,Home Energy,efficient_fossil
 LexCAN Toolkit,Yes,Repair it,Low,0,Waste & Recycling,reduce_waste
@@ -1138,18 +777,12 @@ LexCAN Toolkit,Yes,Switch to Induction Cooking,Low,$$,Home Energy,induction_stov
 LexCAN Toolkit,No,Take a Climate Coffee Break!,High,0,Activism & Education,energy_fair
 LexCAN Toolkit,No,What Can We Do? Sign Up!,Low,0,Activism & Education,energy_fair
 LexCAN Toolkit,Yes,Why We Should Electrify Everything,High,0,Activism & Education,energy_fair
-MassEnergize Demo,No,An Action you want to show up first -Copy-Copy-Copy,Medium,$,Home Energy,DELETE
-MassEnergize Demo,No,An Action you want to show up first !,Medium,$,Home Energy,DELETE
 MassEnergize Demo,Yes,An Action you want to show up first yo!,Medium,$,Home Energy,help_community
-MassEnergize Demo,Yes,An action you want to show up next,Medium,0,Solar,help_community
-MassEnergize Demo,No,An action you want to show up next-Copy,Medium,0,Solar,DELETE
+MassEnergize Demo,Yes,An action you want to show up next,Medium,0,Electricity & Solar,help_community
 MassEnergize Demo,Yes,And so on: you rank your actions yo,Medium,0,Transportation,help_community
 MassEnergize Demo,No,Calculate your Carbon Footprint! ,Low,0,Activism & Education,carbon_footprint
-MassEnergize Demo,No,Copy 7641,High,$$,Home Energy,DELETE
 MassEnergize Demo,Yes,Get Hot & Cool with Mini-Splits,High,$$$,Home Energy,air_source_hp
-MassEnergize Demo,No,Get Hot & Cool with Mini-Splits-Copy,High,$$$,Home Energy,DELETE
-MassEnergize Demo,No,Get Hot & Cool with Mini-Splits-Copy-Copy,High,$$$,Home Energy,DELETE
-MassEnergize Demo,No,Go solar!,High,$$$,Solar,install_solarPV
+MassEnergize Demo,No,Go solar!,High,$$$,Electricity & Solar,install_solarPV
 MassEnergize Demo,Yes,Green Heating and AC copy,High,$$$,Home Energy,air_source_hp
 MassEnergize Demo,Yes,Green Your Electricity,High,0,Home Energy,renewable_elec
 MassEnergize Demo,Yes,Heat my water with Solar!,Medium,$$,Home Energy,install_solarHW
@@ -1157,89 +790,40 @@ MassEnergize Demo,Yes,"Lease, Buy an Electric Car",High,$$$,Transportation,repla
 MassEnergize Demo,Yes,No-cost Home Energy Assessment,Low,0,Home Energy,energy_audit
 MassEnergize Demo,No,Test Action you want to show up first ,High,0,Home Energy,help_community
 MassEnergize Demo,Yes,testing this again,Medium,$,Home Energy,help_community
-MassEnergize Demo,No,TMP Green Your Electricity-Copy,High,0,Home Energy,DELETE
 MassEnergizeDemo,No,An Action you want to show up 1st,Medium,$,Home Energy,learn
-MassEnergizeDemo,Yes,An action you want to show up next,Medium,0,Solar,learn
+MassEnergizeDemo,Yes,An action you want to show up next,Medium,0,Electricity & Solar,learn
 MassEnergizeDemo,Yes,And so on: you rank your actions,Medium,0,Waste & Recycling,learn
 MassEnergizeDemo,No,Calculate your Carbon Footprint! ,Low,0,Activism & Education,carbon_footprint
-MassEnergizeDemo,No,Copy 7641,High,$$,Home Energy,DELETE
 MassEnergizeDemo,Yes,Get Hot & Cool with Mini-Splits,High,$$$,Home Energy,air_source_hp
-MassEnergizeDemo,No,Go solar!,High,$$$,Solar,install_solarPV
+MassEnergizeDemo,No,Go solar!,High,$$$,Electricity & Solar,install_solarPV
 MassEnergizeDemo,Yes,Green Heating and AC copy,High,$$$,Home Energy,air_source_hp
 MassEnergizeDemo,Yes,Green Your Electricity,High,0,Home Energy,renewable_elec
 MassEnergizeDemo,Yes,Heat my water with Solar!,Medium,$$,Home Energy,install_solarHW
 MassEnergizeDemo,Yes,"Lease, Buy an Electric Car",High,$$$,Transportation,replace_car
 MassEnergizeDemo,Yes,No-cost Home Energy Assessment,Low,0,Home Energy,energy_audit
-MassEnergizeDemo,No,Test Action you want to show up first ,High,0,Home Energy,DELETE
-MassEnergizeDemo,No,TMP Green Your Electricity-Copy,High,0,Home Energy,DELETE
-Master Template Community (DO NOT DELETE),Yes,Community Solar-Copy,Medium,0,Solar,community_solar
-Maynard,No,Backyard compost or servic-MaynardMAUSA,Low,0,Food,DELETE
-Maynard,No,bla action for templat-MaynardMAUSA,Low,0,Solar,DELETE
-Maynard,No,blabl-MaynardMAUSA,Low,$,Solar,DELETE
-Maynard,No,Change Thermostat Setting-MaynardMAUSA,Medium,$$$,Home Energy,DELETE
-Maynard,No,Change to LED Lightin-MaynardMAUSA,Medium,$,Home Energy,DELETE
-Maynard,No,Clean Up Your Communit-MaynardMAUSA,Low,0,Activism & Education,DELETE
-Maynard,No,Community Sola-MaynardMAUSA,Medium,0,Solar,DELETE
-Maynard,No,Donate Building Material-MaynardMAUSA,Low,0,Waste & Recycling,DELETE
-Maynard,No,Ecological Landscaping Tree Plantin-MaynardMAUSA,Low,$$,"Land, Soil & Water",DELETE
-Maynard,No,Energy-Efficient Appliance-MaynardMAUSA,High,$$,Home Energy,DELETE
-Maynard,No,Get Hot & Cool with Mini-Split-MaynardMAUSA,High,$$$,Home Energy,DELETE
-Maynard,No,Green Your Electricit-MaynardMAUSA,High,0,Home Energy,DELETE
-Maynard,No,Heat my water with Solar-MaynardMAUSA,Medium,$$$,Solar,DELETE
-Maynard,No,Heating & Cooling with Heat Pump-MaynardMAUSA,High,$$,Home Energy,DELETE
-Maynard,No,Install a mini-split heat pump,High,$$$,Home Energy,air_source_hp
-Maynard,No,Invest Like a Climate Activist Cop-MaynardMAUSA,Medium,0,Activism & Education,DELETE
-Maynard,No,Knit your own sweaters -MaynardMAUSA,Low,$,Home Energy,DELETE
-Maynard,No,Market my Green Hom-MaynardMAUSA,Low,0,Home Energy,DELETE
-Maynard,No,Monitor My Electricity Usag-MaynardMAUSA,Low,$$,Home Energy,DELETE
-Maynard,No,New template actio-MaynardMAUSA,High,$$$,Home Energy,DELETE
-Maynard,Yes,NOT:,Medium,$,Solar,DELETE
-Maynard,No,Offset your air trave-MaynardMAUSA,Medium,$,Transportation,DELETE
-Maynard,No,Pass on used good-MaynardMAUSA,Medium,0,Waste & Recycling,DELETE
-Maynard,No,Renovating? Improve Efficiency too!-MaynardMAUSA,High,$$,Home Energy,DELETE
-Maynard,No,TEM Buy or Lease an Electric Ca-MaynardMAUSA,High,$$$,Transportation,DELETE
-Maynard,No,Test templat-MaynardMAUSA,Medium,$,Solar,DELETE
+Master Template Community (DO NOT DELETE),Yes,Community Solar-Copy,Medium,0,Electricity & Solar,community_solar
 Melrose Climate Action,Yes,Buy or Lease an Electric Vehicle,High,$$$,Transportation,replace_car
 Melrose Climate Action,No,Buy or Lease an Electric Vehicle-Copy,High,$$$,Transportation,replace_car
 Melrose Climate Action,Yes,Calculate Your Carbon Footprint!,Low,0,Activism & Education,carbon_footprint
-Melrose Climate Action,No,Change Thermostat Settings-MelroseMA,Medium,$$$,Home Energy,DELETE
-Melrose Climate Action,No,Change to LED Lighting-MelroseMA,Medium,$,Home Energy,DELETE
-Melrose Climate Action,No,Clean Up Your Community-MelroseMA,Low,0,Activism & Education,DELETE
-Melrose Climate Action,No,Community Solar-MelroseMA,Medium,0,Solar,DELETE
 Melrose Climate Action,Yes,Compost Food Waste,Low,$,Waste & Recycling,compost
 Melrose Climate Action,Yes,Cut Down on Junk Mail,Low,0,Waste & Recycling,reduce_waste
-Melrose Climate Action,No,Donate Building Materials-MelroseMA,Low,0,Waste & Recycling,DELETE
-Melrose Climate Action,No,Ecological Landscaping Tree Planting-MelroseMA,Low,$$,"Land, Soil & Water",DELETE
-Melrose Climate Action,No,Energy-Efficient Appliances-MelroseMA,High,$$,Home Energy,DELETE
 Melrose Climate Action,Yes,Get A No-Cost Home Energy Assessment ,Low,0,Home Energy,energy_audit
-Melrose Climate Action,No,Get Hot & Cool with Mini-Splits-MelroseMA,High,$$$,Home Energy,DELETE
 Melrose Climate Action,No,Get involved in Town's Climate Action!,High,$$$,Activism & Education,activism
 Melrose Climate Action,Yes,Green Heating and Cooling: Heat Pumps,High,$$$,Home Energy,air_source_hp
 Melrose Climate Action,Yes,Green Your Electricity,Medium,$,Home Energy,renewable_elec
-Melrose Climate Action,No,Green Your Electricity-MelroseMA,High,0,Home Energy,DELETE
-Melrose Climate Action,No,Heat my water with Solar!-MelroseMA,Medium,$$$,Solar,DELETE
-Melrose Climate Action,No,Heating & Cooling with Heat Pumps-MelroseMA,High,$$,Home Energy,DELETE
-Melrose Climate Action,Yes,Install Solar On Your Roof,High,$$$,Solar,install_solarPV
+Melrose Climate Action,Yes,Install Solar On Your Roof,High,$$$,Electricity & Solar,install_solarPV
 Melrose Climate Action,Yes,Insulate and air seal your home,Medium,$,Home Energy,weatherization
 Melrose Climate Action,Yes,Make Mondays Meatless,Medium,0,Food,low_carbon_diet
-Melrose Climate Action,No,Market my Green Home-MelroseMA,Low,0,Home Energy,DELETE
-Melrose Climate Action,No,Monitor My Electricity Usage-MelroseMA,Low,$$,Home Energy,DELETE
-Melrose Climate Action,No,"NOT: Community Solar, No Installation-MelroseMA",Medium,$,Solar,DELETE
 Melrose Climate Action,Yes,Prioritize Reuse Over Trash,Low,0,Waste & Recycling,reduce_waste
-Melrose Climate Action,No,Renovating? Improve Efficiency too! -MelroseMA,High,$$,Home Energy,DELETE
-Melrose Climate Action,No,TEM Buy or Lease an Electric Car-MelroseMA,High,$$$,Transportation,DELETE
 Nowhere,Yes,Discount backyard compost bins - Concord,Medium,$$,Waste & Recycling,compost
 Nowhere,Yes,Food scraps pickup,Medium,$,Waste & Recycling,compost
 Nowhere,Yes,Install a Heat Pump Water Heater,High,$$$,Home Energy,hp_water_heater
 Nowhere,Yes,Music calms the savage beast,High,$,Food,eat_locally
 Nowhere,Yes,Renewable transportation,Medium,$$$,Transportation,reduce_car_miles
 Nowhere,Yes,Trim sheep,,,Home Energy,electricity_monitor
-One more,No,Community Garden plot-onemore-153,Medium,$$,Food,DELETE
-One more,No,Electricity Use Monitor-onemore-151,Low,$,Home Energy,DELETE
-One more,No,Mini-Split Heat Pumps Are For You-onemore-357,High,$$$,Home Energy,DELETE
 Pioneer Valley Schools,No,Air Dry Your Clothes,Low,0,Home Energy,line_dry
 Pioneer Valley Schools,Yes,An Environment for All People,High,0,Activism & Education,environmental_stewardship
-Pioneer Valley Schools,Yes,Building a Solar Oven,Low,0,Solar,solar_oven
+Pioneer Valley Schools,Yes,Building a Solar Oven,Low,0,Electricity & Solar,solar_oven
 Pioneer Valley Schools,Yes,Calculate your Carbon Footprint! ,Low,0,Activism & Education,carbon_footprint
 Pioneer Valley Schools,Yes,Drive less / Walk more ,High,0,Transportation,people_power
 Pioneer Valley Schools,Yes,Earth-Friendly Meals ,High,0,Food,low_carbon_diet
@@ -1247,62 +831,34 @@ Pioneer Valley Schools,Yes,Get rid of junk mail,Low,0,Waste & Recycling,reduce_w
 Pioneer Valley Schools,Yes,Less Plastic! ,Low,0,Activism & Education,reduce_waste
 Pioneer Valley Schools,Yes,Meat Less! For Students,High,0,Food,low_carbon_diet
 Pioneer Valley Schools,No,MeatLess,High,0,Food,low_carbon_diet
-Pioneer Valley Schools,Yes,Save Water,Low,0,"Land, Soil & Water",conserve_water
+Pioneer Valley Schools,Yes,Save Water,Low,0,Land & Water,conserve_water
 Pioneer Valley Schools,Yes,Shave the Peak,Medium,0,Home Energy,shave_peak
 Pioneer Valley Schools,Yes,Staying Cozy at Home,Medium,$,Home Energy,weatherization
-Pioneer Valley Schools,No,Staying Cozy at Home Copy 4752,Medium,$,Home Energy,DELETE
-Pioneer Valley Schools,Yes,Sun for Everyone - Community Solar PVS,Medium,0,Solar,community_solar
+Pioneer Valley Schools,Yes,Sun for Everyone - Community Solar PVS,Medium,0,Electricity & Solar,community_solar
 Pioneer Valley Schools,Yes,Unexpected Allies - Students,Medium,0,Activism & Education,sustain_school
-Sam,No,Community Garden plot-153,Medium,$$,Food,DELETE
-Sam,No,Electricity Use Monitor-151,Low,$,Home Energy,DELETE
-Sam,No,Mini-Split Heat Pumps Are For You-357,High,$$$,Home Energy,DELETE
-Solarize Eastie,No,Backyard compost or servic-Green Eastie,Low,0,Food,DELETE
-Solarize Eastie,No,Change Thermostat Settings-BoxboroughM-Green Eastie,Medium,$$$,Home Energy,DELETE
-Solarize Eastie,No,Change to LED Lightin-Green Eastie,Medium,$,Home Energy,DELETE
 Solarize Eastie,No,Clean Up Your Communit-Green Eastie,Low,0,Activism & Education,community_cleanup
-Solarize Eastie,No,Community Sola-Green Eastie,Medium,0,Solar,community_solar
-Solarize Eastie,No,Donate Building Material-Green Eastie,Low,0,Waste & Recycling,DELETE
-Solarize Eastie,No,Ecological Landscaping Tree Plantin-Green Eastie,Low,$$,"Land, Soil & Water",DELETE
-Solarize Eastie,No,Energy-Efficient Appliance-Green Eastie,High,$$,Home Energy,DELETE
-Solarize Eastie,No,Get Hot & Cool with Mini-Split-Green Eastie,High,$$$,Home Energy,DELETE
-Solarize Eastie,No,Get involved in Town's Climate Action-Green Eastie,Medium,0,Activism & Education,DELETE
-Solarize Eastie,No,Green Your Electricit-Green Eastie,High,0,Home Energy,DELETE
-Solarize Eastie,No,Heat my water with Solar-Green Eastie,Medium,$$$,Solar,DELETE
-Solarize Eastie,No,Heating & Cooling with Heat Pump-Green Eastie,High,$$,Home Energy,DELETE
-Solarize Eastie,No,Market my Green Hom-Green Eastie,Low,0,Home Energy,DELETE
-Solarize Eastie,No,Monitor My Electricity Usag-Green Eastie,Low,$$,Home Energy,DELETE
-Solarize Eastie,No,"NOT: Community Solar, No Installatio-Green Eastie",Medium,$,Solar,DELETE
-Solarize Eastie,No,Offset your air trave-Green Eastie,Medium,$,Transportation,DELETE
+Solarize Eastie,No,Community Sola-Green Eastie,Medium,0,Electricity & Solar,community_solar
 Solarize Eastie,Yes,Opt-In to Community Choice Electricity ,High,0,Home Energy,muni_aggregation
-Solarize Eastie,No,Pass on used good-Green Eastie,Medium,0,Waste & Recycling,DELETE
-Solarize Eastie,No,Renovating? Improve Efficiency too!-Green Eastie,High,$$,Home Energy,DELETE
-Solarize Eastie,No,Solarize Eastie!,High,$$,Solar,install_solarPV
-Solarize Eastie,Yes,Solarize!,High,$$,Solar,install_solarPV
+Solarize Eastie,No,Solarize Eastie!,High,$$,Electricity & Solar,install_solarPV
+Solarize Eastie,Yes,Solarize!,High,$$,Electricity & Solar,install_solarPV
 Solarize Eastie,Yes,Suggest a New Action for this Site,Low,0,Activism & Education,help_community
-Solarize Eastie,No,Test Action To Be Deleted,,,,DELETE
-Solarize Eastie,Yes,Virtual solar consult for condos,,,Solar,solar_assessment
-Stowe,No,Dogs as bed-warmers,Low,$$$,Home Energy,DELETE
-Stowe,Yes,Dogs as bed-warmers ,Low,$$$,Home Energy,prog_thermostats
+Solarize Eastie,Yes,Virtual solar consult for condos,,,Electricity & Solar,solar_assessment
 Sustainable Medfield,Yes, Sustainable Household Goods,Low,$,Waste & Recycling,avoid_purchase
-Sustainable Medfield,No, Sustainable Household Goods-Copy,Low,$,Waste & Recycling,DELETE
 Sustainable Medfield,Yes,“3 Months of Less” Challenge,Medium,0,Waste & Recycling,conserve_water
 Sustainable Medfield,No,Attend Town Meeting,Low,0,Activism & Education,local_decision
 Sustainable Medfield,Yes,Be Idle Free,High,0,Activism & Education,reduce_pollution
 Sustainable Medfield,Yes,Be Textile Savvy: Reuse/Donate/Recycle,Medium,0,Waste & Recycling,swap_donate
-Sustainable Medfield,Yes,Be Water Wise,Low,0,"Land, Soil & Water",conserve_water
+Sustainable Medfield,Yes,Be Water Wise,Low,0,Land & Water,conserve_water
 Sustainable Medfield,Yes,Borrow from the Unusual Items Collection,Low,0,Waste & Recycling,avoid_purchase
 Sustainable Medfield,Yes,Buy food from a local farm,Medium,$,Food,eat_locally
 Sustainable Medfield,Yes,Buy or Lease an Electric Car,High,$$$,Transportation,replace_car
 Sustainable Medfield,Yes,Calculate Your Carbon Footprint,Low,0,Activism & Education,carbon_footprint
 Sustainable Medfield,Yes,Change to LED Lighting,Medium,$,Home Energy,led_lighting
-Sustainable Medfield,Yes,Clean Water - Clear Choices,Low,0,"Land, Soil & Water",environmental_stewardship
-Sustainable Medfield,Yes,Create a Native Plant Garden,Medium,$,"Land, Soil & Water",plant_natives
+Sustainable Medfield,Yes,Clean Water - Clear Choices,Low,0,Land & Water,environmental_stewardship
+Sustainable Medfield,Yes,Create a Native Plant Garden,Medium,$,Land & Water,plant_natives
 Sustainable Medfield,Yes,Ditch Disposables,Low,0,Waste & Recycling,reduce_waste
 Sustainable Medfield,Yes,Don't trash foodscraps,High,0,Waste & Recycling,compost
-Sustainable Medfield,No,Follow-up test,Low,$,Waste & Recycling,DELETE
 Sustainable Medfield,Yes,Get Rid of Junk Mail,Low,0,Waste & Recycling,reduce_waste
-Sustainable Medfield,No,Get rid of junk mail-Copy,Low,0,Waste & Recycling,DELETE
-Sustainable Medfield,No,Go Geothermal!-Copy,High,$$$,Home Energy,DELETE
 Sustainable Medfield,Yes,Green Heating & Cooling with Heat Pumps,High,$$$,Home Energy,air_source_hp
 Sustainable Medfield,Yes,Help our Planet by Deleting Emails,Low,0,Waste & Recycling,reduce_waste
 Sustainable Medfield,Yes,Insulate and Air Seal Your Home,Medium,0,Home Energy,weatherization
@@ -1315,21 +871,21 @@ Sustainable Medfield,Yes,Recycle Your Christmas Tree,Low,$,Waste & Recycling,red
 Sustainable Medfield,No,Recycle Your Christmas Tree!,Low,$,Waste & Recycling,recycling
 Sustainable Medfield,Yes,Reduce Light Pollution,Medium,0,Activism & Education,light_pollution
 Sustainable Medfield,Yes,Reuse/Donate Household Items,Medium,0,Waste & Recycling,swap_donate
-Sustainable Medfield,Yes,Rooftop solar,High,$$$,Solar,install_solarPV
+Sustainable Medfield,Yes,Rooftop solar,High,$$$,Electricity & Solar,install_solarPV
 Sustainable Medfield,Yes,Switch to Induction Cooking,Low,$,Activism & Education,induction_stove
 Sustainable Middlesex,Yes,Backyard compost or service,Low,0,Food,compost
 Sustainable Middlesex,Yes,Buy or Lease an Electric Car,High,$$$,Transportation,replace_car
 Sustainable Middlesex,Yes,Change Thermostat Settings,Medium,$$$,Home Energy,electricity_monitor
 Sustainable Middlesex,Yes,Change to LED Lighting,Medium,$,Home Energy,led_lighting
 Sustainable Middlesex,Yes,Clean Up Your Community,Low,0,Activism & Education,community_cleanup
-Sustainable Middlesex,Yes,Community Solar ,Medium,0,Solar,community_solar
+Sustainable Middlesex,Yes,Community Solar ,Medium,0,Electricity & Solar,community_solar
 Sustainable Middlesex,Yes,Donate Building Materials,Low,0,Waste & Recycling,swap_donate
-Sustainable Middlesex,Yes,Ecological Landscaping Tree Planting,Low,$$,"Land, Soil & Water",plant_trees
+Sustainable Middlesex,Yes,Ecological Landscaping Tree Planting,Low,$$,Land & Water,plant_trees
 Sustainable Middlesex,Yes,Energy-Efficient Appliances,High,$$,Home Energy,energystar_fridge
 Sustainable Middlesex,Yes,Get Hot & Cool with Mini-Splits,High,$$$,Home Energy,air_source_hp
 Sustainable Middlesex,Yes,Get involved in Town's Climate Action,Medium,0,Activism & Education,energy_fair
 Sustainable Middlesex,Yes,Green Your Electricity,High,0,Home Energy,renewable_elec
-Sustainable Middlesex,Yes,Heat my water with Solar,Medium,$$$,Solar,install_solarHW
+Sustainable Middlesex,Yes,Heat my water with Solar,Medium,$$$,Home Energy,install_solarHW
 Sustainable Middlesex,Yes,Heating & Cooling with Heat Pumps,High,$$,Home Energy,air_source_hp
 Sustainable Middlesex,Yes,Market my Green Home,Low,0,Home Energy,market_green_home
 Sustainable Middlesex,No,Monitor My Electricity Usage,Low,$$,Home Energy,electricity_monitor
@@ -1337,44 +893,27 @@ Sustainable Middlesex,Yes,No-cost Home Energy Assessment,Low,0,Home Energy,energ
 Sustainable Middlesex,Yes,Offset your air travel,Medium,$,Transportation,offset_flights
 Sustainable Middlesex,Yes,Pass on used goods,Medium,0,Waste & Recycling,reduce_waste
 Sustainable Middlesex,Yes,Renovating? Improve Efficiency too!,High,$$,Home Energy,efficient_renovations
-Sustainable Milton,No,Buy food from a local farm-sustainablemilton,Medium,$,Food,DELETE
 Sustainable Milton,Yes,Buy or Lease an Electric Car,High,$$$,Transportation,replace_car
 Sustainable Milton,Yes,Calculate your Carbon Footprint,Low,0,Activism & Education,carbon_footprint
-Sustainable Milton,No,Calculate your Carbon Footprint Copy 6668-sustainablemilton,Low,0,Activism & Education,DELETE
-Sustainable Milton,No,Change Thermostat Settings-sustainablemilton,Medium,$$$,Home Energy,DELETE
 Sustainable Milton,Yes,Change to LED Lighting,Medium,$,Home Energy,led_lighting
-Sustainable Milton,Yes,Community Solar,Medium,$,Solar,community_solar
+Sustainable Milton,Yes,Community Solar,Medium,$,Electricity & Solar,community_solar
 Sustainable Milton,Yes,Compost at Home or with a Service,Low,0,Waste & Recycling,compost
-Sustainable Milton,No,Don't trash foodscraps-sustainablemilton,Low,0,Waste & Recycling,DELETE
 Sustainable Milton,Yes,Eat a More Plant-Based Diet,High,$,Food,low_carbon_diet
-Sustainable Milton,No,Ecological Landscaping Tree Planting-sustainablemilton,Low,$$,"Land, Soil & Water",DELETE
-Sustainable Milton,No,Food scraps pickup-sustainablemilton,Low,$,Waste & Recycling,DELETE
-Sustainable Milton,No,Get rid of junk mail-sustainablemilton,Low,0,Waste & Recycling,DELETE
 Sustainable Milton,Yes,Green Heating and AC,High,$$$,Home Energy,air_source_hp
 Sustainable Milton,Yes,Green Your Electricity,High,$,Home Energy,renewable_elec
-Sustainable Milton,No,Heat my water with Solar!-sustainablemilton,Medium,$$$,Solar,DELETE
 Sustainable Milton,Yes,Insulate to the Max!,High,$,Home Energy,weatherization
-Sustainable Milton,No,Landlord Near Free Property Upgrades-sustainablemilton,Low,0,Home Energy,DELETE
 Sustainable Milton,Yes,No-cost Home Energy Assessment,Low,0,Home Energy,energy_audit
-Sustainable Milton,No,Pass on used goods-sustainablemilton,Medium,0,Waste & Recycling,DELETE
-Sustainable Milton,No,People Power Your Errands-sustainablemilton,High,0,Transportation,DELETE
-Sustainable Milton,No,Pledge to Vote-sustainablemilton,Medium,0,Activism & Education,DELETE
-Sustainable Milton,No,Refer a Friend-sustainablemilton,Low,0,Activism & Education,DELETE
-Sustainable Milton,Yes,Rooftop Solar,High,$$$,Solar,install_solarPV
-Sustainable Milton,No,Savings for Renters-sustainablemilton,Low,0,Home Energy,DELETE
-Sustainable Milton,No,START HERE for Energy Savings-sustainablemilton,Low,0,Home Energy,DELETE
-Sustainable Milton,No,Suggest a New Action-sustainablemilton,Low,0,Activism & Education,DELETE
-Sustainable Milton,No,Sustainable Household Goods-sustainablemilton,Low,$,Waste & Recycling,DELETE
+Sustainable Milton,Yes,Rooftop Solar,High,$$$,Electricity & Solar,install_solarPV
 Sustainable Milton,Yes,Volunteer with Sustainable Milton,Low,0,Activism & Education,help_community
 Sustainable Sherborn,Yes,Buying Less Stuff,High,0,Waste & Recycling,avoid_purchase
 Sustainable Sherborn,Yes,Buying Local Food,Medium,$,Food,eat_locally
 Sustainable Sherborn,Yes,Calculating Your Carbon Footprint,Low,0,Activism & Education,carbon_footprint
 Sustainable Sherborn,Yes,Canceling Your Catalogs,Low,0,Waste & Recycling,reduce_waste
 Sustainable Sherborn,Yes,Changing your Thermostat Settings ,Medium,$$$,Home Energy,prog_thermostats
-Sustainable Sherborn,Yes,Community Solar,Medium,0,Solar,community_solar
+Sustainable Sherborn,Yes,Community Solar,Medium,0,Electricity & Solar,community_solar
 Sustainable Sherborn,Yes,Composting Food Scraps,Low,0,Waste & Recycling,compost
 Sustainable Sherborn,Yes,Consulting with a Sherborn Energy Coach,Low,0,Home Energy,coaching
-Sustainable Sherborn,Yes,Controlling Invasive Plant Species,Low,$$,"Land, Soil & Water",plant_natives
+Sustainable Sherborn,Yes,Controlling Invasive Plant Species,Low,$$,Land & Water,plant_natives
 Sustainable Sherborn,Yes,Donating Building Materials,Low,0,Waste & Recycling,swap_donate
 Sustainable Sherborn,Yes,Eating Less Meat and Dairy,High,0,Food,low_carbon_diet
 Sustainable Sherborn,Yes,Electrifying your Ride,High,$$$,Transportation,replace_car
@@ -1384,26 +923,22 @@ Sustainable Sherborn,Yes,Joining Sherborn PicksUp April 2021!,Low,0,Activism & E
 Sustainable Sherborn,Yes,Joining Your Local Citizen Group,Medium,0,Activism & Education,get_involved
 Sustainable Sherborn,Yes,Monitor Electricity Usage ,Low,$$,Home Energy,electricity_monitor
 Sustainable Sherborn,Yes,No-cost Home Energy Assessment,Low,0,Home Energy,energy_audit
-Sustainable Sherborn,Yes,Practicing Sustainable Landscaping ,Low,$$,"Land, Soil & Water",reduce_lawn_size
+Sustainable Sherborn,Yes,Practicing Sustainable Landscaping ,Low,$$,Land & Water,reduce_lawn_size
 Sustainable Sherborn,Yes,Referring a Friend,Low,0,Activism & Education,help_community
 Sustainable Sherborn,Yes,Savings for Renters,Low,0,Home Energy,savings_for_renters
-Sustainable Sherborn,No,Savings for Renters-Copy,Low,0,Home Energy,DELETE
 Sustainable Sherborn,Yes,Sherborn Power Choice (coming soon!),High,0,Home Energy,muni_aggregation
-Sustainable Sherborn,Yes,Solar Panels,High,$$$,Solar,install_solarPV
+Sustainable Sherborn,Yes,Solar Panels,High,$$$,Electricity & Solar,install_solarPV
 Sustainable Sherborn,Yes,Suggesting a New Action,Low,0,Activism & Education,help_community
 Sustainable Sherborn,Yes,Upgrading to Energy-Efficient Appliances,High,$$,Home Energy,energystar_fridge
 Sustainable Sherborn,Yes,Using Your Car less Challenge,High,0,Transportation,reduce_car_miles
-TaCommunity,No,Community Garden plo-taCom,Medium,$$,Food,DELETE
-TaCommunity,No,Mini-Split Heat Pumps Are For Yo-taCom,High,$$$,Home Energy,DELETE
-TestingCommunity,No,for frimpong on paragraph spacing,Low,0,Solar,DELETE
-TestingCommunity,Yes,testing IRA google doc copy formatting,Low,0,Solar,community_solar
-Training,Yes,awesome solar  ,High,$$$,Solar,install_solarPV
+TestingCommunity,Yes,testing IRA google doc copy formatting,Low,0,Electricity & Solar,community_solar
+Training,Yes,awesome solar  ,High,$$$,Electricity & Solar,install_solarPV
 Training,Yes,Buy/lease an electric car/hybrid,,,,replace_car
 Training,No,Calculate Carbon Footprint Copy,Low,0,Activism & Education,carbon_footprint
-Training,Yes,Discounted Rain Barrels,,,"Land, Soil & Water",rain_barrel
+Training,Yes,Discounted Rain Barrels,,,Land & Water,rain_barrel
 Training,Yes,Donate building materials,Low,0,Waste & Recycling,swap_donate
-Training,Yes,Ecological Landscaping,Low,$$,"Land, Soil & Water",plant_natives
-Training,No,Ecological Landscaping Copy,Low,$$,"Land, Soil & Water",plant_natives
+Training,Yes,Ecological Landscaping,Low,$$,Land & Water,plant_natives
+Training,No,Ecological Landscaping Copy,Low,$$,Land & Water,plant_natives
 Training,Yes,Electrify your landscaping equipment,,,,electric_mower
 Training,Yes,Free Home Energy Audit,Low,0,Home Energy,energy_audit
 Training,Yes,Green heating and AC,High,$$$,Home Energy,air_source_hp
@@ -1413,33 +948,7 @@ Training,Yes,Insulate & Weatherize to the Max,,,Home Energy,weatherization
 Training,Yes,Join Metrowest 350MA Node,,,,get_involved
 Training,No,Local food with Farmshare or Farmstand,Medium,0,Food,eat_locally
 Training,Yes,RECYCLE Right,Low,0,Waste & Recycling,recycling
-Training,Yes,Sign up for community solar,Medium,,Solar,community_solar
-Training,No,Testing numbering,Low,0,Home Energy,DELETE
-Training,Yes,testing1,Medium,$,Home Energy,DELETE
-UU Mass Action,No,Backyard compost or servic-UUMassAction,Low,0,Food,DELETE
-UU Mass Action,No,bla action for templat-UUMassAction,Low,0,Solar,DELETE
-UU Mass Action,No,blabl-UUMassAction,Low,$,Solar,DELETE
-UU Mass Action,No,Change Thermostat Setting-UUMassAction,Medium,$$$,Home Energy,DELETE
-UU Mass Action,No,Change to LED Lightin-UUMassAction,Medium,$,Home Energy,DELETE
-UU Mass Action,No,Clean Up Your Communit-UUMassAction,Low,0,Activism & Education,DELETE
-UU Mass Action,No,Community Sola-UUMassAction,Medium,0,Solar,DELETE
-UU Mass Action,No,Donate Building Material-UUMassAction,Low,0,Waste & Recycling,DELETE
-UU Mass Action,No,Ecological Landscaping Tree Plantin-UUMassAction,Low,$$,"Land, Soil & Water",DELETE
-UU Mass Action,No,Energy-Efficient Appliance-UUMassAction,High,$$,Home Energy,DELETE
-UU Mass Action,No,Get Hot & Cool with Mini-Split-UUMassAction,High,$$$,Home Energy,DELETE
-UU Mass Action,No,Green Your Electricit-UUMassAction,High,0,Home Energy,DELETE
-UU Mass Action,No,Heat my water with Solar-UUMassAction,Medium,$$$,Solar,DELETE
-UU Mass Action,No,Heating & Cooling with Heat Pump-UUMassAction,High,$$,Home Energy,DELETE
-UU Mass Action,No,Invest Like a Climate Activist Cop-UUMassAction,Medium,0,Activism & Education,DELETE
-UU Mass Action,No,Market my Green Hom-UUMassAction,Low,0,Home Energy,DELETE
-UU Mass Action,No,Monitor My Electricity Usag-UUMassAction,Low,$$,Home Energy,DELETE
-UU Mass Action,No,No-cost Home Energy Assessmen-UUMassAction,Low,0,Home Energy,DELETE
-UU Mass Action,No,"NOT: Community Solar, No Installatio-UUMassAction",Medium,$,Solar,DELETE
-UU Mass Action,No,Offset your air trave-UUMassAction,Medium,$,Transportation,DELETE
-UU Mass Action,No,Pass on used good-UUMassAction,Medium,0,Waste & Recycling,DELETE
-UU Mass Action,No,Renovating? Improve Efficiency too!-UUMassAction,High,$$,Home Energy,DELETE
-UU Mass Action,No,TEM Buy or Lease an Electric Ca-UUMassAction,High,$$$,Transportation,DELETE
-UU Mass Action,No,Test templat-UUMassAction,Medium,$,Solar,DELETE
+Training,Yes,Sign up for community solar,Medium,,Electricity & Solar,community_solar
 Wayland,Yes,Community Gardening,Medium,$$,Food,grow_local
 Wayland,Yes,compost sam and kaat,Low,$,Waste & Recycling,compost
 Wayland,Yes,Discount backyard compost bins,Medium,$$,Waste & Recycling,compost
@@ -1450,459 +959,9 @@ Wayland,Yes,Green Heating and AC,High,$$$,Home Energy,air_source_hp
 Wayland,Yes,Green your electricity,Medium,$,Home Energy,renewable_elec
 Wayland,Yes,Here we go again,Medium,$$,Solar PV,install_solarPV
 Wayland,Yes,Join 350MA Metrowest Node,Medium,0,Activism & Community,get_involved
-Wayland,No,Join 350MA Metrowest Node Copy 4343,Medium,$,Activism & Community,DELETE
-Wayland,No,Join 350MA Metrowest Node Copy 6337,Medium,$,Activism & Community,DELETE
 Wayland,Yes,Make electricity with solar panels,High,$$$,Solar PV,install_solarPV
 Wayland,Yes,Monitor your Electricity Use,Low,$$,Home Energy,electricity_monitor
-Wayland,No,Monitor your Electricity Use Copy 585,Low,$$,Home Energy,DELETE
-Wayland,No,New Test Action,,,,DELETE
 Wayland,Yes,Recycle Textiles,Medium,$,Waste & Recycling,recycling
 Wayland,No,Solar Photovoltaics on your Roof,High,$$$,Solar PV,install_solarPV
 Wayland,Yes,Test,Medium,$,Home Energy,energy_audit
 Wayland,Yes,testing kaat 7/10,Low,0,Transportation,reduce_car_miles
-,No,A new template action,Medium,0,Home Energy,DELETE
-,No,Air-Dry Your Clothe-LittletonMA-Copy,Low,$,Home Energy,DELETE
-,Yes,Air-Dry Your Clothes,Low,$,Home Energy,DELETE
-,No,An Action You Want to Show Up First-Copy,Low,0,Food,DELETE
-,No,An Action You Want to Show Up First-Copy,Low,0,Food,DELETE
-,No,asdfasdfa,Medium,$,Solar,DELETE
-,No,Attend an Earth Day or Climate Festival-Copy,Low,0,Activism & Education,DELETE
-,No,Avoid Bottled Water-Copy-Copy,,,,DELETE
-,No,Backyard compost or servic-EnergizeCorp1,Low,0,Food,DELETE
-,No,Backyard compost or servic-hello_hello,Low,0,Food,DELETE
-,No,Backyard compost or servic-marathon City,Low,0,Food,DELETE
-,No,Backyard compost or servic-marathon day,Low,0,Food,DELETE
-,No,Backyard compost or servic-NewCommunityMA,Low,0,Food,DELETE
-,No,Backyard compost or servic-testingonemore,Low,0,Food,DELETE
-,No,Backyard compost or service,Low,0,Food,DELETE
-,No,Backyard compost or service,Low,0,Food,compost
-,No,Backyard compost or service-Copy,,,,DELETE
-,No,Backyard compost or service-Copy,,,,DELETE
-,No,Backyard compost or service-SCIS,Low,0,Food,DELETE
-,No,Backyard compost or service-SCIS,Low,0,Food,DELETE
-,Yes,Be Water Wise,Low,0,"Land, Soil & Water",DELETE
-,No,Be Water Wise-Copy,Low,0,"Land, Soil & Water",DELETE
-,No,Bike-to-school Concord-Copy,Medium,$,Transportation,DELETE
-,No,bla action for templat-EnergizeCorp1,Low,0,Solar,DELETE
-,No,bla action for templat-hello_hello,Low,0,Solar,DELETE
-,No,bla action for templat-testingonemore,Low,0,Solar,DELETE
-,Yes,bla action for template,Low,0,Solar,DELETE
-,No,blabl-hello_hello,Low,$,Solar,DELETE
-,No,blabl-testingonemore,Low,$,Solar,DELETE
-,No,blabla,Low,$,Solar,DELETE
-,No,"Bring a bag, save the Earth and 10¢-Copy",Low,0,Waste & Recycling,DELETE
-,No,"Bring a bag, save the Earth and 10¢-Copy",Low,0,Waste & Recycling,DELETE
-,Yes,Bushwick 2,,,Solar PV,DELETE
-,Yes,Bushwick 7,Medium,$$$,Transportation,DELETE
-,Yes,Bushwick 9,Medium,$,Transportation,DELETE
-,Yes,Bushwick 9,Medium,$,Transportation,DELETE
-,Yes,Buy Less Stuff,Low,0,Waste & Recycling,DELETE
-,Yes,Buy Less Stuff,Low,0,Waste & Recycling,DELETE
-,No,Buy Secondhand Clothing -Copy,Low,0,Waste & Recycling,DELETE
-,No,Buy/Lease an Electric Car/Hybrid-Copy-Copy,High,$$$,Transportation,DELETE
-,No,Buy/Lease an Electric Car/Hybrid-Copy-Copy,High,$$$,Transportation,DELETE
-,No,Buy/Lease an Electric or Hybrid Vehicle-Copy,High,$$$,Transportation,DELETE
-,No,Buy/Lease an Electric or Hybrid Vehicle-Copy,High,$$$,Transportation,DELETE
-,No,Buy/Lease an EV or Plug-in Hybrid-Copy,High,$$$,Transportation,DELETE
-,Yes,Calculate Your Carbon Footprint,Low,0,Activism & Education,DELETE
-,Yes,Calculate Your Carbon Footprint!,,,,DELETE
-,Yes,Calculate Your Carbon Footprint!,,,,DELETE
-,No,Calculate Your Carbon Footprint!-Copy,Low,0,Activism & Education,DELETE
-,No,Calculate Your Carbon Footprint!-Copy,Low,0,Activism & Education,DELETE
-,No,Calculate your Carbon Footprint!-Copy,Low,0,Activism & Education,DELETE
-,No,Celebrate Boxborough Bill-Copy,Low,0,Home Energy,DELETE
-,No,Celebrate Boxborough Bill-Copy,Low,0,Home Energy,DELETE
-,No,Change Thermostat Setting-EnergizeCorp1,Medium,$$$,Home Energy,DELETE
-,No,Change Thermostat Setting-hello_hello,Medium,$$$,Home Energy,DELETE
-,No,Change Thermostat Setting-marathon City,Medium,$$$,Home Energy,DELETE
-,No,Change Thermostat Setting-marathon day,Medium,$$$,Home Energy,DELETE
-,No,Change Thermostat Setting-NewCommunityMA,Medium,$$$,Home Energy,DELETE
-,No,Change Thermostat Setting-testingonemore,Medium,$$$,Home Energy,DELETE
-,No,Change Thermostat Settings-SCIS,Medium,$$$,Home Energy,DELETE
-,No,Change Thermostat Settings-SCIS,Medium,$$$,Home Energy,DELETE
-,No,Change to LED Lightin-EnergizeCorp1,Medium,$,Home Energy,DELETE
-,No,Change to LED Lightin-hello_hello,Medium,$,Home Energy,DELETE
-,No,Change to LED Lightin-marathon City,Medium,$,Home Energy,DELETE
-,No,Change to LED Lightin-marathon day,Medium,$,Home Energy,DELETE
-,No,Change to LED Lightin-NewCommunityMA,Medium,$,Home Energy,DELETE
-,No,Change to LED Lightin-PepperellMA-Copy,,,,DELETE
-,No,Change to LED Lightin-PepperellMA-Copy,,,,DELETE
-,No,Change to LED Lightin-testingonemore,Medium,$,Home Energy,DELETE
-,No,Change to LED Lighting-CarlisleMA-Copy,Medium,$,Home Energy,DELETE
-,No,Change to LED Lighting-SCIS,Medium,$,Home Energy,DELETE
-,No,Change to LED Lighting-SCIS,Medium,$,Home Energy,DELETE
-,No,Choose 100% Green Electricity-Copy,High,$,Home Energy,DELETE
-,No,Choose 100% Green Electricity-Copy,High,$,Home Energy,DELETE
-,No,Clean Up Your Communit-EnergizeCorp1,Low,0,Activism & Education,DELETE
-,No,Clean Up Your Communit-hello_hello,Low,0,Activism & Education,DELETE
-,No,Clean Up Your Communit-marathon City,Low,0,Activism & Education,DELETE
-,No,Clean Up Your Communit-marathon day,Low,0,Activism & Education,DELETE
-,No,Clean Up Your Communit-NewCommunityMA,Low,0,Activism & Education,DELETE
-,No,Clean Up Your Communit-testingonemore,Low,0,Activism & Education,DELETE
-,No,Clean Up Your Community-GCVS,,,,DELETE
-,No,Clean Up Your Community-GCVS,,,,DELETE
-,No,Clean Up Your Community-GCVS,,,,DELETE
-,No,Clean Up Your Community-GCVS,,,,DELETE
-,No,Clean Up Your Community-SCIS,Low,0,Activism & Education,DELETE
-,No,Clean Up Your Community-SCIS,Low,0,Activism & Education,DELETE
-,No,Clean Up Your Community-SICS,Low,0,Activism & Education,DELETE
-,No,Clean Up Your Community-SICS,Low,0,Activism & Education,DELETE
-,Yes,Clean Water - Clear Choices,Low,0,"Land, Soil & Water",DELETE
-,No,Climate Action Crew - Book Discussion-Copy,Medium,0,Home Energy,DELETE
-,No,Community Garden plo-taCom,Medium,$$,Food,DELETE
-,No,Community Garden plot,Medium,$$,Food,DELETE
-,No,Community Sola-EnergizeCorp1,Medium,0,Solar,DELETE
-,No,Community Sola-hello_hello,Medium,0,Solar,DELETE
-,No,Community Sola-marathon City,Medium,0,Solar,DELETE
-,No,Community Sola-marathon day,Medium,0,Solar,DELETE
-,No,Community Sola-NewCommunityMA,Medium,0,Solar,DELETE
-,No,Community Sola-testingonemore,Medium,0,Solar,DELETE
-,No,Community Solar-Copy,Medium,0,Solar,DELETE
-,No,Community Solar-SCIS,Medium,0,Solar,DELETE
-,No,Community Solar-SCIS,Medium,0,Solar,DELETE
-,Yes,Compost at Home or with a Service,Low,0,Waste & Recycling,DELETE
-,No,Compost at Home or with a Service-Copy,Low,0,Waste & Recycling,DELETE
-,No,Compost Food Waste-Copy,Low,$,Waste & Recycling,DELETE
-,No,Compost Food Waste-Copy,Low,$,Waste & Recycling,DELETE
-,No,Compost Happens-Copy,,,,DELETE
-,No,Compost Happens-Copy,,,,DELETE
-,No,Compost Kitchen Waste-Copy,Medium,$,Waste & Recycling,DELETE
-,No,Compost Kitchen Waste-Copy,Medium,$,Waste & Recycling,DELETE
-,No,Conserve Water - Critical Drought-Copy,High,0,"Land, Soil & Water",DELETE
-,No,Conserve Water - Critical Drought-Copy,High,0,"Land, Soil & Water",DELETE
-,No,Controlling Invasive Plant Species -Copy,Low,0,"Land, Soil & Water",DELETE
-,No,Controlling Invasive Plant Species -Copy,Low,0,"Land, Soil & Water",DELETE
-,No,Curbside & Backyard Composting-Copy,Low,0,Waste & Recycling,DELETE
-,No,Curbside & Backyard Composting-Copy,Low,0,Waste & Recycling,DELETE
-,Yes,Do a Lazy Fall Garden Clean Up,,0,"Land, Soil & Water",DELETE
-,Yes,Do a Lazy Fall Garden Clean Up,,0,"Land, Soil & Water",DELETE
-,No,Donate Building Material-EnergizeCorp1,Low,0,Waste & Recycling,DELETE
-,No,Donate Building Material-hello_hello,Low,0,Waste & Recycling,DELETE
-,No,Donate Building Material-marathon City,Low,0,Waste & Recycling,DELETE
-,No,Donate Building Material-marathon day,Low,0,Waste & Recycling,DELETE
-,No,Donate Building Material-NewCommunityMA,Low,0,Waste & Recycling,DELETE
-,No,Donate Building Material-testingonemore,Low,0,Waste & Recycling,DELETE
-,Yes,Donate building materials-Copy,,,,DELETE
-,Yes,Donate building materials-Copy,,,,DELETE
-,No,Donate Building Materials-SCIS,Low,0,Waste & Recycling,DELETE
-,No,Donate Building Materials-SCIS,Low,0,Waste & Recycling,DELETE
-,Yes,Drive an Electric Vehicle,High,$$$,Transportation,DELETE
-,No,Drive an Electric Vehicle-Copy,High,$$$,Transportation,DELETE
-,No,Drive Electric,,,,DELETE
-,No,Drive Electric,,,,DELETE
-,No,Drive Electric Vehicle (EV)-Copy,High,$$$,Transportation,DELETE
-,No,Drive less / Walk more-MW,High,0,Transportation,DELETE
-,No,Drive less / Walk more-MW,High,0,Transportation,DELETE
-,No,Drive less / Walk more!-Copy,High,0,Transportation,DELETE
-,No,Drive less / Walk more!-Copy,High,0,Transportation,DELETE
-,No,E-Bikes-Copy-Copy,,,,DELETE
-,No,E-Bikes-Copy-Copy,,,,DELETE
-,No,Eat a More Plant-Based Diet-Copy-Copy,High,0,Food,DELETE
-,No,Eat a More Plant-Based Diet-Copy-Copy,High,0,Food,DELETE
-,Yes,Eat a Plant-Based Diet,High,0,Food,DELETE
-,Yes,Eat cookies,,,,DELETE
-,Yes,Eat cookies,,,,DELETE
-,Yes,Eat cookies,,,,DELETE
-,Yes,Eat cookies,,,,DELETE
-,Yes,Eat cookies,,,,DELETE
-,Yes,Eat cookies,,,,DELETE
-,Yes,Eat cookies Copy ,,,,DELETE
-,No,Eat Less Meat and Dairy-Copy,High,0,Food,DELETE
-,No,Eat less meat and dairy-Copy,,,,DELETE
-,No,Eat Less Meat and Dairy-Copy,High,0,Food,DELETE
-,No,Eat less meat and dairy-Copy,,,,DELETE
-,No,Ecological Landscaping Tree Plantin-EnergizeCorp1,Low,$$,"Land, Soil & Water",DELETE
-,No,Ecological Landscaping Tree Plantin-hello_hello,Low,$$,"Land, Soil & Water",DELETE
-,No,Ecological Landscaping Tree Plantin-marathon City,Low,$$,"Land, Soil & Water",DELETE
-,No,Ecological Landscaping Tree Plantin-marathon day,Low,$$,"Land, Soil & Water",DELETE
-,No,Ecological Landscaping Tree Plantin-NewCommunityMA,Low,$$,"Land, Soil & Water",DELETE
-,No,Ecological Landscaping Tree Plantin-testingonemore,Low,$$,"Land, Soil & Water",DELETE
-,No,Ecological Landscaping Tree Planting-SCIS,Low,$$,"Land, Soil & Water",DELETE
-,No,Ecological Landscaping Tree Planting-SCIS,Low,$$,"Land, Soil & Water",DELETE
-,Yes,Electric car,Medium,$$$,Transportation,DELETE
-,No,Electricity Use Monitor,Low,$$,Home Energy,DELETE
-,No,Electrify your landscaping equipment,Medium,$$,Home Energy,DELETE
-,No,Electrify your landscaping equipment,Medium,$$,Home Energy,DELETE
-,No,Energy-Efficient Appliance-EnergizeCorp1,High,$$,Home Energy,DELETE
-,No,Energy-Efficient Appliance-hello_hello,High,$$,Home Energy,DELETE
-,No,Energy-Efficient Appliance-marathon City,High,$$,Home Energy,DELETE
-,No,Energy-Efficient Appliance-marathon day,High,$$,Home Energy,DELETE
-,No,Energy-Efficient Appliance-NewCommunityMA,High,$$,Home Energy,DELETE
-,No,Energy-Efficient Appliance-testingonemore,High,$$,Home Energy,DELETE
-,No,Energy-Efficient Appliances-SCIS,High,$$,Home Energy,DELETE
-,No,Energy-Efficient Appliances-SCIS,High,$$,Home Energy,DELETE
-,No,Engage to Restore the River-Copy,Medium,0,"Land, Soil & Water",DELETE
-,No,Engage to Restore the River-Copy,Medium,0,"Land, Soil & Water",DELETE
-,No,Farmers market-Copy,Medium,$,Food,DELETE
-,No,Food scraps pickup,,,,DELETE
-,No,Frimpong Action Copy 9643,Low,$,Food,DELETE
-,No,Get Dirty in the Garden-Copy,Medium,$,"Land, Soil & Water",DELETE
-,No,Get Dirty in the Garden-Copy,Medium,$,"Land, Soil & Water",DELETE
-,No,Get Hot & Cool with Mini-Split-EnergizeCorp1,High,$$$,Home Energy,DELETE
-,No,Get Hot & Cool with Mini-Split-hello_hello,High,$$$,Home Energy,DELETE
-,No,Get Hot & Cool with Mini-Split-marathon City,High,$$$,Home Energy,DELETE
-,No,Get Hot & Cool with Mini-Split-marathon day,High,$$$,Home Energy,DELETE
-,No,Get Hot & Cool with Mini-Split-NewCommunityMA,High,$$$,Home Energy,DELETE
-,No,Get Hot & Cool with Mini-Split-testingonemore,High,$$$,Home Energy,DELETE
-,No,Get Hot & Cool with Mini-Splits-SCIS,High,$$$,Home Energy,DELETE
-,No,Get Hot & Cool with Mini-Splits-SCIS,High,$$$,Home Energy,DELETE
-,No,Get Started-Copy,Low,0,Activism & Education,DELETE
-,No,Get Started-Copy,Low,0,Activism & Education,DELETE
-,No,Go Geothermal!-Copy-Copy,High,$$$,Home Energy,DELETE
-,No,Go Geothermal!-Copy-Copy,High,$$$,Home Energy,DELETE
-,No,Green Heating & Cooling with Heat Pumps-Copy,High,$$$,Home Energy,DELETE
-,No,Green Heating & Cooling with Heat Pumps-Copy,High,$$$,Home Energy,DELETE
-,No,Green heating and AC-Copy,High,$$$,Home Energy,DELETE
-,No,Green Heating and AC-Copy,High,$$$,Home Energy,DELETE
-,No,Green heating and AC-Copy,High,$$$,Home Energy,DELETE
-,No,Green Your Electricit-EnergizeCorp1,High,0,Home Energy,DELETE
-,No,Green Your Electricit-hello_hello,High,0,Home Energy,DELETE
-,No,Green Your Electricit-marathon City,High,0,Home Energy,DELETE
-,No,Green Your Electricit-marathon day,High,0,Home Energy,DELETE
-,No,Green Your Electricit-NewCommunityMA,High,0,Home Energy,DELETE
-,No,Green Your Electricit-testingonemore,High,0,Home Energy,DELETE
-,Yes,Green Your Electricity,High,0,Home Energy,DELETE
-,No,Green your electricity-Copy-Copy,,,,DELETE
-,No,Green your electricity-Copy-Copy,,,,DELETE
-,No,Green Your Electricity-SCIS,High,0,Home Energy,DELETE
-,No,Green Your Electricity-SCIS,High,0,Home Energy,DELETE
-,Yes,Have food scraps picked up at the curb,,,,DELETE
-,No,Have less children,Even Higher,0,Home Energy,DELETE
-,No,Heat my water with Solar-EnergizeCorp1,Medium,$$$,Solar,DELETE
-,No,Heat my water with Solar-hello_hello,Medium,$$$,Solar,DELETE
-,No,Heat my water with Solar-marathon City,Medium,$$$,Solar,DELETE
-,No,Heat my water with Solar-marathon day,Medium,$$$,Solar,DELETE
-,No,Heat my water with Solar-NewCommunityMA,Medium,$$$,Solar,DELETE
-,No,Heat my water with Solar-testingonemore,Medium,$$$,Solar,DELETE
-,No,Heat my water with Solar!-SCIS,Medium,$$$,Solar,DELETE
-,No,Heat my water with Solar!-SCIS,Medium,$$$,Solar,DELETE
-,Yes,Heat Your Water With Solar,Medium,$$,Home Energy,DELETE
-,No,Heat Your Water With Solar-Copy,Medium,$$,Home Energy,DELETE
-,No,Heating & Cooling with Heat Pump-EnergizeCorp1,High,$$,Home Energy,DELETE
-,No,Heating & Cooling with Heat Pump-hello_hello,High,$$,Home Energy,DELETE
-,No,Heating & Cooling with Heat Pump-marathon City,High,$$,Home Energy,DELETE
-,No,Heating & Cooling with Heat Pump-marathon day,High,$$,Home Energy,DELETE
-,No,Heating & Cooling with Heat Pump-NewCommunityMA,High,$$,Home Energy,DELETE
-,No,Heating & Cooling with Heat Pump-testingonemore,High,$$,Home Energy,DELETE
-,No,Heating & Cooling with Heat Pumps-SCIS,High,$$,Home Energy,DELETE
-,No,Heating & Cooling with Heat Pumps-SCIS,High,$$,Home Energy,DELETE
-,No,Hello Franklin-Copy,Low,0,Activism & Education,DELETE
-,No,Hello Franklin-Copy,Low,0,Activism & Education,DELETE
-,Yes,Here we go again,High,$$,Transportation,DELETE
-,No,Home Energy Assessment  - Concord-Copy,Medium,0,Home Energy,DELETE
-,Yes,Install Mini-Splits Heat Pumps,High,$$$,Home Energy,DELETE
-,No,Install Mini-Splits Heat Pumps-Copy,High,$$$,Home Energy,DELETE
-,No,Install rooftop or ground mount solar PV,High,$$$,Solar,DELETE
-,No,Install rooftop or ground mount solar PV,High,$$$,Solar,install_solarPV
-,No,Install Rooftop or Ground Mount Solar PV-Copy,High,$$$,Solar,DELETE
-,No,Install Rooftop or Ground Mount Solar PV-Copy,High,$$$,Solar,DELETE
-,No,Install Solar PV-Copy-Copy,High,$$$,Solar,DELETE
-,No,Install Solar PV-Copy-Copy,High,$$$,Solar,DELETE
-,No,Install Solar PV-Copy-Copy-Copy,High,$$$,Solar,DELETE
-,No,Install Solar PV-Copy-Copy-Copy,High,$$$,Solar,DELETE
-,No,Insulate & Weatherize to the Max-Copy,High,$$$,Home Energy,DELETE
-,Yes,Insulate and Air Seal Your Home,High,$$,Home Energy,weatherization
-,Yes,Insulate like crazy-Copy,High,0,Home Energy,DELETE
-,No,Insulate like Crazy-Copy,High,0,Home Energy,DELETE
-,Yes,Insulate like crazy-Copy,High,0,Home Energy,DELETE
-,No,Insulate like Crazy-Copy,High,0,Home Energy,DELETE
-,No,Invest Like a Climate Activis-GreenerStow,Medium,0,Activism & Education,investing
-,No,Invest Like a Climate Activis-GreenerStow,Medium,0,Activism & Education,investing
-,No,Invest Like a Climate Activis-StowMA,Medium,0,Activism & Education,DELETE
-,No,Invest Like a Climate Activis-StowMA,Medium,0,Activism & Education,investing
-,No,Invest Like a Climate Activist,Medium,0,Activism & Education,DELETE
-,No,Invest Like a Climate Activist,Medium,0,Activism & Education,DELETE
-,Yes,Invest Like a Climate Activist,Medium,0,Activism & Education,DELETE
-,No,Invest Like a Climate Activist Cop-EnergizeCorp1,Medium,0,Activism & Education,DELETE
-,No,Invest Like a Climate Activist Cop-hello_hello,Medium,0,Activism & Education,DELETE
-,No,Invest Like a Climate Activist Cop-marathon City,Medium,0,Activism & Education,DELETE
-,No,Invest Like a Climate Activist Cop-marathon day,Medium,0,Activism & Education,DELETE
-,No,Invest Like a Climate Activist Cop-NewCommunityMA,Medium,0,Activism & Education,DELETE
-,No,Invest Like a Climate Activist Cop-testingonemore,Medium,0,Activism & Education,DELETE
-,No,Invest Like a Climate Activist Copy-CarlisleMA-Copy,Medium,0,Activism & Education,DELETE
-,No,Invest Like a Climate Activist Copy-SCIS,Medium,0,Activism & Education,DELETE
-,No,Invest Like a Climate Activist-Copy,Medium,0,Activism & Education,DELETE
-,Yes,it works?,Medium,$,Solar PV,DELETE
-,No,Join 2040 Handbook Book Club-Copy-Copy,,,,DELETE
-,No,Join 2040 Handbook Book Club-Copy-Copy,,,,DELETE
-,No,Join 350 Mass Franklin Node-Copy,Low,0,Activism & Education,DELETE
-,No,Join 350 Mass Franklin Node-Copy,Low,0,Activism & Education,DELETE
-,Yes,Join 350MA Metrowest Node,,,,DELETE
-,Yes,Join the 350MA Metrowest Node,,,,DELETE
-,No,Join this site and be counted!-Copy,,,,DELETE
-,No,Join this site and be counted!-Copy,,,,DELETE
-,No,Knit your own sweaters - TMP,Low,$,Home Energy,DELETE
-,No,Knit your own sweaters --Copy,Low,$,Home Energy,DELETE
-,No,Less Plastic Is Good! Age 6+-MW,Low,0,Activism & Education,DELETE
-,No,Less Plastic Is Good! Age 6+-MW,Low,0,Activism & Education,DELETE
-,No,Make Magic: Compost-Copy-Copy,,,,DELETE
-,No,Make Magic: Compost-Copy-Copy,,,,DELETE
-,No,Market my Green Hom-EnergizeCorp1,Low,0,Home Energy,DELETE
-,No,Market my Green Hom-hello_hello,Low,0,Home Energy,DELETE
-,No,Market my Green Hom-marathon City,Low,0,Home Energy,DELETE
-,No,Market my Green Hom-marathon day,Low,0,Home Energy,DELETE
-,No,Market my Green Hom-NewCommunityMA,Low,0,Home Energy,DELETE
-,No,Market my Green Hom-testingonemore,Low,0,Home Energy,DELETE
-,No,Market my Green Home-Copy,,,,DELETE
-,No,Market my Green Home-SCIS,Low,0,Home Energy,DELETE
-,No,Market my Green Home-SCIS,Low,0,Home Energy,DELETE
-,No,May Line Drying Challenge-Copy,Low,$,Home Energy,DELETE
-,No,May Line Drying Challenge-Copy,Low,$,Home Energy,DELETE
-,No,Mini-Split Heat Pumps Are For Yo-taCom,High,$$$,Home Energy,DELETE
-,Yes,Mini-Split Heat Pumps Are For You,High,$$$,Home Energy,air_source_hp
-,No,Mini-Split Heat Pumps Are For You,High,$$$,Home Energy,DELETE
-,No,Monitor My Electricity Usag-EnergizeCorp1,Low,$$,Home Energy,DELETE
-,No,Monitor My Electricity Usag-hello_hello,Low,$$,Home Energy,DELETE
-,No,Monitor My Electricity Usag-marathon City,Low,$$,Home Energy,DELETE
-,No,Monitor My Electricity Usag-marathon day,Low,$$,Home Energy,DELETE
-,No,Monitor My Electricity Usag-NewCommunityMA,Low,$$,Home Energy,DELETE
-,No,Monitor My Electricity Usag-testingonemore,Low,$$,Home Energy,DELETE
-,No,Monitor My Electricity Usage-CarlisleMA-Copy,Low,$$,Home Energy,DELETE
-,No,Monitor My Electricity Usage-MelroseMA-Copy,,,,DELETE
-,No,Monitor My Electricity Usage-MelroseMA-Copy,,,,DELETE
-,No,Monitor My Electricity Usage-SCIS,Low,$$,Home Energy,DELETE
-,No,Monitor My Electricity Usage-SCIS,Low,$$,Home Energy,DELETE
-,No,Monitor your electricity-Copy,Medium,$$,Home Energy,DELETE
-,No,Monitor your electricity-Copy,Medium,$$,Home Energy,DELETE
-,No,Municipal Aggregation in Pepperell-Copy,,,,DELETE
-,No,Municipal Aggregation in Pepperell-Copy,,,,DELETE
-,No,New action-Copy,Low,0,Activism & Education,DELETE
-,No,New template actio-hello_hello,High,$$$,Home Energy,DELETE
-,No,New template action,High,$$$,Home Energy,DELETE
-,No,NO COST home energy assessment-Copy,Low,0,Home Energy,DELETE
-,No,NO COST home energy assessment-Copy,Low,0,Home Energy,DELETE
-,No,No-cost Home Energy Assessmen-EnergizeCorp1,Low,0,Home Energy,DELETE
-,No,No-cost Home Energy Assessmen-hello_hello,Low,0,Home Energy,DELETE
-,No,No-cost Home Energy Assessmen-marathon City,Low,0,Home Energy,DELETE
-,No,No-cost Home Energy Assessmen-marathon day,Low,0,Home Energy,DELETE
-,No,No-cost Home Energy Assessmen-NewCommunityMA,Low,0,Home Energy,DELETE
-,No,No-cost Home Energy Assessmen-testingonemore,Low,0,Home Energy,DELETE
-,No,No-cost Home Energy Assessment-Copy,,,,DELETE
-,No,No-cost Home Energy Assessment-SCIS,Low,0,Home Energy,DELETE
-,No,No-cost Home Energy Assessment-SCIS,Low,0,Home Energy,DELETE
-,Yes,NOT: Community Solar,Medium,$,Solar,DELETE
-,No,"NOT: Community Solar, No Installatio-EnergizeCorp1",Medium,$,Solar,DELETE
-,No,"NOT: Community Solar, No Installatio-hello_hello",Medium,$,Solar,DELETE
-,No,"NOT: Community Solar, No Installatio-marathon City",Medium,$,Solar,DELETE
-,No,"NOT: Community Solar, No Installatio-marathon day",Medium,$,Solar,DELETE
-,No,"NOT: Community Solar, No Installatio-NewCommunityMA",Medium,$,Solar,DELETE
-,No,"NOT: Community Solar, No Installatio-testingonemore",Medium,$,Solar,DELETE
-,No,"NOT: Community Solar, No Installation",Medium,$,Solar,DELETE
-,No,"NOT: Community Solar, No Installation-SCIS",Medium,$,Solar,DELETE
-,No,"NOT: Community Solar, No Installation-SCIS",Medium,$,Solar,DELETE
-,No,Offset your air trave-EnergizeCorp1,Medium,$,Transportation,DELETE
-,No,Offset your air trave-hello_hello,Medium,$,Transportation,DELETE
-,No,Offset your air trave-marathon City,Medium,$,Transportation,DELETE
-,No,Offset your air trave-marathon day,Medium,$,Transportation,DELETE
-,No,Offset your air trave-NewCommunityMA,Medium,$,Transportation,DELETE
-,No,Offset your air trave-testingonemore,Medium,$,Transportation,DELETE
-,No,Offset your air travel-SCIS,Medium,$,Transportation,DELETE
-,No,Offset your air travel-SCIS,Medium,$,Transportation,DELETE
-,No,Opt-In to Community Choice Electricity -Copy,,,,DELETE
-,No,Opt-In to Community Choice Electricity -Copy,,,,DELETE
-,No,Participate in Pepperell Net Zero pLAN-Copy,High,0,Activism & Education,DELETE
-,No,Participate in Pepperell Net Zero pLAN-Copy,High,0,Activism & Education,DELETE
-,No,Pass on used good-EnergizeCorp1,Medium,0,Waste & Recycling,DELETE
-,No,Pass on used good-hello_hello,Medium,0,Waste & Recycling,DELETE
-,No,Pass on used good-marathon City,Medium,0,Waste & Recycling,DELETE
-,No,Pass on used good-marathon day,Medium,0,Waste & Recycling,DELETE
-,No,Pass on used good-NewCommunityMA,Medium,0,Waste & Recycling,DELETE
-,No,Pass on used good-testingonemore,Medium,0,Waste & Recycling,DELETE
-,No,Pass on used goods-SCIS,Medium,0,Waste & Recycling,DELETE
-,No,Pass on used goods-SCIS,Medium,0,Waste & Recycling,DELETE
-,No,Plant A Tree-Copy,,,,DELETE
-,No,Plant A Tree-Copy,,,,DELETE
-,Yes,Reduce Always-On Wasted Electricity,Low,0,Home Energy,DELETE
-,Yes,Refer a Friend,Low,0,Activism & Education,DELETE
-,No,Renovating? Improve Efficiency too! -CarlisleMA-Copy,,,,DELETE
-,No,Renovating? Improve Efficiency too! -SCIS,High,$$,Home Energy,DELETE
-,No,Renovating? Improve Efficiency too! -SCIS,High,$$,Home Energy,DELETE
-,No,Renovating? Improve Efficiency too!-EnergizeCorp1,High,$$,Home Energy,DELETE
-,No,Renovating? Improve Efficiency too!-hello_hello,High,$$,Home Energy,DELETE
-,No,Renovating? Improve Efficiency too!-marathon City,High,$$,Home Energy,DELETE
-,No,Renovating? Improve Efficiency too!-marathon day,High,$$,Home Energy,DELETE
-,No,Renovating? Improve Efficiency too!-NewCommunityMA,High,$$,Home Energy,DELETE
-,No,Renovating? Improve Efficiency too!-testingonemore,High,$$,Home Energy,DELETE
-,No,Save Water-Copy,Low,0,"Land, Soil & Water",DELETE
-,No,Save Water-Copy,Low,0,"Land, Soil & Water",DELETE
-,No,Say No to Throwaways-Copy,Low,0,Waste & Recycling,DELETE
-,No,Say No to Throwaways-Copy,Low,0,Waste & Recycling,DELETE
-,Yes,Schedule No-Cost Home Energy Assessment,Low,0,Home Energy,DELETE
-,No,Schedule No-Cost Home Energy Assessment-Copy,Low,0,Home Energy,DELETE
-,No,Shrink My Carbon Footprint-Copy,,,,DELETE
-,No,Shrink My Carbon Footprint-Copy,,,,DELETE
-,Yes,Solar On Your Roof,High,$$$,Solar,install_solarPV
-,Yes,Solar On Your Roof,High,$$$,Solar,install_solarPV
-,No,Solarize!-Copy,High,$$,Solar,DELETE
-,No,Solarize!-Copy,High,$$,Solar,DELETE
-,Yes,Start Ecological Landscaping,Low,$$,"Land, Soil & Water",DELETE
-,No,Start Here: Joining the Challenge-Copy,,,,DELETE
-,No,Start Here: Joining the Challenge-Copy,,,,DELETE
-,Yes,Suggest a New Action,Low,0,Activism & Education,DELETE
-,No,Sun Power-Copy,High,,Solar,DELETE
-,No,Sun Power-Copy,High,,Solar,DELETE
-,No,Support Lexington Youth-Copy,,,,DELETE
-,No,Support Lexington Youth-Copy,,,,DELETE
-,Yes,Sustainable Household Goods,Low,$,Waste & Recycling,reduce_waste
-,No,Switch to Electric Lawn Equipment-Copy,Medium,$,"Land, Soil & Water",DELETE
-,No,Switch to Electric Lawn Equipment-Copy,Medium,$,"Land, Soil & Water",DELETE
-,No,Take Public Transportation-Copy,High,0,Transportation,DELETE
-,No,Take the MWRTA! and other public transit-Copy,Medium,$,Transportation,DELETE
-,No,Take the MWRTA! and other public transit-Copy,Medium,$,Transportation,DELETE
-,No,TEM Buy or Lease an Electric Ca-EnergizeCorp1,High,$$$,Transportation,DELETE
-,No,TEM Buy or Lease an Electric Ca-hello_hello,High,$$$,Transportation,DELETE
-,No,TEM Buy or Lease an Electric Ca-marathon City,High,$$$,Transportation,DELETE
-,No,TEM Buy or Lease an Electric Ca-marathon day,High,$$$,Transportation,DELETE
-,No,TEM Buy or Lease an Electric Ca-NewCommunityMA,High,$$$,Transportation,DELETE
-,No,TEM Buy or Lease an Electric Ca-testingonemore,High,$$$,Transportation,DELETE
-,No,TEM Buy or Lease an Electric Car,High,$$$,Transportation,DELETE
-,No,TEM Buy or Lease an Electric Car-BoxboroughMA-Copy,High,$$$,Transportation,DELETE
-,No,TEM Buy or Lease an Electric Car-MelroseMA-Copy,,,,DELETE
-,No,TEM Buy or Lease an Electric Car-MelroseMA-Copy,,,,DELETE
-,No,TEM Buy or Lease an Electric Car-SCIS,High,$$$,Transportation,DELETE
-,No,TEM Buy or Lease an Electric Car-SCIS,High,$$$,Transportation,DELETE
-,No,Test action,,,,DELETE
-,Yes,TEST ACTION,Low,$$$,Solar,DELETE
-,No,Test Action New,Medium,$$,Transportation,DELETE
-,Yes,Test Bushwick Action,Medium,$$,Transportation,DELETE
-,No,test for lynne-Copy,Medium,$,Home Energy,DELETE
-,No,test for lynne-Copy,Medium,$,Home Energy,DELETE
-,No,Test Global Action,High,$$$,Transportation,DELETE
-,No,Test templat-hello_hello,Medium,$,Solar,DELETE
-,No,Test template,Medium,$,Solar,DELETE
-,No,TestAction nerw,Low,$$,Home Energy,DELETE
-,No,testing,,,,DELETE
-,Yes,testing 11/6/2019 trial 3,,,,DELETE
-,Yes,testing 11/6/2019 trial 4,,,,DELETE
-,No,Testing copy,,,,DELETE
-,No,testing this again-Copy-Copy,Medium,$,Home Energy,DELETE
-,No,testing-Copy,Low,0,Home Energy,DELETE
-,No,TMP Change Thermostat Settings,Medium,$$$,Home Energy,DELETE
-,No,TMP Change to LED Lighting,Medium,$,Home Energy,DELETE
-,No,TMP Change to LED Lighting-Copy,Medium,$,Home Energy,DELETE
-,No,TMP Change to LED Lighting-Copy,Medium,$,Home Energy,DELETE
-,No,TMP Clean Up Your Community,Low,0,Activism & Education,DELETE
-,No,TMP Community Solar,Medium,0,Solar,DELETE
-,No,TMP Donate Building Materials,Low,0,Waste & Recycling,DELETE
-,No,TMP Ecological Landscaping Tree Planting,Low,$$,"Land, Soil & Water",DELETE
-,No,TMP Energy-Efficient Appliances,High,$$,Home Energy,DELETE
-,No,TMP Get Hot & Cool with Mini-Splits,High,$$$,Home Energy,DELETE
-,No,TMP Green Your Electricity,High,0,Home Energy,DELETE
-,No,TMP Heat my water with Solar!,Medium,$$$,Solar,DELETE
-,No,TMP Heating & Cooling with Heat Pumps,High,$$,Home Energy,DELETE
-,No,TMP Invest Like a Climate Activist Copy,Medium,0,Activism & Education,DELETE
-,No,TMP Market my Green Home,Low,0,Home Energy,DELETE
-,No,TMP Monitor My Electricity Usage,Low,$$,Home Energy,DELETE
-,No,TMP No-cost Home Energy Assessment,Low,0,Home Energy,DELETE
-,No,TMP Offset your air travel,Medium,$,Transportation,DELETE
-,No,TMP Pass on used goods,Medium,0,Waste & Recycling,DELETE
-,No,TMP Renovating? Improve Efficiency too! ,High,$$,Home Energy,DELETE
-,Yes,Update Heating and cool stuff,High,$$$,Home Energy,DELETE
-,Yes,Update Heating and cool stuff,High,$$$,Home Energy,DELETE
-,No,Use heatpumps,High,$$$,Home Energy,DELETE
-,No,Use heatpumps-Copy,High,$$$,Home Energy,DELETE
-,Yes,Walk for a Viable Future,Low,0,Activism & Education,DELETE
-,No,Want to Volunteer?-Copy,Low,0,Activism & Education,DELETE
-,No,Wayland Cleans Up 2,Low,$,Waste & Recycling,DELETE
-,No,Wayland Cleans Up!,Low,$,Waste & Recycling,DELETE
-,No,Write a short play,,0,Activism & Education,DELETE
