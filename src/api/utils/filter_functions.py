@@ -311,6 +311,7 @@ def get_users_filter_params(params):
       is_super_admin = "Super Admin" in params.get("membership", [])
       is_member = "Member" in params.get("membership", [])
       
+    
       if search_text:
         users = CommunityMember.objects.filter(community__name__icontains=search_text).values_list('user', flat=True).distinct()
         search= reduce(
@@ -322,15 +323,23 @@ def get_users_filter_params(params):
         query.append(search)
 
       communities = params.get("community", None)
-      
       if communities and is_community_admin:
         users = CommunityAdminGroup.objects.filter(Q(community__name__in=communities)| Q(community__id__in=communities), members__is_community_admin=True).values_list('members', flat=True).distinct()
         query.append(Q(id__in=users))
         return query
 
       if communities:
-        users = CommunityMember.objects.filter(Q(community__name__in=communities)| Q(community__id__in=communities)).values_list('user', flat=True).distinct()
-        query.append(Q(id__in=users))
+        if isinstance(communities[0], int):
+            users = CommunityMember.objects.filter(
+                Q(community__id__in=communities)
+            ).values_list('user__id', flat=True).distinct()
+
+        else:  
+            users = CommunityMember.objects.filter(
+                Q(community__name__in=communities)
+            ).values_list('user__id', flat=True).distinct()
+
+        query.append(Q(id__in=list(users)))
 
       if is_community_admin:
         query.append(Q(is_community_admin=True))
