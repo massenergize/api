@@ -7,6 +7,8 @@ from api.utils import filter_functions
 from database.models import Role
 from django.db import transaction
 from django.test.testcases import TestCase
+from database.models import Role, CommunityMember, CommunityAdminGroup
+from django.db.models import Q
 
 class FiltersFunctionTests(TestCase):
 	
@@ -110,6 +112,133 @@ class FiltersFunctionTests(TestCase):
 		# Assert
 		self.assertEqual(result, mock_queryset)
 		mock_get_sort_params.assert_called_once_with(params)
+
+
+
+	def test_get_sort_params_sort_name_asc(self):
+		params = {'sort_params': {'name': 'name', 'direction': 'asc'}}
+		result = filter_functions.get_sort_params(params)
+		self.assertEqual(result, "-name")
+	
+	def test_get_sort_params_sort_name_desc(self):
+		params = {'sort_params': {'name': 'name', 'direction': 'desc'}}
+		result = filter_functions.get_sort_params(params)
+		self.assertEqual(result, "name")
+	
+	def test_get_sort_params_none(self):
+		params = {}
+		result = filter_functions.get_sort_params(params)
+		self.assertEqual(result, "-created_at")
+	
+	# ------------------------------------------
+
+	def test_sort_items_empty_queryset(self):
+		"""
+		Test sort_items function with empty queryset
+		"""
+		queryset = []
+		params = {'sort_params': {"direction":"asc", "name":"name"}}
+		result = filter_functions.sort_items(queryset, params)
+		self.assertEqual(result, [])
+	
+	def test_sort_items_list_queryset(self):
+		"""
+		Test sort_items function with queryset as a list
+		"""
+		self._create_roles()
+		qs = Role.objects.all()
+		queryset = qs.order_by("-name")
+		params = {'sort_params': {"direction":"asc", "name":"name"}}
+		result = filter_functions.sort_items(queryset, params)
+		self.assertEqual(result.first(), queryset.first(), "Result should be same as input queryset")
+	
+	@patch('api.utils.filter_functions.get_sort_params')
+	def test_sort_items_exception_case(self, mock_get_sort_params):
+		"""
+		Test sort_items function where an exception occurs within the sorting action
+		"""
+		queryset = MagicMock()
+		queryset.order_by.side_effect = Exception('Exception')
+		params = {'key': 'value'}
+		mock_get_sort_params.return_value = 'param1'
+		result = filter_functions.sort_items(queryset, params)
+		mock_get_sort_params.assert_called_once_with(params)
+		queryset.order_by.assert_called_once_with('param1')
+		self.assertEqual(result, queryset)
+
+	
+	@patch('api.utils.filter_functions.get_sort_params')
+	def test_sort_items_returns_sorted_queryset_when_queryset_is_not_list(self, mock_get_sort_params):
+		# Prepare
+		mock_queryset = MagicMock()
+		mock_get_sort_params.return_value = 'sort_param'
+		params = {'direction': 'asc'}
+		
+		# Act
+		result = filter_functions.sort_items(mock_queryset, params)
+	
+		self.assertEqual(result, mock_queryset.order_by.return_value)
+		mock_get_sort_params.assert_called_once_with(params)
+		mock_queryset.order_by.assert_called_once_with('sort_param')
+	
+	@patch('api.utils.filter_functions.get_sort_params')
+	def test_sort_items_returns_queryset_when_exception_is_raised(self, mock_get_sort_params):
+		# Prepare
+		mock_queryset = MagicMock()
+		mock_queryset.order_by.side_effect = Exception('error')
+		params = {'direction': 'asc'}
+		
+		# Act
+		result = filter_functions.sort_items(mock_queryset, params)
+		
+		# Assert
+		self.assertEqual(result, mock_queryset)
+		mock_get_sort_params.assert_called_once_with(params)
+
+	# ------------------------------------------
+
+	@patch('api.utils.filter_functions.CommunityMember')
+	@patch('api.utils.filter_functions.CommunityAdminGroup')
+	def test_get_users_filter_params_with_community_admin(self, mock_community_admin_group, mock_community_member):
+		params = {'membership': ['Community Admin'], 'community': ['test_community']}
+		mock_community_admin_group.objects.filter.return_value.values_list.return_value.distinct.return_value = [1, 2, 3]
+		result = filter_functions.get_users_filter_params(params)
+		expected_query = [Q(id__in=[1, 2, 3])]
+		self.assertEqual(result, expected_query)
+
+	@patch('api.utils.filter_functions.CommunityMember')
+	@patch('api.utils.filter_functions.CommunityAdminGroup')
+	def test_get_users_filter_params_with_community(self, mock_community_admin_group, mock_community_member):
+		params = {'community': ['test_community']}
+		mock_community_member.objects.filter.return_value.values_list.return_value.distinct.return_value = [1, 2, 3]
+		result = filter_functions.get_users_filter_params(params)
+		expected_query = [Q(id__in=[1, 2, 3])]
+		self.assertEqual(result, expected_query)
+
+	@patch('api.utils.filter_functions.CommunityMember')
+	@patch('api.utils.filter_functions.CommunityAdminGroup')
+	def test_get_users_filter_params_with_roles(self, mock_community_admin_group, mock_community_member):
+		params = {'membership': ['Community Admin',]}
+		result = filter_functions.get_users_filter_params(params)
+
+		expected_query = [
+			Q(is_community_admin=True),
+		]
+		self.assertEqual(result, expected_query)
+
+
+	@patch('api.utils.filter_functions.CommunityMember')
+	@patch('api.utils.filter_functions.CommunityAdminGroup')
+	def test_get_users_filter_params_with_roles(self, mock_community_admin_group, mock_community_member):
+		params = {'membership': ['Super Admin',]}
+		result = filter_functions.get_users_filter_params(params)
+
+		expected_query = [
+			Q(is_super_admin=True),
+		]
+		self.assertEqual(result, expected_query)
+
+
 
 
 if __name__ == "__main__":
