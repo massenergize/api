@@ -324,7 +324,15 @@ def get_users_filter_params(params):
 
       communities = params.get("community", None)
       if communities and is_community_admin:
-        users = CommunityAdminGroup.objects.filter(Q(community__name__in=communities)| Q(community__id__in=communities), members__is_community_admin=True).values_list('members', flat=True).distinct()
+        if isinstance(communities[0], int):
+            users = CommunityAdminGroup.objects.filter(
+                Q(community__id__in=communities)
+            ).values_list('members__id', flat=True).distinct()
+        else:
+          users = CommunityAdminGroup.objects.filter(
+                Q(community__name__in=communities)
+            ).values_list('members__id', flat=True).distinct()
+
         query.append(Q(id__in=users))
         return query
 
