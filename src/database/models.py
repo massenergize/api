@@ -4412,7 +4412,7 @@ class CustomPage(BaseModel):
         version.save()
 
         self.latest_version = version
-        self.status = PageStatus.PUBLISHED.value
+        self.is_published = True
         self.save()
         return version
 
