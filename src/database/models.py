@@ -37,7 +37,7 @@ from api.constants import COMMUNITY_NOTIFICATION_TYPES, STANDARD_USER, GUEST_USE
 from django.forms.models import model_to_dict
 from carbon_calculator.models import Action as CCAction
 from carbon_calculator.carbonCalculator import AverageImpact
-from .utils.settings.model_constants.enums import PageStatus, SharingType, LocationType
+from .utils.settings.model_constants.enums import SharingType, LocationType
 
 CHOICES = json_loader("./database/raw_data/other/databaseFieldChoices.json")
 ZIP_CODE_AND_STATES = json_loader("./database/raw_data/other/states.json")
