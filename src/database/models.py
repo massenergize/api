@@ -4401,7 +4401,7 @@ class CustomPage(BaseModel):
         return f"{self.title}"
     
     def save(self, *args, **kwargs):
-        if not self.slug or self.title != self._loaded_values.get("title"):
+        if not self.slug:
             self.slug = slugify(self.title)
         super(CustomPage, self).save(*args, **kwargs)
 
@@ -4503,7 +4503,7 @@ class CommunityCustomPage(BaseModel):
     """
     community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True, related_name="custom_pages")
     custom_page = models.ForeignKey(CustomPage, on_delete=models.CASCADE, db_index=True)
-    sharing_type =models.CharField(max_length=SHORT_STR_LEN, choices=SharingType.choices(), default=SharingType.PUBLIC)
+    sharing_type =models.CharField(max_length=SHORT_STR_LEN, choices=SharingType.choices(), default=SharingType.OPEN.value[0])
     audience = models.ManyToManyField(Community, blank=True, related_name="custom_pages_audience")
 
 
