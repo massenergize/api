@@ -3,6 +3,8 @@ import json
 import uuid
 from datetime import timezone, timedelta
 
+import slugify
+
 from _main_.utils.common import item_is_empty
 
 from _main_.utils.policy.PolicyConstants import PolicyConstants
@@ -35,7 +37,7 @@ from api.constants import COMMUNITY_NOTIFICATION_TYPES, STANDARD_USER, GUEST_USE
 from django.forms.models import model_to_dict
 from carbon_calculator.models import Action as CCAction
 from carbon_calculator.carbonCalculator import AverageImpact
-from .utils.settings.model_constants.enums import SharingType, LocationType
+from .utils.settings.model_constants.enums import PageStatus, SharingType, LocationType
 
 CHOICES = json_loader("./database/raw_data/other/databaseFieldChoices.json")
 ZIP_CODE_AND_STATES = json_loader("./database/raw_data/other/states.json")
@@ -4379,5 +4381,181 @@ class TestimonialAutoShareSettings(BaseModel):
 
     def full_json(self):
         return self.simple_json()
+    
+
+
+class CustomPage(BaseModel):
+    """
+        A class used to represent a custom page on the MassEnergize platform
+
+    """
+
+    title = models.CharField(max_length=LONG_STR_LEN, blank=True)
+    is_published = models.BooleanField(default=False, blank=True)
+    is_deleted = models.BooleanField(default=False, blank=True)
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, db_index=True)
+    slug = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True, unique=True)
+    latest_version = models.ForeignKey("CustomPageVersion", on_delete=models.SET_NULL, blank=True, null=True, related_name="latest_version")
+
+    def __str__(self):
+        return f"{self.title}"
+    
+    def save(self, *args, **kwargs):
+        if not self.slug or self.title != self._loaded_values.get("title"):
+            self.slug = slugify(self.title)
+        super(CustomPage, self).save(*args, **kwargs)
+
+
+    def create_version(self):
+        version = CustomPageVersion(custom_page=self)
+        version.elements = [x.simple_json() for x in self.elements.all()]
+        version.save()
+
+        self.latest_version = version
+        self.status = PageStatus.PUBLISHED.value
+        self.save()
+        return version
+
+    def simple_json(self):
+        res = model_to_dict(self)
+        res["user"] = get_summary_info(self.user)
+        res["elements"] = [e.simple_json() for e in self.elements.all()]
+        return res
+
+    def full_json(self):
+        return self.simple_json()
+
+    class Meta:
+        db_table = "custom_pages"
+        ordering = ("title",)
+
+
+class CustomPageVersion(BaseModel):
+    """
+        A class used to represent a custom page version on the MassEnergize platform.
+        When a request is made to publish a page, a new version is created with the json blob of the page's 
+        elements. This version will be served to users when they visit the page. Admins can edit the page and create a new version.
+    """
+
+    custom_page = models.ForeignKey(CustomPage, on_delete=models.CASCADE, related_name="versions")
+    version = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+    elements = models.JSONField(blank=True, null=True, default=dict)
+    is_deleted = models.BooleanField(default=False, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.custom_page.title} - {self.version}"
+    
+
+    def save(self, *args, **kwargs):
+        if not self.version:
+            now = datetime.datetime.now()
+            self.version = f"v{now.strftime('%Y%m%d%H%M%S')}"
+        super(CustomPageVersion, self).save(*args, **kwargs)
+    
+    def simple_json(self):
+        res = model_to_dict(self)
+        return res
+
+    def full_json(self):
+        return self.simple_json()
+
+    class Meta:
+        db_table = "custom_page_versions"
+        ordering = ("created_at",)
+
+
+
+class CustomPageBlock(BaseModel):
+    """
+        A class used to represent a custom page element(element) of a custom page on the MassEnergize platform
+        Blocks are the building blocks of a custom page. They can be of different types like text, image, video, section etc.
+    """
+    custom_page = models.ForeignKey(CustomPage, on_delete=models.CASCADE, db_index=True, related_name="elements")
+    order = models.IntegerField(default=0, blank=True)
+    element = models.JSONField(blank=True, null=True, default=dict)
+    direction = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+    type = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+    content = models.JSONField(blank=True, null=True, default=dict)
+    parent = models.ForeignKey("self", on_delete=models.CASCADE, blank=True, null=True, related_name="children")
+    
+
+    def __str__(self):
+        return f"{self.custom_page.title} - {self.type}"
+    
+    def simple_json(self):
+        res = model_to_dict(self)
+        res["elements"] = [e.simple_json() for e in self.children.all()]
+        return res
+
+    def full_json(self):
+        return self.simple_json()
+
+    class Meta:
+        db_table = "custom_page_elements"
+        ordering = ("order",)
         
+
+class CommunityCustomPage(BaseModel):
+    """
+    CommunityCustomPage model represents a custom page associated with a community as the owner of the page. 
+    The page can be shared with other communities and can be made public or private.
+
+    """
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True, related_name="custom_pages")
+    custom_page = models.ForeignKey(CustomPage, on_delete=models.CASCADE, db_index=True)
+    sharing_type =models.CharField(max_length=SHORT_STR_LEN, choices=SharingType.choices(), default=SharingType.PUBLIC)
+    audience = models.ManyToManyField(Community, blank=True, related_name="custom_pages_audience")
+
+
+    def __str__(self):
+        return f"{self.community.name} - {self.custom_page.title}"
+    
+    def simple_json(self):
+        res = model_to_dict(self)
+        res["community"] = get_summary_info(self.community)
+        res["custom_page"] = get_summary_info(self.custom_page)
+        res["audience"] = [c.info() for c in self.audience.all()]
+
+        return res
+    
+    def full_json(self):
+        return self.simple_json()
+    
+    class Meta:
+        db_table = "community_custom_pages"
+        unique_together = ["community", "custom_page"]
+
+
+class CommunityCustomPageShare(BaseModel):
+    """
+    CommunityCustomPageShare model represents the relationship between a community and a custom page shared with that community.
+    
+    """
+ 
+    community_page = models.ForeignKey(CommunityCustomPage, on_delete=models.CASCADE, db_index=True, related_name="shares")
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True, related_name="shared_custom_pages")
+
+    def __str__(self):
+        return f"{self.community_page.custom_page.title} - {self.community.name}"
+    
+    def simple_json(self):
+        res = model_to_dict(self)
+        res["community"] = get_summary_info(self.community)
+        res["community_page"] = get_summary_info(self.community_page)
+
+        return res
+    
+    def full_json(self):
+        return self.simple_json()
+    
+    class Meta:
+        db_table = "community_custom_page_shares"
+        unique_together = ["community_page", "community"]
+
+
+    
+
+    
+
     
