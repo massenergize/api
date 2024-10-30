@@ -4387,7 +4387,6 @@ class TestimonialAutoShareSettings(BaseModel):
 class CustomPage(BaseModel):
     """
         A class used to represent a custom page on the MassEnergize platform
-
     """
 
     title = models.CharField(max_length=LONG_STR_LEN, blank=True)
@@ -4408,7 +4407,7 @@ class CustomPage(BaseModel):
 
     def create_version(self):
         version = CustomPageVersion(custom_page=self)
-        version.content = [x.simple_json() for x in self.content.all()]
+        version.content = self.simple_json()
         version.save()
 
         self.latest_version = version
@@ -4417,13 +4416,15 @@ class CustomPage(BaseModel):
         return version
 
     def simple_json(self):
-        res = model_to_dict(self)
-        res["user"] = get_summary_info(self.user)
-        res["content"] = [e.simple_json() for e in self.content.all()]
+        res = super().to_json()
+        res.update(model_to_dict(self))
+        res["sections"] = [e.simple_json() for e in self.page_sections.all()]
         return res
 
     def full_json(self):
-        return self.simple_json()
+        res = self.simple_json()
+        res["user"] = get_summary_info(self.user)
+        return res
 
     class Meta:
         db_table = "custom_pages"
@@ -4454,7 +4455,8 @@ class CustomPageVersion(BaseModel):
         super(CustomPageVersion, self).save(*args, **kwargs)
     
     def simple_json(self):
-        res = model_to_dict(self)
+        res = super().to_json()
+        res.update(model_to_dict(self))
         return res
 
     def full_json(self):
@@ -4471,19 +4473,20 @@ class CustomPageBlock(BaseModel):
         A class used to represent a custom page block(element) of a custom page on the MassEnergize platform
         Blocks are the building blocks of a custom page. They can be of different types like text, image, video, section etc.
     """
-    custom_page = models.ForeignKey(CustomPage, on_delete=models.CASCADE, db_index=True, related_name="content")
+    custom_page = models.ForeignKey(CustomPage, on_delete=models.CASCADE, db_index=True, related_name="page_sections")
     order = models.IntegerField(default=0, blank=True)
-    element = models.JSONField(blank=True, null=True, default=dict)
-    direction = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+    props = models.JSONField(blank=True, null=True, default=dict)
+    direction = models.CharField(max_length=TINY_STR_LEN, blank=True)
     type = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-    content = models.JSONField(blank=True, null=True, default=dict)
+    text = models.TextField(blank=True, null=True)
     parent = models.ForeignKey("self", on_delete=models.CASCADE, blank=True, null=True, related_name="children")
     
     def __str__(self):
         return f"{self.custom_page.title} - {self.type}"
     
     def simple_json(self):
-        res = model_to_dict(self)
+        res = super().to_json()
+        res.update(model_to_dict(self))
         res["content"] = [e.simple_json() for e in self.children.all()]
         return res
 
@@ -4511,7 +4514,8 @@ class CommunityCustomPage(BaseModel):
         return f"{self.community.name} - {self.custom_page.title}"
     
     def simple_json(self):
-        res = model_to_dict(self)
+        res = super().to_json()
+        res.update(model_to_dict(self))
         res["community"] = get_summary_info(self.community)
         res["custom_page"] = get_summary_info(self.custom_page)
         res["audience"] = [c.info() for c in self.audience.all()]
@@ -4539,7 +4543,8 @@ class CommunityCustomPageShare(BaseModel):
         return f"{self.community_page.custom_page.title} - {self.community.name}"
     
     def simple_json(self):
-        res = model_to_dict(self)
+        res = super().to_json()
+        res.update(model_to_dict(self))
         res["community"] = get_summary_info(self.community)
         res["community_page"] = get_summary_info(self.community_page)
 
