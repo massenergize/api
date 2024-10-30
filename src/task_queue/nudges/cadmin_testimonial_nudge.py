@@ -6,9 +6,9 @@ from _main_.utils.massenergize_logger import log
 from api.utils.api_utils import get_sender_email
 from api.utils.constants import CADMIN_TESTIMONIAL_NUDGE_TEMPLATE
 from database.models import Community, CommunityAdminGroup, FeatureFlag
+from database.utils.common import get_json_if_not_none
 from task_queue.helpers import get_summary
-
-
+from task_queue.nudges.nudge_utils import ME_DEFAULT_IMAGE
 	
 def get_cadmin_names_and_emails(community):
 	"""
@@ -17,11 +17,17 @@ def get_cadmin_names_and_emails(community):
 	name_emails = {}
 	try:
 		c = (CommunityAdminGroup.objects.filter(community=community)
-			.values_list('members__full_name', 'members__email', "members__user_info")
+			.values_list('members__full_name', 'members__email', "members__user_info", 'members__preferences',  "members__notification_dates")
 		)
 		
-		for (name, email, user_info) in list(c):
-			name_emails[email] = (name, user_info)
+		for (name, email, user_info, preference, nudge_dates) in list(c):
+			name_emails[email] = {
+				"name": name,
+				"email":email,
+				"preference": preference,
+				"nudge_dates": nudge_dates,
+				"user_info": user_info
+			}
 			
 	except Exception as e:
 		log.exception(str(e))
@@ -44,10 +50,16 @@ def send_nudge(data, community):
 				"preferred_name": testimonial.get('preferred_name') or testimonial.get('user', {}).get('full_name', "Anonymous") if testimonial else "Anonymous",
 				"community": testimonial.get("community", {}).get("name"),
 				"view_url": f"{COMMUNITY_URL_ROOT}/{community.subdomain}/testimonials/{testimonial.get('id')}",
-				"date": testimonial.get('published_at').strftime("%B %d, %Y")
+				"date": testimonial.get('published_at').strftime("%B %d, %Y"),
+				"image_url": testimonial.get('image', {}).get('url', None)
 			} for testimonial in serialized_data
 		]
-		data = {"testimonials": to_send, "community_name": community.name}
+		data = {
+			"testimonials": to_send,
+			"community_name": community.name,
+			"community_logo":get_json_if_not_none(community.logo).get("url") if community.logo else ME_DEFAULT_IMAGE
+		}
+
 		
 		from_email = get_sender_email(community.id)
 		
@@ -76,6 +88,12 @@ def prepare_testimonials_for_community_admins(task=None):
 
 		communities = Community.objects.filter(is_published=True, is_deleted=False)
 		communities = flag.enabled_communities(communities)
+
+
+		# for each get admin and amin communication  pref
+		# get ll shared testimonials for that community
+		# if there are no shared testimonials, skip
+		# else send nudge to admin
 
 		for community in communities:
 			testimonials_auto_shared = community.testimonial_shares.filter(testimonial__is_published=True, testimonial__published_at__date=today.date())
