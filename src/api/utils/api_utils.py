@@ -2,6 +2,8 @@ import secrets
 import string
 from math import atan2, cos, radians, sin, sqrt
 
+import slugify
+
 from _main_.utils.constants import COMMUNITY_URL_ROOT, DEFAULT_SOURCE_LANGUAGE_CODE
 from _main_.utils.utils import load_json
 from apps__campaigns.models import CallToAction, Section
@@ -367,5 +369,32 @@ def create_or_update_section_from_dict(section_dict, media=None):
                 section.call_to_action_items.add(cta)
 
     return section
+
+
+def create_unique_slug(title, model, field_name="slug", prefix=None):
+    """
+    Create a unique slug for a model instance based on the title.
+    """
+    if not title:
+        return None
+
+    slug = slugify(title)
+    if not model or not field_name:
+        return slug
+
+    if not model.objects.filter(**{field_name: slug}).exists():
+        return slug
+
+    if prefix:
+        prefixed_slug = f"{prefix}-{slug}"
+        if not model.objects.filter(**{field_name: prefixed_slug}).exists():
+            return prefixed_slug
+
+    number = 1
+    while True:
+        new_slug = f"{slug}-{number}"
+        if not model.objects.filter(**{field_name: new_slug}).exists():
+            return new_slug
+        number += 1
 
     
