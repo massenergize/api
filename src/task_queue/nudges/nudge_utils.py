@@ -56,7 +56,6 @@ def get_admin_email_list(admins, nudge_type) -> dict:
         name = data.get("name")
         preferences = data.get("preferences")
         nudge_dates = data.get("nudge_dates")
-        user_info = data.get("user_info")
 
         if not name or not email:
             print(f"Missing name or email for admin: {name}")
@@ -75,10 +74,10 @@ def get_admin_email_list(admins, nudge_type) -> dict:
                 if freq_key in freq.keys() or len(freq.keys()) == 0:
                     next_nudge_date = last_notified_date + delta
                     if next_nudge_date <= date.today():
-                        email_list[name] = email
+                        email_list[email] = data
                         break
         else:
-            email_list[email] = {"name": name, "user_info": user_info, "nudge_dates": nudge_dates}
+            email_list[email] = data
 
     return email_list
 
