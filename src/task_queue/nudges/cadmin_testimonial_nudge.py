@@ -41,7 +41,6 @@ def get_cadmin_names_and_emails(community):
 			}
 			
 	except Exception as e:
-		print("Failed to get community admins", str(e))
 		log.exception(e)
 		return None
 		
@@ -86,7 +85,6 @@ def send_nudge(data, community, admin):
 					
 		return True
 	except Exception as e:
-		print("Failed to send nudge to community admin", str(e))
 		log.exception(e)
 		return False
 	
@@ -157,6 +155,5 @@ def prepare_testimonials_for_community_admins(task=None):
 		log.info("Successfully sent nudge to all community admins")
 		return True
 	except Exception as e:
-		print("Failed to send nudge to community admins", str(e))
 		log.exception(e)
 		return False
