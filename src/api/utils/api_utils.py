@@ -1,3 +1,4 @@
+from datetime import datetime
 import secrets
 import string
 from math import atan2, cos, radians, sin, sqrt
@@ -389,12 +390,9 @@ def create_unique_slug(title, model, field_name="slug", prefix=None):
         prefixed_slug = f"{prefix}-{slug}"
         if not model.objects.filter(**{field_name: prefixed_slug}).exists():
             return prefixed_slug
-
-    number = 1
-    while True:
-        new_slug = f"{slug}-{number}"
-        if not model.objects.filter(**{field_name: new_slug}).exists():
-            return new_slug
-        number += 1
+        
+    timestamp = str(int(datetime.now().timestamp()))
+    
+    return  f"{slug}-{timestamp}"
 
     
