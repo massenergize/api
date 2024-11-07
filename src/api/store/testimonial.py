@@ -210,7 +210,7 @@ class TestimonialStore:
       shared_testimonials = Testimonial.objects.filter(id__in=[t.id for t in shared])
       
       all_testimonials = testimonials | shared_testimonials
-      all_testimonials = all_testimonials.order_by('-created_at').distinct()
+      all_testimonials = all_testimonials.order_by('rank').distinct()
 
       return  all_testimonials , None
     except Exception as e:
@@ -628,6 +628,7 @@ class TestimonialStore:
 
   def update_auto_share_settings(self, context: Context, args) -> Tuple[dict, Any]:
     try:
+      print("== args ===", args)
       community_id = args.pop("community_id", None)
       auto_share_settings = TestimonialAutoShareSettings.objects.filter(community__id=community_id).first()
       if not auto_share_settings:
@@ -642,10 +643,16 @@ class TestimonialStore:
       auto_share_settings.share_from_location_value = sharing_location_value
       
       if excluded_tags_ids:
-        auto_share_settings.excluded_tags.set(excluded_tags_ids)
+        if excluded_tags_ids[0] == RESET:
+          auto_share_settings.excluded_tags.clear()
+        else:
+         auto_share_settings.excluded_tags.set(excluded_tags_ids)
 
       if ids_of_communities_to_share_from:
-        auto_share_settings.share_from_communities.set(ids_of_communities_to_share_from)
+        if ids_of_communities_to_share_from[0] == RESET:
+          auto_share_settings.share_from_communities.clear()
+        else:
+          auto_share_settings.share_from_communities.set(ids_of_communities_to_share_from)
 
       auto_share_settings.save()
       return auto_share_settings, None
