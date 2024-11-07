@@ -20,69 +20,6 @@ from database.utils.settings.model_constants.enums import LocationType, SharingT
 from .utils import get_community, get_user, get_user_from_context, unique_media_filename
 
 
-
-# def get_auto_shared_with_list(testimonial):
-#     """
-#         This function processes a recently published testimonial and checks for all auto-share settings from other communities that meet the following criteria:
-#         1. The community that created the testimonial is included in their `share_from_communities` list, or
-#         2. The community that created the testimonial falls within their defined geographical range, or
-#         3. The auto-share settings contain tags that match the tags of the testimonial.
-#         The function collects these matching communities and returns a list of them. This list will be used to share the testimonial with those communities.
-#     """
-#     if not testimonial or not testimonial.community:
-#         return []
-    
-#     testimonial_community = testimonial.community 
-    
-#     community_zip_codes = set(testimonial_community.locations.values_list('zipcode', flat=True))
-#     communities_list = set()
-
-#     all_auto_share_settings = TestimonialAutoShareSettings.objects.filter(is_deleted=False)
-
-#     categories = testimonial.tags.all()
-
-#     auto_share_settings_with_share_from_communities_values = all_auto_share_settings.filter(
-#         share_from_location_type__isnull=True,
-#         share_from_location_value__isnull=True,
-#         share_from_communities__id=testimonial_community.id,
-#     )
-
-#     if categories.count():
-#         auto_share_settings_with_share_from_communities_values = auto_share_settings_with_share_from_communities_values.filter(Q(excluded_tags__in=categories))
-  
-
-#     communities_list.update(setting.community.id for setting in auto_share_settings_with_share_from_communities_values)
-
-#     # Filter settings that share from specific locations and tags== testimonial tags if any
-#     auto_share_settings_with_geographical_range_values = all_auto_share_settings.filter(
-#         share_from_location_type__isnull=False,
-#         share_from_location_value__isnull=False,
-#     )
-#     if categories.count():
-#         auto_share_settings_with_geographical_range_values = auto_share_settings_with_geographical_range_values.filter(Q(excluded_tags__in=categories))
-
-
-#     for setting in auto_share_settings_with_geographical_range_values:
-#         share_from_location_type = setting.share_from_location_type
-#         share_from_location_value = setting.share_from_location_value
-
-#         if share_from_location_type == LocationType.STATE.value[0]:
-#             share_from_location_value = share_from_location_value.upper()
-#             _zipcodes = zipcodes.filter_by(state=share_from_location_value)
-#         elif share_from_location_type == LocationType.CITY.value[0]:
-#             _zipcodes = zipcodes.filter_by(city=share_from_location_value)
-#         else:
-#             _zipcodes = []
-
-#         if _zipcodes:
-#             state_zipcodes = {str(zipcode_data["zip_code"]) for zipcode_data in _zipcodes}
-#             if state_zipcodes.intersection(community_zip_codes):
-#                 communities_list.add(setting.community.id)
-
-
-#     return Community.objects.filter(id__in=communities_list)
-
-
 def get_auto_shared_with_list(testimonial):
     """
     Processes a recently published testimonial to check for auto-share settings from other communities
@@ -628,7 +565,6 @@ class TestimonialStore:
 
   def update_auto_share_settings(self, context: Context, args) -> Tuple[dict, Any]:
     try:
-      print("== args ===", args)
       community_id = args.pop("community_id", None)
       auto_share_settings = TestimonialAutoShareSettings.objects.filter(community__id=community_id).first()
       if not auto_share_settings:
