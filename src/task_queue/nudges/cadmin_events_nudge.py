@@ -145,7 +145,7 @@ def send_events_nudge(task=None) -> bool:
                     stat = send_events_report(name, email, event_list)
 
                     if not stat:
-                        log("send_events_report error return")
+                        log.error("send_events_report error return")
                         return False
                     admins_emailed.append(email)
 
