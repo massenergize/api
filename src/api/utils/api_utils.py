@@ -1,7 +1,9 @@
+from datetime import datetime
 import secrets
 import string
 from math import atan2, cos, radians, sin, sqrt
 
+from django.utils.text import slugify
 from _main_.utils.constants import COMMUNITY_URL_ROOT, DEFAULT_SOURCE_LANGUAGE_CODE
 from _main_.utils.utils import load_json
 from apps__campaigns.models import CallToAction, Section
@@ -367,5 +369,35 @@ def create_or_update_section_from_dict(section_dict, media=None):
                 section.call_to_action_items.add(cta)
 
     return section
+
+
+def create_unique_slug(title, model, field_name="slug", prefix=None):
+    """
+    Create a unique slug for a model instance based on the title.
+
+    :param title: The title to base the slug on.
+    :param model: The model class to check for existing slugs.
+    :param field_name: The field name to check for uniqueness. Default is "slug".
+    :param prefix: An optional prefix to add to the slug.
+    :return: A unique slug string.
+    """
+    if not title:
+        return None
+
+    slug = slugify(title)
+    if not model or not field_name:
+        return slug.lower() if not prefix else f"{prefix}-{slug}".lower()
+
+    if not model.objects.filter(**{field_name: slug}).exists():
+        return slug.lower() if not prefix else f"{prefix}-{slug}".lower()
+
+    if prefix:
+        prefixed_slug = f"{prefix}-{slug}".lower()
+        if not model.objects.filter(**{field_name: prefixed_slug}).exists():
+            return prefixed_slug
+        
+    timestamp = str(int(datetime.now().timestamp()))
+    
+    return  f"{slug}-{timestamp}".lower() if not prefix else f"{prefix}-{slug}-{timestamp}".lower()
 
     
