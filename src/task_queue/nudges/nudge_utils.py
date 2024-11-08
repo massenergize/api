@@ -83,11 +83,11 @@ def get_admin_email_list(admins, nudge_type) -> dict:
 
 
 def update_last_notification_dates(emails, nudge_type):
-    new_date = str(timezone.now())
-    all_users = UserProfile.objects.filter(email__in=emails)
-    for email in emails:
-        users = all_users.filter(email=email)
-        user = users.first()
+    current_date = timezone.now().date()
+    all_users = list(UserProfile.objects.filter(email__in=emails))
+
+    for user in all_users:
         user_notification_dates = user.notification_dates if user.notification_dates else {}
-        notification_dates = {**user_notification_dates, [nudge_type]:new_date}
-        user.update(**{"notification_dates":notification_dates })
+        user_notification_dates[nudge_type] = current_date.strftime('%Y-%m-%d')
+        user.notification_dates = user_notification_dates
+        user.save()
