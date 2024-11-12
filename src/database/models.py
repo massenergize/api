@@ -4390,10 +4390,10 @@ class CustomPage(BaseModel):
     """
 
     title = models.CharField(max_length=LONG_STR_LEN, blank=True)
-    is_published = models.BooleanField(default=False, blank=True)
     is_deleted = models.BooleanField(default=False, blank=True)
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, db_index=True)
     slug = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True, unique=True)
+    content = models.JSONField(blank=True, null=True, default=dict)
     latest_version = models.ForeignKey("CustomPageVersion", on_delete=models.SET_NULL, blank=True, null=True, related_name="latest_version")
 
     def __str__(self):
@@ -4401,18 +4401,16 @@ class CustomPage(BaseModel):
     
     def create_version(self):
         version = CustomPageVersion(custom_page=self)
-        version.content = self.simple_json()
+        version.content = self.content
         version.save()
 
         self.latest_version = version
-        self.is_published = True
         self.save()
         return version
 
     def simple_json(self):
         res = super().to_json()
         res.update(model_to_dict(self))
-        res["sections"] = [e.simple_json() for e in self.page_sections.all()]
         return res
 
     def full_json(self):
@@ -4445,7 +4443,7 @@ class CustomPageVersion(BaseModel):
     def save(self, *args, **kwargs):
         if not self.version:
             now = datetime.datetime.now()
-            self.version = f"v{now.strftime('%Y%m%d%H%M%S')}"
+            self.version = f"{now.strftime('%Y-%m-%d %H:%M:%S')}"
         super(CustomPageVersion, self).save(*args, **kwargs)
     
     def simple_json(self):
@@ -4460,37 +4458,6 @@ class CustomPageVersion(BaseModel):
         db_table = "custom_page_versions"
         ordering = ("created_at",)
 
-
-
-class CustomPageBlock(BaseModel):
-    """
-        A class used to represent a custom page block(element) of a custom page on the MassEnergize platform
-        Blocks are the building blocks of a custom page. They can be of different types like text, image, video, section etc.
-    """
-    custom_page = models.ForeignKey(CustomPage, on_delete=models.CASCADE, db_index=True, related_name="page_sections")
-    order = models.IntegerField(default=0, blank=True)
-    props = models.JSONField(blank=True, null=True, default=dict)
-    direction = models.CharField(max_length=TINY_STR_LEN, blank=True)
-    type = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-    text = models.TextField(blank=True, null=True)
-    parent = models.ForeignKey("self", on_delete=models.CASCADE, blank=True, null=True, related_name="children")
-    
-    def __str__(self):
-        return f"{self.custom_page.title} - {self.type}"
-    
-    def simple_json(self):
-        res = super().to_json()
-        res.update(model_to_dict(self))
-        res["content"] = [e.simple_json() for e in self.children.all()]
-        return res
-
-    def full_json(self):
-        return self.simple_json()
-
-    class Meta:
-        db_table = "custom_page_blocks"
-        ordering = ("order",)
-        
 
 class CommunityCustomPage(BaseModel):
     """
@@ -4509,10 +4476,11 @@ class CommunityCustomPage(BaseModel):
     
     def simple_json(self):
         res = super().to_json()
-        res.update(model_to_dict(self))
+        res.update(model_to_dict(self, fields=["sharing_type"]))
         res["community"] = get_summary_info(self.community)
-        res["custom_page"] = get_summary_info(self.custom_page)
+        res["page"] = self.custom_page.simple_json() if self.custom_page else None
         res["audience"] = [c.info() for c in self.audience.all()]
+        res["shared_with"] = [cs.community.info() for cs in self.shares.all()]
 
         return res
     
@@ -4539,8 +4507,6 @@ class CommunityCustomPageShare(BaseModel):
     def simple_json(self):
         res = super().to_json()
         res.update(model_to_dict(self))
-        res["community"] = get_summary_info(self.community)
-        res["community_page"] = get_summary_info(self.community_page)
 
         return res
     
