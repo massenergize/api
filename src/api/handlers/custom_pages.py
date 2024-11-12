@@ -18,9 +18,6 @@ class CustomPagesHandler(RouteHandler):
     self.add("/community.custom.pages.share", self.share_community_custom_page)
     self.add("/community.custom.pages.info", self.community_custom_page_info)
     self.add("/community.custom.pages.list", self.list_community_custom_pages)
-    self.add("/custom.page.blocks.create", self.create_custom_page_block)
-    self.add("/custom.page.blocks.update", self.update_custom_page_block)
-    self.add("/custom.page.blocks.delete", self.delete_custom_page_block)
     self.add("/custom.page.publish", self.publish_custom_page)
 
 
@@ -31,6 +28,9 @@ class CustomPagesHandler(RouteHandler):
     
     self.validator.expect("title", str, is_required=True)
     self.validator.expect("community_id", str)
+    self.validator.expect("content", list, is_required=False)
+    self.validator.expect("audience", "str_list", is_required=False)
+    self.validator.expect("sharing_type", str, is_required=False)
 
     args, err = self.validator.verify(args, strict=True)
     if err:
@@ -48,12 +48,14 @@ class CustomPagesHandler(RouteHandler):
     
     self.validator.expect("id", str, is_required=True)
     self.validator.expect("title", str, is_required=False)
-    self.validator.expect("community_id", str, is_required=False)
+    self.validator.expect("content", list, is_required=False)
+    self.validator.expect("audience", "str_list", is_required=False)
+    self.validator.expect("sharing_type", str, is_required=False)
 
     args, err = self.validator.verify(args, strict=True)
     if err:
       return err
-    
+        
     page, err = self.service.update_community_custom_page(context, args)
     if err:
       return err
@@ -80,8 +82,8 @@ class CustomPagesHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     
-    self.validator.expect("id", str, is_required=True)
-    self.validator.expect("audience_ids", "str_list", is_required=True)
+    self.validator.expect("community_page_id", str, is_required=True)
+    self.validator.expect("community_ids", "str_list", is_required=True)
 
     args, err = self.validator.verify(args, strict=True)
     if err:
@@ -123,67 +125,6 @@ class CustomPagesHandler(RouteHandler):
     if err:
       return err
     return MassenergizeResponse(data=page)
-  
-
-  def create_custom_page_block(self, request): 
-    context: Context = request.context
-    args: dict = context.args
-    
-    self.validator.expect("text", str, is_required=False)
-    self.validator.expect("props", dict, is_required=False)
-    self.validator.expect("direction", str, is_required=False)
-    self.validator.expect("type", str, is_required=False)
-    self.validator.expect("order", int, is_required=False)
-    self.validator.expect("parent_id", str, is_required=False)
-    self.validator.expect("page_id", str, is_required=True)
-
-    args, err = self.validator.verify(args, strict=True)
-    if err:
-      return err
-    
-    page_block, err = self.service.create_custom_page_block(context, args)
-    if err:
-      return err
-    return MassenergizeResponse(data=page_block)
-  
-
-  def update_custom_page_block(self, request):
-    context: Context = request.context
-    args: dict = context.args
-    
-    self.validator.expect("id", str, is_required=True)
-    self.validator.expect("text", str, is_required=False)
-    self.validator.expect("props", dict, is_required=False)
-    self.validator.expect("direction", str, is_required=False)
-    self.validator.expect("type", str, is_required=False)
-    self.validator.expect("order", int, is_required=False)
-    self.validator.expect("parent_id", str, is_required=False)
-    
-
-    args, err = self.validator.verify(args, strict=True)
-    if err:
-      return err
-    
-    page_block, err = self.service.update_custom_page_block(context, args)
-    if err:
-      return err
-    return MassenergizeResponse(data=page_block)
-  
-
-  def delete_custom_page_block(self, request):
-    context: Context = request.context
-    args: dict = context.args
-    
-    self.validator.expect("id", str, is_required=True)
-
-    args, err = self.validator.verify(args, strict=True)
-    if err:
-      return err
-    
-    page_block, err = self.service.delete_custom_page_block(context, args)
-    if err:
-      return err
-    return MassenergizeResponse(data=page_block)
   
 
   def publish_custom_page(self, request):
