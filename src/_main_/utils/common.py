@@ -94,6 +94,10 @@ def parse_list(d):
             return d.strip().split(",") if d else []
         elif isinstance(d, dict):
             tmp = list(d.values())
+        
+        elif isinstance(d, list):
+            if d and isinstance(d[0], dict):
+                return d
 
         res = []
         for i in tmp:
