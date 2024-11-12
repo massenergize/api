@@ -4,6 +4,7 @@ from api.handlers.auth import AuthHandler
 from api.handlers.campaign import CampaignHandler
 from api.handlers.campaign_account import CampaignAccountHandler
 # from api.handlers.email_templates import EmailTemplatesHandler
+from api.handlers.custom_pages import CustomPagesHandler
 from api.handlers.media_library import MediaLibraryHandler
 from api.handlers.page_settings__aboutus import AboutUsPageSettingsHandler
 from api.handlers.page_settings__actions import ActionsPageSettingsHandler
@@ -55,6 +56,7 @@ ROUTE_HANDLERS = [
     CampaignHandler(),
     CampaignAccountHandler(),
     ContactUsPageSettingsHandler(),
+    CustomPagesHandler(),
     DeviceHandler(),
     DonatePageSettingsHandler(),
     DownloadHandler(),

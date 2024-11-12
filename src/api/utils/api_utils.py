@@ -387,17 +387,15 @@ def create_unique_slug(title, model, field_name="slug", prefix=None):
     slug = slugify(title)
     if not model or not field_name:
         return slug.lower() if not prefix else f"{prefix}-{slug}".lower()
+    
+    slug = f"{prefix}-{slug}".lower() if prefix else slug.lower()
 
     if not model.objects.filter(**{field_name: slug}).exists():
         return slug.lower() if not prefix else f"{prefix}-{slug}".lower()
 
-    if prefix:
-        prefixed_slug = f"{prefix}-{slug}".lower()
-        if not model.objects.filter(**{field_name: prefixed_slug}).exists():
-            return prefixed_slug
         
     timestamp = str(int(datetime.now().timestamp()))
     
-    return  f"{slug}-{timestamp}".lower() if not prefix else f"{prefix}-{slug}-{timestamp}".lower()
+    return  f"{slug}-{timestamp}".lower()
 
     
