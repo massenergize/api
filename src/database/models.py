@@ -4411,6 +4411,7 @@ class CustomPage(BaseModel):
     def simple_json(self):
         res = super().to_json()
         res.update(model_to_dict(self))
+
         return res
 
     def full_json(self):
@@ -4457,7 +4458,6 @@ class CustomPageVersion(BaseModel):
     class Meta:
         db_table = "custom_page_versions"
         ordering = ("created_at",)
-
 
 class CommunityCustomPage(BaseModel):
     """

@@ -392,10 +392,10 @@ def create_unique_slug(title, model, field_name="slug", prefix=None):
 
     if not model.objects.filter(**{field_name: slug}).exists():
         return slug.lower() if not prefix else f"{prefix}-{slug}".lower()
-
         
     timestamp = str(int(datetime.now().timestamp()))
     
     return  f"{slug}-{timestamp}".lower()
+
 
     
