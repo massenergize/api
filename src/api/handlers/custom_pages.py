@@ -21,7 +21,6 @@ class CustomPagesHandler(RouteHandler):
     self.add("/custom.page.publish", self.publish_custom_page)
 
 
-
   def create_community_custom_page(self, request): 
     context: Context = request.context
     args: dict = context.args
