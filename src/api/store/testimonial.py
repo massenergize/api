@@ -20,65 +20,53 @@ from database.utils.settings.model_constants.enums import LocationType, SharingT
 from .utils import get_community, get_user, get_user_from_context, unique_media_filename
 
 
-
 def get_auto_shared_with_list(testimonial):
     """
-        This function processes a recently published testimonial and checks for all auto-share settings from other communities that meet the following criteria:
-        1. The community that created the testimonial is included in their `share_from_communities` list, or
-        2. The community that created the testimonial falls within their defined geographical range, or
-        3. The auto-share settings contain tags that match the tags of the testimonial.
-        The function collects these matching communities and returns a list of them. This list will be used to share the testimonial with those communities.
+    Processes a recently published testimonial to check for auto-share settings from other communities
+    based on specific criteria: matching communities, geographical range, or shared tags.
+    Returns a list of communities that should auto-share the testimonial.
     """
     if not testimonial or not testimonial.community:
         return []
-    
-    testimonial_community = testimonial.community 
-    
+
+    testimonial_community = testimonial.community
     community_zip_codes = set(testimonial_community.locations.values_list('zipcode', flat=True))
-    communities_list = set()
 
+    # Fetch all auto-share settings, filtering for non-deleted entries
     all_auto_share_settings = TestimonialAutoShareSettings.objects.filter(is_deleted=False)
+    
+    testimonial_tags = set(testimonial.tags.values_list('id', flat=True))
 
-    auto_share_settings_with_share_from_communities_values = all_auto_share_settings.filter(
-        share_from_location_type__isnull=True,
-        share_from_location_value__isnull=True,
-        share_from_communities__id=testimonial_community.id
-    )
-    communities_list.update(setting.community.id for setting in auto_share_settings_with_share_from_communities_values)
+    filtered_auto_share_settings = all_auto_share_settings.filter(
+        (Q(share_from_location_type__isnull=True) & Q(share_from_location_value__isnull=True) &
+         Q(share_from_communities__id=testimonial_community.id)) |
+        (Q(share_from_location_type__isnull=False) & Q(share_from_location_value__isnull=False)),
+        Q(excluded_tags__isnull=True) | Q(excluded_tags__in=testimonial_tags)
+    ).select_related('community')
 
-    # Filter settings that share from specific locations
-    auto_share_settings_with_geographical_range_values = all_auto_share_settings.filter(
-        share_from_location_type__isnull=False,
-        share_from_location_value__isnull=False
-    )
+    communities_to_share_with = set()
 
-    for setting in auto_share_settings_with_geographical_range_values:
-        share_from_location_type = setting.share_from_location_type
-        share_from_location_value = setting.share_from_location_value
-
-        if share_from_location_type == LocationType.STATE.value[0]:
-            share_from_location_value = share_from_location_value.upper()
-            _zipcodes = zipcodes.filter_by(state=share_from_location_value)
-        elif share_from_location_type == LocationType.CITY.value[0]:
-            _zipcodes = zipcodes.filter_by(city=share_from_location_value)
+    # Process filtered settings
+    for setting in filtered_auto_share_settings:
+        if setting.share_from_location_type is None and setting.share_from_location_value is None:
+            # Add community directly if it matches by `share_from_communities`
+            communities_to_share_with.add(setting.community.id)
         else:
+            # Handle geographical filtering based on location type and value
             _zipcodes = []
+            if setting.share_from_location_type == LocationType.STATE.value[0]:
+                _zipcodes = zipcodes.filter_by(state=setting.share_from_location_value.upper())
+            elif setting.share_from_location_type == LocationType.CITY.value[0]:
+                _zipcodes = zipcodes.filter_by(city=setting.share_from_location_value)
+            
+            # Check for any ZIP code intersections
+            setting_zip_codes = {str(z["zip_code"]) for z in _zipcodes}
+            if setting_zip_codes & community_zip_codes:
+                communities_to_share_with.add(setting.community.id)
 
-        if _zipcodes:
-            state_zipcodes = {str(zipcode_data["zip_code"]) for zipcode_data in _zipcodes}
-            if state_zipcodes.intersection(community_zip_codes):
-                communities_list.add(setting.community.id)
+    # Retrieve and return matching community instances
+    return Community.objects.filter(id__in=communities_to_share_with)
 
-
-    auto_share_settings_with_category_values = all_auto_share_settings.filter(
-        excluded_tags__isnull=False,
-        excluded_tags__in=testimonial.tags.all()
-    )
-
-    if auto_share_settings_with_category_values.exists():
-       communities_list.update(setting.community.id for setting in auto_share_settings_with_category_values)
-
-    return Community.objects.filter(id__in=communities_list)
 
 
 def add_auto_shared_communities_to_testimonial(testimonial):
@@ -159,7 +147,7 @@ class TestimonialStore:
       shared_testimonials = Testimonial.objects.filter(id__in=[t.id for t in shared])
       
       all_testimonials = testimonials | shared_testimonials
-      all_testimonials = all_testimonials.order_by('-created_at').distinct()
+      all_testimonials = all_testimonials.order_by('rank').distinct()
 
       return  all_testimonials , None
     except Exception as e:
@@ -591,10 +579,16 @@ class TestimonialStore:
       auto_share_settings.share_from_location_value = sharing_location_value
       
       if excluded_tags_ids:
-        auto_share_settings.excluded_tags.set(excluded_tags_ids)
+        if excluded_tags_ids[0] == RESET:
+          auto_share_settings.excluded_tags.clear()
+        else:
+         auto_share_settings.excluded_tags.set(excluded_tags_ids)
 
       if ids_of_communities_to_share_from:
-        auto_share_settings.share_from_communities.set(ids_of_communities_to_share_from)
+        if ids_of_communities_to_share_from[0] == RESET:
+          auto_share_settings.share_from_communities.clear()
+        else:
+          auto_share_settings.share_from_communities.set(ids_of_communities_to_share_from)
 
       auto_share_settings.save()
       return auto_share_settings, None

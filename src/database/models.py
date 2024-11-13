@@ -4383,7 +4383,6 @@ class TestimonialAutoShareSettings(BaseModel):
         return self.simple_json()
     
 
-
 class CustomPage(BaseModel):
     """
         A class used to represent a custom page on the MassEnergize platform

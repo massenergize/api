@@ -54,6 +54,7 @@ class TestGetAutoSharedWithList(TestCase):
             community=self.c4,
         )
         auto_share_settings.excluded_tags.add(self.tag1)
+        auto_share_settings.share_from_communities.set([self.c1])
         result = get_auto_shared_with_list(self.testimonial)
         self.assertIn(self.c4, list(result))
 
