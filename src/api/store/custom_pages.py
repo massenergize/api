@@ -64,31 +64,25 @@ class CustomPagesStore:
             slug = args.pop('slug', None)
             content = args.pop('content', None)
 
-            if not page_id:
-                return None, CustomMassenergizeError("Missing page_id")
-            
-            if not title:
-                return None, CustomMassenergizeError("Missing title")
-            
-
             page = CustomPage.objects.get(id=page_id)
             if not page:
                 return None, CustomMassenergizeError("Invalid page_id")
             
-            if title and page.title != title:
-                slug = create_unique_slug(title, CustomPage, "slug", ) if not slug else slug
-                page.title = title
-                page.slug = slug
-            
-            if content:
-                page.content = content
-
-
             community_custom_page = CommunityCustomPage.objects.get(custom_page=page)
 
             if not community_custom_page:
                 return None, CustomMassenergizeError("Invalid page_id")
             
+            
+            if (title and page.title != title) or (slug and page.slug != slug):
+                slug = create_unique_slug(title, CustomPage, "slug", community_custom_page.community.subdomain) if not slug else slug
+                page.title = title
+
+                page.slug = slug
+            
+            if content:
+                page.content = content
+
 
             if not is_admin_of_community(context, community_custom_page.community.id):
                 return None, NotAuthorizedError() 

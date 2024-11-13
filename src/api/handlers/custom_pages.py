@@ -1,6 +1,7 @@
 from _main_.utils.context import Context
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.route_handler import RouteHandler
+from api.decorators import admins_only
 from api.services.custom_pages import CustomPagesService
 
 
@@ -20,13 +21,13 @@ class CustomPagesHandler(RouteHandler):
     self.add("/community.custom.pages.list", self.list_community_custom_pages)
     self.add("/custom.page.publish", self.publish_custom_page)
 
-
+  @admins_only
   def create_community_custom_page(self, request): 
     context: Context = request.context
     args: dict = context.args
     
     self.validator.expect("title", str, is_required=True)
-    self.validator.expect("community_id", str)
+    self.validator.expect("community_id", str, is_required=True)
     self.validator.expect("content", list, is_required=False)
     self.validator.expect("audience", "str_list", is_required=False)
     self.validator.expect("sharing_type", str, is_required=False)
@@ -40,7 +41,7 @@ class CustomPagesHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=page)
   
-
+  @admins_only
   def update_community_custom_page(self, request): 
     context: Context = request.context
     args: dict = context.args
@@ -60,7 +61,7 @@ class CustomPagesHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=page)
   
-
+  @admins_only
   def delete_community_custom_page(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -76,7 +77,7 @@ class CustomPagesHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=page)
   
-
+  @admins_only
   def share_community_custom_page(self, request): 
     context: Context = request.context
     args: dict = context.args
@@ -109,7 +110,7 @@ class CustomPagesHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=page)
   
-
+  @admins_only
   def list_community_custom_pages(self, request): 
     context: Context = request.context
     args: dict = context.args
@@ -125,7 +126,7 @@ class CustomPagesHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=page)
   
-
+  @admins_only
   def publish_custom_page(self, request):
     context: Context = request.context
     args: dict = context.args

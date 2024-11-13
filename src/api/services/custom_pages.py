@@ -48,7 +48,7 @@ class CustomPagesService:
     try:
       pages, err = self.store.list_community_custom_pages(context, args)
       if err:
-        return None
+        return None, err
       return serialize_all(pages), None
     except Exception as e:
       return None, MassEnergizeAPIError(str(e))
