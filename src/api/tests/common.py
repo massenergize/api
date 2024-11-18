@@ -9,6 +9,7 @@ from django.utils import timezone
 
 from _main_.utils.common import parse_datetime_to_aware
 from _main_.utils.utils import load_json
+from database.utils.settings.model_constants.enums import SharingType
 from ..store.utils import unique_media_filename
 from _main_.settings import SECRET_KEY
 from _main_.utils.feature_flags.FeatureFlagConstants import FeatureFlagConstants
@@ -16,7 +17,9 @@ from database.models import (
     Action,
     Community,
     CommunityAdminGroup,
+    CommunityCustomPage,
     CommunityMember,
+    CustomPage,
     Event,
     FeatureFlag,
     Footage,
@@ -504,5 +507,31 @@ def make_tag(**kwargs):
         **kwargs,
         "name": kwargs.get("name") or f"New Tag-{datetime.now().timestamp()}",
     })
+
+def make_community_custom_page(**kwargs):
+    community = kwargs.pop("community") or makeCommunity()
+    title = kwargs.get("title") or f"New Custom Page-{datetime.now().timestamp()}"
+    audience = kwargs.pop("audience", [])
+    sharing_type = kwargs.pop("sharing_type", SharingType.OPEN_TO.value[0])
+    user = kwargs.pop("user", makeUser())
+
+    page = CustomPage.objects.create(**{
+        **kwargs,
+        "title": title,
+        "user": user,
+    })
+
+    community_custom_page = CommunityCustomPage.objects.create(
+        community=community, custom_page=page,
+        sharing_type=sharing_type
+    )
+    if audience:
+        community_custom_page.audience.set(audience)
+
+    return page, community_custom_page
+
+
+
+
     
     

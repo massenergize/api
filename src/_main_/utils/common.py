@@ -89,20 +89,20 @@ def get_request_contents(request, **kwargs):
 
 def parse_list(d):
     try:
-        tmp = []
         if isinstance(d, str):
             return d.strip().split(",") if d else []
-        elif isinstance(d, dict):
-            tmp = list(d.values())
 
-        res = []
-        for i in tmp:
-            if i.isnumeric():
-                res.append(i)
-        return res
+        if isinstance(d, dict):
+            return [value for value in d.values() if str(value).isnumeric()]
 
+        if isinstance(d, list):
+            if d and isinstance(d[0], dict):
+                return d
+            return [item for item in d if str(item).isnumeric()]
+
+        return []
     except Exception as e:
-        log.exception(e)
+        log.exception("Error in parse_list: %s", e)
         return []
 
 def parse_dict(d: object) -> object:
