@@ -2,7 +2,7 @@ from datetime import datetime
 from _main_.utils.common import encode_data_for_URL, serialize_all
 from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
-from _main_.utils.feature_flag_keys import SHARED_TESTIMONIALS_NUDGE_FF
+from _main_.utils.feature_flag_keys import TESTIMONIAL_AUTO_SHARE_SETTINGS_NUDGE_FEATURE_FLAG_KEY
 from _main_.utils.massenergize_logger import log
 from api.utils.api_utils import get_sender_email
 from api.utils.constants import CADMIN_TESTIMONIAL_NUDGE_TEMPLATE
@@ -113,7 +113,7 @@ def prepare_testimonials_for_community_admins(task=None):
 	"""
 	try:
         
-		flag = FeatureFlag.objects.get(key=SHARED_TESTIMONIALS_NUDGE_FF)
+		flag = FeatureFlag.objects.get(key=TESTIMONIAL_AUTO_SHARE_SETTINGS_NUDGE_FEATURE_FLAG_KEY)
 		if not flag or not flag.enabled():
 			return False
 
