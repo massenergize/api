@@ -293,6 +293,7 @@ def get_list_of_internal_links(is_footer=False):
     Returns a list of internal links
     """
     try:
+        
         default_menu = load_default_menus_from_json()
         if not default_menu:
             return None, "Could not load default menus."
@@ -371,24 +372,26 @@ def create_or_update_section_from_dict(section_dict, media=None):
     return section
 
 
-def create_unique_slug(title, model, field_name="slug", prefix=None):
+def create_unique_slug(title, model, field_name="slug", user_defined_slug=None):
     """
     Create a unique slug for a model instance based on the title.
 
     :param title: The title to base the slug on.
     :param model: The model class to check for existing slugs.
     :param field_name: The field name to check for uniqueness. Default is "slug".
-    :param prefix: An optional prefix to add to the slug.
     :return: A unique slug string.
     """
-    if not title:
-        return None
 
-    slug = slugify(title)
-    if not model or not field_name:
-        return slug.lower() if not prefix else f"{prefix}-{slug}".lower()
+    if not title and not user_defined_slug:
+        return None
     
-    slug = f"{prefix}-{slug}".lower() if prefix else slug.lower()
+    if not user_defined_slug:
+        slug = slugify(title).lower()
+        if not model or not field_name:
+            return slug
+
+    else:
+        slug = user_defined_slug
 
     if not model.objects.filter(**{field_name: slug}).exists():
         return slug.lower()
