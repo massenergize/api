@@ -83,6 +83,25 @@ class CustomPagesService:
         return serialize(page), None
     except Exception as e:
         return None, MassEnergizeAPIError(str(e))
+    
+  def get_custom_pages_for_user_portal(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+        page, err = self.store.get_custom_pages_for_user_portal(context, args)
+        if err:
+          return None, err
+        return page, None
+    except Exception as e:
+        return None, MassEnergizeAPIError(str(e))
+    
+  
+  def list_custom_pages_from_other_communities(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+        page, err = self.store.list_custom_pages_from_other_communities(context, args)
+        if err:
+          return None, err
+        return page, None
+    except Exception as e:
+        return None, MassEnergizeAPIError(str(e))
 
 
 
