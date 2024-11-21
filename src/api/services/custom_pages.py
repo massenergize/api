@@ -96,10 +96,19 @@ class CustomPagesService:
   
   def list_custom_pages_from_other_communities(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
-        page, err = self.store.list_custom_pages_from_other_communities(context, args)
+        pages, err = self.store.list_custom_pages_from_other_communities(context, args)
         if err:
           return None, err
-        return page, None
+        return serialize_all(pages), None
+    except Exception as e:
+        return None, MassEnergizeAPIError(str(e))
+    
+  def copy_custom_page(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+        page, err = self.store.copy_custom_page(context, args)
+        if err:
+          return None , err
+        return serialize(page), None
     except Exception as e:
         return None, MassEnergizeAPIError(str(e))
 

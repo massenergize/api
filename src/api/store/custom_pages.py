@@ -142,11 +142,22 @@ class CustomPagesStore:
 
     def list_community_custom_pages(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
         try:
-            community_id = args.pop('community_id', None)
-            if not community_id:
-                return None, CustomMassenergizeError("Missing community_id")
+            community_ids = args.pop('community_ids', None)
+
+            if context.user_is_super_admin:
+                community_pages = CommunityCustomPage.objects.filter(is_deleted=False)
+                return community_pages, None
             
-            community_pages = CommunityCustomPage.objects.filter(community__id=community_id, is_deleted=False)
+            user = get_user_from_context(context)
+            if not user:
+                return None, NotAuthorizedError()
+            
+            if not community_ids:
+                admin_groups = user.communityadmingroup_set.all()
+                community_ids = [ag.community.id for ag in admin_groups]
+
+            community_pages = CommunityCustomPage.objects.filter(community__id__in=community_ids, is_deleted=False)
+
             return community_pages, None
 
         except Exception as e:
@@ -166,7 +177,12 @@ class CustomPagesStore:
             if not page:
                 return None, CustomMassenergizeError("Invalid id")
             
-            return page, None
+            community_custom_page = CommunityCustomPage.objects.get(custom_page=page, is_deleted=False)
+            if not community_custom_page:
+                return None, CustomMassenergizeError("Invalid id")
+            
+            return community_custom_page, None
+            
         except Exception as e:
             log.exception(e)
             return None, CustomMassenergizeError(e)
@@ -285,6 +301,52 @@ class CustomPagesStore:
             
             return pages_list, None
 
+        except Exception as e:
+            log.exception(e)
+            return None, CustomMassenergizeError(e)
+        
+
+
+    def copy_custom_page(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        try:
+            page_id = args.pop('page_id', None) 
+            community_id = args.pop('community_id', None)
+            user = get_user_from_context(context)
+            if not user:
+                return None, NotAuthorizedError()
+            
+            if not page_id:
+                return None, CustomMassenergizeError("Missing id")
+            
+            if not community_id:
+                return None, CustomMassenergizeError("Missing community_id")
+            
+            page = CustomPage.objects.get(id=page_id, is_deleted=False)
+            if not page:
+                return None, CustomMassenergizeError("Invalid id")
+            
+            community = Community.objects.get(id=community_id, is_deleted=False)
+            if not community:
+                return None, CustomMassenergizeError("Invalid community_id")
+
+            community_custom_page = CommunityCustomPage.objects.filter(custom_page=page).first()
+
+            new_page = CustomPage.objects.create(
+                title=page.title,
+                user=user,
+                slug=create_unique_slug(page.title, CustomPage),
+                content=page.content
+            )
+            
+            community_custom_page = CommunityCustomPage.objects.create(
+                community=community,
+                custom_page=new_page,
+                sharing_type = community_custom_page.sharing_type
+            )
+            if community_custom_page.audience:
+                community_custom_page.audience.set(community_custom_page.audience.all())
+            
+            return community_custom_page, None
         except Exception as e:
             log.exception(e)
             return None, CustomMassenergizeError(e)

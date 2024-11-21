@@ -22,6 +22,7 @@ class CustomPagesHandler(RouteHandler):
     self.add("/custom.page.publish", self.publish_custom_page)
     self.add("/custom.page.getForUser", self.get_custom_pages_for_user_portal)
     self.add("/custom.page.other.communities.list", self.list_custom_pages_from_other_communities)
+    self.add("/custom.page.copy", self.copy_custom_page)
 
   @admins_only
   def create_community_custom_page(self, request): 
@@ -118,7 +119,7 @@ class CustomPagesHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     
-    self.validator.expect("community_id", "id", is_required=True)
+    self.validator.expect("community_ids", "str_list", is_required=False)
 
     args, err = self.validator.verify(args, strict=True)
     if err:
@@ -174,6 +175,24 @@ class CustomPagesHandler(RouteHandler):
       return err
 
     page, err = self.service.list_custom_pages_from_other_communities(context, args)
+    if err:
+      return err
+    return MassenergizeResponse(data=page)
+  
+
+  @admins_only
+  def copy_custom_page(self, request):
+    context: Context = request.context
+    args: dict = context.args
+
+    self.validator.expect("page_id", str, is_required=True)
+    self.validator.expect("community_id", int, is_required=True)
+
+    args, err = self.validator.verify(args, strict=True)
+    if err:
+      return err
+
+    page, err = self.service.copy_custom_page(context, args)
     if err:
       return err
     return MassenergizeResponse(data=page)

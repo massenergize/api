@@ -11,7 +11,7 @@ from _main_.utils.massenergize_errors import (
 )
 from _main_.utils.utils import load_json
 from api.tests.common import createUsers
-from api.utils.api_utils import load_default_menus_from_json, \
+from api.utils.api_utils import get_list_of_internal_links, load_default_menus_from_json, \
     remove_unpublished_menu_items, validate_menu_content
 from database.models import Action, CarbonEquivalency, Community, CommunityAdminGroup, CommunityMember, Data, Event, \
     FeatureFlag, HomePageSettings, Location, Media, Menu, RealEstateUnit, Subdomain, TagCollection, Team, TeamMember, \
@@ -684,12 +684,41 @@ class MiscellaneousStore:
             return None, CustomMassenergizeError(str(e))
         
         
-        
+
     def list_all_languages(self, context, args) -> (dict, Exception):
         """ Get all the languages """
         try:
             all_languages = load_json("database/raw_data/other/languages.json")
             return all_languages, None
+        except Exception as e:
+            log.exception(e)
+            return None, CustomMassenergizeError(str(e))
+        
+
+    def get_list_of_internal_links(self, context, args):
+        try:
+            community_id = args.pop('community_id', None)
+
+            internal_links, error = get_list_of_internal_links()
+            if not community_id or error:
+                return internal_links, None
+            
+            community = Community.objects.filter(id=community_id).first()
+            custom_pages = community.custom_pages.filter(is_deleted=False, custom_page__latest_version__isnull=False)
+            shared_pages = community.shared_custom_pages.filter(is_deleted=False, community_page__custom_page__latest_version__isnull=False)
+
+            for page in custom_pages:
+                internal_links.append({
+                    "name": page.custom_page.title,
+                    "link": f"/{page.custom_page.slug}",
+                })
+
+            for page in shared_pages:
+                internal_links.append({
+                    "name": page.community_page.custom_page.title,
+                    "link": f"/{page.community_page.custom_page.slug}",
+                })
+            return internal_links, None
         except Exception as e:
             log.exception(e)
             return None, CustomMassenergizeError(str(e))

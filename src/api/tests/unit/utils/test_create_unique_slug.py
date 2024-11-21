@@ -30,19 +30,18 @@ class CreateUniqueSlugTestCase(TestCase):
         self.assertEqual(result, slugify(title))
 
     def test_create_unique_slug_with_prefix(self):
-        title = "Testing"
-        prefix = "Concord"
+        title = "Testing for a new thing"
 
-        result = create_unique_slug(title, CustomPage,"slug",prefix=prefix)
-        self.assertEqual(result, f"{prefix}-{slugify(title)}".lower())
+        result = create_unique_slug(title, CustomPage,"slug")
+        self.assertEqual(result, f"{slugify(title)}".lower())
 
     def test_create_unique_slug_with_prefix_existing(self):
         title = "Testing"
         prefix = "Wayland"
 
-        result = create_unique_slug(title, CustomPage,"slug", prefix=prefix)
+        result = create_unique_slug(title, CustomPage,"slug")
 
-        self.assertTrue(result.startswith(f"{prefix}-{slugify(title)}-".lower()))
+        self.assertTrue(result.startswith(f"{slugify(title)}-".lower()))
 
     def test_create_unique_slug_with_timestamp(self):
         title = "Test Title"

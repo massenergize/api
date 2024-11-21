@@ -64,9 +64,7 @@ class CustomPagesIntegrationTestCase(TestCase):
         pass
 
     def make_request(self, endpoint, data):
-        return self.client.post(
-            f"/api/{endpoint}", data=data, format="multipart"
-        ).json()
+        return self.client.post(f"/api/{endpoint}", data=data, format="multipart").json()
 
     def test_create_community_custom_page(self):
         Console.header("Testing create custom page: as super admin")
@@ -152,7 +150,7 @@ class CustomPagesIntegrationTestCase(TestCase):
         args = {
             "id": self.p1.id,
             "title": "Test Title Updated",
-            "slug": f"{self.COMMUNITY_2.subdomain}-test-title-updated",
+            "slug": f"test-title-updated",
             "content": [
                 {
                     "options": {"position": 3},
@@ -202,13 +200,23 @@ class CustomPagesIntegrationTestCase(TestCase):
         args.pop("id")
         res = self.make_request(endpoint, args)
         self.assertFalse(res["success"])
-        self.assertEqual(res["error"], "You are Missing a Required Input: Id")
+        self.assertEqual(res["error"], 'Provide a valid page_id or community_id')
+
+
+        Console.header("Testing update custom page: create New if none exists")
+        args["community_id"] = self.COMMUNITY_1.id
+        args["title"] = "Test Title 3"
+        args["slug"] = "test-title-3"
+        res = self.make_request(endpoint, args)
+        self.assertTrue(res["success"])
+        self.assertEqual(res["data"]["page"]["title"], args["title"])
+        self.assertEqual(res["data"]["page"]["slug"], args["slug"])
+        
 
         Console.header("Testing update custom page: with invalid id")
         args["id"] = "e13a5038-3dea-45ef-9dd1-00e4148a987d"
         res = self.make_request(endpoint, args)
-        self.assertFalse(res["success"])
-        self.assertEqual(res["error"], "CustomPage matching query does not exist.")
+        self.assertTrue(res["success"])
 
     def test_delete_community_custom_page(self):
         Console.header("Testing delete custom page: as super admin")
@@ -251,8 +259,8 @@ class CustomPagesIntegrationTestCase(TestCase):
 
         res = self.make_request(endpoint, args)
         self.assertTrue(res["success"])
-        self.assertEqual(res["data"]["id"], str(self.p1.id))
-        self.assertEqual(res["data"]["title"], self.p1.title)
+        self.assertEqual(res["data"]["page"]["id"], str(self.p1.id))
+        self.assertEqual(res["data"]["page"]["title"], self.p1.title)
 
         Console.header("Testing community custom page info: as user")
         signinAs(self.client, self.user)
@@ -377,15 +385,151 @@ class CustomPagesIntegrationTestCase(TestCase):
         res = self.make_request(endpoint, args)
         self.assertFalse(res["success"])
 
-        Console.header("Testing list community custom pages: with missing community_id")
-        args.pop("community_id")
-        signinAs(self.client, self.SADMIN)
-        res = self.make_request(endpoint, args)
-        self.assertFalse(res["success"])
-        self.assertEqual(res["error"], "You are Missing a Required Input: Community Id")
+        # Console.header("Testing list community custom pages: with missing community_id")
+        # args.pop("community_id")
+        # signinAs(self.client, self.SADMIN)
+        # res = self.make_request(endpoint, args)
+        # self.assertFalse(res["success"])
+        # self.assertEqual(res["error"], "You are Missing a Required Input: Community Id")
 
         Console.header("Testing list community custom pages: with invalid community_id")
         args["community_id"] = "invalid-id"
         res = self.make_request(endpoint, args)
         self.assertFalse(res["success"])
+        self.assertEqual(res["error"], 'permission_denied')
+
+
+    def test_list_custom_pages_from_other_communities(self):
+        Console.header("Testing list custom pages from other communities: as super admin")
+
+        signinAs(self.client, self.SADMIN)
+        endpoint = "custom.page.other.communities.list"
+
+        args = {
+            "community_ids": f"{self.COMMUNITY_1.id},{self.COMMUNITY_2.id}",
+        }
+
+        res = self.make_request(endpoint, args)
+        self.assertTrue(res["success"])
+        self.assertIsInstance(res["data"], list)
+
+        Console.header("Testing list custom pages from other communities: as user")
+        signinAs(self.client, self.user)
+        res = self.make_request(endpoint, args)
+        self.assertFalse(res["success"])
+
+        Console.header("Testing list custom pages from other communities: with missing community_ids")
+        args.pop("community_ids")
+        signinAs(self.client, self.SADMIN)
+        res = self.make_request(endpoint, args)
+        self.assertTrue(res["success"])
+        self.assertIsInstance(res["data"], list)
+
+        Console.header("Testing list custom pages from other communities: with invalid community_ids")
+        args["community_ids"] = "invalid-id"
+        res = self.make_request(endpoint, args)
+        self.assertFalse(res["success"])
         self.assertEqual(res["error"], "Field 'id' expected a number but got 'invalid-id'.")
+
+    def test_get_custom_pages_for_user_portal(self):
+        Console.header("Testing get custom pages for user portal: as super admin")
+
+        signinAs(self.client, self.SADMIN)
+        endpoint = "custom.page.getForUser"
+
+        args = {
+            "id": self.p2.id,
+            "slug": self.p2.slug,
+        }
+
+        res = self.make_request(endpoint, args)
+        print("==RES==", res)
+        self.assertTrue(res["success"])
+        self.assertEqual(res["data"]["page"]["id"], str(self.p2.id))
+        self.assertEqual(res["data"]["page"]["slug"], self.p2.slug)
+
+        Console.header("Testing get custom pages for user portal: as user")
+        signinAs(self.client, self.user)
+        res = self.make_request(endpoint, args)
+        self.assertTrue(res["success"])
+
+        Console.header("Testing get custom pages for user portal: with missing id")
+        args.pop("id")
+        signinAs(self.client, self.SADMIN)
+        res = self.make_request(endpoint, args)
+        self.assertFalse(res["success"])
+        self.assertEqual(res["error"], "You are Missing a Required Input: Id")
+
+        Console.header("Testing get custom pages for user portal: with missing slug")
+        args["id"] = self.p1.id
+        args.pop("slug")
+        res = self.make_request(endpoint, args)
+        self.assertFalse(res["success"])
+        self.assertEqual(res["error"], "You are Missing a Required Input: Slug")
+
+        Console.header("Testing get custom pages for user portal: with invalid id")
+        args["id"] = "invalid-id"
+        args["slug"] = self.p1.slug
+        res = self.make_request(endpoint, args)
+        self.assertFalse(res["success"])
+        self.assertEqual(res["error"], "['“invalid-id” is not a valid UUID.']")
+
+        Console.header("Testing get custom pages for user portal: with invalid slug")
+        args["id"] = self.p1.id
+        args["slug"] = "invalid-slug"
+        res = self.make_request(endpoint, args)
+        self.assertFalse(res["success"])
+        self.assertEqual(res["error"], "CustomPage matching query does not exist.")
+        
+    def test_copy_custom_page(self):
+        Console.header("Testing copy custom page: as super admin")
+
+        signinAs(self.client, self.SADMIN)
+        endpoint = "custom.page.copy"
+
+        args = {
+            "page_id": self.p1.id,
+            "community_id": self.COMMUNITY_2.id,
+        }
+
+        res = self.make_request(endpoint, args)
+        print("==RES==", res)
+        self.assertTrue(res["success"])
+        self.assertEqual(res["data"]["page"]["title"], self.p1.title)
+        self.assertEqual(res["data"]["community"]["id"], str(self.COMMUNITY_2.id))
+
+        Console.header("Testing copy custom page: as user")
+        signinAs(self.client, self.user)
+        res = self.make_request(endpoint, args)
+        self.assertFalse(res["success"])
+
+        Console.header("Testing copy custom page: with missing page_id")
+        args.pop("page_id")
+        signinAs(self.client, self.SADMIN)
+        res = self.make_request(endpoint, args)
+        self.assertFalse(res["success"])
+        self.assertEqual(res["error"], "You are Missing a Required Input: Page Id")
+
+        Console.header("Testing copy custom page: with missing community_id")
+        args["page_id"] = self.p1.id
+        args.pop("community_id")
+        res = self.make_request(endpoint, args)
+        self.assertFalse(res["success"])
+        self.assertEqual(res["error"], "You are Missing a Required Input: Community Id")
+
+        Console.header("Testing copy custom page: with invalid page_id")
+        args["page_id"] = "invalid-id"
+        args["community_id"] = self.COMMUNITY_2.id
+        res = self.make_request(endpoint, args)
+        self.assertFalse(res["success"])
+        self.assertEqual(res["error"], "['“invalid-id” is not a valid UUID.']")
+
+        Console.header("Testing copy custom page: with invalid community_id")
+        args["page_id"] = self.p1.id
+        args["community_id"] = "invalid-id"
+        res = self.make_request(endpoint, args)
+        self.assertFalse(res["success"])
+        self.assertEqual(res["error"], "Field 'id' expected a number but got 'invalid-id'.")
+
+
+
