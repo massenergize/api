@@ -356,6 +356,7 @@ class MiscellaneousHandler(RouteHandler):
             args: dict = context.args
             
             self.validator.expect("is_footer", bool, is_required=False)
+            self.validator.expect("community_id", int, is_required=False)
             
             args, err = self.validator.verify(args, strict=True)
             if err:
