@@ -31,7 +31,7 @@ class CustomPagesHandler(RouteHandler):
     
     self.validator.expect("title", str, is_required=True)
     self.validator.expect("community_id", str, is_required=True)
-    self.validator.expect("content", list, is_required=False)
+    self.validator.expect("content", dict, is_required=False)
     self.validator.expect("audience", "str_list", is_required=False)
     self.validator.expect("sharing_type", str, is_required=False)
 
@@ -51,7 +51,7 @@ class CustomPagesHandler(RouteHandler):
     
     self.validator.expect("id", str, is_required=False)
     self.validator.expect("title", str, is_required=False)
-    self.validator.expect("content", list, is_required=False)
+    self.validator.expect("content", dict, is_required=False)
     self.validator.expect("audience", "str_list", is_required=False)
     self.validator.expect("sharing_type", str, is_required=False)
     self.validator.expect("community_id", str, is_required=False)

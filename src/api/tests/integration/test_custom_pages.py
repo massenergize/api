@@ -438,15 +438,9 @@ class CustomPagesIntegrationTestCase(TestCase):
         signinAs(self.client, self.SADMIN)
         endpoint = "custom.page.getForUser"
 
-        args = {
-            "id": str(self.p2.id),
-            "slug": self.p2.slug,
-        }
-
-        print("==ARGS==", args)
+        args = {"id": str(self.p2.id)}
 
         res = self.make_request(endpoint, args)
-        print("==RES==", res)
         self.assertTrue(res["success"])
         self.assertEqual(res["data"]["id"], str(self.p2.id))
         self.assertEqual(res["data"]["slug"], self.p2.slug)
@@ -463,26 +457,19 @@ class CustomPagesIntegrationTestCase(TestCase):
         self.assertFalse(res["success"])
         self.assertEqual(res["error"], "You are Missing a Required Input: Id")
 
-        Console.header("Testing get custom pages for user portal: with missing slug")
+        Console.header("Testing get custom pages for user portal: with no published version")
         args["id"] = self.p1.id
-        args.pop("slug")
+
         res = self.make_request(endpoint, args)
         self.assertFalse(res["success"])
-        self.assertEqual(res["error"], "You are Missing a Required Input: Slug")
+        self.assertEqual(res["error"], 'No version found')
 
         Console.header("Testing get custom pages for user portal: with invalid id")
         args["id"] = "invalid-id"
-        args["slug"] = self.p1.slug
         res = self.make_request(endpoint, args)
         self.assertFalse(res["success"])
-        self.assertEqual(res["error"], "['“invalid-id” is not a valid UUID.']")
+        self.assertEqual(res["error"], "page not found")
 
-        Console.header("Testing get custom pages for user portal: with invalid slug")
-        args["id"] = self.p1.id
-        args["slug"] = "invalid-slug"
-        res = self.make_request(endpoint, args)
-        self.assertFalse(res["success"])
-        self.assertEqual(res["error"], "CustomPage matching query does not exist.")
         
     def test_copy_custom_page(self):
         Console.header("Testing copy custom page: as super admin")

@@ -256,7 +256,7 @@ class CustomPagesStore:
                 page = CustomPage.objects.filter(slug=page_id, is_deleted=False).first()
          
             if not page:
-                return None, CustomMassenergizeError("Invalid id")
+                return None, CustomMassenergizeError("page not found")
             
             if not page.latest_version:
                 return None, CustomMassenergizeError("No version found")
