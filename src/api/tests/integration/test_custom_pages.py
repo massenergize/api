@@ -57,6 +57,7 @@ class CustomPagesIntegrationTestCase(TestCase):
             title="Test Title 2",
             community=self.COMMUNITY_2,
             content=self.content,
+            add_version=True,
         )
 
     @staticmethod
@@ -438,15 +439,17 @@ class CustomPagesIntegrationTestCase(TestCase):
         endpoint = "custom.page.getForUser"
 
         args = {
-            "id": self.p2.id,
+            "id": str(self.p2.id),
             "slug": self.p2.slug,
         }
+
+        print("==ARGS==", args)
 
         res = self.make_request(endpoint, args)
         print("==RES==", res)
         self.assertTrue(res["success"])
-        self.assertEqual(res["data"]["page"]["id"], str(self.p2.id))
-        self.assertEqual(res["data"]["page"]["slug"], self.p2.slug)
+        self.assertEqual(res["data"]["id"], str(self.p2.id))
+        self.assertEqual(res["data"]["slug"], self.p2.slug)
 
         Console.header("Testing get custom pages for user portal: as user")
         signinAs(self.client, self.user)
@@ -493,10 +496,9 @@ class CustomPagesIntegrationTestCase(TestCase):
         }
 
         res = self.make_request(endpoint, args)
-        print("==RES==", res)
         self.assertTrue(res["success"])
         self.assertEqual(res["data"]["page"]["title"], self.p1.title)
-        self.assertEqual(res["data"]["community"]["id"], str(self.COMMUNITY_2.id))
+        self.assertEqual(res["data"]["community"]["id"], self.COMMUNITY_2.id)
 
         Console.header("Testing copy custom page: as user")
         signinAs(self.client, self.user)
@@ -529,7 +531,7 @@ class CustomPagesIntegrationTestCase(TestCase):
         args["community_id"] = "invalid-id"
         res = self.make_request(endpoint, args)
         self.assertFalse(res["success"])
-        self.assertEqual(res["error"], "Field 'id' expected a number but got 'invalid-id'.")
+        self.assertEqual(res["error"], 'Missing community_id')
 
 
 

@@ -152,7 +152,6 @@ class CustomPagesHandler(RouteHandler):
     args: dict = context.args
 
     self.validator.expect("id", str, is_required=True)
-    self.validator.expect("slug", str, is_required=True)
 
     args, err = self.validator.verify(args, strict=True)
     if err:
