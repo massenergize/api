@@ -128,7 +128,7 @@ class VendorHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=vendor_info)
 
-  @cached_request
+  # @cached_request
   def list(self, request):
     context: Context  = request.context
     args = context.get_request_body()      
