@@ -9,7 +9,7 @@ from _main_.utils.massenergize_errors import CustomMassenergizeError
 from types import FunctionType as function
 from _main_.utils.context import Context
 from _main_.utils.validator import Validator
-from api.decorators import admins_only, super_admins_only, login_required
+from api.decorators import admins_only, cached_request, super_admins_only, login_required
 from api.store.common import expect_media_fields
 
 
@@ -128,7 +128,7 @@ class VendorHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=vendor_info)
 
-
+  @cached_request
   def list(self, request):
     context: Context  = request.context
     args = context.get_request_body()      

@@ -1,7 +1,7 @@
 from _main_.utils.context import Context
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.route_handler import RouteHandler
-from api.decorators import admins_only
+from api.decorators import admins_only, cached_request
 from api.services.campaign import CampaignService
 
 
@@ -118,7 +118,7 @@ class CampaignHandler(RouteHandler):
         return MassenergizeResponse(data=campaign_info)
 
 
-
+    @cached_request
     def get_campaign_info_for_user(self, request):
         context: Context = request.context
         args: dict = context.args

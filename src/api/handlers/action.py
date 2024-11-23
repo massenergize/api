@@ -5,7 +5,7 @@ from api.services.action import ActionService
 from _main_.utils.massenergize_response import MassenergizeResponse
 #from types import FunctionType as function
 from _main_.utils.context import Context
-from api.decorators import admins_only, super_admins_only, login_required
+from api.decorators import admins_only, cached_request, super_admins_only, login_required
 from api.store.common import expect_media_fields
 
 
@@ -111,7 +111,7 @@ class ActionHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=action_info)
 
-
+  @cached_request
   def list(self, request): 
     context: Context = request.context
     args: dict = context.args

@@ -6,8 +6,9 @@ from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse
 from _main_.utils.context import Context
 from functools import wraps
-from _main_.utils.massenergize_errors import NotAuthorizedError
+from _main_.utils.massenergize_errors import CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_logger import log
+from django.core.cache import cache
 
 def x_frame_options_exempt(view_func):
     @wraps(view_func)
@@ -86,3 +87,35 @@ def super_admins_only(function):
   wrap.__doc__ = function.__doc__
   wrap.__name__ = function.__name__
   return wrap
+
+def cached_request(func):
+    @wraps(func)
+    def wrapper(handler, request, *args, **kwargs):
+        context: Context = request.context
+        args = context.args
+
+        subdomain = args.get('subdomain', args.get("id", "None"))
+        locale = context.preferred_language or 'en'
+
+        print(f"**************Subdomain: {subdomain} ****************")
+
+        force_refresh = context.args.get('force_refresh', False)
+
+        if force_refresh:
+            cache.delete(f"{func.__module__}.{func.__name__}.{subdomain}.{locale}")
+
+        cache_key = f"{func.__module__}.{func.__name__}.{subdomain}.{locale}"
+        cached_data = cache.get(cache_key)
+
+        if cached_data and not force_refresh:
+            print(f"**************Returning Cached Data for {func.__name__} ****************")
+            return cached_data
+        else:
+            result = func(handler,request,**kwargs)
+            cache.set(cache_key, result)
+            return result
+
+    wrapper.__doc__ = func.__doc__
+    wrapper.__name__ = func.__name__
+
+    return wrapper

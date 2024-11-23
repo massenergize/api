@@ -3,7 +3,7 @@
 from _main_.utils.context import Context
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.route_handler import RouteHandler
-from api.decorators import admins_only, login_required, super_admins_only
+from api.decorators import admins_only, cached_request, login_required, super_admins_only
 from api.services.testimonial import TestimonialService
 from api.store.common import expect_media_fields
 
@@ -143,6 +143,7 @@ class TestimonialHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=testimonial_info)
 
+  @cached_request
   def list(self, request):
     context = request.context
     args = context.args
