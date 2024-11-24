@@ -80,6 +80,7 @@ class CustomPagesStore:
                 return None, CustomMassenergizeError("Invalid page_id")
             
             
+            
             if (title and page.title != title) or (slug and page.slug != slug):
                 slug = create_unique_slug(title, CustomPage, "slug", user_defined_slug=slug)
                 page.title = title
