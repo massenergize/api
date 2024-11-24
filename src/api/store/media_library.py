@@ -182,11 +182,21 @@ class MediaLibraryStore:
         images = Media.objects.filter(pk__in=ids)
         return images, None
 
-    def fetch_content(self, args):
+    def fetch_content(self, context: Context, args):
         com_ids = args.get("community_ids") or []
         upper_limit = args.get("upper_limit")
         lower_limit = args.get("lower_limit")
         images = None
+
+        if not com_ids:
+            if context.user_is_community_admin:
+                communities, _ = get_admin_communities(context)
+                com_ids = [c.id for c in communities]
+            elif context.user_is_super_admin:
+                com_ids = [c.id for c in Community.objects.all()]
+            else:
+                com_ids = []
+                
         if upper_limit and lower_limit:
             images = (
                 Media.objects.filter(

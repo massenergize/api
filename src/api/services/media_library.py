@@ -40,8 +40,8 @@ class MediaLibraryService:
             return None, error
         return response, None
     
-    def fetch_content(self, args):
-        images, error = self.store.fetch_content(args)
+    def fetch_content(self, context, args):
+        images, error = self.store.fetch_content(context, args)
         if error:
             return None, error
         return self.organiseData(data=serialize_all(images, True), args=args), None
