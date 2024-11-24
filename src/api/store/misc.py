@@ -710,13 +710,13 @@ class MiscellaneousStore:
             for page in custom_pages:
                 internal_links.append({
                     "name": page.custom_page.title,
-                    "link": f"/{page.custom_page.slug}",
+                    "link": f"/c/{page.custom_page.slug}",
                 })
 
             for page in shared_pages:
                 internal_links.append({
                     "name": page.community_page.custom_page.title,
-                    "link": f"/{page.community_page.custom_page.slug}",
+                    "link": f"/c/{page.community_page.custom_page.slug}",
                 })
             return internal_links, None
         except Exception as e:
