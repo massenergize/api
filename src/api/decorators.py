@@ -97,8 +97,6 @@ def cached_request(func):
         subdomain = args.get('subdomain', args.get("id", "None"))
         locale = context.preferred_language or 'en'
 
-        print(f"**************Subdomain: {subdomain} ****************")
-
         force_refresh = context.args.get('force_refresh', False)
 
         if force_refresh:
@@ -108,7 +106,6 @@ def cached_request(func):
         cached_data = cache.get(cache_key)
 
         if cached_data and not force_refresh:
-            print(f"**************Returning Cached Data for {func.__name__} ****************")
             return cached_data
         else:
             result = func(handler,request,**kwargs)
