@@ -13,12 +13,12 @@ from _main_.utils.utils import load_json
 from api.tests.common import createUsers
 from api.utils.api_utils import get_list_of_internal_links, load_default_menus_from_json, \
     remove_unpublished_menu_items, validate_menu_content
-from database.models import Action, CarbonEquivalency, Community, CommunityAdminGroup, CommunityMember, Data, Event, \
+from database.models import Action, CarbonEquivalency, Community, CommunityAdminGroup, CommunityCustomPage, CommunityCustomPageShare, CommunityMember, Data, Event, \
     FeatureFlag, HomePageSettings, Location, Media, Menu, RealEstateUnit, Subdomain, TagCollection, Team, TeamMember, \
     UserActionRel, \
     UserProfile, Vendor
 from database.utils.common import json_loader
-from .utils import check_location, find_reu_community, get_community, split_location_string
+from .utils import check_location, find_reu_community, get_community, get_user_from_context, split_location_string
 from ..constants import MENU_CONTROL_FEATURE_FLAGS
 
 
@@ -697,17 +697,24 @@ class MiscellaneousStore:
 
     def get_list_of_internal_links(self, context, args):
         try:
-            community_id = args.pop('community_id', None)
+            community_ids = args.pop('community_id', None)
+            user = get_user_from_context(context)
+
+            if not community_ids:
+                admin_groups = user.communityadmingroup_set.all()
+                community_ids = [ag.community.id for ag in admin_groups]
 
             internal_links, error = get_list_of_internal_links()
-            if not community_id or error:
+            if not community_ids or error:
                 return internal_links, None
             
-            community = Community.objects.filter(id=community_id).first()
-            custom_pages = community.custom_pages.filter(is_deleted=False, custom_page__latest_version__isnull=False)
-            shared_pages = community.shared_custom_pages.filter(is_deleted=False, community_page__custom_page__latest_version__isnull=False)
+            communities = Community.objects.filter(id__in=community_ids)
 
-            for page in custom_pages:
+            community_custom_pages = CommunityCustomPage.objects.filter(community__in=communities, custom_page__latest_version__isnull=False)
+            shared_pages = CommunityCustomPageShare.objects.filter(community__in=communities)
+
+
+            for page in community_custom_pages:
                 internal_links.append({
                     "name": page.custom_page.title,
                     "link": f"/c/{page.custom_page.slug}",
