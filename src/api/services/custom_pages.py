@@ -40,7 +40,7 @@ class CustomPagesService:
 
       if err:
         return None, err
-      return serialize(page), None
+      return page, None
     except Exception as e:
       return None, MassEnergizeAPIError(str(e))
 
@@ -109,6 +109,18 @@ class CustomPagesService:
         if err:
           return None , err
         return serialize(page), None
+    except Exception as e:
+        return None, MassEnergizeAPIError(str(e))
+    
+
+  def unpublish_custom_page(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+        page, err = self.store.unpublish_custom_page(context, args)
+        if err:
+          return None, err
+        
+        return serialize(page), None
+    
     except Exception as e:
         return None, MassEnergizeAPIError(str(e))
 

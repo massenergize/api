@@ -339,7 +339,7 @@ class CustomPagesIntegrationTestCase(TestCase):
         Console.header("Testing publish custom page: as super admin")
 
         signinAs(self.client, self.SADMIN)
-        endpoint = "custom.page.publish"
+        endpoint = "custom.pages.publish"
 
         args = {"id": self.p1.id}
 
@@ -404,7 +404,7 @@ class CustomPagesIntegrationTestCase(TestCase):
         Console.header("Testing list custom pages from other communities: as super admin")
 
         signinAs(self.client, self.SADMIN)
-        endpoint = "custom.page.other.communities.list"
+        endpoint = "custom.pages.other.communities.list"
 
         args = {
             "community_ids": f"{self.COMMUNITY_1.id},{self.COMMUNITY_2.id}",
@@ -436,7 +436,7 @@ class CustomPagesIntegrationTestCase(TestCase):
         Console.header("Testing get custom pages for user portal: as super admin")
 
         signinAs(self.client, self.SADMIN)
-        endpoint = "custom.page.getForUser"
+        endpoint = "custom.pages.getForUser"
 
         args = {"id": str(self.p2.id)}
 
@@ -475,7 +475,7 @@ class CustomPagesIntegrationTestCase(TestCase):
         Console.header("Testing copy custom page: as super admin")
 
         signinAs(self.client, self.SADMIN)
-        endpoint = "custom.page.copy"
+        endpoint = "custom.pages.copy"
 
         args = {
             "page_id": self.p1.id,
@@ -519,6 +519,38 @@ class CustomPagesIntegrationTestCase(TestCase):
         res = self.make_request(endpoint, args)
         self.assertFalse(res["success"])
         self.assertEqual(res["error"], 'Missing community_id')
+
+    def test_unpublish_custom_page(self):
+        Console.header("Testing unpublish custom page: as super admin")
+
+        signinAs(self.client, self.SADMIN)
+        endpoint = "custom.pages.unpublish"
+
+        args = {"id": self.p1.id}
+
+        res = self.make_request(endpoint, args)
+        self.assertTrue(res["success"])
+        self.assertEqual(res["data"]["page"]["id"], str(self.p1.id))
+        self.assertEqual(res["data"]["page"]["title"], self.p1.title)
+
+        Console.header("Testing unpublish custom page: as user")
+        signinAs(self.client, self.user)
+        res = self.make_request(endpoint, args)
+        self.assertFalse(res["success"])
+
+        Console.header("Testing unpublish custom page: with missing id")
+        args.pop("id")
+        signinAs(self.client, self.SADMIN)
+        res = self.make_request(endpoint, args)
+        self.assertFalse(res["success"])
+        self.assertEqual(res["error"], "You are Missing a Required Input: Id")
+
+        Console.header("Testing unpublish custom page: with invalid id")
+        args["id"] = "invalid-id"
+        res = self.make_request(endpoint, args)
+        self.assertFalse(res["success"])
+        self.assertEqual(res["error"], "['“invalid-id” is not a valid UUID.']")
+
 
 
 

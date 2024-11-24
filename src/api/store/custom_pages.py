@@ -112,28 +112,27 @@ class CustomPagesStore:
 
     def delete_community_custom_page(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
         try:
-            page_id = args.pop("id")
+            page_ids = args.pop("id")
 
-            page = CustomPage.objects.get(id=page_id)
+            pages = CustomPage.objects.filter(id__in=page_ids, is_deleted=False)
 
-            if not page:
+            if not pages:
+                return None, CustomMassenergizeError("custom page not found")
+            
+            community_custom_pages = CommunityCustomPage.objects.filter(custom_page__in=pages, is_deleted=False)  
+            
+
+            if not community_custom_pages:
                 return None, CustomMassenergizeError("Invalid page_id")
             
-            community_custom_page = CommunityCustomPage.objects.get(custom_page=page)
-
-            if not community_custom_page:
-                return None, CustomMassenergizeError("Invalid page_id")
-            
+            community_custom_page = community_custom_pages.first()
             if not is_admin_of_community(context, community_custom_page.community.id):
                 return None, NotAuthorizedError()
             
-            community_custom_page.is_deleted = True
-            community_custom_page.save()
+            pages.update(is_deleted=True)
+            community_custom_pages.update(is_deleted=True)
 
-            page.is_deleted = True
-            page.save()
-
-            return page, None
+            return {"Success":True}, None
 
         except Exception as e:
             log.exception(e)
@@ -347,6 +346,29 @@ class CustomPagesStore:
                 community_custom_page.audience.set(community_custom_page.audience.all())
             
             return community_custom_page, None
+        except Exception as e:
+            log.exception(e)
+            return None, CustomMassenergizeError(e)
+        
+    
+    def unpublish_custom_page(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        try:
+            page_id = args.pop('id', None)
+            if not page_id:
+                return None, CustomMassenergizeError("Missing id")
+            
+            page = CustomPage.objects.get(id=page_id, is_deleted=False)
+            if not page:
+                return None, CustomMassenergizeError("page not found")
+            
+            page.latest_version = None
+            page.save()
+            community_custom_page = CommunityCustomPage.objects.get(custom_page=page, is_deleted=False)
+
+
+            return community_custom_page, None
+    
+
         except Exception as e:
             log.exception(e)
             return None, CustomMassenergizeError(e)
