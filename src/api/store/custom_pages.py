@@ -126,9 +126,9 @@ class CustomPagesStore:
             if not community_custom_pages:
                 return None, CustomMassenergizeError("Invalid page_id")
             
-            # community_custom_page = community_custom_pages.first()
-            # if not is_admin_of_community(context, community_custom_page.community.id):
-            #     return None, NotAuthorizedError()
+            community_custom_page = community_custom_pages.first()
+            if not is_admin_of_community(context, community_custom_page.community.id):
+                return None, NotAuthorizedError()
             
             pages.update(is_deleted=True)
             community_custom_pages.update(is_deleted=True)
@@ -149,15 +149,14 @@ class CustomPagesStore:
                 return community_pages, None
             
             user = get_user_from_context(context)
-            # if not user:
-            #     return None, NotAuthorizedError()
+            if not user:
+                return None, NotAuthorizedError()
             
             if not community_ids:
                 admin_groups = user.communityadmingroup_set.all()
                 community_ids = [ag.community.id for ag in admin_groups]
 
             community_pages = CommunityCustomPage.objects.filter(community__id__in=community_ids, is_deleted=False)
-            print("community_pages", community_pages)
 
             return community_pages, None
 
