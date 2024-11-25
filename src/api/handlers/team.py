@@ -93,12 +93,9 @@ class TeamHandler(RouteHandler):
   def team_stats(self, request):
     context: Context = request.context
     args: dict = context.args
-    start = time.time()
     team_info, err = self.team.team_stats(context, args)
     if err:
       return err
-    end = time.time()
-    print(f"team_stats took {end-start} seconds")
     return MassenergizeResponse(data=team_info)
 
   @login_required
