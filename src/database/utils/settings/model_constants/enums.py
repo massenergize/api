@@ -20,4 +20,4 @@ class SharingType(Enum):
 
     @classmethod
     def choices(cls):
-        return [(key.value[1], key.value[0]) for key in cls]
+        return [(key.value[0], key.value[0]) for key in cls]
