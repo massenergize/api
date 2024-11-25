@@ -115,12 +115,12 @@ class CustomPagesStore:
         try:
             page_ids = args.pop("id")
 
-            pages = CustomPage.objects.filter(id__in=page_ids, is_deleted=False)
+            pages = CustomPage.objects.filter(id__in=page_ids)
 
             if not pages:
                 return None, CustomMassenergizeError("custom page not found")
             
-            community_custom_pages = CommunityCustomPage.objects.filter(custom_page__in=pages, is_deleted=False)  
+            community_custom_pages = CommunityCustomPage.objects.filter(custom_page__in=pages)  
             
 
             if not community_custom_pages:
