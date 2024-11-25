@@ -4,7 +4,7 @@ from _main_.utils.route_handler import RouteHandler
 from api.services.team import TeamService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
-from api.decorators import admins_only, super_admins_only, login_required
+from api.decorators import admins_only, cached_request, super_admins_only, login_required
 from api.store.common import expect_media_fields
 
 class TeamHandler(RouteHandler):
@@ -88,11 +88,10 @@ class TeamHandler(RouteHandler):
 
     return MassenergizeResponse(data=team_info)
 
-
+  # @cached_request
   def team_stats(self, request):
     context: Context = request.context
     args: dict = context.args
-    context: Context = request.context
     team_info, err = self.team.team_stats(context, args)
     if err:
       return err

@@ -12,10 +12,8 @@ from api.store.misc import MiscellaneousStore
 from _main_.utils.context import Context
 from django.shortcuts import render
 from api.tests.common import signinAs
-from api.utils.api_utils import get_list_of_internal_links
-from database.models import Deployment
 from _main_.settings import IS_PROD, IS_CANARY, BASE_DIR, EnvConfig, TEST_PASSPORT_KEY
-from _main_.utils.utils import load_json, load_text_contents
+from _main_.utils.utils import load_json
 from django.db.models.query import QuerySet
 from typing import Tuple
 import random
@@ -218,8 +216,8 @@ class MiscellaneousService:
     
     def get_internal_links(self, context, args):
         try:
-            is_footer = args.get("is_footer", False)
-            res, err = get_list_of_internal_links(is_footer)
+           
+            res, err = self.store.get_list_of_internal_links(context, args)
             
             if err:
                 return None, CustomMassenergizeError(str(err))

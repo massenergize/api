@@ -4400,7 +4400,18 @@ class CustomPage(BaseModel):
     
     def create_version(self):
         version = CustomPageVersion(custom_page=self)
-        version.content = self.content
+        
+        version.content = {
+            "id": str(self.id),
+            "title": self.title,
+            "slug": self.slug,
+            "content": self.content,
+            "user": {
+                "id": str(self.user.id),
+                "full_name": self.user.full_name,
+                "email": self.user.email,
+            },
+        }
         version.save()
 
         self.latest_version = version
@@ -4410,12 +4421,13 @@ class CustomPage(BaseModel):
     def simple_json(self):
         res = super().to_json()
         res.update(model_to_dict(self))
+        res["user"] = get_summary_info(self.user)
+        res["latest_version"] = self.latest_version.simple_json() if self.latest_version else None
 
         return res
 
     def full_json(self):
         res = self.simple_json()
-        res["user"] = get_summary_info(self.user)
         return res
 
     class Meta:

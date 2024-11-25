@@ -514,11 +514,14 @@ def make_community_custom_page(**kwargs):
     audience = kwargs.pop("audience", [])
     sharing_type = kwargs.pop("sharing_type", SharingType.OPEN_TO.value[0])
     user = kwargs.pop("user", makeUser())
+    slug = kwargs.pop("slug", title.replace(" ","-").lower()) 
+    add_version = kwargs.pop("add_version", False)  
 
     page = CustomPage.objects.create(**{
         **kwargs,
         "title": title,
         "user": user,
+        "slug": slug,
     })
 
     community_custom_page = CommunityCustomPage.objects.create(
@@ -527,6 +530,9 @@ def make_community_custom_page(**kwargs):
     )
     if audience:
         community_custom_page.audience.set(audience)
+    
+    if add_version:
+        page.create_version()
 
     return page, community_custom_page
 
