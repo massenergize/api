@@ -85,9 +85,9 @@ class TeamStore:
     except Exception as e:
       log.exception(e)
       return None, CustomMassenergizeError(e)
+    
 
-
-  def team_stats(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+  def team_stats_v2(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       community = get_community_or_die(context, args)
       teams = Team.objects.filter(communities__id=community.id, is_deleted=False)
@@ -122,6 +122,54 @@ class TeamStore:
         ans.append(res)
 
       return ans, None
+    except Exception as e:
+      log.exception(e)
+      return None, CustomMassenergizeError(e)
+
+
+  def team_stats(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    try:
+        community = get_community_or_die(context, args)
+        teams = Team.objects.filter(communities__id=community.id, is_deleted=False)
+
+        # show unpublished teams only in sandbox.
+        # TODO: Better solution would be to show also for the user who created the team, but more complicated
+        if not context.is_sandbox:
+            teams = teams.filter(is_published=True)
+
+        teams = teams.prefetch_related(
+            'team_users__real_estate_units',
+            'team_users__useractionrel_set__action__calculator_action'
+        )
+
+        ans = []
+        for team in teams:
+            res = {
+                "members": 0,
+                "households": 0,
+                "actions": 0,
+                "actions_completed": 0,
+                "actions_todo": 0,
+                "carbon_footprint_reduction": 0
+            }
+            res["team"] = team.simple_json()
+
+            users = get_team_users(team)
+            res["members"] = users.filter(accepts_terms_and_conditions=True).count()
+
+            for user in users:
+                if user.accepts_terms_and_conditions:
+                    res["households"] += user.real_estate_units.count()
+                    actions = user.useractionrel_set.all()
+                    res["actions"] += actions.count()
+                    done_actions = actions.filter(status="DONE")
+                    res["actions_completed"] += done_actions.count()
+                    res["actions_todo"] += actions.filter(status="TODO").count()
+                    for done_action in done_actions:
+                        if done_action.action and done_action.action.calculator_action:
+                            res["carbon_footprint_reduction"] += AverageImpact(done_action.action.calculator_action, done_action.date_completed)
+
+            ans.append(res)
     except Exception as e:
       log.exception(e)
       return None, CustomMassenergizeError(e)

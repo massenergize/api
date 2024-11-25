@@ -66,7 +66,7 @@ class CustomPagesHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=page)
   
-  @admins_only
+  # @admins_only
   def delete_community_custom_page(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -115,7 +115,7 @@ class CustomPagesHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=page)
   
-  @admins_only
+  # @admins_only
   def list_community_custom_pages(self, request): 
     context: Context = request.context
     args: dict = context.args

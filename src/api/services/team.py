@@ -3,7 +3,6 @@ from _main_.utils.common import serialize, serialize_all
 from _main_.utils.pagination import paginate
 from api.store.team import TeamStore
 from api.store.message import MessageStore
-from api.utils.api_utils import get_sender_email
 from api.utils.filter_functions import sort_items
 from database.models import TeamMember
 from _main_.utils.context import Context

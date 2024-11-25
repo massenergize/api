@@ -1,5 +1,6 @@
 """Handler file for all routes pertaining to teams"""
 
+import time
 from _main_.utils.route_handler import RouteHandler
 from api.services.team import TeamService
 from _main_.utils.massenergize_response import MassenergizeResponse
@@ -92,9 +93,12 @@ class TeamHandler(RouteHandler):
   def team_stats(self, request):
     context: Context = request.context
     args: dict = context.args
+    start = time.time()
     team_info, err = self.team.team_stats(context, args)
     if err:
       return err
+    end = time.time()
+    print(f"team_stats took {end-start} seconds")
     return MassenergizeResponse(data=team_info)
 
   @login_required
