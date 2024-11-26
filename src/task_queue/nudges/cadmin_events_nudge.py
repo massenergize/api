@@ -5,6 +5,7 @@ from _main_.utils.common import custom_timezone_info, encode_data_for_URL, seria
 from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
 from _main_.utils.feature_flag_keys import COMMUNITY_ADMIN_WEEKLY_EVENTS_NUDGE_FF
+from api.utils.api_utils import generate_email_tag
 from api.utils.constants import WEEKLY_EVENTS_NUDGE_TEMPLATE
 from database.models import Community, CommunityAdminGroup, Event, FeatureFlag, UserProfile
 from database.utils.settings.model_constants.events import EventConstants
@@ -142,7 +143,7 @@ def send_events_nudge(task=None) -> bool:
                 for email, data in email_list.items():
                     name = data.get("name")
 
-                    stat = send_events_report(name, email, event_list)
+                    stat = send_events_report(name, email, event_list, com)
 
                     if not stat:
                         log.error("send_events_report error return")
@@ -157,7 +158,7 @@ def send_events_nudge(task=None) -> bool:
         return False
 
 
-def send_events_report(name, email, event_list) -> bool:
+def send_events_report(name, email, event_list, com) -> bool:
     try:
         # 14-Dec-23 - fix for user_info not provided
         user = UserProfile.objects.filter(email=email).first()
@@ -169,8 +170,10 @@ def send_events_report(name, email, event_list) -> bool:
         data["change_preference_link"] = change_preference_link
         data["events"] = event_list
 
+        tag = generate_email_tag(com.subdomain, "CadminEventsNudge")
+
         # sent from MassEnergize to cadmins
-        send_massenergize_email_with_attachments(WEEKLY_EVENTS_NUDGE_TEMPLATE, data, [email], None, None, None)
+        send_massenergize_email_with_attachments(WEEKLY_EVENTS_NUDGE_TEMPLATE, data, [email], None, None, None, tag)
         return True
     except Exception as e:
         log.error("send_events_report exception: " + str(e))

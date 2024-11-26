@@ -401,4 +401,8 @@ def create_unique_slug(title, model, field_name="slug", user_defined_slug=None):
     return  f"{slug}-{timestamp}".lower()
 
 
+def generate_email_tag(name, email_type):
+    return f"{name}__{email_type}"
+
+
     

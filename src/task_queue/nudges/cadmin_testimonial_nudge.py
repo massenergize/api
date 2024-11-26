@@ -4,7 +4,7 @@ from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
 from _main_.utils.feature_flag_keys import SHARED_TESTIMONIALS_NUDGE_FF
 from _main_.utils.massenergize_logger import log
-from api.utils.api_utils import get_sender_email
+from api.utils.api_utils import generate_email_tag, get_sender_email
 from api.utils.constants import CADMIN_TESTIMONIAL_NUDGE_TEMPLATE
 from database.models import Community, CommunityAdminGroup, FeatureFlag, Testimonial
 from task_queue.helpers import get_summary
@@ -79,8 +79,10 @@ def send_nudge(data, community, admin):
 		login_method = user_info.get("login_method") if user_info else None
 		cred = encode_data_for_URL({"email": email, "login_method": login_method})
 		data["change_preference_link"] = f"{ADMIN_URL_ROOT}/admin/profile/preferences/?cred={cred}"
+
+		tag = generate_email_tag(community.subdomain, "CadminTestimonialsNudge")
 		 
-		send_massenergize_email_with_attachments(CADMIN_TESTIMONIAL_NUDGE_TEMPLATE, data, [email], None, None, get_sender_email(community.id))
+		send_massenergize_email_with_attachments(CADMIN_TESTIMONIAL_NUDGE_TEMPLATE, data, [email], None, None, get_sender_email(community.id), tag)
 
 					
 		return True
