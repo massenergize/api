@@ -1,6 +1,5 @@
 """Handler file for all routes pertaining to teams"""
 
-import time
 from _main_.utils.route_handler import RouteHandler
 from api.services.team import TeamService
 from _main_.utils.massenergize_response import MassenergizeResponse
@@ -89,7 +88,7 @@ class TeamHandler(RouteHandler):
 
     return MassenergizeResponse(data=team_info)
 
-  # @cached_request
+  @cached_request
   def team_stats(self, request):
     context: Context = request.context
     args: dict = context.args

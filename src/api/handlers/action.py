@@ -111,7 +111,7 @@ class ActionHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=action_info)
 
-  # @cached_request
+  @cached_request
   def list(self, request): 
     context: Context = request.context
     args: dict = context.args

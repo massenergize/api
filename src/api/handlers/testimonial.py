@@ -143,7 +143,7 @@ class TestimonialHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=testimonial_info)
 
-  # @cached_request
+  @cached_request
   def list(self, request):
     context = request.context
     args = context.args
