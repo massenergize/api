@@ -697,7 +697,7 @@ class MiscellaneousStore:
 
     def get_list_of_internal_links(self, context, args):
         try:
-            community_ids = args.pop('community_id', None)
+            community_ids = args.pop('community_ids', None)
             user = get_user_from_context(context)
 
             if not community_ids:
