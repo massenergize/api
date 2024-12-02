@@ -16,6 +16,10 @@ class MassenergizeLogger:
 
         if not EnvConfig.can_send_logs_to_cloudwatch():
             return
+        
+        if not message:
+            return 
+
 
         if exception:
             extra['exception'] = exception
