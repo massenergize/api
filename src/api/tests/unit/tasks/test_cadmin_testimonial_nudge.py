@@ -86,7 +86,6 @@ class CadminTestimonialNudgeTestCases(TestCase):
         Console.header("Test prepare_testimonials_for_community_admins_success")
         task = None
         result = prepare_testimonials_for_community_admins(task)
-        print("===RESULT===", result)
         self.assertTrue(result)
 
 
