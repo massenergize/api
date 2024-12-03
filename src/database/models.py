@@ -2068,7 +2068,7 @@ class Action(models.Model):
             "community":{
                 "id": self.community.id,
                 "name": self.community.name,
-            },
+            } if self.community else None,
             "image": get_json_if_not_none(self.image),
         }
 
