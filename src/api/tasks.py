@@ -119,7 +119,7 @@ def download_data(self, args, download_type):
         for com in community_list:
             events = generate_event_list_for_community(com)
             event_list = events.get("events", [])
-            stat = send_events_report(user.full_name, user.email, event_list, user.user_info)
+            stat = send_events_report(user.full_name, user.email, event_list)
             if not stat:
                 error_notification(CADMIN_REPORT, email)
                 return
