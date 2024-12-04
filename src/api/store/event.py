@@ -801,8 +801,9 @@ class EventStore:
             events = Event.objects.filter(id=event_id)
             if not events:
                 return None, InvalidResourceError()
-
-            if not is_admin_of_community(context, events.first().community.id):
+            
+            event_community = events.first().community
+            if event_community and not is_admin_of_community(context, event_community.id):
                 return None, NotAuthorizedError()
 
             if len(events) > 1:
