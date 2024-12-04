@@ -11,5 +11,4 @@ class URLResolverMiddleware:
         except Resolver404:
             return HttpResponse("This endpoint does not exist.", status=404)
         
-        response = self.get_response(request)
-        return response
+        return self.get_response(request)
