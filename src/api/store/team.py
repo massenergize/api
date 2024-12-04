@@ -85,43 +85,95 @@ class TeamStore:
     except Exception as e:
       log.exception(e)
       return None, CustomMassenergizeError(e)
+    
+
+  # def team_stats_v2(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+  #   try:
+  #     community = get_community_or_die(context, args)
+  #     teams = Team.objects.filter(communities__id=community.id, is_deleted=False)
+
+  #     # show unpublished teams only in sandbox.
+  #     # TODO: Better solution would be to show also for the user who created the team, but more complicated
+  #     if not context.is_sandbox:
+  #       teams = teams.filter(is_published=True)
+
+  #     ans = []
+  #     for team in teams:
+  #       res = {"members": 0, "households": 0, "actions": 0, "actions_completed": 0, "actions_todo": 0, "carbon_footprint_reduction": 0}
+  #       res["team"] = team.simple_json()
+   
+  #       users = get_team_users(team)
+  #       res["members"] = 0
+
+  #       for user in users:
+  #         # only include users that have joined the platform
+  #         if user.accepts_terms_and_conditions:
+  #           res["members"] += 1
+  #           res["households"] += user.real_estate_units.count()
+  #           actions = user.useractionrel_set.all()
+  #           res["actions"] += len(actions)
+  #           done_actions = actions.filter(status="DONE").prefetch_related('action__calculator_action')
+  #           res["actions_completed"] += done_actions.count()
+  #           res["actions_todo"] += actions.filter(status="TODO").count()
+  #           for done_action in done_actions:
+  #             if done_action.action and done_action.action.calculator_action:
+  #               res["carbon_footprint_reduction"] += AverageImpact(done_action.action.calculator_action, done_action.date_completed)
+
+  #       ans.append(res)
+
+  #     return ans, None
+  #   except Exception as e:
+  #     log.exception(e)
+  #     return None, CustomMassenergizeError(e)
 
 
   def team_stats(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
-      community = get_community_or_die(context, args)
-      teams = Team.objects.filter(communities__id=community.id, is_deleted=False)
+        community = get_community_or_die(context, args)
 
-      # show unpublished teams only in sandbox.
-      # TODO: Better solution would be to show also for the user who created the team, but more complicated
-      if not context.is_sandbox:
-        teams = teams.filter(is_published=True)
+        teams = Team.objects.filter(communities__id=community.id, is_deleted=False)
+        if not context.is_sandbox:
+          teams = teams.filter(is_published=True)
 
-      ans = []
-      for team in teams:
-        res = {"members": 0, "households": 0, "actions": 0, "actions_completed": 0, "actions_todo": 0, "carbon_footprint_reduction": 0}
-        res["team"] = team.simple_json()
-   
-        users = get_team_users(team)
-        res["members"] = 0
+        team_members = TeamMember.objects.filter(
+        Q(team__in=teams) | Q(team__parent__in=teams, team__is_published=True, team__is_deleted=False),
+        is_deleted=False
+          ).select_related('team', 'user').prefetch_related(
+                'user__real_estate_units',
+                'user__useractionrel_set__action__calculator_action'
+            )
 
-        for user in users:
-          # only include users that have joined the platform
-          if user.accepts_terms_and_conditions:
+        data = []
+        teams_dict = {}
+
+        for member in team_members:
+            team = member.team
+            if team.id not in teams_dict:
+                teams_dict[team.id] = {
+                    "team": team.simple_json(),
+                    "members": 0,
+                    "households": 0,
+                    "actions": 0,
+                    "actions_completed": 0,
+                    "actions_todo": 0,
+                    "carbon_footprint_reduction": 0
+                }
+
+            res = teams_dict[team.id]
             res["members"] += 1
+            user = member.user
             res["households"] += user.real_estate_units.count()
             actions = user.useractionrel_set.all()
-            res["actions"] += len(actions)
-            done_actions = actions.filter(status="DONE").prefetch_related('action__calculator_action')
-            res["actions_completed"] += done_actions.count()
-            res["actions_todo"] += actions.filter(status="TODO").count()
+            res["actions"] += actions.count()
+            done_actions = [action for action in actions if action.status == "DONE"]
+            res["actions_completed"] += len(done_actions)
+            res["actions_todo"] += len([action for action in actions if action.status == "TODO"])
             for done_action in done_actions:
-              if done_action.action and done_action.action.calculator_action:
-                res["carbon_footprint_reduction"] += AverageImpact(done_action.action.calculator_action, done_action.date_completed)
+                if done_action.action and done_action.action.calculator_action:
+                    res["carbon_footprint_reduction"] += AverageImpact(done_action.action.calculator_action, done_action.date_completed)
 
-        ans.append(res)
-
-      return ans, None
+        data = list(teams_dict.values())
+        return data, None
     except Exception as e:
       log.exception(e)
       return None, CustomMassenergizeError(e)

@@ -88,7 +88,7 @@ class TeamHandler(RouteHandler):
 
     return MassenergizeResponse(data=team_info)
 
-  # @cached_request
+  @cached_request
   def team_stats(self, request):
     context: Context = request.context
     args: dict = context.args

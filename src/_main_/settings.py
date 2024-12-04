@@ -102,6 +102,7 @@ MIDDLEWARE = [
     'api.middlewares.translation_middleware.TranslationMiddleware',
     'authentication.middleware.MassenergizeJWTAuthMiddleware',
     'django_hosts.middleware.HostsResponseMiddleware',
+    "api.middlewares.gate_middleware.GateMiddleware",
     '_main_.utils.metrics.middleware.MetricsMiddleware'
 ]
 

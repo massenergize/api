@@ -5,7 +5,7 @@ from api.services.event import EventService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
 from _main_.utils.context import Context
-from api.decorators import admins_only, super_admins_only, login_required
+from api.decorators import admins_only, cached_request, super_admins_only, login_required
 from api.store.common import expect_media_fields
 
 
@@ -238,7 +238,8 @@ class EventHandler(RouteHandler):
             return err
 
         return MassenergizeResponse(data=exceptions)
-
+    
+    @cached_request
     def list(self, request):
 
         context: Context = request.context

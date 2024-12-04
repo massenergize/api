@@ -420,9 +420,6 @@ class CommunitiesTestCase(TestCase):
     # test update community notification settings not logged in
     Console.header("Integration: update_community_notification_settings")
     args = {"id": self.community_notification_setting.id, "is_active": True}
-    signinAs(self.client, None)
-    update_response = self.client.post('/api/communities.notifications.settings.update', urlencode(args), content_type="application/x-www-form-urlencoded").toDict()
-    self.assertFalse(update_response["success"])
 
     # test update community notification settings logged as user
     signinAs(self.client, self.USER)

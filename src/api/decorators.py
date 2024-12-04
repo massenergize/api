@@ -4,11 +4,14 @@ conditions have been satisfied
 """
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse
+from _main_.utils.constants import DEFAULT_SOURCE_LANGUAGE_CODE
 from _main_.utils.context import Context
 from functools import wraps
-from _main_.utils.massenergize_errors import CustomMassenergizeError, NotAuthorizedError
+from _main_.utils.massenergize_errors import NotAuthorizedError
 from _main_.utils.massenergize_logger import log
 from django.core.cache import cache
+
+from _main_.utils.utils import is_test_mode
 
 def x_frame_options_exempt(view_func):
     @wraps(view_func)
@@ -94,22 +97,25 @@ def cached_request(func):
         context: Context = request.context
         args = context.args
 
-        subdomain = args.get('subdomain', args.get("id", "None"))
-        locale = context.preferred_language or 'en'
+        # subdomain = args.get('subdomain', args.get("id", "None"))
+        key = ".".join([v for v in args.values()])
+
+        locale = context.preferred_language or DEFAULT_SOURCE_LANGUAGE_CODE
 
         force_refresh = context.args.get('force_refresh', False)
 
-        if force_refresh:
-            cache.delete(f"{func.__module__}.{func.__name__}.{subdomain}.{locale}")
+        cache_key = f"{func.__module__}.{func.__name__}.{key}.{locale}"
 
-        cache_key = f"{func.__module__}.{func.__name__}.{subdomain}.{locale}"
+        if force_refresh:
+            cache.delete(cache_key)
+
         cached_data = cache.get(cache_key)
 
-        if cached_data and not force_refresh:
+        if cached_data and not force_refresh and not is_test_mode():
             return cached_data
         else:
             result = func(handler,request,**kwargs)
-            cache.set(cache_key, result)
+            cache.set(cache_key, result, timeout=3600)
             return result
 
     wrapper.__doc__ = func.__doc__
