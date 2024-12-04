@@ -803,9 +803,8 @@ class EventStore:
                 return None, InvalidResourceError()
             
             event_community = events.first().community
-            if event_community:
-                if not is_admin_of_community(context, event_community.id):
-                    return None, NotAuthorizedError()
+            if event_community and not is_admin_of_community(context, event_community.id):
+                return None, NotAuthorizedError()
 
             if len(events) > 1:
                 return None, CustomMassenergizeError("Deleting multiple events not supported")
