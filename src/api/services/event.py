@@ -195,6 +195,7 @@ class EventService:
           'email': email,
           'title': event.name,
           'body': event.description,
+          'me_logo':ME_LOGO_PNG
         }
         # sent from MassEnergize to cadmins
         # send_massenergize_rich_email(subject, admin_email, 'event_submitted_email.html', content_variables, None)
