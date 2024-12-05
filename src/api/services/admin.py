@@ -2,9 +2,10 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassene
 from _main_.utils.common import serialize
 from _main_.utils.pagination import paginate
 from api.store.admin import AdminStore
-from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
-from _main_.utils.emailer.send_email import send_massenergize_rich_email
+from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT, ME_LOGO_PNG
+from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments, send_massenergize_rich_email
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY
+from api.utils.constants import CONTACT_ADMIN_EMAIL_TEMPLATE
 from api.utils.filter_functions import sort_items
 from .utils import send_slack_message
 from _main_.utils.massenergize_logger import log
@@ -103,7 +104,7 @@ class AdminService:
         if not first_name or first_name == "":
             first_name = admin_name
 
-        subject = 'A message was sent to the Community Admin for ' + message.community.name
+        # subject = 'A message was sent to the Community Admin for ' + message.community.name
 
         content_variables = {
             'name': first_name,
@@ -113,9 +114,12 @@ class AdminService:
             "email": message.email,
             "subject": message.title,
             "message_body": message.body,
+            "me_logo": ME_LOGO_PNG
         }
         # sent from MassEnergize to cadmins
-        send_massenergize_rich_email(subject, admin_email, 'contact_admin_email.html', content_variables, None)
+        # send_massenergize_rich_email(subject, admin_email, 'contact_admin_email.html', content_variables, None)
+        send_massenergize_email_with_attachments(CONTACT_ADMIN_EMAIL_TEMPLATE, content_variables, [admin_email], None, None, None)
+
 
         if IS_PROD or IS_CANARY:
           send_slack_message(
