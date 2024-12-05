@@ -55,6 +55,7 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost:3000',
     'localhost',
+    ".test.com"
     # feel free to add more for your local testing
 ]
 
