@@ -5,7 +5,7 @@ from api.store.admin import AdminStore
 from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT, ME_LOGO_PNG
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments, send_massenergize_rich_email
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY
-from api.utils.constants import CONTACT_ADMIN_EMAIL_TEMPLATE
+from api.utils.constants import CONTACT_ADMIN_EMAIL_TEMPLATE, NEW_ADMIN_EMAIL_TEMPLATE
 from api.utils.filter_functions import sort_items
 from .utils import send_slack_message
 from _main_.utils.massenergize_logger import log
@@ -30,11 +30,16 @@ class AdminService:
             'name': admin.full_name,
             'adminlink': ADMIN_URL_ROOT,
             'admintype': 'Super',
-            'admintext': "Now that you are a super admin, you have access the MassEnergize admin website at %s. You have full control over the content of our sites, can publish new communities and add new admins" % (ADMIN_URL_ROOT)
+            'admintext': "Now that you are a super admin, you have access the MassEnergize admin website at %s. You have full control over the content of our sites, can publish new communities and add new admins" % (ADMIN_URL_ROOT),
+            "me_logo": ME_LOGO_PNG,
+            "subject": "Welcome to the MassEnergize Team"
         }
+
+        send_massenergize_email_with_attachments(NEW_ADMIN_EMAIL_TEMPLATE, content_variables, [admin.email], None, None, None)
+
         # sent from MassEnergize to cadmins
-        send_massenergize_rich_email(
-            subject, admin.email, 'new_admin_email.html', content_variables, None)
+        # send_massenergize_rich_email(
+        #     subject, admin.email, 'new_admin_email.html', content_variables, None)
         return serialize(admin, full=True), None
       except Exception as e:
         log.exception(e)
@@ -66,11 +71,13 @@ class AdminService:
             "community_name": res["community_name"],
             'sandbox_link': f"{COMMUNITY_URL_ROOT}/{res['subdomain']}?sandbox=true",
             'portal_link':  f"{COMMUNITY_URL_ROOT}/{res['subdomain']}",
-            'admin_type': 'Community'
+            'admin_type': 'Community',
+            "me_logo": ME_LOGO_PNG,
+            "subject": "Welcome to the MassEnergize Team"
         }
         #sent from MassEnergize support
-        send_massenergize_rich_email(
-            subject, res["email"], 'new_admin_email.html', content_variables, None)
+        # send_massenergize_rich_email(subject, res["email"], 'new_admin_email.html', content_variables, None)
+        send_massenergize_email_with_attachments(NEW_ADMIN_EMAIL_TEMPLATE, content_variables, [res["email"]], None, None, None)
         res["user"] = serialize(res.get("user"))
         return res, None
       except Exception as e:
