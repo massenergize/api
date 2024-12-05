@@ -18,3 +18,8 @@ CAMPAIGN_MANAGER_INVITE_EMAIL_TEMPLATE="campaign-manager-invite"
 CADMIN_TESTIMONIAL_NUDGE_TEMPLATE="cadmin-shared-testimonial-nudge-temp-alias"
 THANK_YOU_FOR_GETTING_IN_TOUCH_TEMPLATE="campaign-get-in-touch-template-user"
 CAMPAIGN_CONTACT_MESSAGE_TEMPLATE="campaign-get-in-touch-template-admin"
+
+# new 
+CONTACT_TEAM_ADMIN_EMAIL_TEMPLATE  = "contact-team-admin-email-template-id"
+CONTACT_ADMIN_EMAIL_TEMPLATE = "contact-admin-email-template-id"
+VENDOR_SUBMISSION_EMAIL_TEMPLATE = "vendor-submission-email-template-id"
