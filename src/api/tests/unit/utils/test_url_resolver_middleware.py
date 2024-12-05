@@ -1,8 +1,5 @@
 from django.test import SimpleTestCase, RequestFactory
 from django.http import HttpResponse
-from django.urls import path, re_path, Resolver404, resolve
-from django.conf.urls import url
-
 from api.middlewares.url_resolver_middleware import URLResolverMiddleware
 
 class URLResolverMiddlewareTest(SimpleTestCase):
