@@ -1,12 +1,12 @@
-from datetime import date
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.common import serialize, serialize_all
 from _main_.utils.pagination import paginate
 from api.store.event import EventStore
 from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT, ME_LOGO_PNG
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY
-from _main_.utils.emailer.send_email import send_massenergize_rich_email
+from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
 from api.utils.api_utils import get_sender_email
+from api.utils.constants import EVENT_RSVPS_EMAIL_TEMPLATE, EVENT_SUBMISSION_EMAIL_TEMPLATE
 from api.utils.filter_functions import sort_items
 from .utils import send_slack_message
 from api.store.utils import get_user_or_die
@@ -110,8 +110,12 @@ class EventService:
           }
 
 
-          send_massenergize_rich_email(
-              subject, user_email, 'event_rsvp_email.html', content_variables, from_email)
+          # send_massenergize_rich_email(
+          #     subject, user_email, 'event_rsvp_email.html', content_variables, from_email)
+          
+          send_massenergize_email_with_attachments(
+            EVENT_RSVPS_EMAIL_TEMPLATE,
+          content_variables, [user_email], None, None, None)
 
 
       return serialize(event_attendee), None
@@ -181,7 +185,7 @@ class EventService:
         else:
           return None, CustomMassenergizeError('Event submission incomplete')
 
-        subject = 'User Event Submitted'
+        # subject = 'User Event Submitted'
 
         content_variables = {
           'name': first_name,
@@ -193,8 +197,9 @@ class EventService:
           'body': event.description,
         }
         # sent from MassEnergize to cadmins
-        send_massenergize_rich_email(
-              subject, admin_email, 'event_submitted_email.html', content_variables, None)
+        # send_massenergize_rich_email(subject, admin_email, 'event_submitted_email.html', content_variables, None)
+        send_massenergize_email_with_attachments(EVENT_SUBMISSION_EMAIL_TEMPLATE, content_variables, [admin_email], None, None, None)
+
 
         if IS_PROD or IS_CANARY:
           send_slack_message(
