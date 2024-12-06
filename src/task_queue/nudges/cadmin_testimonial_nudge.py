@@ -1,6 +1,6 @@
 from datetime import datetime
 from _main_.utils.common import encode_data_for_URL, serialize_all
-from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
+from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT, ME_LOGO_PNG
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
 from _main_.utils.feature_flag_keys import TESTIMONIAL_AUTO_SHARE_SETTINGS_NUDGE_FEATURE_FLAG_KEY
 from _main_.utils.massenergize_logger import log
@@ -8,7 +8,7 @@ from api.utils.api_utils import get_sender_email
 from api.utils.constants import CADMIN_TESTIMONIAL_NUDGE_TEMPLATE
 from database.models import Community, CommunityAdminGroup, FeatureFlag, Testimonial
 from task_queue.helpers import get_summary
-from task_queue.nudges.nudge_utils import ME_DEFAULT_IMAGE, get_admin_email_list, update_last_notification_dates
+from task_queue.nudges.nudge_utils import get_admin_email_list, update_last_notification_dates
 from dateutil.relativedelta import relativedelta
 from django.db.models import Q
 from django.utils import timezone
@@ -73,7 +73,7 @@ def send_nudge(data, community, admin):
 		data = {
 			"testimonials": to_send,
 			"community_name": community.name,
-			"community_logo": community.logo.file.url if community.logo else ME_DEFAULT_IMAGE,
+			"community_logo": community.logo.file.url if community.logo else ME_LOGO_PNG,
 			"name": name,
 		}
 		login_method = user_info.get("login_method") if user_info else None

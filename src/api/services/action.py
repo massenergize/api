@@ -3,9 +3,10 @@ from _main_.utils.common import serialize, serialize_all
 from _main_.utils.pagination import paginate
 from api.store.action import ActionStore
 from _main_.utils.context import Context
-from _main_.utils.constants import ADMIN_URL_ROOT
+from _main_.utils.constants import ADMIN_URL_ROOT, ME_LOGO_PNG
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY
-from _main_.utils.emailer.send_email import send_massenergize_rich_email
+from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments, send_massenergize_rich_email
+from api.utils.constants import ACTION_SUBMISSION_EMAIL_TEMPLATE
 from api.utils.filter_functions import sort_items
 from .utils import send_slack_message
 from api.store.utils import get_user_or_die
@@ -57,7 +58,7 @@ class ActionService:
         else:
           return None, CustomMassenergizeError('Action submission incomplete')
 
-        subject = 'User Action Submitted'
+        # subject = 'User Action Submitted'
 
         content_variables = {
           'name': first_name,
@@ -67,10 +68,13 @@ class ActionService:
           'email': email,
           'title': action.title,
           'body': action.featured_summary,
+          'me_logo':ME_LOGO_PNG
         }
         # sent from MassEnergize to cadmins
-        send_massenergize_rich_email(
-              subject, admin_email, 'action_submitted_email.html', content_variables, None)
+        # send_massenergize_rich_email(
+        #       subject, admin_email, 'action_submitted_email.html', content_variables, None)
+        send_massenergize_email_with_attachments(ACTION_SUBMISSION_EMAIL_TEMPLATE, content_variables, [admin_email], None, None, None)
+
 
         if IS_PROD or IS_CANARY:
           send_slack_message(
@@ -82,7 +86,7 @@ class ActionService:
             "subject": action.title,
             "message": action.featured_summary,
             "url": f"{ADMIN_URL_ROOT}/admin/edit/{action.id}/action",
-            "community": community_name
+            "community": community_name,
         }) 
 
       return serialize(action), None

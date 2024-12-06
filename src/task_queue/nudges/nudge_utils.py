@@ -13,7 +13,6 @@ MONTHLY = "per_month"
 DAILY = "per_day"
 
 EASTERN_TIME_ZONE = custom_timezone_info("US/Eastern")
-ME_DEFAULT_IMAGE = "https://www.massenergize.org/wp-content/uploads/2021/07/cropped-me-logo-transp.png"
 
 
 LIMIT = 5
