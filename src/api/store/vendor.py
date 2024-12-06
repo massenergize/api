@@ -83,7 +83,6 @@ class VendorStore:
         args['location'] = None
 
       new_vendor = Vendor.objects.create(**args)
-
       if communities:
         new_vendor.communities.set(communities)
 
@@ -92,7 +91,7 @@ class VendorStore:
         if user_submitted:
           name=f"ImageFor {new_vendor.name} Vendor"
           logo = Media.objects.create(name=name, file=images)
-          user_media_upload = makeUserUpload(media = logo,info=image_info,communities=new_vendor.communities)
+          user_media_upload = makeUserUpload(media = logo,info=image_info,communities=new_vendor.communities.all())
           
         else:
            logo = Media.objects.filter(pk = images[0]).first()
@@ -119,20 +118,16 @@ class VendorStore:
 
       if website:
         new_vendor.more_info = {'website': website}
-      
       new_vendor.save()
-
-      
-
       if tags:
         new_vendor.tags.set(tags)
-
       new_vendor.save()
      # ----------------------------------------------------------------
       Spy.create_vendor_footage(vendors = [new_vendor], context = context, actor = new_vendor.user, type = FootageConstants.create(), notes =f"Vendor ID({new_vendor.id})")
     # ---------------------------------------------------------------- 
       return new_vendor, None
     except Exception as e:
+      print("== ERR==", e)
       log.exception(e)
       return None, CustomMassenergizeError(e)
 
