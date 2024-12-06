@@ -127,7 +127,6 @@ class VendorStore:
     # ---------------------------------------------------------------- 
       return new_vendor, None
     except Exception as e:
-      print("== ERR==", e)
       log.exception(e)
       return None, CustomMassenergizeError(e)
 
