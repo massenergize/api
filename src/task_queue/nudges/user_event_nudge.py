@@ -17,6 +17,7 @@ from django.utils import timezone
 
 from task_queue.helpers import get_event_location
 from task_queue.nudges.nudge_utils import USER_PREFERENCE_DEFAULTS, WEEKLY, BI_WEEKLY, MONTHLY, DAILY, DEFAULT_EVENT_SETTINGS, LIMIT, EASTERN_TIME_ZONE
+from task_queue.type_constants import USER_EVENTS_NUDGE
 
 
 
@@ -234,7 +235,7 @@ def send_events_report_email(name, email, event_list, comm, login_method=""):
         data["cadmin_email"] = comm.owner_email if comm.owner_email else ""
         data["community"] = comm.name
         from_email = get_sender_email(comm.id)
-        tag = generate_email_tag(comm.subdomain, "UserEventsNudge")
+        tag = generate_email_tag(comm.subdomain, USER_EVENTS_NUDGE)
         send_massenergize_email_with_attachments(USER_EVENTS_NUDGE_TEMPLATE, data, [email], None, None, from_email, tag)
         print("Email sent to " + email)
         return True

@@ -4,6 +4,7 @@ import string
 from math import atan2, cos, radians, sin, sqrt
 
 from django.utils.text import slugify
+from _main_.settings import IS_PROD
 from _main_.utils.constants import COMMUNITY_URL_ROOT, DEFAULT_SOURCE_LANGUAGE_CODE
 from _main_.utils.utils import load_json
 from apps__campaigns.models import CallToAction, Section
@@ -401,8 +402,8 @@ def create_unique_slug(title, model, field_name="slug", user_defined_slug=None):
     return  f"{slug}-{timestamp}".lower()
 
 
-def generate_email_tag(name, email_type):
-    return f"{name}__{email_type}"
-
-
-    
+def generate_email_tag(subdomain, nudge_name):
+    tag = f"{subdomain}||{nudge_name}"
+    if not IS_PROD:
+        return tag+ "##DEV_MODE"
+    return tag

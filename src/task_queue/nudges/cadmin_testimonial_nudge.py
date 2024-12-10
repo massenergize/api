@@ -13,6 +13,8 @@ from dateutil.relativedelta import relativedelta
 from django.db.models import Q
 from django.utils import timezone
 
+from task_queue.type_constants import CADMIN_TESTIMONIALS_NUDGE
+
 
 TESTIMONIAL_NUDGE_KEY = "cadmin_testimonial_nudge"
 	
@@ -80,7 +82,7 @@ def send_nudge(data, community, admin):
 		cred = encode_data_for_URL({"email": email, "login_method": login_method})
 		data["change_preference_link"] = f"{ADMIN_URL_ROOT}/admin/profile/preferences/?cred={cred}"
 
-		tag = generate_email_tag(community.subdomain, "CadminTestimonialsNudge")
+		tag = generate_email_tag(community.subdomain, CADMIN_TESTIMONIALS_NUDGE)
 		 
 		send_massenergize_email_with_attachments(CADMIN_TESTIMONIAL_NUDGE_TEMPLATE, data, [email], None, None, get_sender_email(community.id), tag)
 

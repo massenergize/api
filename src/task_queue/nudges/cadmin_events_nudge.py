@@ -12,6 +12,7 @@ from database.utils.settings.model_constants.events import EventConstants
 from task_queue.helpers import get_event_location
 from task_queue.nudges.nudge_utils import get_admin_email_list, update_last_notification_dates
 from _main_.utils.massenergize_logger import log
+from task_queue.type_constants import CADMIN_EVENTS_NUDGE
 
 
 
@@ -170,9 +171,8 @@ def send_events_report(name, email, event_list, com) -> bool:
         data["change_preference_link"] = change_preference_link
         data["events"] = event_list
 
-        tag = generate_email_tag(com.subdomain, "CadminEventsNudge")
+        tag = generate_email_tag(com.subdomain, CADMIN_EVENTS_NUDGE)
 
-        # sent from MassEnergize to cadmins
         send_massenergize_email_with_attachments(WEEKLY_EVENTS_NUDGE_TEMPLATE, data, [email], None, None, None, tag)
         return True
     except Exception as e:
