@@ -206,3 +206,5 @@ update-recurring-schedule-prod:
 	DJANGO_ENV=prod python manage.py create-initial-recurring-schedule
 
 
+sh:
+	DJANGO_ENV=local python manage.py shell
