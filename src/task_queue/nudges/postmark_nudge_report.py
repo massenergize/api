@@ -16,7 +16,7 @@ from _main_.utils.massenergize_logger import log
 
 def get_stats_from_postmark(tag, start, end):
     try:
-        url = f"https://api.postmarkapp.com/stats/outbound?fromdate={start}&todate={end}"
+        url = f"https://api.postmarkapp.com/stats/outbound?tag={tag}&fromdate={start}&todate={end}"
         if is_test_mode():
             return 
         headers = {"Accept": "application/json","X-Postmark-Server-Token": POSTMARK_EMAIL_SERVER_TOKEN}
