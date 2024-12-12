@@ -4,6 +4,7 @@ from task_queue.database_tasks.translate_db_content import TranslateDBContents
 from task_queue.database_tasks.update_actions_content import update_actions_content
 from task_queue.nudges.cadmin_events_nudge import send_events_nudge
 from task_queue.nudges.cadmin_testimonial_nudge import prepare_testimonials_for_community_admins
+from task_queue.nudges.postmark_nudge_report import generate_postmark_nudge_report
 from task_queue.nudges.user_event_nudge import prepare_user_events_nudge
 from task_queue.nudges.postmark_sender_signature import collect_and_create_signatures
 from task_queue.database_tasks.media_library_cleanup import remove_duplicate_images
@@ -30,4 +31,5 @@ FUNCTIONS = {
     "Remove Duplicate Images": remove_duplicate_images,
     "Translate Database Contents": TranslateDBContents().start_translations,
     "Community Admin Testimonial Nudge": prepare_testimonials_for_community_admins,
+    "Postmark Nudge Report": generate_postmark_nudge_report
 }

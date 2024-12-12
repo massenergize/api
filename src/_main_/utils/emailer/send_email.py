@@ -1,12 +1,11 @@
 import logging
-from django.core.mail import send_mail, EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 import requests
 from _main_.utils.massenergize_logger import log
 import pystmark
 
-from _main_.settings import IS_CANARY, POSTMARK_ACCOUNT_TOKEN, POSTMARK_EMAIL_SERVER_TOKEN, POSTMARK_DOWNLOAD_SERVER_TOKEN, IS_PROD
+from _main_.settings import POSTMARK_ACCOUNT_TOKEN, POSTMARK_EMAIL_SERVER_TOKEN, POSTMARK_DOWNLOAD_SERVER_TOKEN, IS_PROD
 from _main_.utils.constants import ME_INBOUND_EMAIL_ADDRESS
 from _main_.utils.utils import is_test_mode, run_in_background
 
