@@ -185,8 +185,8 @@ class DownloadTestCase(TestCase):
     self.assertTrue(isinstance(response, MassenergizeResponse))
     self.assertTrue(response.toDict().get("success"))
 
-  @patch("api.tasks.download_data.delay", return_value=None)
-  def test_postmark_nudge_report(self, mock_delay):
+  # @patch("api.tasks.download_data.delay", return_value=None)
+  def test_postmark_nudge_report(self):
     endpoint = "/api/downloads.postmark.nudge_report"
 
     signinAs(self.client, self.CADMIN)
