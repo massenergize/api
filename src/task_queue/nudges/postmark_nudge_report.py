@@ -23,7 +23,6 @@ def get_stats_from_postmark(tag, start, end):
         response = requests.get(url, headers=headers)
         return response
     except Exception as e:
-        print(f"Error in get_stats_from_postmark: {str(e)}")
         log.error(f"Error in get_stats_from_postmark: {str(e)}")
         return None 
 
@@ -39,7 +38,6 @@ def get_community_admins(community):
                 name_and_emails[email] = name
         return name_and_emails
     except Exception as e:
-        print(f"Error in get_community_admins: {str(e)}")
         log.error(f"Error in get_community_admins: {str(e)}")
         return {}
 
@@ -54,7 +52,6 @@ def generate_csv_file(rows):
      
         return response.content
     except Exception as e:
-        print(f"Error in generate_csv_file: {str(e)}")
         log.error(f"Error in generate_csv_file: {str(e)}")
         return None
 
@@ -112,7 +109,6 @@ def generate_community_report_data(community, period=30):
         
         return rows, filename
     except Exception as e:
-        print(f"Error in generate_community_report_data: {str(e)}")
         log.error(f"Error in generate_community_report_data: {str(e)}")
         return [], ""
 
@@ -126,8 +122,7 @@ def send_community_report(report, community, filename, user=None):
             send_massenergize_email_with_attachments(
                 DATA_DOWNLOAD_TEMPLATE,
                 temp_data,
-                ["abdullai.tahiru@gmail.com"],
-                # [email],
+                [email],
                 report,
                 filename,
                 None
@@ -140,16 +135,12 @@ def send_community_report(report, community, filename, user=None):
             for email, name in admins.items():
                 send_email(name, email)
     except Exception as e:
-        print(f"Error in send_community_report: {str(e)}")
         log.error(f"Error in send_community_report: {str(e)}")
 
 
 
 def send_user_requested_postmark_nudge_report(community_id, email, period=45):
     try:
-        print("== com = ", community_id)
-        print("== email ===", email)
-
         if email and community_id:
             user =  UserProfile.objects.filter(email=email).first()
             community = Community.objects.filter(id=community_id, is_published=True).first()
@@ -159,7 +150,6 @@ def send_user_requested_postmark_nudge_report(community_id, email, period=45):
                 report_file  =  generate_csv_file(rows=rows)
                 send_community_report(report_file, community, file_name, user)
     except Exception as e:
-        print(f"Error in send_user_requested_nudge: {str(e)}")
         log.error(f"Error in send_user_requested_nudge: {str(e)}")
 
 
@@ -174,5 +164,4 @@ def generate_postmark_nudge_report(task=None):
         return True
     except Exception as e:
         log.error(f"Error in Nudge report main func: {str(e)}")
-        print(f"Error in Nudge report main func: {str(e)}")
         return False 
