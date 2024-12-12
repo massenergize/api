@@ -18,7 +18,7 @@ def get_stats_from_postmark(tag, start, end):
     try:
         url = f"https://api.postmarkapp.com/stats/outbound?tag={tag}&fromdate={start}&todate={end}"
         if is_test_mode():
-            return 
+            return True
         headers = {"Accept": "application/json","X-Postmark-Server-Token": POSTMARK_EMAIL_SERVER_TOKEN}
         response = requests.get(url, headers=headers)
         return response
@@ -115,7 +115,7 @@ def generate_community_report_data(community, period=30):
 
 def send_community_report(report, community, filename, user=None):
     try:
-        if not report and not filename: return 
+        if not report and not filename: return False
         
         def send_email(name, email):
             temp_data = {'data_type': f'{community.name} Nudge Report', 'name': name}
@@ -134,8 +134,11 @@ def send_community_report(report, community, filename, user=None):
             admins = get_community_admins(community)
             for email, name in admins.items():
                 send_email(name, email)
+
+        return True
     except Exception as e:
         log.error(f"Error in send_community_report: {str(e)}")
+        return False
 
 
 
@@ -149,6 +152,9 @@ def send_user_requested_postmark_nudge_report(community_id, email, period=45):
                 rows, file_name= generate_community_report_data(community, period=period)
                 report_file  =  generate_csv_file(rows=rows)
                 send_community_report(report_file, community, file_name, user)
+                return True
+        
+        return False
     except Exception as e:
         log.error(f"Error in send_user_requested_nudge: {str(e)}")
 
