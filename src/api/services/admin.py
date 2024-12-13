@@ -25,7 +25,6 @@ class AdminService:
         if err:
             return None, err
 
-        subject = 'Welcome to the MassEnergize Team'
         content_variables = {
             'name': admin.full_name,
             'adminlink': ADMIN_URL_ROOT,
@@ -37,9 +36,6 @@ class AdminService:
 
         send_massenergize_email_with_attachments(NEW_ADMIN_EMAIL_TEMPLATE, content_variables, [admin.email], None, None, None)
 
-        # sent from MassEnergize to cadmins
-        # send_massenergize_rich_email(
-        #     subject, admin.email, 'new_admin_email.html', content_variables, None)
         return serialize(admin, full=True), None
       except Exception as e:
         log.exception(e)
@@ -75,8 +71,6 @@ class AdminService:
             "me_logo": ME_LOGO_PNG,
             "subject": "Welcome to the MassEnergize Team"
         }
-        #sent from MassEnergize support
-        # send_massenergize_rich_email(subject, res["email"], 'new_admin_email.html', content_variables, None)
         send_massenergize_email_with_attachments(NEW_ADMIN_EMAIL_TEMPLATE, content_variables, [res["email"]], None, None, None)
         res["user"] = serialize(res.get("user"))
         return res, None
@@ -111,8 +105,6 @@ class AdminService:
         if not first_name or first_name == "":
             first_name = admin_name
 
-        # subject = 'A message was sent to the Community Admin for ' + message.community.name
-
         content_variables = {
             'name': first_name,
             'message_url': f"{ADMIN_URL_ROOT}/admin/edit/{message.id}/message",
@@ -123,8 +115,7 @@ class AdminService:
             "message_body": message.body,
             "me_logo": ME_LOGO_PNG
         }
-        # sent from MassEnergize to cadmins
-        # send_massenergize_rich_email(subject, admin_email, 'contact_admin_email.html', content_variables, None)
+
         send_massenergize_email_with_attachments(CONTACT_ADMIN_EMAIL_TEMPLATE, content_variables, [admin_email], None, None, None)
 
 

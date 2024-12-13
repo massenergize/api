@@ -52,7 +52,7 @@ RESERVED_SUBDOMAIN_LIST = load_json(
 
 STATES = load_json(BASE_DIR + "/database/raw_data/other/states.json")
 
-ME_LOGO_PNG = "https://www.massenergize.org/wp-content/uploads/2023/03/MassEnergize-logo.png"
+ME_LOGO_PNG = os.environ.get("ME_DEFAULT_LOGO_URL")
 
 DEFAULT_PAGINATION_LIMIT = 25
 
@@ -64,7 +64,6 @@ ME_INBOUND_EMAIL_ADDRESS = (
 
 PUBLIC_EMAIL_DOMAINS=["gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "aol.com"]
 
-import random
 
 INSPIRATIONAL_MESSAGES = [
     "Together, we can make a difference for our planet.",
