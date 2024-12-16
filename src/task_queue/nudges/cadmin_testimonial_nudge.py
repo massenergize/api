@@ -4,7 +4,7 @@ from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT, ME_LOGO_P
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
 from _main_.utils.feature_flag_keys import TESTIMONIAL_AUTO_SHARE_SETTINGS_NUDGE_FEATURE_FLAG_KEY
 from _main_.utils.massenergize_logger import log
-from api.utils.api_utils import get_sender_email
+from api.utils.api_utils import generate_email_tag, get_sender_email
 from api.utils.constants import CADMIN_TESTIMONIAL_NUDGE_TEMPLATE
 from database.models import Community, CommunityAdminGroup, FeatureFlag, Testimonial
 from task_queue.helpers import get_summary
@@ -12,6 +12,8 @@ from task_queue.nudges.nudge_utils import get_admin_email_list, update_last_noti
 from dateutil.relativedelta import relativedelta
 from django.db.models import Q
 from django.utils import timezone
+
+from task_queue.type_constants import CADMIN_TESTIMONIALS_NUDGE
 
 
 TESTIMONIAL_NUDGE_KEY = "cadmin_testimonial_nudge"
@@ -79,8 +81,10 @@ def send_nudge(data, community, admin):
 		login_method = user_info.get("login_method") if user_info else None
 		cred = encode_data_for_URL({"email": email, "login_method": login_method})
 		data["change_preference_link"] = f"{ADMIN_URL_ROOT}/admin/profile/preferences/?cred={cred}"
+
+		tag = generate_email_tag(community.subdomain, CADMIN_TESTIMONIALS_NUDGE)
 		 
-		send_massenergize_email_with_attachments(CADMIN_TESTIMONIAL_NUDGE_TEMPLATE, data, [email], None, None, get_sender_email(community.id))
+		send_massenergize_email_with_attachments(CADMIN_TESTIMONIAL_NUDGE_TEMPLATE, data, [email], None, None, get_sender_email(community.id), tag)
 
 					
 		return True
