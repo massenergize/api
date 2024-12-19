@@ -901,7 +901,7 @@ class EventStore:
             
             all_events = events | shared
             
-            return all_events, None
+            return all_events.distinct(), None
         except Exception as e:
             log.exception(e)
             return None, CustomMassenergizeError(e)
