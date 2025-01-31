@@ -131,16 +131,17 @@ def send_events_nudge(task=None) -> bool:
         communities = Community.objects.filter(is_published=True, is_deleted=False)
         communities = flag.enabled_communities(communities)
         for com in communities:
-            log.info(f"==== Preparing Cadmin nudges for {com.name}====")
             d = generate_event_list_for_community(com)
             admins = d.get("admins", {})
 
             event_list = d.get("events", [])
 
-            log.info(f"=== Admins count({len(list(admins.keys()))}) | Events count({len(event_list)})")
+            log.info(f"=== Preparing Cadmin nudges for {com.name} || Admins count({len(list(admins.keys()))}) | Events count({len(event_list)})")
 
             if len(admins) > 0 and len(event_list) > 0:
                 email_list = get_admin_email_list(admins, CADMIN_NUDGE_KEY)
+
+                log.info(f"== Community: {com.name} | email list ({list(email_list.keys())})")
 
                 for email, data in email_list.items():
                     name = data.get("name")

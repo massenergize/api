@@ -4,6 +4,8 @@ from database.utils.settings.admin_settings import AdminPortalSettings
 from datetime import datetime, date
 from dateutil.relativedelta import relativedelta
 from django.utils import timezone
+from _main_.utils.massenergize_logger import log
+
 
 
 
@@ -58,7 +60,7 @@ def get_admin_email_list(admins, nudge_type) -> dict:
         nudge_dates = data.get("nudge_dates")
 
         if not name or not email:
-            print(f"Missing name or email for admin: {name}")
+            log.error(f"Missing name or email for admin: {name}")
             continue
 
         admin_preferences = preferences or AdminPortalSettings.Defaults
