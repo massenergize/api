@@ -70,12 +70,12 @@ def get_admin_email_list(admins, nudge_type) -> dict:
         notification_dates = nudge_dates
         last_notified = notification_dates.get(nudge_type, "") if notification_dates else None
 
-        log.info(f"== USER: {email} | NUDGE_DATE: {last_notified}")
-
         if last_notified:
             last_notified_date = datetime.strptime(last_notified, '%Y-%m-%d').date()
+           
             for freq_key, delta in frequency_map.items():
-                if freq_key in freq.keys() or len(freq.keys()) == 0:
+                log.info(f"== FREQ_KEY: {freq_key} | NUDGE_FREQ: {freq.keys()} | MATCH?: {freq_key in freq.keys() or len(freq.keys()) == 0}")
+                if freq_key.lower() in freq.keys() or len(freq.keys()) == 0:
                     next_nudge_date = last_notified_date + delta
                     if next_nudge_date <= date.today():
                         email_list[email] = data
