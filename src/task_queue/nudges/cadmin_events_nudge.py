@@ -138,12 +138,7 @@ def send_events_nudge(task=None) -> bool:
 
 
             if len(admins) > 0 and len(event_list) > 0:
-                log.info(f"=== Preparing Cadmin nudges for {com.name} || Admins count({list(admins.keys())}) | Events count({len(event_list)})")
-
                 email_list = get_admin_email_list(admins, CADMIN_NUDGE_KEY)
-
-                log.info(f"== Community: {com.name} | email list ({list(email_list.keys())})")
-
                 for email, data in email_list.items():
                     name = data.get("name")
 
