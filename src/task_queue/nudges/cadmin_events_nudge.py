@@ -131,10 +131,13 @@ def send_events_nudge(task=None) -> bool:
         communities = Community.objects.filter(is_published=True, is_deleted=False)
         communities = flag.enabled_communities(communities)
         for com in communities:
+            log.info(f"==== Preparing Cadmin nudges for {com.name}====")
             d = generate_event_list_for_community(com)
             admins = d.get("admins", {})
 
             event_list = d.get("events", [])
+
+            log.info(f"=== Admins count({len(list(admins.keys()))}) | Events count({len(event_list)})")
 
             if len(admins) > 0 and len(event_list) > 0:
                 email_list = get_admin_email_list(admins, CADMIN_NUDGE_KEY)
@@ -168,9 +171,14 @@ def send_events_report(name, email, event_list) -> bool:
         data["name"] = name.split(" ")[0]
         data["change_preference_link"] = change_preference_link
         data["events"] = event_list
-
+        
+        
         # sent from MassEnergize to cadmins
-        send_massenergize_email_with_attachments(WEEKLY_EVENTS_NUDGE_TEMPLATE, data, [email], None, None, None)
+        ok = send_massenergize_email_with_attachments(WEEKLY_EVENTS_NUDGE_TEMPLATE, data, [email], None, None, None)
+        if not ok:
+            log.info(f"Failed to send Cadmin Nudge to '{email}'  ")
+        else:
+            log.info(f"Sent Cadmin Nudge to '{email}'  ")
         return True
     except Exception as e:
         log.error("send_events_report exception: " + str(e))
