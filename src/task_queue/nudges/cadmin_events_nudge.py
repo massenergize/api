@@ -138,9 +138,9 @@ def send_events_nudge(task=None) -> bool:
 
             event_list = d.get("events", [])
 
+
             if len(admins) > 0 and len(event_list) > 0:
                 email_list = get_admin_email_list(admins, CADMIN_NUDGE_KEY)
-
                 for email, data in email_list.items():
                     name = data.get("name")
 
