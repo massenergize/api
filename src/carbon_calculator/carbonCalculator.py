@@ -30,10 +30,9 @@ from .solar import EvalSolarAssessment, EvalSolarPV
 from .transportation import EvalEliminateCar, EvalOffsetFlights, EvalReduceFlights, EvalReduceMilesDriven, \
     EvalReplaceCar
 
-CALCULATOR_VERSION = "4.0.5"
+CALCULATOR_VERSION = "4.0.6"
 QUESTIONS_DATA = BASE_DIR + "/carbon_calculator/content/Questions.csv"
 ACTIONS_DATA = BASE_DIR + "/carbon_calculator/content/Actions.csv"
-CATEGORIES_DATA = BASE_DIR + "/carbon_calculator/content/Categories.csv"
 SUBCATEGORIES_DATA = BASE_DIR + "/carbon_calculator/content/Subcategories.csv"
 DEFAULTS_DATA = BASE_DIR + "/carbon_calculator/content/defaults.csv"
 TOKEN_POINTS = 15
@@ -578,7 +577,6 @@ class CalculatorAction:
         self.cost = 0
         self.savings = 0
         self.text = "" # "Explanation for the calculated results."
-        self.picture = ""
 
     def Query(self):
         status, actionInfo = QuerySingleAction(self.name)
@@ -589,7 +587,6 @@ class CalculatorAction:
             self.helptext = actionInfo["helptext"]
             self.questions = actionInfo["questionInfo"]    # question with list of valid responses.
             self.average_points = actionInfo["average_points"]
-            self.picture = actionInfo["picture"]
             self.initialized = True
             self.category = actionInfo["category"]
 
