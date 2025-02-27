@@ -30,7 +30,7 @@ from .solar import EvalSolarAssessment, EvalSolarPV
 from .transportation import EvalEliminateCar, EvalOffsetFlights, EvalReduceFlights, EvalReduceMilesDriven, \
     EvalReplaceCar
 
-CALCULATOR_VERSION = "4.0.6"
+CALCULATOR_VERSION = "4.0.7"
 QUESTIONS_DATA = BASE_DIR + "/carbon_calculator/content/Questions.csv"
 ACTIONS_DATA = BASE_DIR + "/carbon_calculator/content/Actions.csv"
 SUBCATEGORIES_DATA = BASE_DIR + "/carbon_calculator/content/Subcategories.csv"
@@ -73,50 +73,6 @@ def versionCheck():
         version.save()
         return False    # reload data
     return True
-
-def SavePic2Media(picURL):
-    if picURL == '':
-        return None
-    # in the import from AirTable, picture files have the url between ( ) after the original picture name
-    loc1 = picURL.find('(')
-    loc2 = picURL.find(')')
-    if loc1>0 and loc2>0:
-        picURL = picURL[loc1+1:loc2]
-    #print("Importing picture from: "+picURL)
-    try:
-        resp = requests.get(picURL)
-        if resp.status_code != requests.codes.ok:
-            # Error handling here3
-            # As of 2022, attachment URLs in AirTable expire after a couple of hour, so this will always fail until we figure out another solution
-            # sprint("ERROR: Unable to import action photo from "+picURL)
-            return None
-        else:
-            image = resp.content
-            file_name =  picURL.split("/")[-1]
-            file_type_ext = file_name.split(".")[-1]
-
-            content_type = 'image/jpeg'
-            if len(file_type_ext)>0 and file_type_ext.lower() == 'png':
-                content_type = 'image/png'
-
-            # Create a new Django file-like object to be used in models as ImageField using
-            # InMemoryUploadedFile.  If you look at the source in Django, a
-            # SimpleUploadedFile is essentially instantiated similarly to what is shown here
-            img_io = BytesIO(image)
-            image_file = InMemoryUploadedFile(img_io, None, file_name, content_type,
-                                  None, None)
-
-            media = CarbonCalculatorMedia.objects.create(file=image_file, name=f"{slugify(file_name)}")
-
-            if media:
-                media.save()
-                return media
-            else:
-                return None
-            
-    except Exception as e:
-        print("Error encountered: "+str(e))
-        return None
 
 def AverageImpact(action, date=None, locality="default"):
     averageName = action.name + '_average_points'
@@ -517,6 +473,7 @@ class CarbonCalculator:
                     avg_points = item[column_index["Avg points"]]
                     cat = Category.objects.filter(name=item[column_index["Category"]]).first()
                     subcat = Subcategory.objects.filter(name=item[column_index["Subcategory"]], category = cat).first() 
+                    print(name,cat,subcat)
 
                     defaults = {
                             'title':item[column_index["Title"]],
