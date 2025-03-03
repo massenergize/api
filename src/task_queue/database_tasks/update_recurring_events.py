@@ -151,7 +151,8 @@ def update_or_create_task(task, event, key):
             status=TaskStatus.PENDING.value,
             recurring_details=recurring_details_str,
             frequency=ScheduleInterval.ONE_OFF.value,
-            is_automatic_task=True
+            is_automatic_task=True,
+            args=json.dumps([event.id]),
         )
         task.create_task()
     else:
