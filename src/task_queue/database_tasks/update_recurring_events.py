@@ -145,7 +145,7 @@ def update_or_create_task(task, event, key):
     recurring_details_str = json.dumps(recurring_details) if recurring_details else None
 
     if not task:
-        task = Task(
+        task: Task = Task(
             name=key,
             job_name="Update Recurring Events",
             status=TaskStatus.PENDING.value,
@@ -157,7 +157,7 @@ def update_or_create_task(task, event, key):
         task.create_task()
     else:
         task.recurring_details = recurring_details
-        task.activate()
+        task.start()
     task.save()
 
 
