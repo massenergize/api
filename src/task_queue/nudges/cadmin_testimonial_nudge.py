@@ -46,7 +46,8 @@ def get_cadmin_names_and_emails(community):
 		
 	return name_emails
 
-
+def format_date(date_str):
+	return date_str.strftime("%B %d, %Y") if date_str else "N/A"
 
 	
 def send_nudge(data, community, admin):
