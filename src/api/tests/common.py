@@ -49,6 +49,7 @@ from ..utils.api_utils import load_default_menus_from_json
 RESET = "reset"
 ME_DEFAULT_TEST_IMAGE = os.environ.get("ME_DEFAULT_LOGO_URL")
 
+
 def makeFootage(**kwargs):
     communities = kwargs.pop("communities",None)
     f =  Footage.objects.create(**{**kwargs})
