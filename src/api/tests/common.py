@@ -344,7 +344,7 @@ def createImage(picURL=None):
     if not picURL:
         picURL = ME_DEFAULT_TEST_IMAGE
 
-    resp = requests.get(picURL)
+    resp = requests.get("https://www.massenergize.org/wp-content/uploads/2024/04/EDP_LR_Z8G_4079.jpg")
     if resp.status_code != requests.codes.ok:
         # Error handling here3
         print("ERROR: Unable to import image file from " + picURL)
