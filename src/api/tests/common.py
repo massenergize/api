@@ -1,4 +1,5 @@
 import base64
+import os
 import time
 from zoneinfo import ZoneInfo
 
@@ -46,7 +47,7 @@ from database.models import Vendor
 from ..utils.api_utils import load_default_menus_from_json
 
 RESET = "reset"
-ME_DEFAULT_TEST_IMAGE = "https://www.whitehouse.gov/wp-content/uploads/2021/04/P20210303AS-1901-cropped.jpg"
+ME_DEFAULT_TEST_IMAGE = os.environ.get("ME_DEFAULT_LOGO_URL")
 
 def makeFootage(**kwargs):
     communities = kwargs.pop("communities",None)
@@ -341,8 +342,7 @@ def createUsers():
 def createImage(picURL=None):
 
     # this may break if that picture goes away.  Ha ha - keep you on your toes!
-    if not picURL:
-        picURL = ME_DEFAULT_TEST_IMAGE
+    picURL = ME_DEFAULT_TEST_IMAGE
 
     resp = requests.get(picURL)
     if resp.status_code != requests.codes.ok:
@@ -380,7 +380,6 @@ def image_url_to_base64(image_url = None):
         base64_image = f'data:{content_type};base64,{base64_image}'
         return base64_image
     return None
-
 
 
 def make_technology(**kwargs):
