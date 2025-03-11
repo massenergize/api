@@ -46,7 +46,7 @@ from database.models import Vendor
 from ..utils.api_utils import load_default_menus_from_json
 
 RESET = "reset"
-ME_DEFAULT_TEST_IMAGE = "https://www.whitehouse.gov/wp-content/uploads/2021/04/P20210303AS-1901-cropped.jpg"
+ME_DEFAULT_TEST_IMAGE = "https://www.massenergize.org/wp-content/uploads/2023/03/MassEnergize-logo.png"
 
 def makeFootage(**kwargs):
     communities = kwargs.pop("communities",None)
