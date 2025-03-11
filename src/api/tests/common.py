@@ -343,9 +343,7 @@ def createUsers():
 def createImage(picURL=None):
 
     # this may break if that picture goes away.  Ha ha - keep you on your toes!
-    picURL = ME_DEFAULT_TEST_IMAGE
-
-    resp = requests.get("https://www.massenergize.org/wp-content/uploads/2023/03/MassEnergize-logo.png")
+    resp = requests.get(ME_DEFAULT_TEST_IMAGE)
     if resp.status_code != requests.codes.ok:
         # Error handling here3
         print("ERROR: Unable to import image file from " + picURL)
