@@ -55,6 +55,7 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost:3000',
     'localhost',
+    ".test.com"
     # feel free to add more for your local testing
 ]
 
@@ -102,6 +103,7 @@ MIDDLEWARE = [
     'api.middlewares.translation_middleware.TranslationMiddleware',
     'authentication.middleware.MassenergizeJWTAuthMiddleware',
     'django_hosts.middleware.HostsResponseMiddleware',
+    'api.middlewares.url_resolver_middleware.URLResolverMiddleware',
     '_main_.utils.metrics.middleware.MetricsMiddleware'
 ]
 

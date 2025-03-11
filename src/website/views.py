@@ -310,8 +310,8 @@ def _base_community_query(is_sandbox):
 
 def _get_file_url(image):
     if not image:
-        return None
-    return image.file.url if image.file else None
+        return ""
+    return image.file.url if image.file else ""
 
 
 def _separate_communities(communities, lat, long):

@@ -14,7 +14,7 @@ from _main_.utils.emailer.send_email import send_massenergize_email, send_massen
 from _main_.utils.massenergize_logger import log
 from api.constants import ACTIONS, CADMIN_REPORT, CAMPAIGN_INTERACTION_PERFORMANCE_REPORT, CAMPAIGN_PERFORMANCE_REPORT, \
     CAMPAIGN_VIEWS_PERFORMANCE_REPORT, COMMUNITIES, COMMUNITY_PAGEMAP, DOWNLOAD_POLICY, FOLLOWED_REPORT, LIKE_REPORT, \
-    LINK_PERFORMANCE_REPORT, METRICS, SAMPLE_USER_REPORT, TEAMS, USERS
+    LINK_PERFORMANCE_REPORT, METRICS, POSTMARK_NUDGE_REPORT, SAMPLE_USER_REPORT, TEAMS, USERS
 from api.services.translations_cache import TranslationsCacheService
 from api.store.common import create_pdf_from_rich_text, sign_mou
 from api.store.download import DownloadStore
@@ -26,6 +26,7 @@ from database.models import Community, CommunityAdminGroup, CommunityMember, Com
     Policy, \
     UserActionRel, UserProfile
 from task_queue.nudges.cadmin_events_nudge import generate_event_list_for_community, send_events_report
+from task_queue.nudges.postmark_nudge_report import send_user_requested_postmark_nudge_report
 from task_queue.nudges.user_event_nudge import prepare_user_events_nudge
 from django.core.cache import cache
 from _main_.celery.app import app
@@ -119,13 +120,16 @@ def download_data(self, args, download_type):
         for com in community_list:
             events = generate_event_list_for_community(com)
             event_list = events.get("events", [])
-            stat = send_events_report(user.full_name, user.email, event_list, user.user_info)
+            stat = send_events_report(user.full_name, user.email, event_list)
             if not stat:
                 error_notification(CADMIN_REPORT, email)
                 return
             
     elif download_type == SAMPLE_USER_REPORT:
         prepare_user_events_nudge(email=email, community_id=args.get("community_id"))
+
+    elif download_type == POSTMARK_NUDGE_REPORT:
+        send_user_requested_postmark_nudge_report(community_id=args.get("community_id"), email=email, period=args.get("period", 45))
 
     elif download_type == DOWNLOAD_POLICY:
         policy = Policy.objects.filter(id=args.get("policy_id")).first()

@@ -1,12 +1,11 @@
 import logging
-from django.core.mail import send_mail, EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 import requests
 from _main_.utils.massenergize_logger import log
 import pystmark
 
-from _main_.settings import IS_CANARY, POSTMARK_ACCOUNT_TOKEN, POSTMARK_EMAIL_SERVER_TOKEN, POSTMARK_DOWNLOAD_SERVER_TOKEN, IS_PROD
+from _main_.settings import POSTMARK_ACCOUNT_TOKEN, POSTMARK_EMAIL_SERVER_TOKEN, POSTMARK_DOWNLOAD_SERVER_TOKEN, IS_PROD
 from _main_.utils.constants import ME_INBOUND_EMAIL_ADDRESS
 from _main_.utils.utils import is_test_mode, run_in_background
 
@@ -37,13 +36,13 @@ def send_massenergize_email(subject, msg, to, sender=None):
     return False
   return True
 
-def send_massenergize_email_with_attachments(temp, t_model, to, file, file_name, sender=None):
+def send_massenergize_email_with_attachments(temp, t_model, to, file, file_name, sender=None, tag=None):
   if is_test_mode():
     return True
   t_model = {**t_model, "is_dev":is_dev_env()}
 
   
-  message = pystmark.Message(sender=sender or FROM_EMAIL, to=to, template_alias=temp, template_model=t_model)
+  message = pystmark.Message(sender=sender or FROM_EMAIL, to=to, template_alias=temp, template_model=t_model, tag=tag)
   # postmark server can be Production, Development or Testing (for local testing)
   postmark_server = POSTMARK_EMAIL_SERVER_TOKEN
   if file is not None:

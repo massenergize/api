@@ -2,6 +2,7 @@ from django.test import TestCase, Client
 from django.conf import settings as django_settings
 from urllib.parse import urlencode
 from _main_.settings import BASE_DIR
+from _main_.utils.massenergize_errors import MassEnergizeAPIError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from database.models import Team, Community, UserProfile, TeamMember, CommunityAdminGroup, CommunityMember, Action
 from api.tests.common import signinAs, createUsers
@@ -183,6 +184,23 @@ class DownloadTestCase(TestCase):
     response = self.client.post('/api/downloads.actions', urlencode({}), content_type="application/x-www-form-urlencoded")
     self.assertTrue(isinstance(response, MassenergizeResponse))
     self.assertTrue(response.toDict().get("success"))
+
+  @patch("api.tasks.download_data.delay", return_value=None)
+  def test_postmark_nudge_report(self, mock_delay):
+    endpoint = "/api/downloads.postmark.nudge_report"
+
+    signinAs(self.client, self.CADMIN)
+    response = self.client.post(endpoint, urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded")
+    self.assertEquals(type(response), MassenergizeResponse)
+    self.assertTrue(response.toDict().get("success"))
+
+    signinAs(self.client, None)
+    response = self.client.post(endpoint, urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded")
+    self.assertFalse(response.toDict().get("success"))
+
+    signinAs(self.client, self.USER)
+    response = self.client.post(endpoint, urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded")
+    self.assertFalse(response.toDict().get("success"))
 
 
   def test_download_communities(self):

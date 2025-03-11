@@ -5,7 +5,7 @@ from _main_.utils.emailer.send_email import send_massenergize_email_with_attachm
 from _main_.utils.feature_flag_keys import USER_EVENTS_NUDGES_FF
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
-from api.utils.api_utils import get_sender_email
+from api.utils.api_utils import generate_email_tag, get_sender_email
 from api.utils.constants import USER_EVENTS_NUDGE_TEMPLATE
 from database.models import Community, CommunityMember, CommunityNotificationSetting, Event, UserProfile, FeatureFlag, EventNudgeSetting
 from django.db.models import Q
@@ -17,6 +17,7 @@ from django.utils import timezone
 
 from task_queue.helpers import get_event_location
 from task_queue.nudges.nudge_utils import USER_PREFERENCE_DEFAULTS, WEEKLY, BI_WEEKLY, MONTHLY, DAILY, DEFAULT_EVENT_SETTINGS, LIMIT, EASTERN_TIME_ZONE
+from task_queue.type_constants import USER_EVENTS_NUDGE
 
 
 
@@ -234,7 +235,8 @@ def send_events_report_email(name, email, event_list, comm, login_method=""):
         data["cadmin_email"] = comm.owner_email if comm.owner_email else ""
         data["community"] = comm.name
         from_email = get_sender_email(comm.id)
-        send_massenergize_email_with_attachments(USER_EVENTS_NUDGE_TEMPLATE, data, [email], None, None, from_email)
+        tag = generate_email_tag(comm.subdomain, USER_EVENTS_NUDGE)
+        send_massenergize_email_with_attachments(USER_EVENTS_NUDGE_TEMPLATE, data, [email], None, None, from_email, tag)
         print("Email sent to " + email)
         return True
     except Exception as e:

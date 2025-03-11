@@ -41,3 +41,8 @@ schedules = {
     "ONE_OFF":'ONE_OFF',
     "EVERY_WEEK":'EVERY_WEEK'
 }
+
+
+USER_EVENTS_NUDGE = "user_event_nudge"
+CADMIN_EVENTS_NUDGE = "community_admin_events_nudge"
+CADMIN_TESTIMONIALS_NUDGE = "community_admin_testimonials_nudge"

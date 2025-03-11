@@ -1,10 +1,11 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
-from _main_.utils.constants import ADMIN_URL_ROOT
+from _main_.utils.constants import ADMIN_URL_ROOT, ME_LOGO_PNG
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY
 from _main_.utils.common import serialize, serialize_all
-from _main_.utils.emailer.send_email import send_massenergize_rich_email
+from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments, send_massenergize_rich_email
 from _main_.utils.pagination import paginate
 from api.utils.api_utils import get_sender_email
+from api.utils.constants import TESTIMONIAL_SUBMISSION_EMAIL_TEMPLATE
 from api.utils.filter_functions import sort_items
 from .utils import send_slack_message
 from api.store.testimonial import TestimonialStore
@@ -55,7 +56,7 @@ class TestimonialService:
         else:
           return None, CustomMassenergizeError('Testimonial submission incomplete')
 
-        subject = 'User Testimonial Submitted'
+        # subject = 'User Testimonial Submitted'
 
         content_variables = {
           'name': first_name,
@@ -65,9 +66,12 @@ class TestimonialService:
           'email': email,
           'title': testimonial.title,
           'body': testimonial.body,
+          'me_logo':ME_LOGO_PNG
         }
-        send_massenergize_rich_email(
-              subject, admin_email, 'testimonial_submitted_email.html', content_variables, None)
+
+        send_massenergize_email_with_attachments(
+            TESTIMONIAL_SUBMISSION_EMAIL_TEMPLATE,
+          content_variables, [admin_email], None, None, None)
 
         if IS_PROD or IS_CANARY:
           send_slack_message(

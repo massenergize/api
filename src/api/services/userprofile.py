@@ -4,7 +4,7 @@ from _main_.utils.pagination import paginate
 from api.decorators import login_required
 from api.store.userprofile import UserStore
 from _main_.utils.context import Context
-from _main_.utils.emailer.send_email import send_massenergize_rich_email
+from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments, send_massenergize_rich_email
 from _main_.utils.constants import COMMUNITY_URL_ROOT,  ME_LOGO_PNG
 import os, csv
 import re
@@ -12,6 +12,7 @@ from _main_.utils.massenergize_logger import log
 from typing import Tuple
 from api.utils.api_utils import get_sender_email
 
+from api.utils.constants import COMMUNITY_INVITATION_EMAIL_TEMPLATE, NEW_USER_REGISTRATION_EMAIL_TEMPLATE, TEAM_INVITATION_EMAIL_TEMPLATE
 from api.utils.filter_functions import sort_items
 
 
@@ -103,9 +104,11 @@ def _send_invitation_email(user_info, mess):
     'privacylink': f"{homelink}/policies?name=Privacy%20Policy"
     }
   
-  #send_massenergize_rich_email(subject, email, email_template, content_variables, cadmin_email)
-  send_massenergize_rich_email(subject, email, email_template, content_variables)
-
+  if team_name:
+    send_massenergize_email_with_attachments(TEAM_INVITATION_EMAIL_TEMPLATE, content_variables, [email], None, None, None)
+  else:
+    send_massenergize_email_with_attachments(COMMUNITY_INVITATION_EMAIL_TEMPLATE, content_variables, [email], None, None, None)
+    
 class UserService:
   """
   Service Layer for all the users
@@ -237,7 +240,8 @@ class UserService:
           'privacylink': f"{homelink}/policies?name=Privacy%20Policy"
           }
 
-        send_massenergize_rich_email(subject, user.email, 'user_registration_email.html', content_variables, from_email)
+        # send_massenergize_rich_email(subject, user.email, 'user_registration_email.html', content_variables, from_email)
+        send_massenergize_email_with_attachments(NEW_USER_REGISTRATION_EMAIL_TEMPLATE, content_variables, [user.email], None, None, from_email)
       user = serialize(user, full=True)
       return {**user, "is_new":True }, None
     except Exception as e:

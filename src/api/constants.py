@@ -19,6 +19,7 @@ CAMPAIGN_TECH_PERFORMANCE_REPORT = 'campaign_tech_performance_report'
 CAMPAIGN_VIEWS_PERFORMANCE_REPORT = 'campaign_views_performance_report'
 CAMPAIGN_INTERACTION_PERFORMANCE_REPORT = 'campaign_interaction_performance_report'
 CAMPAIGN_INTERACTION_PERFORMANCE_REPORT = 'campaign_interaction_performance_report'
+POSTMARK_NUDGE_REPORT = "postmark_nudge_report"
 
 STANDARD_USER = 'standard_user'
 GUEST_USER = 'guest_user'

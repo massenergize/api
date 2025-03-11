@@ -3,10 +3,11 @@ from _main_.utils.common import serialize, serialize_all
 from _main_.utils.pagination import paginate
 from api.store.vendor import VendorStore
 from _main_.utils.context import Context
-from _main_.utils.constants import ADMIN_URL_ROOT
+from _main_.utils.constants import ADMIN_URL_ROOT, ME_LOGO_PNG
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY
-from _main_.utils.emailer.send_email import send_massenergize_rich_email
+from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments, send_massenergize_rich_email
 from api.utils.api_utils import get_sender_email
+from api.utils.constants import VENDOR_SUBMISSION_EMAIL_TEMPLATE
 from api.utils.filter_functions import sort_items
 from .utils import send_slack_message
 from api.store.utils import get_user_or_die, get_community_or_die
@@ -64,7 +65,7 @@ class VendorService:
         else:
           return None, CustomMassenergizeError('Vendor submission incomplete')
 
-        subject = 'User Service Provider Submitted'
+        # subject = 'User Service Provider Submitted'
 
         content_variables = {
           'name': first_name,
@@ -74,9 +75,13 @@ class VendorService:
           'email': email,
           'title': vendor.name,
           'body': vendor.description,
+          'me_logo':ME_LOGO_PNG
         }
-        send_massenergize_rich_email(
-              subject, admin_email, 'vendor_submitted_email.html', content_variables, None)
+        # send_massenergize_rich_email(
+        #       subject, admin_email, 'vendor_submitted_email.html', content_variables, None)
+        
+        send_massenergize_email_with_attachments(VENDOR_SUBMISSION_EMAIL_TEMPLATE, content_variables, [admin_email], None, None, None)
+
 
         if IS_PROD or IS_CANARY: 
           send_slack_message(

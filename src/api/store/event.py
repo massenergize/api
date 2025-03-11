@@ -801,8 +801,9 @@ class EventStore:
             events = Event.objects.filter(id=event_id)
             if not events:
                 return None, InvalidResourceError()
-
-            if not is_admin_of_community(context, events.first().community.id):
+            
+            event_community = events.first().community
+            if event_community and not is_admin_of_community(context, event_community.id):
                 return None, NotAuthorizedError()
 
             if len(events) > 1:
@@ -900,7 +901,7 @@ class EventStore:
             
             all_events = events | shared
             
-            return all_events, None
+            return all_events.distinct(), None
         except Exception as e:
             log.exception(e)
             return None, CustomMassenergizeError(e)
