@@ -341,10 +341,9 @@ def createUsers():
 def createImage(picURL=None):
 
     # this may break if that picture goes away.  Ha ha - keep you on your toes!
-    if not picURL:
-        picURL = ME_DEFAULT_TEST_IMAGE
+    picURL = ME_DEFAULT_TEST_IMAGE
 
-    resp = requests.get("https://www.massenergize.org/wp-content/uploads/2024/04/EDP_LR_Z8G_4079.jpg")
+    resp = requests.get(picURL)
     if resp.status_code != requests.codes.ok:
         # Error handling here3
         print("ERROR: Unable to import image file from " + picURL)
@@ -380,7 +379,6 @@ def image_url_to_base64(image_url = None):
         base64_image = f'data:{content_type};base64,{base64_image}'
         return base64_image
     return None
-
 
 
 def make_technology(**kwargs):
