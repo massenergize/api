@@ -161,7 +161,7 @@ def send_user_requested_postmark_nudge_report(community_id, email, period=45):
 
 def generate_postmark_nudge_report(task=None):
     try:
-        communities = Community.objects.filter(is_published=True, is_deleted=False, subdomain="wayland")
+        communities = Community.objects.filter(is_published=True, is_deleted=False)
         for com in communities:
             rows , file_name= generate_community_report_data(com)
             report_file  =  generate_csv_file(rows=rows)
