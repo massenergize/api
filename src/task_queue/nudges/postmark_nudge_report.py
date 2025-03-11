@@ -21,7 +21,7 @@ def get_stats_from_postmark(tag, start, end):
             return True
         headers = {"Accept": "application/json","X-Postmark-Server-Token": POSTMARK_EMAIL_SERVER_TOKEN}
         response = requests.get(url, headers=headers)
-        log.info(f'*** Response for {tag}: ', response.json())
+        log.info(f'*** Response for {tag}: {response.json()}', )
         return response
     except Exception as e:
         log.error(f"Error in get_stats_from_postmark: {str(e)}")
