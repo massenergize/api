@@ -1,4 +1,0 @@
-﻿Name,is_deleted,description,Subcategories,Actions
-Emma Cat,,this is a category for testing,emma subcategory,"energy_fair,energy_audit,prog_thermostats,weatherization,community_solar,renewable_elec,led_lighting,heating_assessment,efficient_fossil,air_source_hp,ground_source_hp,hw_assessment,hp_water_heater,solar_assessment,install_solarPV,install_solarHW,energystar_fridge,energystar_washer,induction_stove,hp_dryer,coldwater_wash,line_dry,fridge_pickup,smart_power_strip,electricity_monitor,replace_car,reduce_car_miles,eliminate_car,reduce_flights,offset_flights,low_carbon_diet,reduce_waste,compost,reduce_lawn_size,reduce_lawn_care,electric_mower,rake_elec_blower,plant_trees,eat_locally"
-Second Category,True,,,
-not deleted cat,,descript,"hm,Subcateogry with is_deleted cat",

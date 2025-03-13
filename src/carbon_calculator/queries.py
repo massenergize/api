@@ -82,13 +82,9 @@ def QuerySingleAction(name,event_tag=""):
                     if len(qq.questionText)>0:
                         questionInfo.append(jsons.dump(qq))
 
-            picture = ""
-            if q.picture:
-                picture = q.picture.file.url
-
             return VALID_QUERY, {"id": q.pk, "name":q.name, "title":q.title, "description":q.description, \
                                 "category":category_id, "helptext":q.helptext, "questionInfo":questionInfo, \
-                                "average_points":q.average_points, "picture":picture}
+                                "average_points":q.average_points}
         else:
             #print("ERROR: Action "+name+" was not found")
             return INVALID_QUERY, {}
