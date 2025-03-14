@@ -59,6 +59,7 @@ jobs:
         FIREBASE_SERVICE_ACCOUNT_CLIENT_URL: ${{ secrets.DEV_FIREBASE_SERVICE_ACCOUNT_CLIENT_URL }}
         GOOGLE_TRANSLATE_KEY_FILE_NAME: ${{ secrets.GOOGLE_TRANSLATE_KEY_FILE_NAME}}
         GOOGLE_TRANSLATE_KEY_FILE_PATH: ${{ secrets.GOOGLE_TRANSLATE_KEY_FILE_PATH}}
+        ME_DEFAULT_LOGO_URL: ${{secrets.ME_DEFAULT_LOGO_URL}}
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v4.0.1
       with:

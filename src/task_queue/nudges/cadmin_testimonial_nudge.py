@@ -48,6 +48,9 @@ def get_cadmin_names_and_emails(community):
 		
 	return name_emails
 
+def format_date(date_str):
+	return date_str.strftime("%B %d, %Y") if date_str else  "N/A"
+
 
 
 	
@@ -68,7 +71,7 @@ def send_nudge(data, community, admin):
 				"preferred_name": testimonial.get('preferred_name') or testimonial.get('user', {}).get('full_name', "Anonymous") if testimonial else "Anonymous",
 				"community": testimonial.get("community", {}).get("name"),
 				"view_url": f"{COMMUNITY_URL_ROOT}/{community.subdomain}/testimonials/{testimonial.get('id')}",
-				"date": testimonial.get('published_at').strftime("%B %d, %Y"),
+				"date": format_date(testimonial.get('published_at')),
 				"image": {"url": testimonial.get('image', {}).get('url', None)} if testimonial.get('image') else None,
 			} for testimonial in serialized_data
 		]
@@ -95,20 +98,24 @@ def send_nudge(data, community, admin):
 
 
 def get_admin_testimonials(notification_dates, testimonial_list):
-	today = timezone.now()
-	a_week_ago = today - relativedelta(weeks=4)
+	try:
+		today = timezone.now()
+		a_week_ago = today - relativedelta(weeks=4)
 
-	user_event_nudge = notification_dates.get(TESTIMONIAL_NUDGE_KEY, None)
+		user_event_nudge = notification_dates.get(TESTIMONIAL_NUDGE_KEY, None)
 
-	if not user_event_nudge or not notification_dates:
-		return testimonial_list.filter(Q(published_at__range=[a_week_ago, today])).order_by('published_at')
-	
-	last_received_at = datetime.strptime(user_event_nudge, '%Y-%m-%d')
-	date_aware = timezone.make_aware(last_received_at, timezone=timezone.get_default_timezone())
+		if not user_event_nudge or not notification_dates:
+			return testimonial_list.filter(Q(published_at__range=[a_week_ago, today])).order_by('published_at')
+		
+		last_received_at = datetime.strptime(user_event_nudge, '%Y-%m-%d')
+		date_aware = timezone.make_aware(last_received_at, timezone=timezone.get_default_timezone())
 
-	last_time = date_aware if date_aware else a_week_ago
+		last_time = date_aware if date_aware else a_week_ago
 
-	return testimonial_list.filter(Q(published_at__range=[last_time, today])).order_by('published_at')
+		return testimonial_list.filter(Q(published_at__range=[last_time, today])).order_by('published_at')
+	except Exception as e:
+		log.exception(e)
+		return []
 
 	
 def prepare_testimonials_for_community_admins(task=None):
@@ -125,9 +132,11 @@ def prepare_testimonials_for_community_admins(task=None):
 		communities = flag.enabled_communities(communities)
 
 		for community in communities:
+			log.info(f"*** Processing Testimonial Auto-Share Nudge for {community.name}")
 			testimonials_auto_shared = community.testimonial_shares.filter(testimonial__is_published=True)
 
 			if not testimonials_auto_shared:
+				log.info("No testimonials found")
 				continue
 			
 			list_to_send = [t.testimonial for t in testimonials_auto_shared]
@@ -149,7 +158,8 @@ def prepare_testimonials_for_community_admins(task=None):
 				admin_testimonials = get_admin_testimonials(nudge_dates, testimonials)
 				if not admin_testimonials:
 					continue
-		
+		        
+				log.info(f"*** Sending Testimonial({len(admin_testimonials)}) Nudge to {email}")
 				ok = send_nudge(admin_testimonials, community, {"name": name, "email": email, "user_info": user_info})
 				if not ok:
 					log.error(f"Failed to send nudge to community admin for community {community.name}")

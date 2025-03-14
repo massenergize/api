@@ -138,9 +138,9 @@ def send_events_nudge(task=None) -> bool:
 
             event_list = d.get("events", [])
 
+
             if len(admins) > 0 and len(event_list) > 0:
                 email_list = get_admin_email_list(admins, CADMIN_NUDGE_KEY)
-
                 for email, data in email_list.items():
                     name = data.get("name")
 
@@ -173,7 +173,11 @@ def send_events_report(name, email, event_list, com) -> bool:
 
         tag = generate_email_tag(com.subdomain, CADMIN_EVENTS_NUDGE)
 
-        send_massenergize_email_with_attachments(WEEKLY_EVENTS_NUDGE_TEMPLATE, data, [email], None, None, None, tag)
+        ok = send_massenergize_email_with_attachments(WEEKLY_EVENTS_NUDGE_TEMPLATE, data, [email], None, None, None, tag)
+        if not ok:
+            log.info(f"Failed to send Cadmin Nudge to '{email}'  ")
+        else:
+            log.info(f"Sent Cadmin Nudge to '{email}'  ")
         return True
     except Exception as e:
         log.error("send_events_report exception: " + str(e))

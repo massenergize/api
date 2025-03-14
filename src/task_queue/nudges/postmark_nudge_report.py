@@ -21,6 +21,7 @@ def get_stats_from_postmark(tag, start, end):
             return True
         headers = {"Accept": "application/json","X-Postmark-Server-Token": POSTMARK_EMAIL_SERVER_TOKEN}
         response = requests.get(url, headers=headers)
+        log.info(f'*** Response for {tag}: {response.json()}', )
         return response
     except Exception as e:
         log.error(f"Error in get_stats_from_postmark: {str(e)}")
@@ -161,7 +162,7 @@ def send_user_requested_postmark_nudge_report(community_id, email, period=45):
 
 def generate_postmark_nudge_report(task=None):
     try:
-        communities = Community.objects.filter(is_published=True, is_deleted=False, subdomain="wayland")
+        communities = Community.objects.filter(is_published=True, is_deleted=False)
         for com in communities:
             rows , file_name= generate_community_report_data(com)
             report_file  =  generate_csv_file(rows=rows)
