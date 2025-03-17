@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+import uuid
 
 from django.db import models
 from django.forms import model_to_dict
@@ -183,3 +184,48 @@ class Task(models.Model):
         schedule = self.schedule
         schedule.enabled = True
         schedule.save()
+
+
+
+class TaskRun(models.Model):
+    """
+    Model to track individual executions of tasks
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='runs' )
+    started_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(max_length=SHORT_STR_LEN,choices=TaskStatus.choices(), default=TaskStatus.RUNNING)
+    error_message = models.TextField(null=True, blank=True)
+    result = models.JSONField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-started_at']
+
+    def __str__(self):
+        return f'{self.task.name} - {self.started_at}'
+
+    def mark_complete(self, result=None):
+        self.completed_at = datetime.now()
+        self.status = TaskStatus.COMPLETED
+        self.result = result
+        self.save()
+
+    def mark_failed(self, error_message):
+        self.completed_at = datetime.now()
+        self.status = TaskStatus.FAILED
+        self.error_message = error_message
+        self.save()
+
+
+
+'''
+
+result format for each task
+
+{
+audience:"sn,er,w,,r,e,",
+scope: USER|| CADMIN|| SADMIN
+
+}
+'''

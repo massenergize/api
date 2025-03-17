@@ -116,6 +116,7 @@ def generate_community_report_data(community, period=30):
 
 def send_community_report(report, community, filename, user=None):
     try:
+        emails = []
         if not report and not filename: return False
         
         def send_email(name, email):
@@ -128,6 +129,7 @@ def send_community_report(report, community, filename, user=None):
                 filename,
                 None
             )
+            emails.append(email)
 
         if user:
             send_email(user.preferred_name or user.full_name, user.email)
@@ -136,7 +138,7 @@ def send_community_report(report, community, filename, user=None):
             for email, name in admins.items():
                 send_email(name, email)
 
-        return True
+        return emails
     except Exception as e:
         log.error(f"Error in send_community_report: {str(e)}")
         return False
@@ -162,13 +164,19 @@ def send_user_requested_postmark_nudge_report(community_id, email, period=45):
 
 def generate_postmark_nudge_report(task=None):
     try:
+        emails = []
         communities = Community.objects.filter(is_published=True, is_deleted=False)
         for com in communities:
             rows , file_name= generate_community_report_data(com)
             report_file  =  generate_csv_file(rows=rows)
-            send_community_report(report_file, com, file_name)
-
-        return True
+            sent_emails = send_community_report(report_file, com, file_name)
+            emails+=sent_emails
+        
+        res = {
+            "audience":",".join(emails),
+            "scope":"CADMIN"
+        }
+        return res
     except Exception as e:
         log.error(f"Error in Nudge report main func: {str(e)}")
         return False 

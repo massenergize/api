@@ -4,20 +4,14 @@ from _main_.utils.emailer.send_email import (
     get_sender_signature_info,
     resend_signature_confirmation,
 )
-#from _main_.utils.feature_flag_keys import POSTMARK_COMMUNITY_EMAIL_SENDER_SIGNATURE_FF
-#from database.models import Community, FeatureFlag
+from _main_.utils.massenergize_logger import log
 from database.models import Community
 
 def collect_and_create_signatures(task=None):
-    #flag = FeatureFlag.objects.filter(key=POSTMARK_COMMUNITY_EMAIL_SENDER_SIGNATURE_FF).first()
-    #if not flag or not flag.enabled():
-    #    return False
-    #communities = Community.objects.filter(is_published=True, is_deleted=False).exclude(
     enabled_communities = Community.objects.filter(is_published=True, is_deleted=False).exclude(
         contact_info__is_validated=False
     )
-    #ff_enabled_communities = flag.enabled_communities(communities)
-    #for community in ff_enabled_communities:
+    emails= []
     for community in enabled_communities:
         email = community.owner_email
         if not email or email.split("@")[1].strip().lower() in PUBLIC_EMAIL_DOMAINS:
@@ -43,10 +37,11 @@ def collect_and_create_signatures(task=None):
                             **postmark_info,
                             "nudge_count": postmark_info.get("nudge_count", 0) + 1,
                         }
+                        emails.append(email)
                     else:
-                        print(f"ERROR Resending Confirmation to {community.name}: ", res.json())
+                        log.error(f"ERROR Resending Confirmation to {community.name}: {res.json()} ")
             else:
-                print(f"ERROR getting Contact Info of {community.name}: ", response.json())
+                log.error(f"ERROR getting Contact Info of {community.name}: {response.json()}")
         else:
             response = add_sender_signature(email, alias, community.owner_name, community.name)
             if response.status_code == 200:
@@ -61,6 +56,12 @@ def collect_and_create_signatures(task=None):
                 community.contact_sender_alias = alias
             
                 community.save()
+                emails.append(email)
             else:
-                print(f"ERROR adding signature for {community.name}: ", response.json())
-    return True
+                log.error(f"ERROR adding signature for {community.name}: {response.json()}")
+
+        result = {
+            "scope": "CADMIN",
+            "audience":",".join(emails)
+        }
+    return result

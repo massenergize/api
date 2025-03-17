@@ -162,7 +162,11 @@ def super_admin_nudge(task=None):
         SADMIN_EMAIL_TEMPLATE,
         temp_data,
     )
-    return "success"
+    result = {
+        "scope":"SADMIN",
+        "audience": ",".join(list(super_admins)),
+    }
+    return result
 
 
 def community_admin_nudge():
@@ -416,7 +420,7 @@ def send_admin_mou_notification(task=None):
 
     # Get current time in UTC timezone
     now = datetime.datetime.now(timezone.utc)
-
+    admins_emailed = []
     # Calculate one year and one month ago for comparison
     a_year_ago = now - datetime.timedelta(days=365)
     a_month_ago = now - datetime.timedelta(days=31)
@@ -460,6 +464,7 @@ def send_admin_mou_notification(task=None):
                         print("Sending first MOU notification")
                     send_mou_email(admin.email, admin_name)
                     update_records(last=last_record, notices=notices)
+                    admins_emailed.append(admin.email)
                     
                     
                 else:  # They have been notified before
@@ -471,6 +476,7 @@ def send_admin_mou_notification(task=None):
                             print("Overdue: Sending another notification")
                         send_mou_email(admin.email, admin_name)
                         update_records(last=last_record, notices=notices)
+                        admins_emailed.append(admin.email)
                         
        
                         
@@ -483,7 +489,12 @@ def send_admin_mou_notification(task=None):
             # Record the current notification timestamp
             new_notification_time = datetime.datetime.now(timezone.utc).isoformat()
             update_records(notices=[new_notification_time], user=admin)
+
+    result = {
+        "audience": ",".join(admins_emailed),
+        "scope": "CADMIN",
+    }
     
-    return "success"
+    return result
 
 

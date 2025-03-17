@@ -152,8 +152,12 @@ def send_events_nudge(task=None) -> bool:
                     admins_emailed.append(email)
 
         update_last_notification_dates(admins_emailed, CADMIN_NUDGE_KEY)
+        result = {
+            "audience": ",".join(admins_emailed),
+            "scope": "CADMIN",
+        }
 
-        return True
+        return result
     except Exception as e:
         log.error("Community admin nudge exception: " + str(e))
         return False

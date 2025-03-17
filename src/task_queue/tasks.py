@@ -33,13 +33,16 @@ def log_status(task, message):
 
 @shared_task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 1, 'countdown': 5})
 def run_some_task(self, task_id):
+	task = None
+	task_run = None
 	try:
 		today = datetime.date.today()
 		should_run = False
-		task = None
 		
 		with transaction.atomic():
 			task = Task.objects.select_for_update().get(id=task_id)
+			# Create a TaskRun instance at the start
+			task_run = task.runs.create()
 			
 			if is_time_to_run(task):
 				task.last_run = today
@@ -54,16 +57,28 @@ def run_some_task(self, task_id):
 			if func:
 				try:
 					res = func(task)
-					task.status = SUCCEEDED if res else FAILED
+					if res:
+						task.status = SUCCEEDED
+						task_run.mark_complete(result=res if isinstance(res, (dict, list)) else None)
+					else:
+						task.status = FAILED
+						task_run.mark_failed("Task returned False")
 					log_status(task, "Task ran successfully" if res else "Task failed")
 				
 				except Exception as e:
+					error_msg = str(e)
 					task.status = FAILED
-					log_status(task, str(e))
+					task_run.mark_failed(error_msg)
+					log_status(task, error_msg)
 			else:
+				error_msg = "Task not found in FUNCTIONS"
 				task.status = FAILED
-				log_status(task, "Task not found in FUNCTIONS")
+				task_run.mark_failed(error_msg)
+				log_status(task, error_msg)
 			task.save()
 			
 	except Exception as e:
-		log.error(f"Task: {task_id}, Status: ❌, Info: {str(e)}")
+		error_msg = str(e)
+		log.error(f"Task: {task_id}, Status: ❌, Info: {error_msg}")
+		if task_run:
+			task_run.mark_failed(error_msg)

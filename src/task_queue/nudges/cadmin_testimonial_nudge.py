@@ -130,6 +130,7 @@ def prepare_testimonials_for_community_admins(task=None):
 
 		communities = Community.objects.filter(is_published=True, is_deleted=False)
 		communities = flag.enabled_communities(communities)
+		emailed_list = []
 
 		for community in communities:
 			log.info(f"*** Processing Testimonial Auto-Share Nudge for {community.name}")
@@ -163,11 +164,16 @@ def prepare_testimonials_for_community_admins(task=None):
 				ok = send_nudge(admin_testimonials, community, {"name": name, "email": email, "user_info": user_info})
 				if not ok:
 					log.error(f"Failed to send nudge to community admin for community {community.name}")
-
+			emailed_list += list(admins_to_receive.keys())
 			update_last_notification_dates(admins_to_receive.keys(), TESTIMONIAL_NUDGE_KEY)
 
+		res = {
+            "scope":"SADMIN",
+            "audience": ",".join(emailed_list)
+        }
+
 		log.info("Successfully sent nudge to all community admins")
-		return True
+		return res
 	except Exception as e:
 		log.exception(e)
 		return False
