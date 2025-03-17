@@ -38,4 +38,5 @@ class PostmarkNudgeReportTests(TestCase):
 
     def test_generate_postmark_nudge_report(self):
         result = generate_postmark_nudge_report()
+        print("=== result:   ", result)
         self.assertTrue(result) 

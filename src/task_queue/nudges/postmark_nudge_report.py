@@ -117,7 +117,7 @@ def generate_community_report_data(community, period=30):
 def send_community_report(report, community, filename, user=None):
     try:
         emails = []
-        if not report and not filename: return False
+        if not report and not filename: return emails
         
         def send_email(name, email):
             temp_data = {'data_type': f'{community.name} Nudge Report', 'name': name}
@@ -141,7 +141,7 @@ def send_community_report(report, community, filename, user=None):
         return emails
     except Exception as e:
         log.error(f"Error in send_community_report: {str(e)}")
-        return False
+        return []
 
 
 
@@ -179,4 +179,4 @@ def generate_postmark_nudge_report(task=None):
         return res
     except Exception as e:
         log.error(f"Error in Nudge report main func: {str(e)}")
-        return False 
+        return str(e) 
