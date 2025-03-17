@@ -184,7 +184,6 @@ class ActionStore:
         new_action.steps_to_take = action_to_copy.steps_to_take
         new_action.deep_dive = action_to_copy.deep_dive
         new_action.about = action_to_copy.about
-        new_action.primary_category = action_to_copy.primary_category
         new_action.geographic_area = action_to_copy.geographic_area
         new_action.icon = action_to_copy.icon
         new_action.image = action_to_copy.image
