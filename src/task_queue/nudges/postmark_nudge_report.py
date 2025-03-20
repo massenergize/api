@@ -1,4 +1,5 @@
 import csv
+import traceback
 from django.http import HttpResponse
 import requests
 from _main_.settings import POSTMARK_EMAIL_SERVER_TOKEN
@@ -176,7 +177,8 @@ def generate_postmark_nudge_report(task=None):
             "audience":",".join(emails),
             "scope":"CADMIN"
         }
-        return res
+        return res, None
     except Exception as e:
-        log.error(f"Error in Nudge report main func: {str(e)}")
-        return str(e) 
+        stack_trace = traceback.format_exc()
+        log.error(f"Error in Nudge report main func: {stack_trace}")
+        return None, stack_trace

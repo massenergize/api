@@ -1,4 +1,5 @@
 from datetime import datetime
+import traceback
 from _main_.utils.common import encode_data_for_URL, serialize_all
 from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT, ME_LOGO_PNG
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
@@ -126,7 +127,7 @@ def prepare_testimonials_for_community_admins(task=None):
         
 		flag = FeatureFlag.objects.get(key=TESTIMONIAL_AUTO_SHARE_SETTINGS_NUDGE_FEATURE_FLAG_KEY)
 		if not flag or not flag.enabled():
-			return False
+			return None, "Feature flag not enabled"
 
 		communities = Community.objects.filter(is_published=True, is_deleted=False)
 		communities = flag.enabled_communities(communities)
@@ -167,13 +168,11 @@ def prepare_testimonials_for_community_admins(task=None):
 			emailed_list += list(admins_to_receive.keys())
 			update_last_notification_dates(admins_to_receive.keys(), TESTIMONIAL_NUDGE_KEY)
 
-		res = {
-            "scope":"SADMIN",
-            "audience": ",".join(emailed_list)
-        }
+		res = {"scope":"CADMIN","audience": ",".join(emailed_list)}
 
 		log.info("Successfully sent nudge to all community admins")
-		return res
+		return res, None
 	except Exception as e:
-		log.exception(e)
-		return False
+		stack_trace = traceback.format_exc()
+		log.error(f"Community admin nudge exception: {stack_trace}")
+		return None, stack_trace

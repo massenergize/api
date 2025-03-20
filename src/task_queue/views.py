@@ -1,4 +1,5 @@
 import csv
+import traceback
 from django.http import HttpResponse
 from _main_.utils.common import parse_datetime_to_aware
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
@@ -18,6 +19,8 @@ from django.db.models import Count
 from django.db.models import Q
 from django.core.exceptions import ObjectDoesNotExist
 from carbon_calculator.carbonCalculator import AverageImpact
+from _main_.utils.massenergize_logger import log
+
 
 today = parse_datetime_to_aware()
 one_week_ago = today - timezone.timedelta(days=7)
@@ -78,95 +81,100 @@ def super_admin_nudge(task=None):
     """
     Send a nudge to super admins.
     """
-    response = HttpResponse(content_type="text/csv")
-    writer = csv.writer(response)
-    writer.writerow(
-        [
-            "Community",
-            "Total Signups",
-            "Signups This Week",
-            "Total Actions Taken",
-            " Actions Taken This Week ",
-            "Actions in ToDo This Week",
-        ]
-    )
-
-    data = query_db()
-
-    super_admins = UserProfile.objects.filter(
-        is_super_admin=True, is_deleted=False
-    ).values_list("email", flat=True)
-
-    for community in communities:
-        community_name = community.name
-        all_community_admins = CommunityAdminGroup.objects.filter(
-            community=community
-        ).values_list("members__email", flat=True)
-        all_community_admins = list(all_community_admins)
-
-        total_signup = (
-            data.get("total_sign_ups").filter(community__name=community_name).first()
-        )
-        community_total_signup = total_signup["signups"] if total_signup else 0
-
-        weekly_signup = (
-            data.get("weekly_sign_ups").filter(community__name=community_name).first()
-        )
-        community_weekly_signup = weekly_signup["signups"] if weekly_signup else 0
-
-        total_actions = (
-            data.get("total_actions")
-            .filter(action__community__name=community_name)
-            .first()
-        )
-        community_actions_taken = total_actions["actions"] if total_actions else 0
-
-        weekly_done_actions = (
-            data.get("weekly_done_actions")
-            .filter(action__community__name=community_name)
-            .first()
-        )
-        community_weekly_done_actions = (
-            weekly_done_actions["actions"] if weekly_done_actions else 0
-        )
-
-        weekly_todo_actions = (
-            data.get("weekly_todo_actions")
-            .filter(action__community__name=community_name)
-            .first()
-        )
-        community_weekly_todo_actions = (
-            weekly_todo_actions["actions"] if weekly_todo_actions else 0
-        )
-
+    try:
+        response = HttpResponse(content_type="text/csv")
+        writer = csv.writer(response)
         writer.writerow(
             [
-                community_name,
-                community_total_signup,
-                community_weekly_signup,
-                community_actions_taken,
-                community_weekly_done_actions,
-                community_weekly_todo_actions,
+                "Community",
+                "Total Signups",
+                "Signups This Week",
+                "Total Actions Taken",
+                " Actions Taken This Week ",
+                "Actions in ToDo This Week",
             ]
         )
-    temp_data = {
-        "name": "there",
-        "start": str(one_week_ago.date()),
-        "end": str(today.date()),
-    }
 
-    send_nudge(
-        response.content,
-        f"Weekly Report({one_week_ago.date()} to {today.date()}).csv",
-        list(super_admins),
-        SADMIN_EMAIL_TEMPLATE,
-        temp_data,
-    )
-    result = {
-        "scope":"SADMIN",
-        "audience": ",".join(list(super_admins)),
-    }
-    return result
+        data = query_db()
+
+        super_admins = UserProfile.objects.filter(
+            is_super_admin=True, is_deleted=False
+        ).values_list("email", flat=True)
+
+        for community in communities:
+            community_name = community.name
+            all_community_admins = CommunityAdminGroup.objects.filter(
+                community=community
+            ).values_list("members__email", flat=True)
+            all_community_admins = list(all_community_admins)
+
+            total_signup = (
+                data.get("total_sign_ups").filter(community__name=community_name).first()
+            )
+            community_total_signup = total_signup["signups"] if total_signup else 0
+
+            weekly_signup = (
+                data.get("weekly_sign_ups").filter(community__name=community_name).first()
+            )
+            community_weekly_signup = weekly_signup["signups"] if weekly_signup else 0
+
+            total_actions = (
+                data.get("total_actions")
+                .filter(action__community__name=community_name)
+                .first()
+            )
+            community_actions_taken = total_actions["actions"] if total_actions else 0
+
+            weekly_done_actions = (
+                data.get("weekly_done_actions")
+                .filter(action__community__name=community_name)
+                .first()
+            )
+            community_weekly_done_actions = (
+                weekly_done_actions["actions"] if weekly_done_actions else 0
+            )
+
+            weekly_todo_actions = (
+                data.get("weekly_todo_actions")
+                .filter(action__community__name=community_name)
+                .first()
+            )
+            community_weekly_todo_actions = (
+                weekly_todo_actions["actions"] if weekly_todo_actions else 0
+            )
+
+            writer.writerow(
+                [
+                    community_name,
+                    community_total_signup,
+                    community_weekly_signup,
+                    community_actions_taken,
+                    community_weekly_done_actions,
+                    community_weekly_todo_actions,
+                ]
+            )
+        temp_data = {
+            "name": "there",
+            "start": str(one_week_ago.date()),
+            "end": str(today.date()),
+        }
+
+        send_nudge(
+            response.content,
+            f"Weekly Report({one_week_ago.date()} to {today.date()}).csv",
+            list(super_admins),
+            SADMIN_EMAIL_TEMPLATE,
+            temp_data,
+        )
+        result = {
+            "scope":"SADMIN",
+            "audience": ",".join(list(super_admins)),
+        }
+        return result, None
+    except Exception as e:
+        stack_trace = traceback.format_exc()
+        log.error(f"Error sending super admin nudge: {stack_trace}")
+        return None, stack_trace
 
 
 def community_admin_nudge():
