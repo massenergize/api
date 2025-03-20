@@ -1,4 +1,5 @@
 import datetime
+import traceback
 from _main_.utils.common import encode_data_for_URL, serialize_all
 from _main_.utils.constants import COMMUNITY_URL_ROOT
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
@@ -312,8 +313,7 @@ def prepare_user_events_nudge(task=None, email=None, community_id=None):
 
         flag = FeatureFlag.objects.get(key=USER_EVENTS_NUDGES_FF)
         if not flag or not flag.enabled():
-            return False
-
+            return None, "Feature flag not enabled"
         communities = Community.objects.filter(is_published=True, is_deleted=False)
         communities = flag.enabled_communities(communities)
 
@@ -338,7 +338,8 @@ def prepare_user_events_nudge(task=None, email=None, community_id=None):
         
         result = {"audience": ",".join(audience), "scope": "USER"}
 
-        return result
+        return result, None
     except Exception as e:
-        log.error("Community member nudge exception: ",e)
-        return False
+        stack_trace = traceback.format_exc()
+        log.error(f"User event nudge exception: {stack_trace}")
+        return None, stack_trace
