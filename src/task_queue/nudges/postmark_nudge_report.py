@@ -16,6 +16,11 @@ from _main_.utils.massenergize_logger import log
 
 
 def get_stats_from_postmark(tag, start, end):
+    if is_test_mode():
+        res = requests.Response()
+        res.status_code = 200
+        res._content = b'{"Sent": 10, "UniqueOpens": 5, "Bounced": 0, "SpamComplaints": 0, "TotalClicks": 0}'
+        return res
     try:
         url = f"https://api.postmarkapp.com/stats/outbound?tag={tag}&fromdate={start}&todate={end}"
         if is_test_mode():
@@ -111,6 +116,7 @@ def generate_community_report_data(community, period=30):
         
         return rows, filename
     except Exception as e:
+        print("=== ERROR ===", e)
         log.error(f"Error in generate_community_report_data: {str(e)}")
         return [], ""
 

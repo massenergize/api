@@ -1,5 +1,5 @@
 from django.test import TestCase
-from src.task_queue.nudges.postmark_nudge_report import (
+from task_queue.nudges.postmark_nudge_report import (
     get_stats_from_postmark,
     get_community_admins,
     generate_csv_file,
