@@ -239,6 +239,7 @@ class CampaignHandler(RouteHandler):
          .expect("about_us_section", dict, is_required=False )
          .expect("eligibility_section", dict, is_required=False)
           .expect("manager_section", dict, is_required=False)
+          .expect("default_community_settings", dict, is_required=False)
         )
 
 
