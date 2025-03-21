@@ -181,6 +181,7 @@ class CampaignStore:
             get_in_touch_section = args.pop("get_in_touch_section", None)
             about_us_section = args.pop("about_us_section", None)
             eligibility_section = args.pop("eligibility_section", None)
+            manager_section = args.pop("manager_section", None)
 
             campaigns = Campaign.objects.filter(id=campaign_id)
             if not campaigns:
@@ -231,6 +232,9 @@ class CampaignStore:
                 
             if eligibility_section:
                 args["eligibility_section"] = create_or_update_section_from_dict(eligibility_section, section_media)
+
+            if manager_section:
+                args["manager_section"] = create_or_update_section_from_dict(manager_section, section_media)
             campaigns.update(**args)
 
             return campaigns.first(), None
