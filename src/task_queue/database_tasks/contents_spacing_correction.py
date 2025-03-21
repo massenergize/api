@@ -1,5 +1,6 @@
 import csv
 import datetime
+import traceback
 from django.apps import apps
 from _main_.utils.massenergize_logger import log
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
@@ -103,12 +104,15 @@ def process_spacing_data(task=None):
             temp_data = {'data_type': "Content Spacing", "name":task.creator.full_name if task.creator else "admin"}
             file_name = "Content-Spacing-Report-{}.csv".format(datetime.datetime.now().strftime("%Y-%m-%d"))
             send_massenergize_email_with_attachments(DATA_DOWNLOAD_TEMPLATE,temp_data,[task.creator.email], report, file_name)
-    
-        return True
+        res = {
+            "scope":"SADMIN",
+            "audience": task.creator.email
+        }
+        return res
     except Exception as e:
-        print(str(e))
+        stack_trace =  traceback.format_exc()
         log.exception(e)
-        return False
+        return None, stack_trace
   
     
 

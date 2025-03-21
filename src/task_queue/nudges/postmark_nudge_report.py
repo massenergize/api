@@ -1,4 +1,5 @@
 import csv
+import traceback
 from django.http import HttpResponse
 import requests
 from _main_.settings import POSTMARK_EMAIL_SERVER_TOKEN
@@ -15,6 +16,11 @@ from _main_.utils.massenergize_logger import log
 
 
 def get_stats_from_postmark(tag, start, end):
+    if is_test_mode():
+        res = requests.Response()
+        res.status_code = 200
+        res._content = b'{"Sent": 10, "UniqueOpens": 5, "Bounced": 0, "SpamComplaints": 0, "TotalClicks": 0}'
+        return res
     try:
         url = f"https://api.postmarkapp.com/stats/outbound?tag={tag}&fromdate={start}&todate={end}"
         if is_test_mode():
@@ -110,13 +116,15 @@ def generate_community_report_data(community, period=30):
         
         return rows, filename
     except Exception as e:
+        print("=== ERROR ===", e)
         log.error(f"Error in generate_community_report_data: {str(e)}")
         return [], ""
 
 
 def send_community_report(report, community, filename, user=None):
     try:
-        if not report and not filename: return False
+        emails = []
+        if not report and not filename: return emails
         
         def send_email(name, email):
             temp_data = {'data_type': f'{community.name} Nudge Report', 'name': name}
@@ -128,6 +136,7 @@ def send_community_report(report, community, filename, user=None):
                 filename,
                 None
             )
+            emails.append(email)
 
         if user:
             send_email(user.preferred_name or user.full_name, user.email)
@@ -136,10 +145,10 @@ def send_community_report(report, community, filename, user=None):
             for email, name in admins.items():
                 send_email(name, email)
 
-        return True
+        return emails
     except Exception as e:
         log.error(f"Error in send_community_report: {str(e)}")
-        return False
+        return []
 
 
 
@@ -162,13 +171,20 @@ def send_user_requested_postmark_nudge_report(community_id, email, period=45):
 
 def generate_postmark_nudge_report(task=None):
     try:
+        emails = []
         communities = Community.objects.filter(is_published=True, is_deleted=False)
         for com in communities:
             rows , file_name= generate_community_report_data(com)
             report_file  =  generate_csv_file(rows=rows)
-            send_community_report(report_file, com, file_name)
-
-        return True
+            sent_emails = send_community_report(report_file, com, file_name)
+            emails+=sent_emails
+        
+        res = {
+            "audience":",".join(emails),
+            "scope":"CADMIN"
+        }
+        return res, None
     except Exception as e:
-        log.error(f"Error in Nudge report main func: {str(e)}")
-        return False 
+        stack_trace = traceback.format_exc()
+        log.error(f"Error in Nudge report main func: {stack_trace}")
+        return None, stack_trace

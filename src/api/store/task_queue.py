@@ -54,7 +54,7 @@ class TaskQueueStore:
       log.exception(e)
       return None, CustomMassenergizeError(str(e))
 
-  def update_task(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def update_task(self, context:Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       task_id = args.get('id', None)
       if not task_id:
@@ -63,6 +63,10 @@ class TaskQueueStore:
       task = Task.objects.filter(id=task_id)
       if not task.first():
           return None, InvalidResourceError()
+      
+      user = UserProfile.objects.filter(email=context.user_email).first()
+      if user:
+        args['creator'] = user
       task.update(**args)
       
       task = Task.objects.filter(id=task_id).first()

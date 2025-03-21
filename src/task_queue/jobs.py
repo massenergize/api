@@ -19,7 +19,11 @@ PLEASE NOTE:
 
  You can only add new items to the dictionary.
 """
+
+def test(task):
+    return True, None
 FUNCTIONS = {
+    'Test': test,
     'Super admin nudge': super_admin_nudge,
     "Community Admin nudge": send_events_nudge,
     "Admin MOU Notifier": send_admin_mou_notification,

@@ -1,4 +1,5 @@
 import datetime
+import traceback
 from _main_.utils.common import encode_data_for_URL, serialize_all
 from _main_.utils.constants import COMMUNITY_URL_ROOT
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
@@ -14,6 +15,7 @@ from database.utils.common import get_json_if_not_none
 from datetime import timedelta
 
 from django.utils import timezone
+from _main_.utils.massenergize_logger import log
 
 from task_queue.helpers import get_event_location
 from task_queue.nudges.nudge_utils import USER_PREFERENCE_DEFAULTS, WEEKLY, BI_WEEKLY, MONTHLY, DAILY, DEFAULT_EVENT_SETTINGS, LIMIT, EASTERN_TIME_ZONE
@@ -117,7 +119,7 @@ def is_event_eligible(event, community_id, task=None):
         
         return False
     except Exception as e:
-        print(f"is_event_eligible exception - (event:{event.name}|| community:{community_id}): " + str(e))
+        log.error(f"is_event_eligible exception - (event:{event.name}|| community:{community_id}): ", e)
         return False
 
 
@@ -214,7 +216,7 @@ def community_has_altered_flow(community, feature_flag_key) -> bool:
             return False
         return True
     except Exception as e:
-        print(f"community_has_altered_flow exception - ({community.name}): " + str(e))
+        log.error(f"community_has_altered_flow exception - ({community.name}): " , e)
         return False
 
 
@@ -237,30 +239,27 @@ def send_events_report_email(name, email, event_list, comm, login_method=""):
         from_email = get_sender_email(comm.id)
         tag = generate_email_tag(comm.subdomain, USER_EVENTS_NUDGE)
         send_massenergize_email_with_attachments(USER_EVENTS_NUDGE_TEMPLATE, data, [email], None, None, from_email, tag)
-        print("Email sent to " + email)
+        log.info(f"Email sent to {email}")
         return True
     except Exception as e:
-        print("send_events_report exception: " + str(e))
+        log.error("send_events_report exception: " , str(e))
         return False
 
 
 def send_automated_nudge(events, user, community):
-    if len(events) > 0 and user:
-        name = user.full_name
-        email = user.email
-        login_method = (user.user_info or {}).get("login_method") or ""
-        if not name or not email:
-            print("Missing name or email for user: " + str(user))
-            return False
-        user_is_ready_for_nudge = should_user_get_nudged(user)
+    name = user.full_name
+    email = user.email
+    login_method = (user.user_info or {}).get("login_method") or ""
+    if not name or not email:
+        log.info(f"Missing name or email for user: {str(user)}" )
+        return False
 
-        if user_is_ready_for_nudge:
-            print("sending nudge to " + email)
-            is_sent = send_events_report_email(name, email, events, community, login_method)
-            if not is_sent:
-                print(f"**** Failed to send email to {name} for community {community.name} ****")
-                return False
-            update_last_notification_dates(email)
+    log.info(f"sending nudge to {email}")
+    is_sent = send_events_report_email(name, email, events, community, login_method)
+    if not is_sent:
+        log.info(f"**** Failed to send email to {name} for community {community.name} ****")
+        return False
+    update_last_notification_dates(email)
     return True
 
 
@@ -271,7 +270,7 @@ def send_user_requested_nudge(events, user, community):
         login_method = (user.user_info or {}).get("login_method") or ""
         is_sent = send_events_report_email(name, email, events, community, login_method)
         if not is_sent:
-            print(f"**** Failed to send email to {name} for community {community.name} ****")
+            log.info(f"**** Failed to send email to {name} for community {community.name} ****")
             return False
     return True
 
@@ -314,10 +313,11 @@ def prepare_user_events_nudge(task=None, email=None, community_id=None):
 
         flag = FeatureFlag.objects.get(key=USER_EVENTS_NUDGES_FF)
         if not flag or not flag.enabled():
-            return False
-
+            return None, "Feature flag not enabled"
         communities = Community.objects.filter(is_published=True, is_deleted=False)
         communities = flag.enabled_communities(communities)
+
+        audience = []
         for community in communities:
 
             if community_has_altered_flow(community, flag.key):
@@ -328,10 +328,18 @@ def prepare_user_events_nudge(task=None, email=None, community_id=None):
             users = flag.enabled_users(users)
 
             for user in users:
-                user_events = get_user_events(user.notification_dates, events)
-                send_automated_nudge(user_events, user, community)
+                if should_user_get_nudged(user):
+                    user_events = get_user_events(user.notification_dates, events)
+                    if user_events:
+                        ok = send_automated_nudge(user_events, user, community)
+                        if ok:
+                            audience.append(user.email)
 
-        return True
+        
+        result = {"audience": ",".join(audience), "scope": "USER"}
+
+        return result, None
     except Exception as e:
-        print("Community member nudge exception: " + str(e))
-        return False
+        stack_trace = traceback.format_exc()
+        log.error(f"User event nudge exception: {stack_trace}")
+        return None, stack_trace

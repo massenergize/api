@@ -1,4 +1,5 @@
 import datetime
+import traceback
 from django.http import HttpResponse
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
 from _main_.utils.feature_flag_keys import REMOVE_DUPLICATE_IMAGE_FF
@@ -29,26 +30,28 @@ def remove_duplicate_images(task : Task = None):
     Its based on the "Remove Duplicate Images" feature flag. For communities that are subscribed
     to the flag, duplicates will be removed from their libraries.
     """
-    # try: 
-    generate_hashes() 
-    flag = FeatureFlag.objects.filter(key=REMOVE_DUPLICATE_IMAGE_FF).first()
-    is_for_specific_audience = FeatureFlagConstants.is_for_specific_audience(flag and flag.audience)
-    do_deletion = flag and flag.enabled()
-    communities = flag.enabled_communities() if flag else []
-    ids = [c.id for c in communities]
-    com_names = ", ".join([c.name for c in communities])
+    try: 
+        generate_hashes() 
+        flag = FeatureFlag.objects.filter(key=REMOVE_DUPLICATE_IMAGE_FF).first()
+        is_for_specific_audience = FeatureFlagConstants.is_for_specific_audience(flag and flag.audience)
+        do_deletion = flag and flag.enabled()
+        communities = flag.enabled_communities() if flag else []
+        ids = [c.id for c in communities]
+        com_names = ", ".join([c.name for c in communities])
 
-    search_context = None
-    if is_for_specific_audience and ids: 
-            search_context = ids 
+        search_context = None
+        if is_for_specific_audience and ids: 
+                search_context = ids 
+            
+        status = clean_and_notify(search_context,com_names,task.creator if task else None, do_deletion)
         
-    status = clean_and_notify(search_context,com_names,task.creator if task else None, do_deletion)
+        return "success" if status else "Failure"
     
-    return "success" if status else "Failure"
-    
-    # except Exception as e: 
-    #     print("Duplicate Removal Error (Media Library Cleanup): " + str(e))
-    #     return "Failure"
+    except Exception as e: 
+        stack_trace = traceback.format_exc()
+
+        print("Duplicate Removal Error (Media Library Cleanup): " + stack_trace)
+        return None, stack_trace
 
 def clean_and_notify(ids,community_names,notification_receiver, do_deletion): 
         grouped_dupes = find_duplicate_items(False, community_ids=ids)

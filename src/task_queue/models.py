@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+import uuid
 
 from django.db import models
 from django.forms import model_to_dict
@@ -8,6 +9,7 @@ from database.utils.common import get_summary_info
 from database.utils.constants import SHORT_STR_LEN
 from django_celery_beat.models import PeriodicTask, CrontabSchedule
 from task_queue.type_constants import ScheduleInterval, TaskStatus, schedules
+from django.utils import timezone
 
 
 # Create your models here.
@@ -61,10 +63,12 @@ class Task(models.Model):
     is_automatic_task = models.BooleanField(default=False)
 
     def simple_json(self):
+        latest_run = self.runs.all().order_by('-completed_at').first()
         res = model_to_dict(self, exclude=['schedule'])
         res["creator"] = get_summary_info(self.creator)["full_name"] if self.creator else None
         res["is_active"] = self.schedule.enabled if self.schedule else False
-        res["last_run_at"] = self.schedule.last_run_at if self.schedule else None
+        res["last_run_at"] = latest_run.completed_at if latest_run else self.last_run
+        res["status"] = latest_run.status if latest_run else self.status
         return res
 
 
@@ -183,3 +187,35 @@ class Task(models.Model):
         schedule = self.schedule
         schedule.enabled = True
         schedule.save()
+
+
+
+class TaskRun(models.Model):
+    """
+    Model to track individual executions of tasks
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='runs' )
+    started_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(max_length=SHORT_STR_LEN,choices=TaskStatus.choices(), default=TaskStatus.RUNNING.value)
+    error_message = models.TextField(null=True, blank=True)
+    result = models.JSONField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-started_at']
+
+    def __str__(self):
+        return f'{self.task.name} - {self.started_at}'
+
+    def mark_complete(self, result=None):
+        self.completed_at = timezone.now()
+        self.status = TaskStatus.SUCCEEDED.value
+        self.result = result
+        self.save()
+
+    def mark_failed(self, error_message):
+        self.completed_at = timezone.now()
+        self.status = TaskStatus.FAILED.value
+        self.error_message = error_message
+        self.save()
