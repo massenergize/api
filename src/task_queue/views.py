@@ -389,11 +389,15 @@ def create_snapshots(task=None):
         for comm in communities:
             _create_community_timestamp(comm, primary_reu_dict)
 
-        return "Success"
+        return {
+            "scope": "SADMIN",
+            "audience": "All Super"
+        }, None
 
     except Exception as e: 
-        print("Community snapshot exception: " + str(e))
-        return "Failure"
+        stack_trace = traceback.format_exc()
+        log.error(f"Community snapshot exception: {stack_trace}")
+        return None, stack_trace
 
 def send_mou_email(email, name):
     #host = get_frontend_host()

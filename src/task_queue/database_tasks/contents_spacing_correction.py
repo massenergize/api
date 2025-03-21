@@ -1,5 +1,6 @@
 import csv
 import datetime
+import traceback
 from django.apps import apps
 from _main_.utils.massenergize_logger import log
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
@@ -109,9 +110,9 @@ def process_spacing_data(task=None):
         }
         return res
     except Exception as e:
-        print(str(e))
+        stack_trace =  traceback.format_exc()
         log.exception(e)
-        return False
+        return None, stack_trace
   
     
 
