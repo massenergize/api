@@ -1,3 +1,4 @@
+import traceback
 from django.db.models import Q
 from django.utils import timezone
 
@@ -128,7 +129,7 @@ def send_events_nudge(task=None) -> bool:
         admins_emailed=[]
         flag = FeatureFlag.objects.get(key=COMMUNITY_ADMIN_WEEKLY_EVENTS_NUDGE_FF)
         if not flag or not flag.enabled():
-            return False
+            return  None, "Feature flag not enabled"
 
         communities = Community.objects.filter(is_published=True, is_deleted=False)
         communities = flag.enabled_communities(communities)
@@ -152,11 +153,16 @@ def send_events_nudge(task=None) -> bool:
                     admins_emailed.append(email)
 
         update_last_notification_dates(admins_emailed, CADMIN_NUDGE_KEY)
+        result = {
+            "audience": ",".join(admins_emailed),
+            "scope": "CADMIN",
+        }
 
-        return True
+        return result, None
     except Exception as e:
-        log.error("Community admin nudge exception: " + str(e))
-        return False
+        stacktrace = traceback.format_exc()
+        log.error(f"Community admin nudge exception: {stacktrace}")
+        return None, stacktrace
 
 
 def send_events_report(name, email, event_list, com) -> bool:
