@@ -118,7 +118,7 @@ class CampaignHandler(RouteHandler):
         return MassenergizeResponse(data=campaign_info)
 
 
-    @cached_request
+    # @cached_request
     def get_campaign_info_for_user(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -238,6 +238,8 @@ class CampaignHandler(RouteHandler):
         .expect("get_in_touch_section", dict, is_required=False)
          .expect("about_us_section", dict, is_required=False )
          .expect("eligibility_section", dict, is_required=False)
+          .expect("manager_section", dict, is_required=False)
+          .expect("default_community_settings", dict, is_required=False)
         )
 
 

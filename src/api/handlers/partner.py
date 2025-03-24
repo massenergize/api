@@ -50,7 +50,7 @@ class PartnerHandler(RouteHandler):
     def create(self, request):
         context: Context = request.context
         args: dict = context.args
-
+        self.validator.expect("campaign_id", str, is_required=True)
         self.validator.expect("name", str, is_required=True)
         self.validator.expect("phone_number", str, is_required=False)
         self.validator.expect("email", str, is_required=False)

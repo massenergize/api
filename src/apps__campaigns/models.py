@@ -202,6 +202,8 @@ class Campaign(BaseModel):
     get_in_touch_section = models.ForeignKey(Section, on_delete=models.CASCADE, null=True, blank=True, related_name="get_in_touch_section")
     about_us_section = models.ForeignKey(Section, on_delete=models.CASCADE, null=True, blank=True, related_name="about_us_section")
     eligibility_section = models.ForeignKey(Section, on_delete=models.CASCADE, null=True, blank=True, related_name="eligibility_section")
+    manager_section = models.ForeignKey(Section, on_delete=models.CASCADE, null=True, blank=True, related_name="manager_section")
+    default_community_settings = models.ForeignKey(CallToAction, on_delete=models.CASCADE, null=True, blank=True, related_name="default_community_settings")
     
     
     
@@ -234,7 +236,8 @@ class Campaign(BaseModel):
         res["get_in_touch_section"] = self.get_in_touch_section.simple_json() if self.get_in_touch_section else None
         res["about_us_section"] = self.about_us_section.simple_json() if self.about_us_section else None
         res["eligibility_section"] = self.eligibility_section.simple_json() if self.eligibility_section else None
-
+        res["manager_section"] = self.manager_section.simple_json() if self.manager_section else None
+        res["default_community_settings"] = self.default_community_settings.simple_json() if self.default_community_settings else None
         return res
 
     def full_json(self):
@@ -790,6 +793,7 @@ class CampaignTechnologyEvent(BaseModel):
         fields_to_translate = []
 
 class Partner(BaseModel):
+    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, related_name="partner", null=True, blank=True)
     name = models.CharField(max_length=SHORT_STR_LEN)
     website = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
     logo = models.ForeignKey("database.Media", on_delete=models.CASCADE, blank=True, null=True, related_name="partner_logo")
