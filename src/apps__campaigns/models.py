@@ -793,6 +793,7 @@ class CampaignTechnologyEvent(BaseModel):
         fields_to_translate = []
 
 class Partner(BaseModel):
+    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, related_name="partner", null=True, blank=True)
     name = models.CharField(max_length=SHORT_STR_LEN)
     website = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
     logo = models.ForeignKey("database.Media", on_delete=models.CASCADE, blank=True, null=True, related_name="partner_logo")
