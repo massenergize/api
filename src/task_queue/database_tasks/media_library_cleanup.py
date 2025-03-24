@@ -45,7 +45,7 @@ def remove_duplicate_images(task : Task = None):
             
         status = clean_and_notify(search_context,com_names,task.creator if task else None, do_deletion)
         
-        return "success" if status else "Failure"
+        return {"status": status}, None
     
     except Exception as e: 
         stack_trace = traceback.format_exc()
