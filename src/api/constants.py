@@ -21,6 +21,10 @@ CAMPAIGN_INTERACTION_PERFORMANCE_REPORT = 'campaign_interaction_performance_repo
 CAMPAIGN_INTERACTION_PERFORMANCE_REPORT = 'campaign_interaction_performance_report'
 POSTMARK_NUDGE_REPORT = "postmark_nudge_report"
 
+EXPORT_ACTIONS="EXPORT_ACTIONS"
+EXPORT_EVENTS="EXPORT_EVENTS"
+EXPORT_TESTIMONIALS="EXPORT_TESTIMONIALS"
+
 STANDARD_USER = 'standard_user'
 GUEST_USER = 'guest_user'
 INVITED_USER = 'invited_user'  

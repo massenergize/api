@@ -13,7 +13,7 @@ from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
 from _main_.utils.massenergize_logger import log
 from api.constants import ACTIONS, CADMIN_REPORT, CAMPAIGN_INTERACTION_PERFORMANCE_REPORT, CAMPAIGN_PERFORMANCE_REPORT, \
-    CAMPAIGN_VIEWS_PERFORMANCE_REPORT, COMMUNITIES, COMMUNITY_PAGEMAP, DOWNLOAD_POLICY, FOLLOWED_REPORT, LIKE_REPORT, \
+    CAMPAIGN_VIEWS_PERFORMANCE_REPORT, COMMUNITIES, COMMUNITY_PAGEMAP, DOWNLOAD_POLICY, EXPORT_ACTIONS, EXPORT_EVENTS, EXPORT_TESTIMONIALS, FOLLOWED_REPORT, LIKE_REPORT, \
     LINK_PERFORMANCE_REPORT, METRICS, POSTMARK_NUDGE_REPORT, SAMPLE_USER_REPORT, TEAMS, USERS
 from api.services.translations_cache import TranslationsCacheService
 from api.store.common import create_pdf_from_rich_text, sign_mou
@@ -153,6 +153,32 @@ def download_data(self, args, download_type):
         else:
             generate_csv_and_email(
                 data=files, download_type=COMMUNITY_PAGEMAP, community_name=com.name, email=email)
+            
+
+    # data export
+    elif download_type == EXPORT_ACTIONS:
+        (files, com_name), err = store.export_actions(context, community_id=args.get("community_id"))
+        
+        if err:
+            error_notification(EXPORT_ACTIONS, email)
+        else:
+            generate_csv_and_email(data=files, download_type=EXPORT_ACTIONS, community_name=com_name, email=email)
+
+    elif download_type == EXPORT_TESTIMONIALS:
+        (files, com_name), err = store.export_testimonials(context, community_id=args.get("community_id"))
+
+        if err:
+            error_notification(EXPORT_TESTIMONIALS, email)
+        else:
+            generate_csv_and_email(data=files, download_type=EXPORT_TESTIMONIALS, community_name=com_name, email=email)
+
+    elif download_type == EXPORT_EVENTS:
+        (files, com_name), err = store.export_events(context, community_id=args.get("community_id"))
+        if err:
+            error_notification(EXPORT_EVENTS, email)
+        else:
+            generate_csv_and_email(data=files, download_type=EXPORT_EVENTS, community_name=com_name, email=email)
+
             
     
     #  --------------- CAMPAIGN REPORTS ----------------
