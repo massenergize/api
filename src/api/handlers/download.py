@@ -36,6 +36,10 @@ class DownloadHandler(RouteHandler):
     self.add("/downloads.campaigns.views.performance", self.campaign_views_performance_download)
     self.add("/downloads.campaigns.interaction.performance", self.campaign_interaction_performance_download)
 
+    self.add("/export.actions", self.export_actions)
+    self.add("/export.events", self.export_events)
+    self.add("/export.testimonials", self.export_testimonials)
+
 
   @admins_only
   def users_download(self, request):
@@ -240,6 +244,43 @@ class DownloadHandler(RouteHandler):
     community_id = args.pop('community_id', None)
     period = args.get("period")
     report, err = self.service.download_postmark_nudge_report(context, community_id=community_id, period=period)
+    
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data={}, status=200)
+  
+
+  # @admins_only
+  def export_actions(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    community_id = args.pop('community_id', None)
+    email = args.pop("email")
+    report, err = self.service.export_actions(context, community_id=community_id, email=email)
+    
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data={}, status=200)
+  
+  # @admins_only
+  def export_events(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    community_id = args.pop('community_id', None)
+    email = args.pop("email")
+    report, err = self.service.export_events(context, community_id=community_id, email=email)
+    
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data={}, status=200)
+  
+  # @admins_only
+  def export_testimonials(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    community_id = args.pop('community_id', None)
+    email = args.pop("email")
+    report, err = self.service.export_testimonials(context, community_id=community_id, email=email)
     
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)

@@ -1981,5 +1981,94 @@ class DownloadStore:
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
         
 
+    def export_actions(self, context: Context, community_id=None) -> Tuple[list, MassEnergizeAPIError]:
+        try:            
+            if not community_id:     
+                return EMPTY_DOWNLOAD, CustomMassenergizeError("Please provide community_id")               
+            community_name = Community.objects.get(id=community_id).name
+            return (self._export_community_actions(community_id), community_name), None
+
+        except Exception as e:
+            log.exception(e)
+            return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
+
+    def export_events(self, context: Context, community_id=None) -> Tuple[list, MassEnergizeAPIError]:
+        try:
+            if not community_id:
+                    return EMPTY_DOWNLOAD,CustomMassenergizeError("Please provide community_id")  
+            
+            community_name = Community.objects.get(id=community_id).name
+            return (self._community_events_download(community_id), community_name), None
+  
+        except Exception as e:
+            log.exception(e)
+            return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
+
+    def export_testimonials(self, context: Context, community_id=None) -> Tuple[list, MassEnergizeAPIError]:
+        try:
+            if not community_id:
+                    return EMPTY_DOWNLOAD, CustomMassenergizeError("Please provide community_id")  
+            community_name = Community.objects.get(id=community_id).name
+            return (self._community_testimonials_download(community_id), community_name), None
+   
+        except Exception as e:
+            log.exception(e)
+            return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
+
+    def _community_events_download(self, community_id):
+        events = Event.objects.filter(community__id=community_id, is_deleted=False, is_published=True)
+        columns = ["Title", "Description", "Start Date", "End Date", "Location", "Event Type", "Link", "Image"]
+        data = [columns]
+        
+        for event in events:
+            cell = self._get_cells_from_dict(columns, {
+                "Title": event.name,
+                "Description": event.description,
+                "Start Date": event.start_date_and_time.strftime("%Y-%m-%d %H:%M") if event.start_date_and_time else "",
+                "End Date": event.end_date_and_time.strftime("%Y-%m-%d %H:%M") if event.end_date_and_time else "",
+                "Location": event.location,
+                "Event Type": event.event_type,
+                "Link": event.external_link if event.external_link else "",
+                "Image": event.image.file.url if event.image else ""
+            })
+            data.append(cell)
+        return data
+
+
+    def _community_testimonials_download(self, community_id):
+        testimonials = Testimonial.objects.filter(community__id=community_id, is_deleted=False, is_published=True)
+        columns = ["Title", "Body","User", "Related Action", "Related Vendor", "Image"]
+        data = [columns]
+        
+        for testimonial in testimonials:
+            cell = self._get_cells_from_dict(columns, {
+                "Title": testimonial.title,
+                "Body": testimonial.body,
+                "User": testimonial.user.full_name if testimonial.user else testimonial.preferred_name or "",
+                "Related Action": testimonial.action.title if testimonial.action else "",
+                "Related Vendor": testimonial.vendor.name if testimonial.vendor else "",
+                "Image": testimonial.image.file.url if testimonial.image else ""
+            })
+            data.append(cell)
+        return data
+    
+    def _export_community_actions(self, community_id):
+        actions = Action.objects.filter(community__id=community_id, is_deleted=False,is_published=True)
+        columns = ["Title", "Description", "Steps to Take", "Deep Dive", "Image"]
+        data = [columns]
+        
+        for action in actions:
+            cell = self._get_cells_from_dict(columns, {
+                "Title": action.title,
+                "Description": action.about,
+                "Steps to Take": action.steps_to_take,
+                "Deep Dive": action.deep_dive,
+                "Image": action.image.file.url if action.image else ""
+            })
+            data.append(cell)
+        return data
+        
+        
+
 
         
