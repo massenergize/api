@@ -255,8 +255,8 @@ class DownloadHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     community_id = args.pop('community_id', None)
-    email = args.pop("email")
-    report, err = self.service.export_actions(context, community_id=community_id, email=email)
+
+    report, err = self.service.export_actions(context, community_id=community_id)
     
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
@@ -267,8 +267,8 @@ class DownloadHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     community_id = args.pop('community_id', None)
-    email = args.pop("email")
-    report, err = self.service.export_events(context, community_id=community_id, email=email)
+
+    report, err = self.service.export_events(context, community_id=community_id)
     
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
@@ -279,8 +279,7 @@ class DownloadHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     community_id = args.pop('community_id', None)
-    email = args.pop("email")
-    report, err = self.service.export_testimonials(context, community_id=community_id, email=email)
+    report, err = self.service.export_testimonials(context, community_id=community_id)
     
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)

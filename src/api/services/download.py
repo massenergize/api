@@ -215,34 +215,35 @@ class DownloadService:
         return [], None
     
 
-    def export_actions(self, context: Context, community_id=None, email=None) -> Tuple[list, MassEnergizeAPIError]:
+    def export_actions(self, context: Context, community_id=None) -> Tuple[list, MassEnergizeAPIError]:
         data = {
             'community_id': community_id,
             'user_is_community_admin': context.user_is_community_admin,
             'user_is_super_admin': context.user_is_super_admin,
-            'email': email,
+            'email': context.user_email,
             'user_is_logged_in': context.user_is_logged_in
         }
+
         download_data.delay(data, EXPORT_ACTIONS)
         return [], None
 
-    def export_events(self, context: Context, community_id=None, email=None) -> Tuple[list, MassEnergizeAPIError]:
+    def export_events(self, context: Context, community_id=None) -> Tuple[list, MassEnergizeAPIError]:
         data = {
             'community_id': community_id,
             'user_is_community_admin': context.user_is_community_admin,
             'user_is_super_admin': context.user_is_super_admin,
-            'email': email,
+            'email': context.user_email,
             'user_is_logged_in': context.user_is_logged_in
         }
         download_data.delay(data, EXPORT_EVENTS)
         return [], None
 
-    def export_testimonials(self, context: Context, community_id=None,email=None) -> Tuple[list, MassEnergizeAPIError]:
+    def export_testimonials(self, context: Context, community_id=None) -> Tuple[list, MassEnergizeAPIError]:
         data = {
             'community_id': community_id,
             'user_is_community_admin': context.user_is_community_admin,
             'user_is_super_admin': context.user_is_super_admin,
-            'email': email,
+            'email': context.user_email,
             'user_is_logged_in': context.user_is_logged_in
         }
         download_data.delay(data, EXPORT_TESTIMONIALS)
