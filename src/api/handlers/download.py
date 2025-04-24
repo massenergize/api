@@ -39,6 +39,9 @@ class DownloadHandler(RouteHandler):
     self.add("/export.actions", self.export_actions)
     self.add("/export.events", self.export_events)
     self.add("/export.testimonials", self.export_testimonials)
+    self.add("/export.cc.actions", self.export_cc_actions)
+    self.add("/export.vendors", self.export_vendors)
+    
 
 
   @admins_only
@@ -255,8 +258,12 @@ class DownloadHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     community_id = args.pop('community_id', None)
+    email = args.pop('email', None)
 
-    report, err = self.service.export_actions(context, community_id=community_id)
+    print(f"community_id: {community_id}")
+    print("== EMAIL: ", email)
+
+    report, err = self.service.export_actions(context, community_id=community_id, email=email)
     
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
@@ -267,8 +274,9 @@ class DownloadHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     community_id = args.pop('community_id', None)
+    email = args.pop('email', None)
 
-    report, err = self.service.export_events(context, community_id=community_id)
+    report, err = self.service.export_events(context, community_id=community_id, email=email)
     
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
@@ -279,7 +287,37 @@ class DownloadHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     community_id = args.pop('community_id', None)
-    report, err = self.service.export_testimonials(context, community_id=community_id)
+    email = args.pop('email', None)
+    report, err = self.service.export_testimonials(context, community_id=community_id, email=email)
+    
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data={}, status=200)
+  
+
+  # @admins_only
+  def export_cc_actions(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    community_id = args.pop('community_id', None)
+    email = args.get('email', None)
+
+    report, err = self.service.export_cc_actions(context, community_id=community_id, email=email)
+    
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data={}, status=200)
+  
+
+  # @admins_only
+  def export_vendors(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    community_id = args.pop('community_id', None)
+    email = args.get('email', None)
+
+    report, err = self.service.export_vendors(context, community_id=community_id, email=email)
+    print("== EMAIL: ", err)
     
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
