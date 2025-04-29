@@ -253,15 +253,12 @@ class DownloadHandler(RouteHandler):
     return MassenergizeResponse(data={}, status=200)
   
 
-  # @admins_only
+  @admins_only
   def export_actions(self, request):
     context: Context = request.context
     args: dict = context.args
     community_id = args.pop('community_id', None)
     email = args.pop('email', None)
-
-    print(f"community_id: {community_id}")
-    print("== EMAIL: ", email)
 
     report, err = self.service.export_actions(context, community_id=community_id, email=email)
     
@@ -269,7 +266,7 @@ class DownloadHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data={}, status=200)
   
-  # @admins_only
+  @admins_only
   def export_events(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -282,7 +279,7 @@ class DownloadHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data={}, status=200)
   
-  # @admins_only
+  @admins_only
   def export_testimonials(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -295,7 +292,7 @@ class DownloadHandler(RouteHandler):
     return MassenergizeResponse(data={}, status=200)
   
 
-  # @admins_only
+  @admins_only
   def export_cc_actions(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -309,7 +306,7 @@ class DownloadHandler(RouteHandler):
     return MassenergizeResponse(data={}, status=200)
   
 
-  # @admins_only
+  @admins_only
   def export_vendors(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -317,7 +314,6 @@ class DownloadHandler(RouteHandler):
     email = args.get('email', None)
 
     report, err = self.service.export_vendors(context, community_id=community_id, email=email)
-    print("== EMAIL: ", err)
     
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
