@@ -556,6 +556,7 @@ class CampaignStore:
             name = args.pop("name", None)
             email = args.pop("email", None)
             user = None
+            community = None
 
             if not campaign_technology_id:
                 return None, CustomMassenergizeError("Campaign Technology ID is required !")
