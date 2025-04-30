@@ -55,6 +55,7 @@ from django.utils.timezone import utc
 from carbon_calculator.carbonCalculator import AverageImpact
 from django.db.models import Count, Sum
 from uuid import UUID
+from carbon_calculator.models import Action as CCAction
 
 
 EMPTY_DOWNLOAD = (None, None)
@@ -1208,7 +1209,7 @@ class DownloadStore:
         data = [columns]
         audience = args["audience"]
         comm_ids = []
-        if args["community_ids"] is not None:
+        if args.get("community_ids"):
             comm_ids = args["community_ids"].split(",")
         if audience == "SPECIFIC":
             community_snapshots = CommunitySnapshot.objects.filter(community__id__in = comm_ids).order_by("date")
@@ -1979,6 +1980,159 @@ class DownloadStore:
         except Exception as e:
             log.exception(e)
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
+        
+
+    def export_actions(self, context: Context, community_id=None) -> Tuple[list, MassEnergizeAPIError]:
+        try:            
+            if not community_id:     
+                return EMPTY_DOWNLOAD, CustomMassenergizeError("Please provide community_id")               
+            community_name = Community.objects.get(id=community_id).name
+            return (self._export_community_actions(community_id), community_name), None
+
+        except Exception as e:
+            log.exception(e)
+            return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
+
+    def export_events(self, context: Context, community_id=None) -> Tuple[list, MassEnergizeAPIError]:
+        try:
+            if not community_id:
+                    return EMPTY_DOWNLOAD,CustomMassenergizeError("Please provide community_id")  
+            
+            community_name = Community.objects.get(id=community_id).name
+            return (self._community_events_download(community_id), community_name), None
+  
+        except Exception as e:
+            log.exception(e)
+            return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
+
+    def export_testimonials(self, context: Context, community_id=None) -> Tuple[list, MassEnergizeAPIError]:
+        try:
+            if not community_id:
+                    return EMPTY_DOWNLOAD, CustomMassenergizeError("Please provide community_id")  
+            community_name = Community.objects.get(id=community_id).name
+            return (self._community_testimonials_download(community_id), community_name), None
+   
+        except Exception as e:
+            log.exception(e)
+            return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
+        
+
+    def export_vendors(self, context: Context, community_id=None) -> Tuple[list, MassEnergizeAPIError]:
+        try:
+            if not community_id:
+                    return EMPTY_DOWNLOAD, CustomMassenergizeError("Please provide community_id")  
+            community_name = Community.objects.get(id=community_id).name
+            return (self._community_vendors_download(community_id), community_name), None
+   
+        except Exception as e:
+            log.exception(e)
+            return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
+        
+
+    def export_cc_actions(self, context: Context, community_id=None) -> Tuple[list, MassEnergizeAPIError]:
+        try:
+            if not community_id:
+                    return EMPTY_DOWNLOAD, CustomMassenergizeError("Please provide community_id")
+            community_name = Community.objects.get(id=community_id).name
+            return (self._cc_actions_download(community_id), community_name), None
+        except Exception as e:
+            log.exception(e)
+            return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
+        
+
+    def _cc_actions_download(self, community_id):
+        actions = CCAction.objects.all()
+        columns = ["Name", "Title", "Category", "Sub Category", "Description", "Average Points"]
+
+        data = [columns]
+        for action in actions:
+            cell = self._get_cells_from_dict(columns, {
+                "Name": action.name,
+                "Title": action.title,
+                "Category": action.category.name if action.category else "",
+                "Sub Category": action.sub_category.name if action.sub_category else "",
+                "Description": action.description,
+                "Average Points": action.average_points
+            })
+            data.append(cell)
+        return data
+
+        
+
+    def _community_vendors_download(self, community_id):
+        vendors = Vendor.objects.filter(communities__id=community_id, is_deleted=False, is_published=True)
+        columns = ["Name", "Logo", "Description", "Website", "Key Contact", "Key Contact Email", "Communities Serviced", "Service Area"]
+        data = [columns]
+        for vendor in vendors:
+            key_contact = vendor.key_contact or {}
+            cell = self._get_cells_from_dict(columns, {
+                "Name": vendor.name,
+                "Logo": vendor.logo.file.url if vendor.logo else "",
+                "Description": vendor.description,
+                "Website": vendor.get_field_from_more_info("website"),
+                "Key Contact": key_contact.get("name") if key_contact else "",
+                "Key Contact Email": key_contact.get("email") if key_contact else "",
+                "Communities Serviced": ", ".join([community.name for community in vendor.communities.all()]),
+                "Service Area": vendor.service_area,
+            })
+            data.append(cell)
+        return data
+    
+
+    def _community_events_download(self, community_id):
+        events = Event.objects.filter(community__id=community_id, is_deleted=False, is_published=True)
+        columns = ["Title", "Description", "Start Date", "End Date", "Location", "Event Type", "Link", "Image"]
+        data = [columns]
+        
+        for event in events:
+            cell = self._get_cells_from_dict(columns, {
+                "Title": event.name,
+                "Description": event.description,
+                "Start Date": event.start_date_and_time.strftime("%Y-%m-%d %H:%M") if event.start_date_and_time else "",
+                "End Date": event.end_date_and_time.strftime("%Y-%m-%d %H:%M") if event.end_date_and_time else "",
+                "Location": event.location,
+                "Event Type": event.event_type,
+                "Link": event.external_link if event.external_link else "",
+                "Image": event.image.file.url if event.image else ""
+            })
+            data.append(cell)
+        return data
+
+
+    def _community_testimonials_download(self, community_id):
+        testimonials = Testimonial.objects.filter(community__id=community_id, is_deleted=False, is_published=True)
+        columns = ["Title", "Body","User", "Related Action", "Related Vendor", "Image"]
+        data = [columns]
+        
+        for testimonial in testimonials:
+            cell = self._get_cells_from_dict(columns, {
+                "Title": testimonial.title,
+                "Body": testimonial.body,
+                "User": testimonial.user.full_name if testimonial.user else testimonial.preferred_name or "",
+                "Related Action": testimonial.action.title if testimonial.action else "",
+                "Related Vendor": testimonial.vendor.name if testimonial.vendor else "",
+                "Image": testimonial.image.file.url if testimonial.image else ""
+            })
+            data.append(cell)
+        return data
+    
+    def _export_community_actions(self, community_id):
+        actions = Action.objects.filter(community__id=community_id, is_deleted=False,is_published=True)
+        columns = ["Title", "Description", "Steps to Take", "Deep Dive", "Image", "CC Action"]
+        data = [columns]
+        
+        for action in actions:
+            cell = self._get_cells_from_dict(columns, {
+                "Title": action.title,
+                "Description": action.about,
+                "Steps to Take": action.steps_to_take,
+                "Deep Dive": action.deep_dive,
+                "Image": action.image.file.url if action.image else "",
+                "CC Action": action.calculator_action.name if action.calculator_action else ""
+            })
+            data.append(cell)
+        return data
+        
         
 
 
