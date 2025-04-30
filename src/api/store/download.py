@@ -1209,7 +1209,7 @@ class DownloadStore:
         data = [columns]
         audience = args["audience"]
         comm_ids = []
-        if args["community_ids"] is not None:
+        if args.get("community_ids"):
             comm_ids = args["community_ids"].split(",")
         if audience == "SPECIFIC":
             community_snapshots = CommunitySnapshot.objects.filter(community__id__in = comm_ids).order_by("date")
