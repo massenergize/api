@@ -202,6 +202,98 @@ class DownloadTestCase(TestCase):
     response = self.client.post(endpoint, urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded")
     self.assertFalse(response.toDict().get("success"))
 
+  @patch("api.tasks.download_data.delay", return_value=None)
+  def test_export_actions(self, mocked_delay):
+        # Test not logged in
+        signinAs(self.client, None)
+        response = self.client.post('/api/export.actions', urlencode({
+            "community_id": self.COMMUNITY.id
+        }), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertFalse(response["success"])
+
+        # Test as regular user
+        signinAs(self.client, self.USER)
+        response = self.client.post('/api/export.actions', urlencode({
+            "community_id": self.COMMUNITY.id
+        }), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertFalse(response["success"])
+
+        # Test as community admin
+        signinAs(self.client, self.CADMIN)
+        response = self.client.post('/api/export.actions', urlencode({
+            "community_id": self.COMMUNITY.id
+        }), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(response["success"])
+
+  @patch("api.tasks.download_data.delay", return_value=None)
+  def test_export_events(self, mocked_delay):
+        # Test not logged in
+        signinAs(self.client, None)
+        response = self.client.post('/api/export.events', urlencode({
+            "community_id": self.COMMUNITY.id
+        }), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertFalse(response["success"])
+
+        # Test as regular user
+        signinAs(self.client, self.USER)
+        response = self.client.post('/api/export.events', urlencode({
+            "community_id": self.COMMUNITY.id
+        }), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertFalse(response["success"])
+
+        # Test as community admin
+        signinAs(self.client, self.CADMIN)
+        response = self.client.post('/api/export.events', urlencode({
+            "community_id": self.COMMUNITY.id
+        }), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(response["success"])
+
+  @patch("api.tasks.download_data.delay", return_value=None)
+  def test_export_testimonials(self, mocked_delay):
+        # Test not logged in
+        signinAs(self.client, None)
+        response = self.client.post('/api/export.testimonials', urlencode({
+            "community_id": self.COMMUNITY.id
+        }), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertFalse(response["success"])
+
+        # Test as regular user
+        signinAs(self.client, self.USER)
+        response = self.client.post('/api/export.testimonials', urlencode({
+            "community_id": self.COMMUNITY.id
+        }), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertFalse(response["success"])
+
+        # Test as community admin
+        signinAs(self.client, self.CADMIN)
+        response = self.client.post('/api/export.testimonials', urlencode({
+            "community_id": self.COMMUNITY.id
+        }), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(response["success"])
+
+  @patch("api.tasks.download_data.delay", return_value=None)
+  def test_export_vendors(self, mocked_delay):
+        # Test not logged in
+        signinAs(self.client, None)
+        response = self.client.post('/api/export.vendors', urlencode({
+            "community_id": self.COMMUNITY.id
+        }), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertFalse(response["success"])
+
+        # Test as regular user
+        signinAs(self.client, self.USER)
+        response = self.client.post('/api/export.vendors', urlencode({
+            "community_id": self.COMMUNITY.id
+        }), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertFalse(response["success"])
+
+        # Test as community admin
+        signinAs(self.client, self.CADMIN)
+        response = self.client.post('/api/export.vendors', urlencode({
+            "community_id": self.COMMUNITY.id
+        }), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(response["success"]) 
+
 
   def test_download_communities(self):
     pass
