@@ -181,6 +181,8 @@ class CampaignStore:
             get_in_touch_section = args.pop("get_in_touch_section", None)
             about_us_section = args.pop("about_us_section", None)
             eligibility_section = args.pop("eligibility_section", None)
+            manager_section = args.pop("manager_section", None)
+            default_community_settings = args.pop("default_community_settings", None)
 
             campaigns = Campaign.objects.filter(id=campaign_id)
             if not campaigns:
@@ -231,6 +233,13 @@ class CampaignStore:
                 
             if eligibility_section:
                 args["eligibility_section"] = create_or_update_section_from_dict(eligibility_section, section_media)
+
+            if manager_section:
+                args["manager_section"] = create_or_update_section_from_dict(manager_section, section_media)
+
+            if default_community_settings:
+                args["default_community_settings"] = create_or_update_call_to_action_from_dict(default_community_settings)
+
             campaigns.update(**args)
 
             return campaigns.first(), None
@@ -547,6 +556,7 @@ class CampaignStore:
             name = args.pop("name", None)
             email = args.pop("email", None)
             user = None
+            community = None
 
             if not campaign_technology_id:
                 return None, CustomMassenergizeError("Campaign Technology ID is required !")

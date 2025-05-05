@@ -3,7 +3,7 @@ from django.core.files import File
 from _main_.utils.common import serialize, serialize_all
 from api.constants import CAMPAIGN_TEMPLATE_KEYS
 from apps__campaigns.models import CampaignAccount, CampaignAccountAdmin, CampaignCommunity, CampaignFollow, CampaignLink, CampaignManager, CampaignTechnology, CampaignTechnologyEvent, \
-    CampaignTechnologyLike, CampaignTechnologyTestimonial, CampaignTechnologyView, CampaignView, Comment, Technology, \
+    CampaignTechnologyLike, CampaignTechnologyTestimonial, CampaignTechnologyView, CampaignView, Comment, Partner, Technology, \
     TechnologyCoach, TechnologyDeal, TechnologyOverview, TechnologyVendor
 
 # from database.models import Event
@@ -39,12 +39,15 @@ def get_campaign_details(campaign_id, for_campaign=False):
     prepared = [{"campaign_technology_id": str(x.id), **get_campaign_technology_details({ "campaign_technology_id": str(x.id),"for_admin":True})} for x in techs]
     managers = CampaignManager.objects.filter(campaign_id=campaign_id, is_deleted=False).order_by("-created_at")
     communities = CampaignCommunity.objects.filter(campaign_id=campaign_id, is_deleted=False)
+    partners = Partner.objects.filter(campaign__id=campaign_id, is_deleted=False)
+
     
     communities = sorted(communities, key=lambda x:  x.alias or x.community.name)
     return {
         "technologies": prepared,
         "communities": serialize_all(communities),
         "managers": serialize_all(managers),
+        "partners": serialize_all(partners),
     }
 
 
@@ -119,6 +122,7 @@ def get_campaign_details_for_user(campaign, email):
     key_contact = CampaignManager.objects.filter(is_key_contact=True, is_deleted=False, campaign__id=campaign.id).first()
     campaign_views = CampaignTechnologyView.objects.filter(campaign_technology__campaign__id=campaign.id,is_deleted=False).first()
     languages = campaign.supported_languages.filter(is_active=True)
+    partners = Partner.objects.filter(campaign__id=campaign.id, is_deleted=False)
 
     if email:
         my_testimonials = CampaignTechnologyTestimonial.objects.filter(
@@ -138,6 +142,7 @@ def get_campaign_details_for_user(campaign, email):
         "campaign_views": campaign_views.count if campaign_views else 0,
         "navigation": generate_campaign_navigation(campaign),
         "languages": serialize_all(languages),
+        "partners": serialize_all(partners),
     }
 
 

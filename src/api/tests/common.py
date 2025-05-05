@@ -120,7 +120,7 @@ def makeFlag(**kwargs):
 
 def makeMedia(**kwargs):
     name = kwargs.get("name") or "New Media"
-    file = kwargs.get("file") or kwargs.get("image") or createImage()
+    file = kwargs.get("file") or kwargs.get("image") or createImage(ME_DEFAULT_TEST_IMAGE)
     file.name = unique_media_filename(file)
     tags = kwargs.pop("tags", None)
     media = Media.objects.create(**{**kwargs, "name": name, "file": file})
