@@ -39,8 +39,7 @@ class MessagesTestCase(TestCase):
     def tearDown(self) -> None:
         return super().tearDown()
 
-    @patch("api.tasks.send_scheduled_email.apply_async", return_value=None)
-    def test_send_message(self, mocked_data):
+    def test_send_message(self):
         endpoint = "/api/messages.send"
         schedule = create_schedule()
         #  "schedule": schedule,
