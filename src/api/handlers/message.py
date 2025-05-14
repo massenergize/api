@@ -83,7 +83,9 @@ class MessageHandler(RouteHandler):
     self.validator.expect("schedule",str, is_required=False)
     self.validator.expect("community_ids",str, is_required=False)
     self.validator.expect("audience_type",str, is_required=True)
+
     message_info, err = self.service.send_message(context,args)
+    
     if err:
       return err
     return MassenergizeResponse(data=message_info)

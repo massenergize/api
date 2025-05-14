@@ -40,10 +40,9 @@ def get_schedule(schedule):
     return  parse_datetime_to_aware() + timedelta(minutes=1)
 
 
-def get_logo(id):
-    com = Community.objects.filter(id=id).first()
-    if com:
-        return com.logo.file.url if com.logo else None
+def get_logo(community):
+    if community:
+        return community.logo.file.url if community.logo else None
     return None
 
 
@@ -417,6 +416,7 @@ class MessageStore:
             audience = args.get("audience")
             communities = args.get("community_ids")
 
+
             if not audience_type:
                 return None, CustomMassenergizeError("Audience type is required")
 
@@ -431,8 +431,15 @@ class MessageStore:
 
             associated_community = None
             if not context.user_is_super_admin:
-                associated_community = Community.objects.filter(id=communities[0]).first()
-                logo = get_logo(communities[0])
+                if is_null(communities):
+                    cadmin_community = CommunityAdminGroup.objects.filter(members=user).first()
+                    if cadmin_community:
+                        associated_community = cadmin_community.community
+                    else:
+                        return None, CustomMassenergizeError("No community found")
+                else:
+                    associated_community = Community.objects.filter(id=communities[0]).first()
+                logo = get_logo(associated_community)
             
             # Prepare schedule info
             schedule_info = {
@@ -465,18 +472,19 @@ class MessageStore:
                 create_or_update_task(messages.first())
                 return messages.first(), None
             
-            # Create new message
-            new_message = Message(
-                title=subject,
-                body=message,
-                user=user,
-                scheduled_at=schedule,
-                schedule_info=schedule_info,
-                community=associated_community
-            )
-            new_message.save()
-            create_or_update_task(new_message)
-            return new_message, None
+            else:
+        
+                new_message = Message(
+                    title=subject,
+                    body=message,
+                    user=user,
+                    scheduled_at=schedule,
+                    schedule_info=schedule_info,
+                    community=associated_community
+                )
+                new_message.save()
+                create_or_update_task(new_message)
+                return new_message, None
             
         except Exception as e:
             log.exception(e)
