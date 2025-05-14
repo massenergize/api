@@ -88,13 +88,16 @@ def send_nudge(data, community, admin):
 
 		tag = generate_email_tag(community.subdomain, CADMIN_TESTIMONIALS_NUDGE)
 		 
-		send_massenergize_email_with_attachments(CADMIN_TESTIMONIAL_NUDGE_TEMPLATE, data, [email], None, None, get_sender_email(community.id), tag)
+		ok, err = send_massenergize_email_with_attachments(CADMIN_TESTIMONIAL_NUDGE_TEMPLATE, data, [email], None, None, get_sender_email(community.id), tag)
 
+		if err:
+			log.error(f"Failed to send Cadmin Nudge to '{email}' || ERROR: {err}")
+			return None, err
 					
-		return True
+		return True, None
 	except Exception as e:
 		log.exception(e)
-		return False
+		return False, str(e)
 	
 
 

@@ -238,9 +238,12 @@ def send_events_report_email(name, email, event_list, comm, login_method=""):
         data["community"] = comm.name
         from_email = get_sender_email(comm.id)
         tag = generate_email_tag(comm.subdomain, USER_EVENTS_NUDGE)
-        send_massenergize_email_with_attachments(USER_EVENTS_NUDGE_TEMPLATE, data, [email], None, None, from_email, tag)
+        ok, err = send_massenergize_email_with_attachments(USER_EVENTS_NUDGE_TEMPLATE, data, [email], None, None, from_email, tag)
+        if err:
+            log.error(f"Failed to send email to {email} || ERROR: {err}")
+            return False, err
         log.info(f"Email sent to {email}")
-        return True
+        return True, None
     except Exception as e:
         log.error("send_events_report exception: " , str(e))
         return False

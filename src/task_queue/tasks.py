@@ -6,7 +6,7 @@ from django.db import transaction
 from _main_.settings import IS_PROD, SLACK_SUPER_ADMINS_WEBHOOK_URL
 from api.services.utils import send_slack_message
 from task_queue.helpers import is_time_to_run
-from .jobs import FUNCTIONS
+from .jobs import FUNCTIONS, AUTOMATIC_TASK_FUNCTIONS
 from .models import Task, TaskRun
 from _main_.utils.massenergize_logger import log
 from django.utils import timezone
@@ -64,7 +64,8 @@ def run_some_task(self, task_id):
 		)
 		log_status(task, "Task execution started", {"run_id": task_run.id})
 
-		func = FUNCTIONS.get(task.job_name)
+		all_functions = FUNCTIONS | AUTOMATIC_TASK_FUNCTIONS
+		func = all_functions.get(task.job_name)
 		if not func:
 			error_msg = f"Task function '{task.job_name}' not found in FUNCTIONS"
 			task.status = FAILED
