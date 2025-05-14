@@ -1,4 +1,5 @@
 import traceback
+from typing import Tuple
 from django.db.models import Q
 from django.utils import timezone
 
@@ -124,7 +125,7 @@ def prepare_events_email_data(events) -> list:
         return []
 
 
-def send_events_nudge(task=None) -> bool:
+def send_events_nudge(task=None) -> Tuple[bool, str]:
     try:
         admins_emailed=[]
         flag = FeatureFlag.objects.get(key=COMMUNITY_ADMIN_WEEKLY_EVENTS_NUDGE_FF)
@@ -149,7 +150,7 @@ def send_events_nudge(task=None) -> bool:
 
                     if err:
                         log.error(f"send_events_report error return: {err}")
-                        return False
+                        return False, err
                     admins_emailed.append(email)
 
         update_last_notification_dates(admins_emailed, CADMIN_NUDGE_KEY)
