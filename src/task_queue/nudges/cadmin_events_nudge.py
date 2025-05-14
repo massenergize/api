@@ -166,7 +166,7 @@ def send_events_nudge(task=None) -> Tuple[bool, str]:
         return None, stacktrace
 
 
-def send_events_report(name, email, event_list, com) -> bool:
+def send_events_report(name, email, event_list, com) -> Tuple[bool, str]:
     try:
         # 14-Dec-23 - fix for user_info not provided
         user = UserProfile.objects.filter(email=email).first()
@@ -186,7 +186,9 @@ def send_events_report(name, email, event_list, com) -> bool:
             log.error(f"Failed to send Cadmin Nudge to '{email}' || ERROR: {err}")
 
             return None, err
+        
         log.info(f"Sent Cadmin Nudge to '{email}'  ")
+
         return True, None
     
     except Exception as e:
