@@ -3,8 +3,9 @@ from unittest.mock import patch
 from django.test.testcases import TestCase
 
 from _main_.utils.constants import AudienceType, SubAudienceType
-from api.store.message import get_message_recipients
+
 from api.tests.common import makeAction, makeAdmin, makeCommunity, makeMembership, makeUser, makeUserActionRel
+from task_queue.database_tasks.shedule_admin_messages import get_message_recipients
 
 
 class TestGetMessageRecipients(TestCase):
@@ -28,11 +29,11 @@ class TestGetMessageRecipients(TestCase):
 	@patch('api.store.message.is_null')
 	def test_null_audience(self, mock_is_null):
 		mock_is_null.return_value = True
-		result = get_message_recipients(None, AudienceType.COMMUNITY_CONTACTS.value, None, None)
+		result, err = get_message_recipients(None, AudienceType.COMMUNITY_CONTACTS.value, None, None)
 		self.assertIsNone(result)
 	
 	def test_community_contacts(self):
-		result = get_message_recipients("all", AudienceType.COMMUNITY_CONTACTS.value, None, None)
+		result, err = get_message_recipients("all", AudienceType.COMMUNITY_CONTACTS.value, None, None)
 		self.assertIn('admin3@me.com', result)
 		self.assertIn('admin1@me.com', result)
 		self.assertIn('admin2@me.com', result)
@@ -40,21 +41,21 @@ class TestGetMessageRecipients(TestCase):
 		
 	def test_specific_community_contacts(self):
 		community_ids = ','.join(list(self.communities.keys())[2:4])
-		result = get_message_recipients(community_ids, AudienceType.COMMUNITY_CONTACTS.value, None, None)
+		result, err = get_message_recipients(community_ids, AudienceType.COMMUNITY_CONTACTS.value, None, None)
 		self.assertEqual(len(result), 2)
 		
 	def test_super_admins(self):
-		result = get_message_recipients('all', AudienceType.SUPER_ADMINS.value, None, None)
+		result, err = get_message_recipients('all', AudienceType.SUPER_ADMINS.value, None, None)
 		self.assertIn('user2+2@me.com', result)
 		self.assertIn('user0+0@me.com', result)
 		
 	def test_specific_super_admins(self):
 		super_user_ids = ','.join([str(u.id) for u in self.users.values() if u.is_super_admin])
-		result = get_message_recipients(super_user_ids, AudienceType.SUPER_ADMINS.value, None, None)
+		result, err = get_message_recipients(super_user_ids, AudienceType.SUPER_ADMINS.value, None, None)
 		self.assertEqual(len(result), 2)
 	
 	def test_community_admin(self, ):
-		result = get_message_recipients('all', AudienceType.COMMUNITY_ADMIN.value, None, None)
+		result, err = get_message_recipients('all', AudienceType.COMMUNITY_ADMIN.value, None, None)
 		self.assertIn("cadmin1@me.com", result)
 		self.assertIn("cadmin2@me.com", result)
 		self.assertIn("cadmin3@me.com", result)
@@ -62,7 +63,7 @@ class TestGetMessageRecipients(TestCase):
 		
 	def test_specific_community_admin(self):
 		community_admin_ids = ','.join(list(self.cadmins.keys())[0:2])
-		result = get_message_recipients(community_admin_ids, AudienceType.COMMUNITY_ADMIN.value, None, None)
+		result, err = get_message_recipients(community_admin_ids, AudienceType.COMMUNITY_ADMIN.value, None, None)
 		self.assertEqual(len(result), 2)
 		
 	def test_community_admins_from_specific_communities(self):
@@ -71,32 +72,32 @@ class TestGetMessageRecipients(TestCase):
 		self.assertEqual(len(result), 2)
 	
 	def test_users(self):
-		result = get_message_recipients('all', AudienceType.USERS.value, None, None)
+		result, err = get_message_recipients('all', AudienceType.USERS.value, None, None)
 		self.assertIn('user1+1@me.com', result)
 		self.assertIn('user3+3@me.com', result)
 		
 	def test_specific_users(self):
 		user_ids = ','.join([str(u.id) for u in self.users.values()][0:2])
-		result = get_message_recipients(user_ids, AudienceType.USERS.value, None, None)
+		result, err = get_message_recipients(user_ids, AudienceType.USERS.value, None, None)
 		self.assertEqual(len(result), 2)
 		
 	def test_users_from_specific_communities(self):
 		community_ids = ','.join(list(self.communities.keys())[:2])
-		result = get_message_recipients("all", AudienceType.USERS.value, community_ids, None)
+		result, err = get_message_recipients("all", AudienceType.USERS.value, community_ids, None)
 		self.assertEqual(len(result), 2)
 		
 	def test_action_takers_completed(self):
-		result = get_message_recipients(f'{self.action2.id},{self.action1.id}', AudienceType.ACTION_TAKERS.value,  None, SubAudienceType.COMPLETED.value)
+		result, err = get_message_recipients(f'{self.action2.id},{self.action1.id}', AudienceType.ACTION_TAKERS.value,  None, SubAudienceType.COMPLETED.value)
 		self.assertEqual(len(result), 2)
 		self.assertEqual(set(result), {'user2+2@me.com', 'user0+0@me.com'})
 	
 	def test_action_takers_todo(self):
-		result = get_message_recipients(f'{self.action2.id},{self.action1.id}', AudienceType.ACTION_TAKERS.value,  None, SubAudienceType.TODO.value)
+		result, err = get_message_recipients(f'{self.action2.id},{self.action1.id}', AudienceType.ACTION_TAKERS.value,  None, SubAudienceType.TODO.value)
 		self.assertEqual(len(result), 2)
 		self.assertEqual(set(result), {'user1+1@me.com', 'user3+3@me.com'})
 	
 	def test_action_takers_both(self):
-		result = get_message_recipients(f'{self.action2.id},{self.action1.id}', AudienceType.ACTION_TAKERS.value,  None, SubAudienceType.BOTH.value)
+		result, err = get_message_recipients(f'{self.action2.id},{self.action1.id}', AudienceType.ACTION_TAKERS.value,  None, SubAudienceType.BOTH.value)
 		self.assertEqual(len(result), 4)
 		self.assertEqual(set(result), {'user1+1@me.com', 'user2+2@me.com', 'user0+0@me.com', 'user3+3@me.com'})
 

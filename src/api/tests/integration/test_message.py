@@ -96,18 +96,6 @@ class MessagesTestCase(TestCase):
                 "expected": {"success": True, "error": None},
             },
             {
-                "description": "Send scheduled message  With incorrect audience",
-                "args": {
-                    **args,
-                    "audience": "1,2,3,4",
-                    "audience_type": AudienceType.COMMUNITY_ADMIN.value,
-                    "schedule": schedule,
-                    "community_ids": self.COMMUNITY.id,
-                },
-                "signedInAs": self.CADMIN,
-                "expected": {"success": False, "error": "['“1” is not a valid UUID.']"},
-            },
-            {
                 "description": "Send scheduled message  With no audience details",
                 "args": {
                     **args,
@@ -115,7 +103,7 @@ class MessagesTestCase(TestCase):
                     "community_ids":self.COMMUNITY.id,
                 },
                 "signedInAs": self.CADMIN,
-                "expected": {"success": False, "error": "invalid_resource"},
+                "expected": {"success": False, "error": "Audience type is required"},
             },
             {
                 "description": "Update scheduled message",

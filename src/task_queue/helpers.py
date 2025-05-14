@@ -78,3 +78,24 @@ def get_summary(text, word_limit):
 		return clean_text
 	summary = ' '.join(words[:word_limit]) + '...'
 	return summary
+
+
+
+def get_recurring_details_from_date(date_time):
+    if not date_time:
+        return None
+
+    if isinstance(date_time, str):
+        try:
+            date_time = datetime.strptime(date_time, '%Y-%m-%d %H:%M:%S')
+        except ValueError:
+            return None
+
+    return {
+        'month_of_year': date_time.month,
+        'day_of_month': date_time.day,
+        'hour': date_time.hour,
+        'minute': date_time.minute,
+        'year': date_time.year,
+        'actual': date_time.isoformat()
+    }

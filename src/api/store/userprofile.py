@@ -600,13 +600,15 @@ class UserStore:
       if not existing_user:
         if is_guest:
           from_email = get_sender_email(community.id)
-          ok = send_massenergize_email_with_attachments(
+          ok, err = send_massenergize_email_with_attachments(
             GUEST_USER_EMAIL_TEMPLATE,
             {"community_name":community.name,
              "community_logo":serialize(community.logo).get("url") if community.logo else None,
              "register_link":f'{COMMUNITY_URL_ROOT}/{community.subdomain}/signup'
              },
             email, None, None, from_email)
+          if err:
+            return None, CustomMassenergizeError(f"email_not_sent: {err}")
         user: UserProfile = UserProfile.objects.create(
           full_name=full_name,
           preferred_name=preferred_name,
