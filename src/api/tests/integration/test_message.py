@@ -4,7 +4,6 @@ from _main_.utils.constants import AudienceType
 from database.models import Community, Message
 from django.test import TestCase, Client
 from unittest.mock import patch
-from api.tasks import send_scheduled_email
 from api.tests.common import signinAs, createUsers
 from urllib.parse import urlencode
 from _main_.utils.utils import Console
