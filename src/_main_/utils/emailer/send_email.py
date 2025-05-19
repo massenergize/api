@@ -38,26 +38,27 @@ def send_massenergize_email(subject, msg, to, sender=None):
 
 def send_massenergize_email_with_attachments(temp, t_model, to, file, file_name, sender=None, tag=None):
   if is_test_mode():
-    return True
+    return True, None
 
-  t_model = {**t_model, "is_dev":is_dev_env()}
-
-  
-  message = pystmark.Message(sender=sender or FROM_EMAIL, to=to, template_alias=temp, template_model=t_model, tag=tag)
-  # postmark server can be Production, Development or Testing (for local testing)
-  postmark_server = POSTMARK_EMAIL_SERVER_TOKEN
-  if file is not None:
-    message.attach_binary(file, filename=file_name)
-    # downloads or any message with attachments may have a different server since Testing server doesn't process attachments
-    if POSTMARK_DOWNLOAD_SERVER_TOKEN:
-      postmark_server = POSTMARK_DOWNLOAD_SERVER_TOKEN
-  response = pystmark.send_with_template(message, api_key=postmark_server)
-  if not response.ok:
-    logging.error("EMAILING_ERROR: "+str(response.json()))
-    #if IS_PROD:
-    #  log.error(f"Error Occurred in Sending Email to {to}", level="error")
-    return False
-  return True
+  try:
+    t_model = {**t_model, "is_dev":is_dev_env()}
+    
+    message = pystmark.Message(sender=sender or FROM_EMAIL, to=to, template_alias=temp, template_model=t_model, tag=tag)
+    # postmark server can be Production, Development or Testing (for local testing)
+    postmark_server = POSTMARK_EMAIL_SERVER_TOKEN
+    if file is not None:
+      message.attach_binary(file, filename=file_name)
+      # downloads or any message with attachments may have a different server since Testing server doesn't process attachments
+      if POSTMARK_DOWNLOAD_SERVER_TOKEN:
+        postmark_server = POSTMARK_DOWNLOAD_SERVER_TOKEN
+    response = pystmark.send_with_template(message, api_key=postmark_server)
+    if not response.ok:
+      logging.error("EMAILING_ERROR: "+str(response.json()))
+      return False, str(response.json())
+    return True, None
+  except Exception as e:
+    logging.error(f"Error sending email with attachments: {str(e)}")
+    return False, str(e)
   
 @run_in_background
 def send_massenergize_rich_email(subject, to, massenergize_email_type, content_variables, from_email=None):

@@ -1,4 +1,5 @@
 import traceback
+from typing import Tuple
 from django.db.models import Q
 from django.utils import timezone
 
@@ -124,7 +125,7 @@ def prepare_events_email_data(events) -> list:
         return []
 
 
-def send_events_nudge(task=None) -> bool:
+def send_events_nudge(task=None) -> Tuple[bool, str]:
     try:
         admins_emailed=[]
         flag = FeatureFlag.objects.get(key=COMMUNITY_ADMIN_WEEKLY_EVENTS_NUDGE_FF)
@@ -145,11 +146,11 @@ def send_events_nudge(task=None) -> bool:
                 for email, data in email_list.items():
                     name = data.get("name")
 
-                    stat = send_events_report(name, email, event_list, com)
+                    stat, err = send_events_report(name, email, event_list, com)
 
-                    if not stat:
-                        log.error("send_events_report error return")
-                        return False
+                    if err:
+                        log.error(f"send_events_report error return: {err}")
+                        return False, err
                     admins_emailed.append(email)
 
         update_last_notification_dates(admins_emailed, CADMIN_NUDGE_KEY)
@@ -165,7 +166,7 @@ def send_events_nudge(task=None) -> bool:
         return None, stacktrace
 
 
-def send_events_report(name, email, event_list, com) -> bool:
+def send_events_report(name, email, event_list, com) -> Tuple[bool, str]:
     try:
         # 14-Dec-23 - fix for user_info not provided
         user = UserProfile.objects.filter(email=email).first()
@@ -179,12 +180,17 @@ def send_events_report(name, email, event_list, com) -> bool:
 
         tag = generate_email_tag(com.subdomain, CADMIN_EVENTS_NUDGE)
 
-        ok = send_massenergize_email_with_attachments(WEEKLY_EVENTS_NUDGE_TEMPLATE, data, [email], None, None, None, tag)
-        if not ok:
-            log.info(f"Failed to send Cadmin Nudge to '{email}'  ")
-        else:
-            log.info(f"Sent Cadmin Nudge to '{email}'  ")
-        return True
+        ok, err = send_massenergize_email_with_attachments(WEEKLY_EVENTS_NUDGE_TEMPLATE, data, [email], None, None, None, tag)
+
+        if err:
+            log.error(f"Failed to send Cadmin Nudge to '{email}' || ERROR: {err}")
+
+            return None, err
+        
+        log.info(f"Sent Cadmin Nudge to '{email}'  ")
+
+        return True, None
+    
     except Exception as e:
         log.error("send_events_report exception: " + str(e))
-        return False
+        return None, str(e)

@@ -29,3 +29,4 @@ _main_/config/*json
 .vscode
 .massenergize
 settings.json
+ec2.sh
