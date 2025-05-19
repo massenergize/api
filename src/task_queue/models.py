@@ -63,6 +63,8 @@ class Task(models.Model):
     is_automatic_task = models.BooleanField(default=False)
 
     def simple_json(self):
+        if not self.pk:
+            return {}
         latest_run = self.runs.all().order_by('-completed_at').first()
         res = model_to_dict(self, exclude=['schedule'])
         res["creator"] = get_summary_info(self.creator)["full_name"] if self.creator else None
