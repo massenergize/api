@@ -124,8 +124,8 @@ def download_data(self, args, download_type):
         for com in community_list:
             events = generate_event_list_for_community(com)
             event_list = events.get("events", [])
-            stat = send_events_report(user.full_name, user.email, event_list)
-            if not stat:
+            stat, err = send_events_report(user.full_name, user.email, event_list)
+            if err:
                 error_notification(CADMIN_REPORT, email)
                 return
             
@@ -342,30 +342,6 @@ def deactivate_user(self,email):
     if user:
         user.delete()
 
-
-@app.task
-def send_scheduled_email(subject, message, recipients, image):
-    cache_key = f"email_sent_{subject.replace(' ', '_')}"
-    
-    if cache.add(cache_key, True, timeout=3600):
-        
-        try:
-            data = {"body": message, "subject": subject, "image": image}
-            
-            is_sent = send_massenergize_email_with_attachments(BROADCAST_EMAIL_TEMPLATE, data, recipients, None, None)
-            
-            if is_sent:
-                log.info(f"Successfully sent email to {str(recipients)}")
-                
-        except Exception as e:
-            log.exception(e)
-            
-        finally:
-            log.info(f"===== Deleting Cache Key: {cache_key} =====")
-            cache.delete(cache_key)
-            
-    else:
-        log.info("Task already picked up by another worker")
         
 @app.task
 def automatically_activate_nudge(community_nudge_setting_id):

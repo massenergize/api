@@ -2612,6 +2612,10 @@ class TestimonialSharedCommunity(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     testimonial = models.ForeignKey(Testimonial, on_delete=models.CASCADE, related_name="shared_communities")
     community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name="testimonial_shares")
+
+
+    def __str__(self) -> str:
+        return f"{self.testimonial.title} - shared with {self.community.name} from {self.testimonial.community.name}"
     
     def simple_json(self):
         data = model_to_dict(self, exclude=["testimonial", "community"])

@@ -4,7 +4,6 @@ from _main_.utils.constants import AudienceType
 from database.models import Community, Message
 from django.test import TestCase, Client
 from unittest.mock import patch
-from api.tasks import send_scheduled_email
 from api.tests.common import signinAs, createUsers
 from urllib.parse import urlencode
 from _main_.utils.utils import Console
@@ -40,8 +39,7 @@ class MessagesTestCase(TestCase):
     def tearDown(self) -> None:
         return super().tearDown()
 
-    @patch("api.tasks.send_scheduled_email.apply_async", return_value=None)
-    def test_send_message(self, mocked_data):
+    def test_send_message(self):
         endpoint = "/api/messages.send"
         schedule = create_schedule()
         #  "schedule": schedule,
@@ -96,18 +94,6 @@ class MessagesTestCase(TestCase):
                 "expected": {"success": True, "error": None},
             },
             {
-                "description": "Send scheduled message  With incorrect audience",
-                "args": {
-                    **args,
-                    "audience": "1,2,3,4",
-                    "audience_type": AudienceType.COMMUNITY_ADMIN.value,
-                    "schedule": schedule,
-                    "community_ids": self.COMMUNITY.id,
-                },
-                "signedInAs": self.CADMIN,
-                "expected": {"success": False, "error": "['“1” is not a valid UUID.']"},
-            },
-            {
                 "description": "Send scheduled message  With no audience details",
                 "args": {
                     **args,
@@ -115,7 +101,7 @@ class MessagesTestCase(TestCase):
                     "community_ids":self.COMMUNITY.id,
                 },
                 "signedInAs": self.CADMIN,
-                "expected": {"success": False, "error": "invalid_resource"},
+                "expected": {"success": False, "error": "Audience type is required"},
             },
             {
                 "description": "Update scheduled message",

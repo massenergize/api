@@ -43,7 +43,9 @@ class CommunityAdminEventsNudgeTests(TestCase):
         self.admin_group.members.add(self.user)
 
     def test_send_community_admin_events_nudge(self):
-        result = send_events_nudge()
+        result, err = send_events_nudge()
+        print(f"*************************** test_send_community_admin_events_nudge == {result} {err}")
         self.assertTrue(result)
+        self.assertIsNone(err)
 
 

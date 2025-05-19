@@ -407,9 +407,13 @@ def send_mou_email(email, name):
         "privacy_policy_url": f"{ADMIN_URL_ROOT}/admin/view/policy/privacy-policy?ct=true",
         "mou_page_url": f"{ADMIN_URL_ROOT}/admin/view/policy/mou?ct=true",
     }
-    return send_massenergize_email_with_attachments(
+    ok, err = send_massenergize_email_with_attachments(
         YEARLY_MOU_TEMPLATE, content_values, email, None, None
     )
+    if err:
+        log.error(f"Failed to send MOU email to {email} || ERROR: {err}")
+        return False,
+    return True
 
 
 def update_records(**kwargs):

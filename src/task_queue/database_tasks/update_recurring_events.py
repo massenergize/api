@@ -3,6 +3,7 @@ import json
 from _main_.utils.common import custom_timezone_info, parse_datetime_to_aware
 from _main_.utils.massenergize_logger import log
 from database.models import Event, RecurringEventException
+from task_queue.helpers import get_recurring_details_from_date
 from task_queue.models import Task
 from django.utils import timezone
 import calendar
@@ -152,7 +153,6 @@ def update_or_create_task(task, event, key):
             recurring_details=recurring_details_str,
             frequency=ScheduleInterval.ONE_OFF.value,
             is_automatic_task=True,
-            args=json.dumps([event.id]),
         )
         task.create_task()
     else:
@@ -161,21 +161,3 @@ def update_or_create_task(task, event, key):
     task.save()
 
 
-def get_recurring_details_from_date(date_time):
-    if not date_time:
-        return None
-
-    if isinstance(date_time, str):
-        try:
-            date_time = datetime.strptime(date_time, '%Y-%m-%d %H:%M:%S')
-        except ValueError:
-            return None
-
-    return {
-        'month_of_year': date_time.month,
-        'day_of_month': date_time.day,
-        'hour': date_time.hour,
-        'minute': date_time.minute,
-        'year': date_time.year,
-        'actual': date_time.isoformat()
-    }

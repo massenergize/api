@@ -205,9 +205,9 @@ class AuthService:
       }
       from_email = get_sender_email(community.id)
       
-      ok = send_massenergize_email_with_attachments(USER_EMAIL_VERIFICATION_TEMPLATE,temp_data,[email], None, None, from_email)
-      if not ok:
-        return None, CustomMassenergizeError("email_not_sent")
+      ok, err = send_massenergize_email_with_attachments(USER_EMAIL_VERIFICATION_TEMPLATE,temp_data,[email], None, None, from_email)
+      if err:
+        return None, CustomMassenergizeError(f"email_not_sent: {err}")
       
       return {}, None
       

@@ -108,7 +108,7 @@ test:
 .PHONY: test
 
 celery:
-	DJANGO_ENV=local celery -A _main_.celery.app worker --loglevel=info --pool=solo -B
+	celery -A _main_.celery.app worker --loglevel=info --concurrency=4 -B
 .PHONY: celery 
 
 beat:

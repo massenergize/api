@@ -19,7 +19,7 @@ from api.store.media_library import MediaLibraryStore as media_store
 from api.utils.constants import MEDIA_LIBRARY_CLEANUP_TEMPLATE
 from database.models import FeatureFlag
 from task_queue.models import Task
-
+from _main_.utils.massenergize_logger import log
 
 
 
@@ -80,6 +80,10 @@ def send_summary_email_to_admin(admin, community_names, total, csv_file, **kwarg
     response = HttpResponse(content_type="text/csv")
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
     response.write(csv_file)
-    return send_massenergize_email_with_attachments(
+    ok, err = send_massenergize_email_with_attachments(
         MEDIA_LIBRARY_CLEANUP_TEMPLATE, args, admin.email if admin else DEFAULT_SUPER_ADMIN_EMAIL, response.content, filename
     )
+    if err:
+        log.error(f"Failed to send Media Library Cleanup email to {admin.email} || ERROR: {err}")
+        return False
+    return True
