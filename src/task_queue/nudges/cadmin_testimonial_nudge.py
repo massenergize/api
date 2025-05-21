@@ -228,10 +228,6 @@ def prepare_testimonials_for_community_admins(task=None):
 				log.exception(f"Error processing community {community.name}: {str(e)}")
 				continue
 
-		if not emailed_list:
-			log.info("No emails were sent successfully")
-			return None, "No emails were sent successfully"
-
 		res = {"scope":"CADMIN","audience": ",".join(emailed_list)}
 		log.info("Successfully sent nudge to all community admins")
 		return res, None
