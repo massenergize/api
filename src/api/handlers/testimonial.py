@@ -56,7 +56,7 @@ class TestimonialHandler(RouteHandler):
     args: dict = context.args
 
     self.validator.expect("community_id", int, is_required=True)
-    self.validator.expect("excluded_tags", list, is_required=False)
+    # self.validator.expect("excluded_tags", list, is_required=False)
     self.validator.expect("communities_to_share_from", "str_list", is_required=False)
     self.validator.expect("sharing_location_type", str, is_required=False)
     self.validator.expect("sharing_location_value", str, is_required=False)
@@ -300,7 +300,7 @@ class TestimonialHandler(RouteHandler):
     args: dict = context.args
 
     self.validator.expect("community_id", int, is_required=True)
-    self.validator.expect("excluded_tags", list, is_required=False)
+    # self.validator.expect("excluded_tags", list, is_required=False)
     self.validator.expect("share_from_communities", "str_list", is_required=False)
     self.validator.expect("sharing_location_type", str, is_required=False)
     self.validator.expect("sharing_location_value", str, is_required=False)
