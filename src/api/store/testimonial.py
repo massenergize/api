@@ -41,7 +41,7 @@ def get_auto_shared_with_list(testimonial):
         (Q(share_from_location_type__isnull=True) & Q(share_from_location_value__isnull=True) &
          Q(share_from_communities__id=testimonial_community.id)) |
         (Q(share_from_location_type__isnull=False) & Q(share_from_location_value__isnull=False)),
-        Q(excluded_tags__isnull=True) | Q(excluded_tags__in=testimonial_tags)
+        # Q(excluded_tags__isnull=True) | Q(excluded_tags__in=testimonial_tags)
     ).select_related('community')
 
     communities_to_share_with = set()
@@ -539,7 +539,7 @@ class TestimonialStore:
       community_id = args.pop("community_id", None)
       community = Community.objects.filter(id=community_id).first()
 
-      excluded_tags_ids = args.pop("excluded_tags", None)
+      # excluded_tags_ids = args.pop("excluded_tags", None)
       ids_of_communities_to_share_from = args.pop("communities_to_share_from", None)
       sharing_location_type = args.pop("sharing_location_type", None)
       sharing_location_value = args.pop("sharing_location_value", None)
@@ -550,8 +550,8 @@ class TestimonialStore:
         share_from_location_value=sharing_location_value,
       )
 
-      if excluded_tags_ids:
-        auto_share_settings.excluded_tags.set(excluded_tags_ids)
+      # if excluded_tags_ids:
+      #   auto_share_settings.excluded_tags.set(excluded_tags_ids)
 
       if ids_of_communities_to_share_from:
         auto_share_settings.share_from_communities.set(ids_of_communities_to_share_from)
@@ -570,7 +570,7 @@ class TestimonialStore:
       if not auto_share_settings:
         return None, CustomMassenergizeError("Testimonial Auto share settings not found")
       
-      excluded_tags_ids = args.pop("excluded_tags", None)
+      # excluded_tags_ids = args.pop("excluded_tags", None)
       ids_of_communities_to_share_from = args.pop("share_from_communities", None)
       sharing_location_type = args.pop("sharing_location_type", None)
       sharing_location_value = args.pop("sharing_location_value", None)
@@ -578,11 +578,11 @@ class TestimonialStore:
       auto_share_settings.share_from_location_type = sharing_location_type
       auto_share_settings.share_from_location_value = sharing_location_value
       
-      if excluded_tags_ids:
-        if excluded_tags_ids[0] == RESET:
-          auto_share_settings.excluded_tags.clear()
-        else:
-         auto_share_settings.excluded_tags.set(excluded_tags_ids)
+      # if excluded_tags_ids:
+      #   if excluded_tags_ids[0] == RESET:
+      #     auto_share_settings.excluded_tags.clear()
+      #   else:
+      #    auto_share_settings.excluded_tags.set(excluded_tags_ids)
 
       if ids_of_communities_to_share_from:
         if ids_of_communities_to_share_from[0] == RESET:

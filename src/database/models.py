@@ -4364,7 +4364,7 @@ class TestimonialAutoShareSettings(BaseModel):
     share_from_communities = models.ManyToManyField(Community, related_name="share_from_communities", blank=True)
     share_from_location_type = models.CharField(max_length=SHORT_STR_LEN, choices = LocationType.choices(), null=True, blank=True)
     share_from_location_value = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
-    excluded_tags = models.ManyToManyField(Tag, blank=True)
+    # excluded_tags = models.ManyToManyField(Tag, blank=True)
 
     def __str__(self):
         return f"{self.community.name}"
@@ -4374,7 +4374,7 @@ class TestimonialAutoShareSettings(BaseModel):
         res.update(model_to_dict(self))
         res["community"] = get_summary_info(self.community)
         res["share_from_communities"] = [c.info() for c in self.share_from_communities.all()]
-        res["excluded_tags"] = [t.info() for t in self.excluded_tags.all()]
+        # res["excluded_tags"] = [t.info() for t in self.excluded_tags.all()]
         return res
 
     def full_json(self):
