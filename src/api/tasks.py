@@ -12,8 +12,8 @@ from _main_.utils.common import parse_datetime_to_aware
 from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
 from _main_.utils.massenergize_logger import log
-from api.constants import ACTIONS, CADMIN_REPORT, CAMPAIGN_INTERACTION_PERFORMANCE_REPORT, CAMPAIGN_PERFORMANCE_REPORT, \
-    CAMPAIGN_VIEWS_PERFORMANCE_REPORT, COMMUNITIES, COMMUNITY_PAGEMAP, DOWNLOAD_POLICY, EXPORT_ACTIONS, EXPORT_CC_ACTIONS, EXPORT_EVENTS, EXPORT_TESTIMONIALS, EXPORT_VENDORS, FOLLOWED_REPORT, LIKE_REPORT, \
+from api.constants import ACTIONS, ACTION_USERS, ACTIONS_USERS, CADMIN_REPORT, CAMPAIGN_INTERACTION_PERFORMANCE_REPORT, CAMPAIGN_PERFORMANCE_REPORT, \
+    CAMPAIGN_VIEWS_PERFORMANCE_REPORT, COMMUNITIES, COMMUNITY_PAGEMAP, DOWNLOAD_POLICY, FOLLOWED_REPORT, LIKE_REPORT, \
     LINK_PERFORMANCE_REPORT, METRICS, POSTMARK_NUDGE_REPORT, SAMPLE_USER_REPORT, TEAMS, USERS
 from api.services.translations_cache import TranslationsCacheService
 from api.store.common import create_pdf_from_rich_text, sign_mou
@@ -33,27 +33,23 @@ from _main_.celery.app import app
 
 
 def generate_csv_and_email(data, download_type, community_name=None, email=None,filename=None):
-    try:
-        response = HttpResponse(content_type="text/csv")
-        now = datetime.datetime.now().strftime("%Y%m%d")
-        if not filename:
-            if not community_name:
-                filename = "all-%s-data-%s.csv" % (download_type, now)
-            else:
-                filename = "%s-%s-data-%s.csv" % (community_name, download_type, now)
-        writer = csv.writer(response)
-        for row in data:
-            writer.writerow(row)
-        user = UserProfile.objects.get(email=email)
-        temp_data = {
-            'data_type': download_type,
-            "name":user.full_name,
-        }
-        send_massenergize_email_with_attachments(DATA_DOWNLOAD_TEMPLATE,temp_data,[email], response.content, filename, None)
-        return True
-    except Exception as e:
-        log.exception(e)
-        return False
+    response = HttpResponse(content_type="text/csv")
+    now = datetime.datetime.now().strftime("%Y%m%d")
+    if not filename:
+        if not community_name:
+            filename = "all-%s-data-%s.csv" % (download_type, now)
+        else:
+            filename = "%s-%s-data-%s.csv" % (community_name, download_type, now)
+    writer = csv.writer(response)
+    for row in data:
+        writer.writerow(row)
+    user = UserProfile.objects.get(email=email)
+    temp_data = {
+        'data_type': download_type,
+        "name":user.full_name,
+    }
+    send_massenergize_email_with_attachments(DATA_DOWNLOAD_TEMPLATE,temp_data,[email], response.content, filename, None)
+    return True
 
 
 def error_notification(download_type, email):
@@ -84,6 +80,21 @@ def download_data(self, args, download_type):
             error_notification(ACTIONS, email)
         else:
             generate_csv_and_email(data=files, download_type=ACTIONS, community_name=com_name, email=email)
+    
+    elif download_type == ACTION_USERS:
+        (files, action_name), err = store.action_users_download(context, action_id=args.get("action_id"))
+        if err:
+            error_notification(ACTION_USERS, email)
+        else:
+            generate_csv_and_email(data=files, download_type=ACTION_USERS, community_name=com_name, email=email)
+    
+
+    elif download_type == ACTIONS_USERS:
+        (files, com_name), err = store.actions_users_download(context, community_id=args.get("community_id"))
+        if err:
+            error_notification(ACTIONS_USERS, email)
+        else:
+            generate_csv_and_email(data=files, download_type=ACTION_USERS, community_name=com_name, email=email)
     
 
     elif download_type == COMMUNITIES:
@@ -157,50 +168,6 @@ def download_data(self, args, download_type):
         else:
             generate_csv_and_email(
                 data=files, download_type=COMMUNITY_PAGEMAP, community_name=com.name, email=email)
-            
-
-    # data export
-    elif download_type == EXPORT_ACTIONS:
-        (files, com_name), err = store.export_actions(context, community_id=args.get("community_id"))
-        
-        if err:
-            error_notification(EXPORT_ACTIONS, email)
-        else:
-            generate_csv_and_email(data=files, download_type=EXPORT_ACTIONS, community_name=com_name, email=email)
-
-    elif download_type == EXPORT_TESTIMONIALS:
-        (files, com_name), err = store.export_testimonials(context, community_id=args.get("community_id"))
-
-        if err:
-            error_notification(EXPORT_TESTIMONIALS, email)
-        else:
-            generate_csv_and_email(data=files, download_type=EXPORT_TESTIMONIALS, community_name=com_name, email=email)
-
-    elif download_type == EXPORT_EVENTS:
-        (files, com_name), err = store.export_events(context, community_id=args.get("community_id"))
-        if err:
-            error_notification(EXPORT_EVENTS, email)
-        else:
-            generate_csv_and_email(data=files, download_type=EXPORT_EVENTS, community_name=com_name, email=email)
-
-
-    elif download_type == EXPORT_CC_ACTIONS:
-        (files, com_name), err = store.export_cc_actions(context, community_id=args.get("community_id"))
-        if err:
-            error_notification(EXPORT_CC_ACTIONS, email)
-        else:
-            generate_csv_and_email(data=files, download_type=EXPORT_CC_ACTIONS, community_name=com_name, email=email)
-
-    
-    elif download_type == EXPORT_VENDORS:
-        (files, com_name), err = store.export_vendors(context, community_id=args.get("community_id"))
-        if err:
-            error_notification(EXPORT_VENDORS, email)
-        else:
-            generate_csv_and_email(data=files, download_type=EXPORT_VENDORS, community_name=com_name, email=email)
-        
-
-
             
     
     #  --------------- CAMPAIGN REPORTS ----------------
@@ -341,7 +308,6 @@ def deactivate_user(self,email):
     user = UserProfile.objects.filter(email=email).first()
     if user:
         user.delete()
-
         
 @app.task
 def automatically_activate_nudge(community_nudge_setting_id):
