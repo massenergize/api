@@ -32,6 +32,8 @@ from apps__campaigns.models import (
 from _main_.utils.context import Context
 from datetime import datetime
 import uuid
+from _main_.utils.massenergize_errors import NotAuthorizedError, InvalidResourceError
+from django.utils import timezone
 
 User = get_user_model()
 
@@ -346,12 +348,12 @@ class TestDownloadStore(TestCase):
         context.user_is_super_admin = True
         context.user_email = self.super_admin.email
         
-        result, error = self.download_store.action_users(context, self.action.id)
+        result, error = self.download_store.action_users_download(context, self.action.id)
         self.assertIsNone(error)
         self.assertIsNotNone(result)
         
         # Test with invalid action_id
-        result, error = self.download_store.action_users(context, 3)
+        result, error = self.download_store.action_users_download(context, 3)
   
         self.assertIsNotNone(error)
         self.assertIsNone(result[0])
@@ -500,3 +502,160 @@ class TestDownloadStore(TestCase):
         result, error = self.download_store.export_cc_actions(context, None)
         self.assertIsNotNone(error)
         self.assertIsNone(result[0])
+
+class TestActionsUsersDownload(TestCase):
+    def setUp(self):
+        self.download_store = DownloadStore()
+        self.community = Community.objects.create(
+            name="Test Community",
+            is_deleted=False
+        )
+        self.user = UserProfile.objects.create(
+            email="test@example.com",
+            full_name="Test User",
+            is_deleted=False
+        )
+        self.action = Action.objects.create(
+            title="Test Action",
+            community=self.community,
+            is_deleted=False
+        )
+        # Create real estate unit
+        self.real_estate_unit = RealEstateUnit.objects.create(
+            name="Test Unit",
+            community=self.community,
+            is_deleted=False
+        )
+        self.user_action_rel = UserActionRel.objects.create(
+            user=self.user,
+            action=self.action,
+            status="DONE",
+            date_completed=timezone.now(),
+            is_deleted=False,
+            real_estate_unit=self.real_estate_unit
+        )
+        self.context = Context()
+        self.context.user_id = self.user.id
+
+    def test_actions_users_download_not_admin(self):
+        """Test that non-admin users cannot download action users data"""
+        result, error = self.download_store.actions_users_download(self.context, self.community.id)
+        self.assertIsNone(result[0])
+        self.assertIsInstance(error, NotAuthorizedError)
+
+    def test_actions_users_download_invalid_community(self):
+        """Test that invalid community ID returns appropriate error"""
+        self.context.user_is_community_admin = True
+        _, error = self.download_store.actions_users_download(self.context, "invalid-id")
+        self.assertIsNotNone(error)
+
+    def test_actions_users_download_no_data(self):
+        """Test that empty data returns appropriate error"""
+        self.context.user_is_community_admin = True
+        # Delete the user action relationship
+        self.user_action_rel.delete()
+        result, error = self.download_store.actions_users_download(self.context, self.community.id)
+        self.assertIsNone(result[0])
+        self.assertIsInstance(error, InvalidResourceError)
+
+    def test_actions_users_download_success(self):
+        """Test successful download of action users data"""
+        self.context.user_is_community_admin = True
+        result, error = self.download_store.actions_users_download(self.context, self.community.id)
+        
+        # Check that we got data and no error
+        self.assertIsNotNone(result)
+        self.assertIsNone(error)
+        
+        # Unpack the result
+        data, community_name = result
+        
+        # Check community name
+        self.assertEqual(community_name, self.community.name)
+        
+        # Check data structure
+        self.assertEqual(len(data), 2)  # Header row + 1 data row
+        self.assertEqual(data[0], ["Action", "Completed On", "User Email", "Status"])
+        
+        # Check data content
+        self.assertEqual(data[1][0], self.action.title)
+        self.assertEqual(data[1][2], self.user.email)
+        self.assertEqual(data[1][3], self.user_action_rel.status)
+
+    def test_actions_users_download_multiple_actions(self):
+        """Test download with multiple actions and users"""
+        self.context.user_is_community_admin = True
+        
+        # Create another action and user
+        action2 = Action.objects.create(
+            title="Test Action 2",
+            community=self.community,
+            is_deleted=False
+        )
+        user2 = UserProfile.objects.create(
+            email="test2@example.com",
+            full_name="Test User 2",
+            is_deleted=False
+        )
+        UserActionRel.objects.create(
+            user=user2,
+            action=action2,
+            status="TODO",
+            is_deleted=False,
+            real_estate_unit=self.real_estate_unit
+        )
+
+        result, error = self.download_store.actions_users_download(self.context, self.community.id)
+        
+        # Check that we got data and no error
+        self.assertIsNotNone(result)
+        self.assertIsNone(error)
+        
+        # Unpack the result
+        data, community_name = result
+        
+        # Check data structure
+        self.assertEqual(len(data), 3) 
+        
+        # Check that both actions are present
+        action_titles = [row[0] for row in data[1:]]
+        self.assertIn(self.action.title, action_titles)
+        self.assertIn(action2.title, action_titles)
+        
+        # Check that both users are present
+        user_emails = [row[2] for row in data[1:]]
+        self.assertIn(self.user.email, user_emails)
+        self.assertIn(user2.email, user_emails)
+
+    def test_actions_users_download_deleted_items(self):
+        """Test that deleted items are not included in the download"""
+        self.context.user_is_community_admin = True
+        
+        # Create a deleted action and user action relationship
+        deleted_action = Action.objects.create(
+            title="Deleted Action",
+            community=self.community,
+            is_deleted=True
+        )
+        UserActionRel.objects.create(
+            user=self.user,
+            action=deleted_action,
+            status="DONE",
+            is_deleted=True,
+            real_estate_unit=self.real_estate_unit
+        )
+
+        result, error = self.download_store.actions_users_download(self.context, self.community.id)
+        
+        # Check that we got data and no error
+        self.assertIsNotNone(result)
+        self.assertIsNone(error)
+        
+        # Unpack the result
+        data, community_name = result
+        
+        # Check that only non-deleted items are present
+        self.assertEqual(len(data), 2)  # Header row + 1 data row
+        self.assertNotIn(deleted_action.title, [row[0] for row in data[1:]])
+
+

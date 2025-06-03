@@ -1061,6 +1061,7 @@ class DownloadStore:
 
         return data
     
+    
     def _action_users_download(self, action):
         user_action_rel = UserActionRel.objects.filter(action=action, is_deleted=False)
         columns = ["Recorded At","User", "Email", "Unit Name", "Unit Type", "Carbon Impact", "Status"]
@@ -1082,6 +1083,26 @@ class DownloadStore:
             return []
         
     
+    def _actions_users_download(self, community_id):
+        try:
+            actions = Action.objects.filter(Q(community__id=community_id) | Q(is_global=True)).filter(is_deleted=False)
+            user_action_rels = UserActionRel.objects.filter(is_deleted=False, action__in=actions).select_related("user", "action")
+            
+            if not user_action_rels:
+                return []
+            
+            # format requested by Mike Roy
+            columns = ["Action", "Completed On", "User Email", "Status"]
+            data = [columns]
+
+            for action_rel in user_action_rels:
+                row = [action_rel.action.title, get_human_readable_date(action_rel.date_completed),action_rel.user.email,action_rel.status]
+                data.append(row)
+
+            return data
+        except Exception as e:
+            log.exception(e)
+            return []
     
 
     def _get_metrics_cells(self, community_id, time_stamp):
@@ -1601,8 +1622,8 @@ class DownloadStore:
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
         
 
-
-    def action_users(self, context: Context, action_id) -> Tuple[list, MassEnergizeAPIError]:
+    # download data on an individual action and users who taken it
+    def action_users_download(self, context: Context, action_id) -> Tuple[list, MassEnergizeAPIError]:
         try:
             if not context.user_is_admin():
                 return EMPTY_DOWNLOAD, NotAuthorizedError()
@@ -1616,6 +1637,26 @@ class DownloadStore:
                 return EMPTY_DOWNLOAD, InvalidResourceError()
             
             return (action_users_data, action.title), None
+        
+        except Exception as e:
+            log.exception(e)
+            return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
+            
+    # download information on actions from a community and users who've recorded then        
+    def actions_users_download(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
+        try:
+            if not context.user_is_admin():
+                return EMPTY_DOWNLOAD, NotAuthorizedError()
+            
+            community = Community.objects.filter(id=community_id, is_deleted=False).first()
+            if not community:
+                return EMPTY_DOWNLOAD, InvalidResourceError()
+
+            action_users_data = self._actions_users_download(community_id)
+            if len(action_users_data) == 0:
+                return EMPTY_DOWNLOAD, InvalidResourceError()
+            
+            return (action_users_data, community.name), None
             
             
         except Exception as e:

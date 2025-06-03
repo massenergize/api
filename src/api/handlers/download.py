@@ -24,6 +24,7 @@ class DownloadHandler(RouteHandler):
     self.add("/downloads.sadmin_report", self.send_sadmin_report)
     self.add("/downloads.sample.user_report", self.send_sample_user_report)
     self.add("/downloads.action.users", self.action_users_download)
+    self.add("/downloads.actions.users", self.actions_users_download)
     self.add("/downloads.pagemap", self.community_pagemap_download)
     self.add("/downloads.postmark.nudge_report", self.download_postmark_nudge_report)
 
@@ -137,6 +138,16 @@ class DownloadHandler(RouteHandler):
     args: dict = context.args
     action_id = args.pop('action_id', None)
     _, err = self.service.action_users_download(context, action_id)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data={}, status=200)
+
+  @admins_only
+  def actions_users_download(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    community_id = args.pop('community_id', None)
+    _, err = self.service.actions_users_download(context, community_id)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data={}, status=200)
