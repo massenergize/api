@@ -346,12 +346,12 @@ class TestDownloadStore(TestCase):
         context.user_is_super_admin = True
         context.user_email = self.super_admin.email
         
-        result, error = self.download_store.action_users(context, self.action.id)
+        result, error = self.download_store.action_users_download(context, self.action.id)
         self.assertIsNone(error)
         self.assertIsNotNone(result)
         
         # Test with invalid action_id
-        result, error = self.download_store.action_users(context, 3)
+        result, error = self.download_store.action_users_download(context, 3)
   
         self.assertIsNotNone(error)
         self.assertIsNone(result[0])

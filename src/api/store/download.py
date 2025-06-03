@@ -1098,6 +1098,8 @@ class DownloadStore:
         ]
 
         data = [columns]
+
+        user_action_rels = UserActionRel.objects.filter( is_deleted=False,action__in=actions).select_related("user", "action")
         for action in actions:
 
             # for each action, one line per user who has marked it
@@ -1647,6 +1649,10 @@ class DownloadStore:
                 return EMPTY_DOWNLOAD, InvalidResourceError()
             
             return (action_users_data, action.title), None
+        
+        except Exception as e:
+            log.exception(e)
+            return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
             
     # download information on actions from a community and users who've recorded then        
     def actions_users_download(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
