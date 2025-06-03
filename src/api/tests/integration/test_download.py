@@ -300,5 +300,62 @@ class DownloadTestCase(TestCase):
   def test_download_teams(self):
     pass
 
-    return
+  @patch("api.tasks.download_data.delay", return_value=None)
+  def test_actions_users_download(self, mocked_delay):
+    """Test the actions users download endpoint with different user roles"""
+    endpoint = "/api/downloads.actions.users"
+
+    # Test not logged in
+    signinAs(self.client, None)
+    response = self.client.post(endpoint, urlencode({
+        "community_id": self.COMMUNITY.id
+    }), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertFalse(response["success"])
+
+    # Test as regular user
+    signinAs(self.client, self.USER)
+    response = self.client.post(endpoint, urlencode({
+        "community_id": self.COMMUNITY.id
+    }), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertFalse(response["success"])
+
+    # Test as community admin
+    signinAs(self.client, self.CADMIN)
+    response = self.client.post(endpoint, urlencode({
+        "community_id": self.COMMUNITY.id
+    }), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertTrue(response["success"])
+
+    # Test as super admin
+    signinAs(self.client, self.SADMIN)
+    response = self.client.post(endpoint, urlencode({
+        "community_id": self.COMMUNITY.id
+    }), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertTrue(response["success"])
+
+
+    # Test as regular user
+    signinAs(self.client, self.USER)
+    response = self.client.post(endpoint, urlencode({
+        "community_id": self.COMMUNITY.id
+    }), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertFalse(response["success"])
+
+    # Test as community admin
+    signinAs(self.client, self.CADMIN)
+    response = self.client.post(endpoint, urlencode({
+        "community_id": self.COMMUNITY.id
+    }), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertTrue(response["success"])
+
+    # Test as super admin
+    signinAs(self.client, self.SADMIN)
+    response = self.client.post(endpoint, urlencode({
+        "community_id": self.COMMUNITY.id
+    }), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertTrue(response["success"])
+
+
+
+
 
