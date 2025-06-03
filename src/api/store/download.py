@@ -1084,37 +1084,25 @@ class DownloadStore:
         
     
     def _actions_users_download(self, community_id):
-        actions = (
-            Action.objects.filter(Q(community__id=community_id) | Q(is_global=True))
-            .filter(is_deleted=False)
-        )
+        try:
+            actions = Action.objects.filter(Q(community__id=community_id) | Q(is_global=True)).filter(is_deleted=False)
+            user_action_rels = UserActionRel.objects.filter(is_deleted=False, action__in=actions).select_related("user", "action")
+            
+            if not user_action_rels:
+                return []
+            
+            # format requested by Mike Roy
+            columns = ["Action", "Completed On", "User Email", "Status"]
+            data = [columns]
 
-        # format requested by Mike Roy
-        columns = [
-            "Action", 
-            "Completed On", 
-            "User Email",
-            "Status",
-        ]
-
-        data = [columns]
-
-        user_action_rels = UserActionRel.objects.filter( is_deleted=False,action__in=actions).select_related("user", "action")
-        for action in actions:
-
-            # for each action, one line per user who has marked it
-            actions_todo = UserActionRel.objects.filter(is_deleted=False, action=action, status="TODO")
-            for todo_action in actions_todo:
-                row = [action.title, todo_action.date_completed, todo_action.user.email, todo_action.status]
+            for action_rel in user_action_rels:
+                row = [action_rel.action.title, get_human_readable_date(action_rel.date_completed),action_rel.user.email,action_rel.status]
                 data.append(row)
 
-            actions_done = UserActionRel.objects.filter(is_deleted=False, action=action, status="DONE")
-            for done_action in actions_done:
-                row = [action.title, todo_action.date_completed, todo_action.user.email, todo_action.status]
-                data.append(row)
-
-        return data
-    
+            return data
+        except Exception as e:
+            log.exception(e)
+            return []
     
 
     def _get_metrics_cells(self, community_id, time_stamp):

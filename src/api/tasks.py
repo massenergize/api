@@ -33,23 +33,27 @@ from _main_.celery.app import app
 
 
 def generate_csv_and_email(data, download_type, community_name=None, email=None,filename=None):
-    response = HttpResponse(content_type="text/csv")
-    now = datetime.datetime.now().strftime("%Y%m%d")
-    if not filename:
-        if not community_name:
-            filename = "all-%s-data-%s.csv" % (download_type, now)
-        else:
-            filename = "%s-%s-data-%s.csv" % (community_name, download_type, now)
-    writer = csv.writer(response)
-    for row in data:
-        writer.writerow(row)
-    user = UserProfile.objects.get(email=email)
-    temp_data = {
-        'data_type': download_type,
-        "name":user.full_name,
-    }
-    send_massenergize_email_with_attachments(DATA_DOWNLOAD_TEMPLATE,temp_data,[email], response.content, filename, None)
-    return True
+    try:
+         response = HttpResponse(content_type="text/csv")
+         now = datetime.datetime.now().strftime("%Y%m%d")
+         if not filename:
+             if not community_name:
+                 filename = "all-%s-data-%s.csv" % (download_type, now)
+             else:
+                 filename = "%s-%s-data-%s.csv" % (community_name, download_type, now)
+         writer = csv.writer(response)
+         for row in data:
+             writer.writerow(row)
+         user = UserProfile.objects.get(email=email)
+         temp_data = {
+             'data_type': download_type,
+             "name":user.full_name,
+         }
+         send_massenergize_email_with_attachments(DATA_DOWNLOAD_TEMPLATE,temp_data,[email], response.content, filename, None)
+         return True
+    except Exception as e:
+        log.exception(e)
+        return False
 
 
 def error_notification(download_type, email):
@@ -94,7 +98,7 @@ def download_data(self, args, download_type):
         if err:
             error_notification(ACTIONS_USERS, email)
         else:
-            generate_csv_and_email(data=files, download_type=ACTION_USERS, community_name=com_name, email=email)
+            generate_csv_and_email(data=files, download_type=ACTIONS_USERS, community_name=com_name, email=email)
     
 
     elif download_type == COMMUNITIES:

@@ -187,7 +187,7 @@ tk:
 	 fi
 	 touch test.sqlite3
 	 DJANGO_ENV=test python3 manage.py migrate
-	 DJANGO_ENV=test python manage.py test api.tests.integration.test_campaigns.CampaignsIntegrationTestCase
+	 DJANGO_ENV=test python manage.py test api.tests.unit.utils.test_downloads.TestActionsUsersDownload
 
 	# coverage report --precision=2
 .PHONY: tk

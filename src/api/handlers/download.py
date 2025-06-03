@@ -146,8 +146,8 @@ class DownloadHandler(RouteHandler):
   def actions_users_download(self, request):
     context: Context = request.context
     args: dict = context.args
-    action_id = args.pop('action_id', None)
-    _, err = self.service.actions_users_download(context, action_id)
+    community_id = args.pop('community_id', None)
+    _, err = self.service.actions_users_download(context, community_id)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data={}, status=200)
