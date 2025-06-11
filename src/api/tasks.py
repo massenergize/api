@@ -90,7 +90,8 @@ def download_data(self, args, download_type):
         if err:
             error_notification(ACTION_USERS, email)
         else:
-            generate_csv_and_email(data=files, download_type=ACTION_USERS, community_name=com_name, email=email)
+            # community_name used to name the csv file - use th action name
+            generate_csv_and_email(data=files, download_type=ACTION_USERS, community_name=action_name, email=email)
     
 
     elif download_type == ACTIONS_USERS:
