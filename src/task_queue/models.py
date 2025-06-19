@@ -4,6 +4,8 @@ import uuid
 
 from django.db import models
 from django.forms import model_to_dict
+from _main_.settings import IS_PROD, SLACK_SUPER_ADMINS_WEBHOOK_URL
+from api.services.utils import send_slack_message
 from database.models import UserProfile
 from database.utils.common import get_summary_info
 from database.utils.constants import SHORT_STR_LEN
@@ -221,3 +223,5 @@ class TaskRun(models.Model):
         self.status = TaskStatus.FAILED.value
         self.error_message = error_message
         self.save()
+        if IS_PROD:
+            send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL, {"text": error_message})

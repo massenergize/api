@@ -3,8 +3,6 @@ import traceback
 from celery import shared_task
 from django.db import transaction
 
-from _main_.settings import IS_PROD, SLACK_SUPER_ADMINS_WEBHOOK_URL
-from api.services.utils import send_slack_message
 from task_queue.helpers import is_time_to_run
 from .jobs import FUNCTIONS, AUTOMATIC_TASK_FUNCTIONS
 from .models import Task, TaskRun
@@ -27,12 +25,7 @@ def log_status(task, message, extra_context=None):
 	if extra_context:
 		log_message += f", Context: {extra_context}"
 
-	if task.status == FAILED:
-		log.error(log_message)
-		if IS_PROD:
-			send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL, {"text": log_message})
-	else:
-		log.info(log_message)
+	log.info(log_message)
 
 
 @shared_task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 1, 'countdown': 5})
@@ -78,6 +71,7 @@ def run_some_task(self, task_id):
 			res, err = func(task)
 
 			task.status = SUCCEEDED if not err else FAILED
+			task.save()
 			
 			if res:
 				task_run.mark_complete(result=res)
@@ -86,15 +80,15 @@ def run_some_task(self, task_id):
 				task_run.mark_failed(err)
 				log_status(task, "Task failed", {"error": str(err)})
 			
-			task.save()
 			return True
 
 		except Exception as e:
 			task.status = FAILED
+			task.save()
 			stack_trace = traceback.format_exc()
 			task_run.mark_failed(stack_trace)
 			log_status(task, "Task failed with exception", {"error": stack_trace, "type": type(e).__name__})
-			task.save()
+	
 			raise
 
 	except Exception as e:
