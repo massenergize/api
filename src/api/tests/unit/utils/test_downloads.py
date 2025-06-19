@@ -575,12 +575,12 @@ class TestActionsUsersDownload(TestCase):
         
         # Check data structure
         self.assertEqual(len(data), 2)  # Header row + 1 data row
-        self.assertEqual(data[0], ["Action", "Completed On", "User Email", "Status"])
+        self.assertEqual(data[0], ['Action', 'Completed On', 'Full Name', 'User Email', 'Status'])
         
         # Check data content
         self.assertEqual(data[1][0], self.action.title)
-        self.assertEqual(data[1][2], self.user.email)
-        self.assertEqual(data[1][3], self.user_action_rel.status)
+        self.assertEqual(data[1][3], self.user.email)
+        self.assertEqual(data[1][4], self.user_action_rel.status)
 
     def test_actions_users_download_multiple_actions(self):
         """Test download with multiple actions and users"""
@@ -623,7 +623,7 @@ class TestActionsUsersDownload(TestCase):
         self.assertIn(action2.title, action_titles)
         
         # Check that both users are present
-        user_emails = [row[2] for row in data[1:]]
+        user_emails = [row[3] for row in data[1:]]
         self.assertIn(self.user.email, user_emails)
         self.assertIn(user2.email, user_emails)
 

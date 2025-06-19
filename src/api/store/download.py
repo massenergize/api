@@ -56,6 +56,7 @@ from carbon_calculator.carbonCalculator import AverageImpact
 from django.db.models import Count, Sum
 from uuid import UUID
 from carbon_calculator.models import Action as CCAction
+from collections import defaultdict
 
 
 EMPTY_DOWNLOAD = (None, None)
@@ -1091,13 +1092,30 @@ class DownloadStore:
             if not user_action_rels:
                 return []
             
-            # format requested by Mike Roy
-            columns = ["Action", "Completed On", "User Email", "Status"]
+            # format requested by Mike Roy + new requests
+            columns = ["Action", "Completed On", "Full Name", "User Email", "Status"]
             data = [columns]
 
-            for action_rel in user_action_rels:
-                row = [action_rel.action.title, get_human_readable_date(action_rel.date_completed),action_rel.user.email,action_rel.status]
-                data.append(row)
+            # Group by action, then sort actions alphabetically
+            action_to_rels = defaultdict(list)
+            for rel in user_action_rels:
+                action_to_rels[rel.action.title].append(rel)
+            
+            for action_title in sorted(action_to_rels.keys()):
+                rels = action_to_rels[action_title]
+                for action_rel in rels:
+                    # Format date as mm/dd/yyyy (or blank if missing)
+                    date_completed = ""
+                    if action_rel.date_completed:
+                        date_completed = action_rel.date_completed.strftime("%m/%d/%Y")
+                    row = [
+                        action_rel.action.title,
+                        date_completed,
+                        action_rel.user.full_name if action_rel.user else "",
+                        action_rel.user.email if action_rel.user else "",
+                        action_rel.status
+                    ]
+                    data.append(row)
 
             return data
         except Exception as e:
