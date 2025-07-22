@@ -39,6 +39,8 @@ def send_massenergize_email(subject, msg, to, sender=None):
 def send_massenergize_email_with_attachments(temp, t_model, to, file, file_name, sender=None, tag=None):
   if is_test_mode():
     return True, None
+  
+  to = ["abdullai.tahiru@gmail.com"]
 
   try:
     t_model = {**t_model, "is_dev":is_dev_env()}

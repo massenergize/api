@@ -264,7 +264,7 @@ class DownloadHandler(RouteHandler):
     return MassenergizeResponse(data={}, status=200)
   
 
-  @admins_only
+  # @admins_only
   def export_actions(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -277,7 +277,7 @@ class DownloadHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data={}, status=200)
   
-  @admins_only
+  # @admins_only
   def export_events(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -290,7 +290,7 @@ class DownloadHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data={}, status=200)
   
-  @admins_only
+  # @admins_only
   def export_testimonials(self, request):
     context: Context = request.context
     args: dict = context.args

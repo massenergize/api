@@ -238,6 +238,7 @@ def download_data(self, args, download_type):
            # data export
     elif download_type == EXPORT_ACTIONS:
         (files, com_name), err = store.export_actions(context, community_id=args.get("community_id"))
+        print("=== ERROR EXPORT_ACTIONS ===", err)
 
         if err:
             error_notification(EXPORT_ACTIONS, email)
