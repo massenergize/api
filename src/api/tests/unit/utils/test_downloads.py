@@ -433,11 +433,6 @@ class TestDownloadStore(TestCase):
         result, error = self.download_store.export_actions(context, self.community.id)
         self.assertIsNone(error)
         self.assertIsNotNone(result)
-        
-        # Test without community_id
-        result, error = self.download_store.export_actions(context, None)
-        self.assertIsNotNone(error)
-        self.assertIsNone(result[0])
 
     def test_export_events(self):
         context = Context()
@@ -449,11 +444,6 @@ class TestDownloadStore(TestCase):
         result, error = self.download_store.export_events(context, self.community.id)
         self.assertIsNone(error)
         self.assertIsNotNone(result)
-        
-        # Test without community_id
-        result, error = self.download_store.export_events(context, None)
-        self.assertIsNotNone(error)
-        self.assertIsNone(result[0])
 
     def test_export_testimonials(self):
         context = Context()
@@ -466,10 +456,6 @@ class TestDownloadStore(TestCase):
         self.assertIsNone(error)
         self.assertIsNotNone(result)
         
-        # Test without community_id
-        result, error = self.download_store.export_testimonials(context, None)
-        self.assertIsNotNone(error)
-        self.assertIsNone(result[0])
 
     def test_export_vendors(self):
         context = Context()

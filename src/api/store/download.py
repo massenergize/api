@@ -2042,9 +2042,9 @@ class DownloadStore:
         
 
     def export_actions(self, context: Context, community_id=None) -> Tuple[list, MassEnergizeAPIError]:
-        try:            
+        try:      
             if not community_id:     
-                return EMPTY_DOWNLOAD, CustomMassenergizeError("Please provide community_id")               
+                return (self._export_all_actions(), "All Actions"), None              
             community_name = Community.objects.get(id=community_id).name
             return (self._export_community_actions(community_id), community_name), None
 
@@ -2055,7 +2055,7 @@ class DownloadStore:
     def export_events(self, context: Context, community_id=None) -> Tuple[list, MassEnergizeAPIError]:
         try:
             if not community_id:
-                    return EMPTY_DOWNLOAD,CustomMassenergizeError("Please provide community_id")  
+                return (self._export_all_events(), "All Events"), None
             
             community_name = Community.objects.get(id=community_id).name
             return (self._community_events_download(community_id), community_name), None
@@ -2067,7 +2067,7 @@ class DownloadStore:
     def export_testimonials(self, context: Context, community_id=None) -> Tuple[list, MassEnergizeAPIError]:
         try:
             if not community_id:
-                    return EMPTY_DOWNLOAD, CustomMassenergizeError("Please provide community_id")  
+                return (self._export_all_testimonials(), "All Testimonials"), None
             community_name = Community.objects.get(id=community_id).name
             return (self._community_testimonials_download(community_id), community_name), None
    
@@ -2140,7 +2140,7 @@ class DownloadStore:
 
     def _community_events_download(self, community_id):
         events = Event.objects.filter(community__id=community_id, is_deleted=False, is_published=True)
-        columns = ["Title", "Description", "Start Date", "End Date", "Location", "Event Type", "Link", "Image"]
+        columns = ["Title", "Description", "Start Date", "End Date", "Location", "Event Type", "Link", "Image", "Tags"]
         data = [columns]
         
         for event in events:
@@ -2152,7 +2152,8 @@ class DownloadStore:
                 "Location": event.location,
                 "Event Type": event.event_type,
                 "Link": event.external_link if event.external_link else "",
-                "Image": event.image.file.url if event.image else ""
+                "Image": event.image.file.url if event.image else "",
+                "Tags": ", ".join([tag.name for tag in event.tags.all()])
             })
             data.append(cell)
         return data
@@ -2160,7 +2161,7 @@ class DownloadStore:
 
     def _community_testimonials_download(self, community_id):
         testimonials = Testimonial.objects.filter(community__id=community_id, is_deleted=False, is_published=True)
-        columns = ["Title", "Body","User", "Related Action", "Related Vendor", "Image"]
+        columns = ["Title", "Body","User","Related Action", "Related Vendor", "Image", "Tags",  "Email"]
         data = [columns]
         
         for testimonial in testimonials:
@@ -2170,14 +2171,16 @@ class DownloadStore:
                 "User": testimonial.user.full_name if testimonial.user else testimonial.preferred_name or "",
                 "Related Action": testimonial.action.title if testimonial.action else "",
                 "Related Vendor": testimonial.vendor.name if testimonial.vendor else "",
-                "Image": testimonial.image.file.url if testimonial.image else ""
+                "Image": testimonial.image.file.url if testimonial.image else "",
+                "Tags": ", ".join([tag.name for tag in testimonial.tags.all()]),
+                "Email": testimonial.user.email if testimonial.user else ""
             })
             data.append(cell)
         return data
     
     def _export_community_actions(self, community_id):
         actions = Action.objects.filter(community__id=community_id, is_deleted=False,is_published=True)
-        columns = ["Title", "Description", "Steps to Take", "Deep Dive", "Image", "CC Action"]
+        columns = ["Title", "Description", "Steps to Take", "Deep Dive", "Image", "CC Action", "Tags"]
         data = [columns]
         
         for action in actions:
@@ -2187,12 +2190,75 @@ class DownloadStore:
                 "Steps to Take": action.steps_to_take,
                 "Deep Dive": action.deep_dive,
                 "Image": action.image.file.url if action.image else "",
-                "CC Action": action.calculator_action.name if action.calculator_action else ""
+                "CC Action": action.calculator_action.name if action.calculator_action else "",
+                "Tags": ", ".join([tag.name for tag in action.tags.all()])
             })
             data.append(cell)
         return data
         
+
+    def _export_all_actions(self):
+        actions = Action.objects.filter(is_deleted=False,is_published=True)
+        columns = ["Title", "Description", "Steps to Take", "Deep Dive", "Image", "CC Action", "Tags", "Community"]
+        data = [columns]
         
+        for action in actions:
+            cell = self._get_cells_from_dict(columns, {
+                "Title": action.title,
+                "Description": action.about,
+                "Steps to Take": action.steps_to_take,
+                "Deep Dive": action.deep_dive,
+                "Image": action.image.file.url if action.image else "",
+                "CC Action": action.calculator_action.name if action.calculator_action else "",
+                "Tags": ", ".join([tag.name for tag in action.tags.all()]),
+                "Community": action.community.name if action.community else "",
+            })
+            data.append(cell)
+        return data
+
+
+    def _export_all_testimonials(self):
+        testimonials = Testimonial.objects.filter(is_deleted=False,is_published=True)
+        columns = ["Title", "Body", "User", "Related Action", "Related Vendor", "Image", "Tags", "Email", "Community"]
+        data = [columns]
+        
+        for testimonial in testimonials:
+            cell = self._get_cells_from_dict(columns, {
+                "Title": testimonial.title,
+                "Body": testimonial.body,
+                "User": testimonial.user.full_name if testimonial.user else testimonial.preferred_name or "",
+                "Related Action": testimonial.action.title if testimonial.action else "",
+                "Related Vendor": testimonial.vendor.name if testimonial.vendor else "",
+                "Image": testimonial.image.file.url if testimonial.image else "",
+                "Tags": ", ".join([tag.name for tag in testimonial.tags.all()]),
+                "Email": testimonial.user.email if testimonial.user else "",
+                "Community": testimonial.community.name if testimonial.community else "",
+            })
+            data.append(cell)
+        return data
+    
+    def _export_all_events(self):
+        events = Event.objects.filter(is_deleted=False,is_published=True)
+        columns = ["Title", "Description", "Start Date", "End Date", "Location", "Event Type", "Link", "Image", "Tags", "Community"]
+        data = [columns]
+        
+        for event in events:
+            cell = self._get_cells_from_dict(columns, {
+                "Title": event.name,
+                "Description": event.description,
+                "Start Date": event.start_date_and_time.strftime("%Y-%m-%d %H:%M") if event.start_date_and_time else "",
+                "End Date": event.end_date_and_time.strftime("%Y-%m-%d %H:%M") if event.end_date_and_time else "",
+                "Location": event.location,
+                "Event Type": event.event_type,
+                "Link": event.external_link if event.external_link else "",
+                "Image": event.image.file.url if event.image else "",
+                "Tags": ", ".join([tag.name for tag in event.tags.all()]),
+                "Community": event.community.name if event.community else "",
+            })
+            data.append(cell)
+        return data
+
+
 
 
         
