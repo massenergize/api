@@ -238,6 +238,7 @@ def download_data(self, args, download_type):
            # data export
     elif download_type == EXPORT_ACTIONS:
         (files, com_name), err = store.export_actions(context, community_id=args.get("community_id"))
+        print("ACTIONS err", err)
 
         if err:
             error_notification(EXPORT_ACTIONS, email)
@@ -246,6 +247,7 @@ def download_data(self, args, download_type):
 
     elif download_type == EXPORT_TESTIMONIALS:
         (files, com_name), err = store.export_testimonials(context, community_id=args.get("community_id"))
+        print("TESTIMONIALS err", err)
 
         if err:
             error_notification(EXPORT_TESTIMONIALS, email)
@@ -254,6 +256,7 @@ def download_data(self, args, download_type):
 
     elif download_type == EXPORT_EVENTS:
         (files, com_name), err = store.export_events(context, community_id=args.get("community_id"))
+        print("EVENTS err", err)
         if err:
             error_notification(EXPORT_EVENTS, email)
         else:
