@@ -2055,10 +2055,10 @@ class DownloadStore:
     def export_events(self, context: Context, community_id=None) -> Tuple[list, MassEnergizeAPIError]:
         try:
             if not community_id:
-                return (self._export_all_events(), "All Events"), None
+                return (self._export_all_events_for_wp(), "All Events"), None
             
             community_name = Community.objects.get(id=community_id).name
-            return (self._community_events_download(community_id), community_name), None
+            return (self._export_all_events_for_wp(community_id), community_name), None
   
         except Exception as e:
             log.exception(e)
@@ -2257,8 +2257,88 @@ class DownloadStore:
             })
             data.append(cell)
         return data
+    
 
-
-
-
+    def _export_all_events_for_wp(self, community_id=None):
+        events = Event.objects.filter(is_deleted=False,is_published=True)
+        if community_id:
+            events = events.filter(community__id=community_id)
+        columns = [
+            "EVENT NAME", "EVENT EXCERPT", "EVENT VENUE NAME", "EVENT ORGANIZER NAME", 
+            "EVENT START DATE", "EVENT START TIME", "EVENT END DATE", "EVENT END TIME", 
+            "ALL DAY EVENT", "TIMEZONE", "HIDE FROM EVENT LISTINGS", "STICKY IN MONTH VIEW", 
+            "EVENT CATEGORY", "EVENT TAGS", "EVENT COST", "EVENT CURRENCY SYMBOL", 
+            "EVENT CURRENCY POSITION", "EVENT ISO CURRENCY CODE", "EVENT FEATURED IMAGE", 
+            "EVENT WEBSITE", "EVENT SHOW MAP LINK", "EVENT SHOW MAP", "ALLOW COMMENTS", 
+            "ALLOW TRACKBACKS AND PINGBACKS", "EVENT DESCRIPTION"
+        ]
+        data = [columns]
         
+        for event in events:
+            # Format dates and times
+            start_date = event.start_date_and_time.strftime("%Y-%m-%d") if event.start_date_and_time else ""
+            start_time = event.start_date_and_time.strftime("%I:%M %p") if event.start_date_and_time else ""
+            end_date = event.end_date_and_time.strftime("%Y-%m-%d") if event.end_date_and_time else ""
+            end_time = event.end_date_and_time.strftime("%I:%M %p") if event.end_date_and_time else ""
+            
+            # Determine if it's an all-day event (if start and end are on same day and times are 00:00)
+            is_all_day = False
+            if event.start_date_and_time and event.end_date_and_time:
+                if (event.start_date_and_time.date() == event.end_date_and_time.date() and
+                    event.start_date_and_time.hour == 0 and event.start_date_and_time.minute == 0 and
+                    event.end_date_and_time.hour == 0 and event.end_date_and_time.minute == 0):
+                    is_all_day = True
+            
+            # Extract venue name from location JSON
+            venue_name = ""
+            if event.location and isinstance(event.location, dict):
+                venue_name = event.location.get('name', '') or event.location.get('address', '')
+            
+            # Get organizer name
+            organizer_name = ""
+            if event.user:
+                organizer_name = event.user.full_name or event.user.preferred_name or event.user.email
+            
+            # Get event type/category
+            event_category = event.event_type or "Event"
+            
+            # Get tags
+            tags = ", ".join([tag.name for tag in event.tags.all()])
+            
+            # Get featured image URL
+            featured_image = ""
+            if event.image and event.image.file:
+                featured_image = event.image.file.url
+            
+            # Get external link as website
+            website = event.external_link or ""
+            
+            cell = self._get_cells_from_dict(columns, {
+                "EVENT NAME": event.name,
+                "EVENT EXCERPT": event.featured_summary or "",
+                "EVENT VENUE NAME": venue_name,
+                "EVENT ORGANIZER NAME": organizer_name,
+                "EVENT START DATE": start_date,
+                "EVENT START TIME": start_time,
+                "EVENT END DATE": end_date,
+                "EVENT END TIME": end_time,
+                "ALL DAY EVENT": "TRUE" if is_all_day else "FALSE",
+                "TIMEZONE": "America/New_York",  # Default timezone
+                "HIDE FROM EVENT LISTINGS": "FALSE",
+                "STICKY IN MONTH VIEW": "FALSE",
+                "EVENT CATEGORY": event_category,
+                "EVENT TAGS": tags,
+                "EVENT COST": "",  # No cost field in Event model
+                "EVENT CURRENCY SYMBOL": "",
+                "EVENT CURRENCY POSITION": "",
+                "EVENT ISO CURRENCY CODE": "",
+                "EVENT FEATURED IMAGE": featured_image,
+                "EVENT WEBSITE": website,
+                "EVENT SHOW MAP LINK": "TRUE" if venue_name else "FALSE",
+                "EVENT SHOW MAP": "TRUE" if venue_name else "FALSE",
+                "ALLOW COMMENTS": "FALSE",
+                "ALLOW TRACKBACKS AND PINGBACKS": "FALSE",
+                "EVENT DESCRIPTION": event.description
+            })
+            data.append(cell)
+        return data
