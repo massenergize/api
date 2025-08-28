@@ -330,7 +330,7 @@ class DownloadHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data={}, status=200)
   
-  # @admins_only
+  @admins_only
   def export_site_data(self, request):
     context: Context = request.context
     args: dict = context.args
