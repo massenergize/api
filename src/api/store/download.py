@@ -1,3 +1,7 @@
+import io
+import os
+import zipfile
+import csv
 from _main_.utils.common import generate_workbook_with_sheets
 from _main_.utils.massenergize_errors import (
     NotAuthorizedError,
@@ -5,11 +9,10 @@ from _main_.utils.massenergize_errors import (
     InvalidResourceError,
     CustomMassenergizeError,
 )
-from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from collections import Counter
 from api.store.utils import get_human_readable_date
-from api.utils.api_utils import get_user_community_ids, is_admin_of_community
+from api.utils.api_utils import is_admin_of_community
 from apps__campaigns.models import Campaign, CampaignActivityTracking, CampaignFollow, CampaignLink, CampaignTechnology, CampaignTechnologyFollow, CampaignTechnologyLike, CampaignTechnologyTestimonial, CampaignTechnologyView, CampaignView, Comment
 from database.models import (
     UserProfile,
@@ -30,7 +33,6 @@ from database.models import (
     CustomCommunityWebsiteDomain,
     HomePageSettings,
     ImpactPageSettings,
-    ActionsPageSettings,
     EventsPageSettings,
     Vendor,
     TestimonialsPageSettings,
@@ -44,19 +46,21 @@ from api.store.team import get_team_users
 from api.constants import STANDARD_USER, GUEST_USER
 from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
 from api.store.tag_collection import TagCollectionStore
-from api.store.deviceprofile import DeviceStore
 from django.db.models import Q
 from _main_.utils.massenergize_logger import log
 from typing import Tuple
 
 from django.utils import timezone
 import datetime
-from django.utils.timezone import utc
 from carbon_calculator.carbonCalculator import AverageImpact
-from django.db.models import Count, Sum
+from django.db.models import Sum
 from uuid import UUID
 from carbon_calculator.models import Action as CCAction
 from collections import defaultdict
+
+
+import json
+import boto3
 
 
 EMPTY_DOWNLOAD = (None, None)
@@ -2342,3 +2346,140 @@ class DownloadStore:
             })
             data.append(cell)
         return data
+    
+    def _build_quick_links_csv(self, community_id):
+        home_page = HomePageSettings.objects.filter(community__id=community_id).first()
+        columns = ["Title", "Link", "Icon", "Description"]
+        # No home page or no featured links
+        if not home_page or not home_page.featured_links:
+            return [columns]
+
+        # featured_links may be stored as JSON string or list
+        links = home_page.featured_links
+        try:
+            if isinstance(links, str):
+                links = json.loads(links)
+        except Exception:
+            # If parsing fails, return only headers
+            return [columns]
+
+        data = [columns]
+        for item in links or []:
+            title = (item.get("title") if isinstance(item, dict) else "") or ""
+            link = (item.get("link") if isinstance(item, dict) else "") or ""
+            icon = (item.get("icon") if isinstance(item, dict) else "") or ""
+            description = (item.get("description") if isinstance(item, dict) else "") or ""
+            data.append([title, link, icon, description])
+
+        return data
+    
+
+    
+    def _build_home_page_csv(self, community_id):
+        from database.utils.common import get_images_in_sequence
+        
+        home_page = HomePageSettings.objects.filter(community__id=community_id).first()
+        if not home_page:
+            return [["Title"], [""]]
+
+        title = home_page.sub_title or ""
+        images = home_page.images.all()
+        sequence = home_page.image_sequence.sequence if home_page.image_sequence else None
+        image_list = (
+            get_images_in_sequence(images, json.loads(sequence))
+            if sequence
+            else [i.simple_json() for i in images]
+        )
+
+        # Dynamic columns: one column per image
+        image_columns = [f"Image {index+1}" for index in range(len(image_list))]
+        columns = ["Title", *image_columns]
+        image_values = [img.get("url", "") for img in image_list]
+        row = [title, *image_values]
+
+        return [columns, row]
+
+    def _build_about_us_csv(self, community_id):
+        about_us = AboutUsPageSettings.objects.filter(community__id=community_id).first()
+        columns = [
+            "Description",
+            "Featured Video",
+        ]
+        if not about_us:
+            return [columns, ["", ""]]
+
+        description = about_us.description or ""
+        featured_video = about_us.featured_video_link or ""
+
+        data = [columns, [description, featured_video]]
+        return data
+
+    def upload_zip_to_s3(self, file_buffer, filename):
+        s3 = boto3.client(
+            "s3",
+            aws_access_key_id=os.environ.get('AWS_ACCESS_KEY_ID'),
+            aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY'),
+            region_name= os.environ.get('AWS_S3_REGION_NAME'),
+        )
+
+        s3.upload_fileobj(
+            file_buffer,
+            os.environ.get('AWS_STORAGE_BUCKET_NAME'),
+            filename,
+            ExtraArgs={"ContentType": "application/zip"}
+        )
+
+    def generate_presigned_url(self, filename, expires_in=3600):
+        s3 = boto3.client(
+            "s3",
+            aws_access_key_id=os.environ.get('AWS_ACCESS_KEY_ID'),
+            aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY'),
+            region_name=os.environ.get('AWS_S3_REGION_NAME'),
+        )
+
+        return s3.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": os.environ.get('AWS_STORAGE_BUCKET_NAME'), "Key": filename},
+            ExpiresIn=expires_in,
+        )
+
+    
+
+    def export_site_data(self, context: Context, community_id=None):
+        community = Community.objects.get(id=community_id)
+        files = {
+            "actions.csv": self._export_community_actions(community_id),
+            "events.csv": self._community_events_download(community_id),
+            "testimonials.csv": self._community_testimonials_download(community_id),
+            "vendors.csv": self._community_vendors_download(community_id),
+            "home_page.csv": self._build_home_page_csv(community_id),
+            "featured_links.csv": self._build_quick_links_csv(community_id),
+            "about_us.csv": self._build_about_us_csv(community_id),
+        }
+        zip_file = self._create_zip(files)
+        filename = f"{community.name}-site-data.zip"
+        self.upload_zip_to_s3(zip_file, filename)
+        download_link = self.generate_presigned_url(filename)
+        return (download_link, community.name), None
+
+
+
+    def _create_zip(self, files):
+            buffer = io.BytesIO()
+            with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+                for name, content in files.items():
+                    if content is None:
+                        continue
+                    if isinstance(content, str):
+                        zf.writestr(name, content)
+                    elif isinstance(content, list):
+                        # Convert list data to CSV format
+                        csv_buffer = io.StringIO()
+                        writer = csv.writer(csv_buffer)
+                        for row in content:
+                            writer.writerow(row)
+                        zf.writestr(name, csv_buffer.getvalue())
+                    else:
+                        zf.writestr(name, content.getvalue() if hasattr(content, "getvalue") else content)
+            buffer.seek(0)
+            return buffer

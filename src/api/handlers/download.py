@@ -42,6 +42,7 @@ class DownloadHandler(RouteHandler):
     self.add("/export.testimonials", self.export_testimonials)
     self.add("/export.cc.actions", self.export_cc_actions)
     self.add("/export.vendors", self.export_vendors)
+    self.add("/export.site.data", self.export_site_data)
 
 
   @admins_only
@@ -329,4 +330,15 @@ class DownloadHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data={}, status=200)
   
-  
+  # @admins_only
+  def export_site_data(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    community_id = args.pop('community_id', None)
+    email = args.get('email', None)
+
+    report, err = self.service.export_site_data(context, community_id=community_id, email=email)
+    
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data={}, status=200)

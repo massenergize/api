@@ -1,5 +1,5 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError
-from api.constants import ACTION_USERS, ACTIONS_USERS, ACTIONS, CAMPAIGN_INTERACTION_PERFORMANCE_REPORT, CAMPAIGN_PERFORMANCE_REPORT, CAMPAIGN_VIEWS_PERFORMANCE_REPORT, COMMUNITIES, EXPORT_ACTIONS, EXPORT_CC_ACTIONS, EXPORT_EVENTS, EXPORT_TESTIMONIALS, EXPORT_VENDORS, FOLLOWED_REPORT, LIKE_REPORT, LINK_PERFORMANCE_REPORT, METRICS, POSTMARK_NUDGE_REPORT, SAMPLE_USER_REPORT, TEAMS, USERS, CADMIN_REPORT, SADMIN_REPORT, COMMUNITY_PAGEMAP
+from api.constants import ACTION_USERS, ACTIONS_USERS, ACTIONS, CAMPAIGN_INTERACTION_PERFORMANCE_REPORT, CAMPAIGN_PERFORMANCE_REPORT, CAMPAIGN_VIEWS_PERFORMANCE_REPORT, COMMUNITIES, EXPORT_ACTIONS, EXPORT_CC_ACTIONS, EXPORT_EVENTS, EXPORT_SITE_DATA, EXPORT_TESTIMONIALS, EXPORT_VENDORS, FOLLOWED_REPORT, LIKE_REPORT, LINK_PERFORMANCE_REPORT, METRICS, POSTMARK_NUDGE_REPORT, SAMPLE_USER_REPORT, TEAMS, USERS, CADMIN_REPORT, SADMIN_REPORT, COMMUNITY_PAGEMAP
 from api.store.download import DownloadStore
 from _main_.utils.context import Context
 from typing import Tuple
@@ -284,3 +284,13 @@ class DownloadService:
         return [], None
     
     
+    def export_site_data(self, context: Context, community_id=None, email=None) -> Tuple[list, MassEnergizeAPIError]:
+        data = {
+            'community_id': community_id,
+            'user_is_community_admin': context.user_is_community_admin,
+            'user_is_super_admin': context.user_is_super_admin,
+            'email': context.user_email or email,
+            'user_is_logged_in': context.user_is_logged_in
+        }
+        download_data.delay(data, EXPORT_SITE_DATA)
+        return [], None
