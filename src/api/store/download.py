@@ -223,6 +223,21 @@ class DownloadStore:
 
         self.community_id = None
 
+    def _clean_datetime_for_json(self, obj):
+        """
+        Recursively clean datetime objects in data structures for JSON serialization
+        """
+        if isinstance(obj, datetime.datetime):
+            return obj.isoformat()
+        elif isinstance(obj, datetime.date):
+            return obj.isoformat()
+        elif isinstance(obj, dict):
+            return {key: self._clean_datetime_for_json(value) for key, value in obj.items()}
+        elif isinstance(obj, list):
+            return [self._clean_datetime_for_json(item) for item in obj]
+        else:
+            return obj
+
 
     def _get_cells_from_dict(self, columns, data):
         cells = ["" for _ in range(len(columns))]
@@ -2347,12 +2362,14 @@ class DownloadStore:
             data.append(cell)
         return data
     
-    def _build_quick_links_csv(self, community_id):
+    def _build_quick_links_json(self, community_id):
+        from datetime import datetime
+        
         home_page = HomePageSettings.objects.filter(community__id=community_id).first()
-        columns = ["Title", "Link", "Icon", "Description"]
+        
         # No home page or no featured links
         if not home_page or not home_page.featured_links:
-            return [columns]
+            return json.dumps({"featured_links": []})
 
         # featured_links may be stored as JSON string or list
         links = home_page.featured_links
@@ -2360,28 +2377,28 @@ class DownloadStore:
             if isinstance(links, str):
                 links = json.loads(links)
         except Exception:
-            # If parsing fails, return only headers
-            return [columns]
+            # If parsing fails, return empty array
+            return json.dumps({"featured_links": []})
 
-        data = [columns]
-        for item in links or []:
-            title = (item.get("title") if isinstance(item, dict) else "") or ""
-            link = (item.get("link") if isinstance(item, dict) else "") or ""
-            icon = (item.get("icon") if isinstance(item, dict) else "") or ""
-            description = (item.get("description") if isinstance(item, dict) else "") or ""
-            data.append([title, link, icon, description])
-
-        return data
+        # Clean the links to ensure JSON serializable
+        clean_links = self._clean_datetime_for_json(links or [])
+        
+        data = {"featured_links": clean_links}
+        return json.dumps(data, indent=2)
     
 
     
-    def _build_home_page_csv(self, community_id):
+    def _build_home_page_json(self, community_id):
         from database.utils.common import get_images_in_sequence
+        from datetime import datetime
         
         home_page = HomePageSettings.objects.filter(community__id=community_id).first()
         if not home_page:
-            return [["Title"], [""]]
-
+            return json.dumps({
+                "title": "",
+                "images": []
+            })
+        
         title = home_page.sub_title or ""
         images = home_page.images.all()
         sequence = home_page.image_sequence.sequence if home_page.image_sequence else None
@@ -2391,28 +2408,39 @@ class DownloadStore:
             else [i.simple_json() for i in images]
         )
 
-        # Dynamic columns: one column per image
-        image_columns = [f"Image {index+1}" for index in range(len(image_list))]
-        columns = ["Title", *image_columns]
-        image_values = [img.get("url", "") for img in image_list]
-        row = [title, *image_values]
+        # Clean the image list to ensure JSON serializable
+        clean_image_list = self._clean_datetime_for_json(image_list)
 
-        return [columns, row]
+        data = {
+            "title": title,
+            "images": clean_image_list
+        }
+        
+        return json.dumps(data, indent=2)
 
-    def _build_about_us_csv(self, community_id):
+    def _build_about_us_json(self, community_id):
+        from datetime import datetime
+        
         about_us = AboutUsPageSettings.objects.filter(community__id=community_id).first()
-        columns = [
-            "Description",
-            "Featured Video",
-        ]
+        
         if not about_us:
-            return [columns, ["", ""]]
+            return json.dumps({
+                "description": "",
+                "featured_video": "",
+                "title": "",
+                "subtitle": ""
+            })
 
-        description = about_us.description or ""
-        featured_video = about_us.featured_video_link or ""
-
-        data = [columns, [description, featured_video]]
-        return data
+        data = {
+            "description": about_us.description or "",
+            "featured_video": about_us.featured_video_link or "",
+            "title": about_us.title or "",
+            "subtitle": about_us.sub_title or ""
+        }
+        
+        # Clean any datetime objects in the data
+        clean_data = self._clean_datetime_for_json(data)
+        return json.dumps(clean_data, indent=2)
 
     def upload_zip_to_s3(self, file_buffer, filename):
         s3 = boto3.client(
@@ -2442,6 +2470,90 @@ class DownloadStore:
             Params={"Bucket": os.environ.get('AWS_STORAGE_BUCKET_NAME'), "Key": filename},
             ExpiresIn=expires_in,
         )
+    
+    def _build_contact_json(self, community_id):
+        from datetime import datetime
+        
+        community = Community.objects.get(id=community_id)
+        
+        # Get location information
+        community_location = community.locations.first()
+        if community_location:
+            # Build location string from available fields
+            location_parts = []
+            if community_location.city:
+                location_parts.append(community_location.city)
+            if community_location.state:
+                location_parts.append(community_location.state)
+            if community_location.zipcode:
+                location_parts.append(community_location.zipcode)
+            
+            location = ", ".join(location_parts) if location_parts else ""
+        else:
+            # Fallback to community.location field if locations relationship is empty
+            if community.location:
+                try:
+                    location_data = json.loads(community.location)
+                    location_parts = []
+                    if location_data.get("city"):
+                        location_parts.append(location_data["city"])
+                    if location_data.get("state"):
+                        location_parts.append(location_data["state"])
+                    if location_data.get("zipcode"):
+                        location_parts.append(location_data["zipcode"])
+                    
+                    location = ", ".join(location_parts) if location_parts else ""
+                except (json.JSONDecodeError, TypeError):
+                    location = ""
+            else:
+                location = ""
+        
+        # Get media URLs
+        logo_url = community.logo.file.url if community.logo else ""
+        
+        data = {
+            "admin_name": community.owner_name or "",
+            "admin_email": community.owner_email or "",
+            "admin_phone_number": community.owner_phone_number or "",
+            "logo": logo_url,
+            "address_line_1": location,
+        }
+        
+        # Clean any datetime objects in the data
+        clean_data = self._clean_datetime_for_json(data)
+        return json.dumps(clean_data, indent=2)
+
+    def _build_socials_json(self, community_id):
+        
+        community = Community.objects.filter(id=community_id).first()
+        if not community:
+            return json.dumps({
+                "facebook_url": "",
+                "instagram_url": "",
+                "twitter_url": ""
+            })
+        
+        # Handle more_info safely
+        more_info = {}
+        if community.more_info:
+            try:
+                more_info = json.loads(community.more_info)
+            except (json.JSONDecodeError, TypeError):
+                more_info = {}
+        
+        facebook = more_info.get("facebook_link", "") or ""
+        instagram_link = more_info.get("instagram_link", "") or ""
+        twitter_link = more_info.get("twitter_link", "") or ""
+        
+        data = {
+           "facebook_url": facebook,
+           "instagram_url": instagram_link,
+           "twitter_url": twitter_link,
+        }
+        
+        # Clean any datetime objects in the data
+        clean_data = self._clean_datetime_for_json(data)
+        return json.dumps(clean_data, indent=2)
 
     
 
@@ -2452,9 +2564,11 @@ class DownloadStore:
             "events.csv": self._community_events_download(community_id),
             "testimonials.csv": self._community_testimonials_download(community_id),
             "vendors.csv": self._community_vendors_download(community_id),
-            "home_page.csv": self._build_home_page_csv(community_id),
-            "featured_links.csv": self._build_quick_links_csv(community_id),
-            "about_us.csv": self._build_about_us_csv(community_id),
+            "home_page.json": self._build_home_page_json(community_id),
+            "featured_links.json": self._build_quick_links_json(community_id),
+            "about_us.json": self._build_about_us_json(community_id),
+            "contact.json":self._build_contact_json(community_id),
+            "socials.json":self._build_socials_json(community_id)
         }
         zip_file = self._create_zip(files)
         filename = f"{community.name}-site-data.zip"
