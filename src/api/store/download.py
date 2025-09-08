@@ -2191,7 +2191,7 @@ class DownloadStore:
                 "Related Action": testimonial.action.title if testimonial.action else "",
                 "Related Vendor": testimonial.vendor.name if testimonial.vendor else "",
                 "Image": testimonial.image.file.url if testimonial.image else "",
-                "Tags": ", ".join([tag.name for tag in testimonial.tags.all()]),
+                "Tags": ", ".join([f"{tag.name}:{tag.tag_collection.name if tag.tag_collection else ''}" for tag in testimonial.tags.all()]),
                 "Email": testimonial.user.email if testimonial.user else ""
             })
             data.append(cell)
@@ -2203,6 +2203,7 @@ class DownloadStore:
         data = [columns]
         
         for action in actions:
+            tags = action.tags.all()
             cell = self._get_cells_from_dict(columns, {
                 "Title": action.title,
                 "Description": action.about,
@@ -2210,7 +2211,7 @@ class DownloadStore:
                 "Deep Dive": action.deep_dive,
                 "Image": action.image.file.url if action.image else "",
                 "CC Action": action.calculator_action.name if action.calculator_action else "",
-                "Tags": ", ".join([tag.name for tag in action.tags.all()])
+                "Tags": ", ".join([f"{tag.name}:{tag.tag_collection.name if tag.tag_collection else ''}" for tag in action.tags.all()])
             })
             data.append(cell)
         return data
@@ -2229,7 +2230,7 @@ class DownloadStore:
                 "Deep Dive": action.deep_dive,
                 "Image": action.image.file.url if action.image else "",
                 "CC Action": action.calculator_action.name if action.calculator_action else "",
-                "Tags": ", ".join([tag.name for tag in action.tags.all()]),
+                "Tags": ", ".join([f"{tag.name}:{tag.tag_collection.name if tag.tag_collection else ''}" for tag in action.tags.all()]),
                 "Community": action.community.name if action.community else "",
             })
             data.append(cell)
@@ -2249,7 +2250,7 @@ class DownloadStore:
                 "Related Action": testimonial.action.title if testimonial.action else "",
                 "Related Vendor": testimonial.vendor.name if testimonial.vendor else "",
                 "Image": testimonial.image.file.url if testimonial.image else "",
-                "Tags": ", ".join([tag.name for tag in testimonial.tags.all()]),
+                "Tags": ", ".join([f"{tag.name}:{tag.tag_collection.name if tag.tag_collection else ''}" for tag in testimonial.tags.all()]),
                 "Email": testimonial.user.email if testimonial.user else "",
                 "Community": testimonial.community.name if testimonial.community else "",
             })
@@ -2271,7 +2272,7 @@ class DownloadStore:
                 "Event Type": event.event_type,
                 "Link": event.external_link if event.external_link else "",
                 "Image": event.image.file.url if event.image else "",
-                "Tags": ", ".join([tag.name for tag in event.tags.all()]),
+                "Tags": ", ".join([f"{tag.name}:{tag.tag_collection.name if tag.tag_collection else ''}" for tag in event.tags.all()]),
                 "Community": event.community.name if event.community else "",
             })
             data.append(cell)
@@ -2322,7 +2323,7 @@ class DownloadStore:
             event_category = event.event_type or "Event"
             
             # Get tags
-            tags = ", ".join([tag.name for tag in event.tags.all()])
+            tags = ", ".join([f"{tag.name}:{tag.tag_collection.name if tag.tag_collection else ''}" for tag in event.tags.all()])
             
             # Get featured image URL
             featured_image = ""
