@@ -128,6 +128,7 @@ def prepare_events_email_data(events) -> list:
 def send_events_nudge(task=None) -> Tuple[bool, str]:
     try:
         admins_emailed=[]
+        failures = {}
         flag = FeatureFlag.objects.get(key=COMMUNITY_ADMIN_WEEKLY_EVENTS_NUDGE_FF)
         if not flag or not flag.enabled():
             return  None, "Feature flag not enabled"
@@ -150,8 +151,18 @@ def send_events_nudge(task=None) -> Tuple[bool, str]:
 
                     if err:
                         log.error(f"send_events_report error return: {err}")
-                        return False, err
+                        failures[email] = str(err)
+                        continue
                     admins_emailed.append(email)
+
+        # If any failures occurred, report them and fail the overall task
+        if failures:
+            result = {
+                "audience": ",".join(admins_emailed),
+                "scope": "CADMIN",
+                "failures": failures,
+            }
+            return result, "One or more emails failed to send"
 
         update_last_notification_dates(admins_emailed, CADMIN_NUDGE_KEY)
         result = {

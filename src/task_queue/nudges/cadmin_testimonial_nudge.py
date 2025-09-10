@@ -173,6 +173,7 @@ def prepare_testimonials_for_community_admins(task=None):
 			return None, "No communities enabled for testimonial nudge"
 			
 		emailed_list = []
+		failures = {}
 
 		for community in communities:
 			try:
@@ -220,6 +221,7 @@ def prepare_testimonials_for_community_admins(task=None):
 					ok, err = send_nudge(admin_testimonials, community, {"name": name, "email": email, "user_info": user_info})
 					if not ok:
 						log.error(f"Failed to send nudge to community admin {email} for community {community.name}: {err}")
+						failures[email] = str(err)
 						continue
 						
 				emailed_list.append(email)
@@ -228,6 +230,12 @@ def prepare_testimonials_for_community_admins(task=None):
 				log.exception(f"Error processing community {community.name}: {str(e)}")
 				continue
 
+		# If any failures occurred, report them and fail the overall task
+		if failures:
+			res = {"scope":"CADMIN","audience": ",".join(emailed_list), "failures": failures}
+			return res, "One or more emails failed to send"
+
+		update_last_notification_dates(emailed_list, TESTIMONIAL_NUDGE_KEY)
 		res = {"scope":"CADMIN","audience": ",".join(emailed_list)}
 		log.info("Successfully sent nudge to all community admins")
 		return res, None

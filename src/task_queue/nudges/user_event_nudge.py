@@ -255,15 +255,14 @@ def send_automated_nudge(events, user, community):
     login_method = (user.user_info or {}).get("login_method") or ""
     if not name or not email:
         log.info(f"Missing name or email for user: {str(user)}" )
-        return False
+        return False, None
 
     log.info(f"sending nudge to {email}")
     is_sent, err = send_events_report_email(name, email, events, community, login_method)
     if err:
         log.info(f"**** Failed to send email to {name} for community {community.name} ****")
-        return False
-    update_last_notification_dates(email)
-    return True
+        return False, err
+    return True, None
 
 
 def send_user_requested_nudge(events, user, community):
@@ -321,6 +320,7 @@ def prepare_user_events_nudge(task=None, email=None, community_id=None):
         communities = flag.enabled_communities(communities)
 
         audience = []
+        failures = {}
         for community in communities:
 
             if community_has_altered_flow(community, flag.key):
@@ -334,11 +334,22 @@ def prepare_user_events_nudge(task=None, email=None, community_id=None):
                 if should_user_get_nudged(user):
                     user_events = get_user_events(user.notification_dates, events)
                     if user_events:
-                        ok = send_automated_nudge(user_events, user, community)
+                        ok , err = send_automated_nudge(user_events, user, community)
                         if ok:
                             audience.append(user.email)
+                        else:
+                            failures[user.email] = str(err)
 
         
+        # If any failures occurred, report them and fail the overall task
+        if failures:
+            result = {"audience": ",".join(audience), "scope": "USER", "failures": failures}
+            return result, "One or more emails failed to send"
+
+        # Only update notification dates if all succeeded
+        for email_addr in audience:
+            update_last_notification_dates(email_addr)
+
         result = {"audience": ",".join(audience), "scope": "USER"}
 
         return result, None
