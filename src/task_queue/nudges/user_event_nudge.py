@@ -340,15 +340,18 @@ def prepare_user_events_nudge(task=None, email=None, community_id=None):
                         else:
                             failures[user.email] = str(err)
 
-        
-        # If any failures occurred, report them and fail the overall task
-        if failures:
-            result = {"audience": ",".join(audience), "scope": "USER", "failures": failures}
-            return result, "One or more emails failed to send"
 
         # Only update notification dates if all succeeded
         for email_addr in audience:
             update_last_notification_dates(email_addr)
+
+        
+        # If any failures occurred, report them and fail the overall task
+        if failures:
+            result = {"audience": ",".join(audience), "scope": "USER", "failures": failures}
+            return result, None
+
+
 
         result = {"audience": ",".join(audience), "scope": "USER"}
 

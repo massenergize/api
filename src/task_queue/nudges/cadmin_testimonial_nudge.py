@@ -230,12 +230,14 @@ def prepare_testimonials_for_community_admins(task=None):
 				log.exception(f"Error processing community {community.name}: {str(e)}")
 				continue
 
+		update_last_notification_dates(emailed_list, TESTIMONIAL_NUDGE_KEY)
+
 		# If any failures occurred, report them and fail the overall task
 		if failures:
 			res = {"scope":"CADMIN","audience": ",".join(emailed_list), "failures": failures}
-			return res, "One or more emails failed to send"
+			return res, None
 
-		update_last_notification_dates(emailed_list, TESTIMONIAL_NUDGE_KEY)
+	
 		res = {"scope":"CADMIN","audience": ",".join(emailed_list)}
 		log.info("Successfully sent nudge to all community admins")
 		return res, None
