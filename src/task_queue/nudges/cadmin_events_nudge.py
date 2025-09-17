@@ -157,19 +157,15 @@ def send_events_nudge(task=None) -> Tuple[bool, str]:
 
         update_last_notification_dates(admins_emailed, CADMIN_NUDGE_KEY)
 
-        # If any failures occurred, report them and fail the overall task
-        if failures:
-            result = {
-                "audience": ",".join(admins_emailed),
-                "scope": "CADMIN",
-                "failures": failures,
-            }
-            return result, None
+        if len(admins_emailed)==0:
+            result = {"audience": ",".join(admins_emailed), "scope": "USER", "failures": failures}
+            return None, str(result)
 
         
         result = {
             "audience": ",".join(admins_emailed),
             "scope": "CADMIN",
+            "failures": failures,
         }
 
         return result, None

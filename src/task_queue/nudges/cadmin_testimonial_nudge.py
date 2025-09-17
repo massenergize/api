@@ -232,13 +232,12 @@ def prepare_testimonials_for_community_admins(task=None):
 
 		update_last_notification_dates(emailed_list, TESTIMONIAL_NUDGE_KEY)
 
-		# If any failures occurred, report them and fail the overall task
-		if failures:
-			res = {"scope":"CADMIN","audience": ",".join(emailed_list), "failures": failures}
-			return res, None
+		if len(emailed_list)==0:
+			result = {"audience": ",".join(emailed_list), "scope": "USER", "failures": failures}
+			return None, str(result)
 
 	
-		res = {"scope":"CADMIN","audience": ",".join(emailed_list)}
+		res = {"scope":"CADMIN","audience": ",".join(emailed_list), "failures": failures}
 		log.info("Successfully sent nudge to all community admins")
 		return res, None
 	except Exception as e:
