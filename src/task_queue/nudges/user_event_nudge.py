@@ -345,11 +345,6 @@ def prepare_user_events_nudge(task=None, email=None, community_id=None):
         for email_addr in audience:
             update_last_notification_dates(email_addr)
 
-        if len(audience)==0:
-            result = {"audience": ",".join(audience), "scope": "USER", "failures": failures}
-            
-            return None, str(result)
-
         result = {"audience": ",".join(audience), "scope": "USER", "failures": failures}
 
         return result, None

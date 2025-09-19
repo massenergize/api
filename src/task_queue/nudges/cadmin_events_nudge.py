@@ -157,10 +157,6 @@ def send_events_nudge(task=None) -> Tuple[bool, str]:
 
         update_last_notification_dates(admins_emailed, CADMIN_NUDGE_KEY)
 
-        if len(admins_emailed)==0:
-            result = {"audience": ",".join(admins_emailed), "scope": "USER", "failures": failures}
-            return None, str(result)
-
         
         result = {
             "audience": ",".join(admins_emailed),

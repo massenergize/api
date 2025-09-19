@@ -217,6 +217,15 @@ class TaskRun(models.Model):
         self.status = TaskStatus.SUCCEEDED.value
         self.result = result
         self.save()
+        if IS_PROD:
+            parsed_results = json.dump(result)
+            failures = parsed_results.get("failures", None)
+            if failures:
+                task_name = self.task.name
+                message =  f'Task: {task_name}, Status: Succeeded With Failures, Info: {str(failures)}'
+                send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL, {"text": message})
+
+
 
     def mark_failed(self, error_message):
         self.completed_at = timezone.now()
@@ -224,4 +233,6 @@ class TaskRun(models.Model):
         self.error_message = error_message
         self.save()
         if IS_PROD:
-            send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL, {"text": error_message})
+            task_name = self.task.name
+            message =  f'Task: {task_name}, Status: {self.status}, Info: {error_message}'
+            send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL, {"text": message})
