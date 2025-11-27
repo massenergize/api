@@ -11,7 +11,7 @@ from _main_.utils.massenergize_errors import (
 )
 from _main_.utils.context import Context
 from collections import Counter
-from api.store.utils import get_human_readable_date
+from api.store.utils import get_human_readable_date, get_massachusetts_time
 from api.utils.api_utils import is_admin_of_community
 from apps__campaigns.models import Campaign, CampaignActivityTracking, CampaignFollow, CampaignLink, CampaignTechnology, CampaignTechnologyFollow, CampaignTechnologyLike, CampaignTechnologyTestimonial, CampaignTechnologyView, CampaignView, Comment
 from database.models import (
@@ -2263,11 +2263,13 @@ class DownloadStore:
         data = [columns]
         
         for event in events:
+            local_start = get_massachusetts_time(event.start_date_and_time)
+            local_end = get_massachusetts_time(event.end_date_and_time)
             cell = self._get_cells_from_dict(columns, {
                 "Title": event.name,
                 "Description": event.description,
-                "Start Date": event.start_date_and_time.strftime("%Y-%m-%d %H:%M") if event.start_date_and_time else "",
-                "End Date": event.end_date_and_time.strftime("%Y-%m-%d %H:%M") if event.end_date_and_time else "",
+                "Start Date": local_start.strftime("%Y-%m-%d %H:%M") if event.start_date_and_time else "",
+                "End Date": local_end.strftime("%Y-%m-%d %H:%M") if event.end_date_and_time else "",
                 "Location": event.location,
                 "Event Type": event.event_type,
                 "Link": event.external_link if event.external_link else "",
@@ -2296,10 +2298,11 @@ class DownloadStore:
         
         for event in events:
             # Format dates and times
-            start_date = event.start_date_and_time.strftime("%Y-%m-%d") if event.start_date_and_time else ""
+            start_date = get_massachusetts_time(event.start_date_and_time).strftime("%Y-%m-%d") if event.start_date_and_time else ""
             start_time = event.start_date_and_time.strftime("%I:%M %p") if event.start_date_and_time else ""
-            end_date = event.end_date_and_time.strftime("%Y-%m-%d") if event.end_date_and_time else ""
+            end_date = get_massachusetts_time(event.end_date_and_time).strftime("%Y-%m-%d") if event.end_date_and_time else ""
             end_time = event.end_date_and_time.strftime("%I:%M %p") if event.end_date_and_time else ""
+            start_date.str
             
             # Determine if it's an all-day event (if start and end are on same day and times are 00:00)
             is_all_day = False

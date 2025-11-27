@@ -1,3 +1,4 @@
+from zoneinfo import ZoneInfo
 from _main_.settings import IS_LOCAL, IS_PROD, IS_CANARY
 from _main_.utils.metrics import timed
 from _main_.utils.utils import strip_website
@@ -333,3 +334,21 @@ def get_human_readable_date(date):
   formatted_datetime = formatted_datetime.replace("{:02d}".format(date.day), "{:d}{}".format(date.day, day_suffix))
   return formatted_datetime
 
+
+
+def get_massachusetts_time(date_and_time):
+    """
+    Converts a UTC datetime string to local datetime in Massachusetts time zone.
+    """    # Parse the datetime string to a datetime object
+    try:
+        # Try parsing the datetime string with the first format
+        dt = datetime.datetime.strptime(str(date_and_time), '%Y-%m-%dT%H:%M:%SZ')
+    except ValueError:
+        # If it fails, try the second format
+        dt = datetime.datetime.strptime(str(date_and_time), '%Y-%m-%d %H:%M:%S%z')
+    # Specify the Massachusetts time zone
+    massachusetts_zone = ZoneInfo('America/New_York')
+
+    # Convert time zone from UTC to Massachusetts time zone
+    local_datetime = dt.replace(tzinfo=ZoneInfo('UTC')).astimezone(massachusetts_zone)
+    return local_datetime
