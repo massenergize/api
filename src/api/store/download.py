@@ -2166,8 +2166,8 @@ class DownloadStore:
             cell = self._get_cells_from_dict(columns, {
                 "Title": event.name,
                 "Description": event.description,
-                "Start Date": event.start_date_and_time.strftime("%Y-%m-%d %H:%M") if event.start_date_and_time else "",
-                "End Date": event.end_date_and_time.strftime("%Y-%m-%d %H:%M") if event.end_date_and_time else "",
+                "Start Date": get_massachusetts_time(event.start_date_and_time).strftime("%Y-%m-%d %H:%M") if event.start_date_and_time else "",
+                "End Date": get_massachusetts_time(event.end_date_and_time).strftime("%Y-%m-%d %H:%M") if event.end_date_and_time else "",
                 "Location": event.location,
                 "Event Type": event.event_type,
                 "Link": event.external_link if event.external_link else "",
