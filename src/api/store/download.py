@@ -2297,12 +2297,14 @@ class DownloadStore:
         data = [columns]
         
         for event in events:
-            # Format dates and times
-            start_date = get_massachusetts_time(event.start_date_and_time).strftime("%Y-%m-%d") if event.start_date_and_time else ""
-            start_time = event.start_date_and_time.strftime("%I:%M %p") if event.start_date_and_time else ""
-            end_date = get_massachusetts_time(event.end_date_and_time).strftime("%Y-%m-%d") if event.end_date_and_time else ""
-            end_time = event.end_date_and_time.strftime("%I:%M %p") if event.end_date_and_time else ""
-            start_date.str
+            # Format dates and times - convert to Massachusetts timezone
+            local_start = get_massachusetts_time(event.start_date_and_time) if event.start_date_and_time else None
+            local_end = get_massachusetts_time(event.end_date_and_time) if event.end_date_and_time else None
+            
+            start_date = local_start.strftime("%Y-%m-%d") if local_start else ""
+            start_time = local_start.strftime("%I:%M %p") if local_start else ""
+            end_date = local_end.strftime("%Y-%m-%d") if local_end else ""
+            end_time = local_end.strftime("%I:%M %p") if local_end else ""
             
             # Determine if it's an all-day event (if start and end are on same day and times are 00:00)
             is_all_day = False
