@@ -2,6 +2,8 @@ import io
 import os
 import zipfile
 import csv
+import requests
+from PIL import Image
 from _main_.utils.common import generate_workbook_with_sheets
 from _main_.utils.massenergize_errors import (
     NotAuthorizedError,
@@ -61,6 +63,11 @@ from collections import defaultdict
 
 import json
 import boto3
+
+import boto3
+import requests
+import base64
+from uuid import uuid4 
 
 
 EMPTY_DOWNLOAD = (None, None)
@@ -250,6 +257,102 @@ class DownloadStore:
 
             cells[columns.index(key)] = value
         return cells
+
+    def _get_compressed_image_url(self, image_url, max_size_kb=200):
+        max_width = 1280
+
+        bucket_name = os.getenv("AWS_STORAGE_BUCKET_NAME")
+        if not bucket_name:
+            return image_url
+
+        s3_client = boto3.client("s3")
+        region = s3_client.meta.region_name
+
+        try:
+            response = requests.get(image_url, timeout=10)
+            response.raise_for_status()
+
+            original_size_kb = len(response.content) / 1024
+            print("IMAGE:", image_url, "SIZE:", round(original_size_kb, 2), "KB")
+
+            if original_size_kb <= max_size_kb:
+                return image_url
+
+            image = Image.open(io.BytesIO(response.content))
+
+            if image.mode != "RGB":
+                image = image.convert("RGB")
+
+            width, height = image.size
+
+            if width > max_width:
+                new_height = int(height * (max_width / width))
+                image.thumbnail((max_width, new_height))
+
+            output = io.BytesIO()
+
+            quality = 85
+            subsampling = 2
+            progressive = True
+
+            while quality > 20:
+                output.seek(0)
+                output.truncate()
+
+                image.save(
+                    output,
+                    format="JPEG",
+                    quality=quality,
+                    optimize=True,
+                    subsampling=subsampling,
+                    progressive=progressive
+                )
+
+                size_kb = len(output.getvalue()) / 1024
+                if size_kb <= max_size_kb:
+                    break
+
+                quality -= 10
+
+            if len(output.getvalue()) / 1024 > max_size_kb:
+                new_width = int(image.width * 0.85)
+                new_height = int(image.height * 0.85)
+                image = image.resize((new_width, new_height), Image.LANCZOS)
+
+                output.seek(0)
+                output.truncate()
+
+                image.save(
+                    output,
+                    format="JPEG",
+                    quality=70,
+                    optimize=True,
+                    subsampling=subsampling,
+                    progressive=progressive
+                )
+
+            compressed_data = output.getvalue()
+            compressed_kb = len(compressed_data) / 1024
+            print("Compressed image size:", round(compressed_kb, 2), "KB")
+
+            object_key = "compressed_images/" + str(uuid4()) + ".jpg"
+
+            s3_client.put_object(
+                Bucket=bucket_name,
+                Key=object_key,
+                Body=compressed_data,
+                ContentType="image/jpeg",
+                ACL="public-read"
+            )
+
+            url = "https://" + bucket_name + ".s3." + region + ".amazonaws.com/" + object_key
+            return url
+
+        except Exception as e:
+            print("Error compressing or uploading:", str(e))
+            return ""
+
+
 
     #Given user, returns first part of populated row for Users CSV
     def _get_user_info_cells_1(self, user):
@@ -2142,10 +2245,12 @@ class DownloadStore:
         columns = ["Name", "Logo", "Description", "Website", "Key Contact", "Key Contact Email", "Communities Serviced", "Service Area"]
         data = [columns]
         for vendor in vendors:
+            image_url = vendor.logo.file.url if vendor.logo else ""
+            compressed_image_url = self._get_compressed_image_url(image_url)
             key_contact = vendor.key_contact or {}
             cell = self._get_cells_from_dict(columns, {
                 "Name": vendor.name,
-                "Logo": vendor.logo.file.url if vendor.logo else "",
+                "Logo": compressed_image_url,
                 "Description": vendor.description,
                 "Website": vendor.get_field_from_more_info("website"),
                 "Key Contact": key_contact.get("name") if key_contact else "",
@@ -2163,6 +2268,8 @@ class DownloadStore:
         data = [columns]
         
         for event in events:
+            image_url = event.image.file.url if event.image else ""
+            compressed_image_url = self._get_compressed_image_url(image_url)
             cell = self._get_cells_from_dict(columns, {
                 "Title": event.name,
                 "Description": event.description,
@@ -2171,7 +2278,7 @@ class DownloadStore:
                 "Location": event.location,
                 "Event Type": event.event_type,
                 "Link": event.external_link if event.external_link else "",
-                "Image": event.image.file.url if event.image else "",
+                "Image": compressed_image_url if event.image else "",
                 "Tags": ", ".join([tag.name for tag in event.tags.all()])
             })
             data.append(cell)
@@ -2184,13 +2291,15 @@ class DownloadStore:
         data = [columns]
         
         for testimonial in testimonials:
+            image_url = testimonial.image.file.url if testimonial.image else ""
+            compressed_image_url = self._get_compressed_image_url(image_url)
             cell = self._get_cells_from_dict(columns, {
                 "Title": testimonial.title,
                 "Body": testimonial.body,
                 "User": testimonial.user.full_name if testimonial.user else testimonial.preferred_name or "",
                 "Related Action": testimonial.action.title if testimonial.action else "",
                 "Related Vendor": testimonial.vendor.name if testimonial.vendor else "",
-                "Image": testimonial.image.file.url if testimonial.image else "",
+                "Image": compressed_image_url,
                 "Tags": ", ".join([f"{tag.name}:{tag.tag_collection.name if tag.tag_collection else ''}" for tag in testimonial.tags.all()]),
                 "Email": testimonial.user.email if testimonial.user else ""
             })
@@ -2203,13 +2312,15 @@ class DownloadStore:
         data = [columns]
         
         for action in actions:
+            image_url = action.image.file.url if action.image else ""
+            compressed_image_url = self._get_compressed_image_url(image_url)
             tags = action.tags.all()
             cell = self._get_cells_from_dict(columns, {
                 "Title": action.title,
                 "Description": action.about,
                 "Steps to Take": action.steps_to_take,
                 "Deep Dive": action.deep_dive,
-                "Image": action.image.file.url if action.image else "",
+                "Image": compressed_image_url,
                 "CC Action": action.calculator_action.name if action.calculator_action else "",
                 "Tags": ", ".join([f"{tag.name}:{tag.tag_collection.name if tag.tag_collection else ''}" for tag in action.tags.all()])
             })
@@ -2221,14 +2332,17 @@ class DownloadStore:
         actions = Action.objects.filter(is_deleted=False,is_published=True)
         columns = ["Title", "Description", "Steps to Take", "Deep Dive", "Image", "CC Action", "Tags", "Community"]
         data = [columns]
-        
+
         for action in actions:
+            image_url = action.image.file.url if action.image else ""
+            compressed_image_url = self._get_compressed_image_url(image_url)
+
             cell = self._get_cells_from_dict(columns, {
                 "Title": action.title,
                 "Description": action.about,
                 "Steps to Take": action.steps_to_take,
                 "Deep Dive": action.deep_dive,
-                "Image": action.image.file.url if action.image else "",
+                "Image": compressed_image_url,
                 "CC Action": action.calculator_action.name if action.calculator_action else "",
                 "Tags": ", ".join([f"{tag.name}:{tag.tag_collection.name if tag.tag_collection else ''}" for tag in action.tags.all()]),
                 "Community": action.community.name if action.community else "",
@@ -2263,8 +2377,8 @@ class DownloadStore:
         data = [columns]
         
         for event in events:
-            local_start = get_massachusetts_time(event.start_date_and_time)
-            local_end = get_massachusetts_time(event.end_date_and_time)
+            local_start = get_massachusetts_time(event.start_date_and_time) if event.start_date_and_time else ""
+            local_end = get_massachusetts_time(event.end_date_and_time) if event.end_date_and_time else ""
             cell = self._get_cells_from_dict(columns, {
                 "Title": event.name,
                 "Description": event.description,
