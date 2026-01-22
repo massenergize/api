@@ -2322,7 +2322,8 @@ class DownloadStore:
                 "Deep Dive": action.deep_dive,
                 "Image": compressed_image_url,
                 "CC Action": action.calculator_action.name if action.calculator_action else "",
-                "Tags": ", ".join([f"{tag.name}:{tag.tag_collection.name if tag.tag_collection else ''}" for tag in action.tags.all()])
+                "Tags": ", ".join([f"{tag.name}:{tag.tag_collection.name if tag.tag_collection else ''}" for tag in action.tags.all()]),
+                "order":action.rank if action.rank else action.id,
             })
             data.append(cell)
         return data
@@ -2346,6 +2347,7 @@ class DownloadStore:
                 "CC Action": action.calculator_action.name if action.calculator_action else "",
                 "Tags": ", ".join([f"{tag.name}:{tag.tag_collection.name if tag.tag_collection else ''}" for tag in action.tags.all()]),
                 "Community": action.community.name if action.community else "",
+                "order":action.rank if action.rank else action.id,
             })
             data.append(cell)
         return data
@@ -2367,12 +2369,14 @@ class DownloadStore:
                 "Tags": ", ".join([f"{tag.name}:{tag.tag_collection.name if tag.tag_collection else ''}" for tag in testimonial.tags.all()]),
                 "Email": testimonial.user.email if testimonial.user else "",
                 "Community": testimonial.community.name if testimonial.community else "",
+                "order":testimonial.rank if testimonial.rank else testimonial.id,
             })
             data.append(cell)
         return data
     
     def _export_all_events(self):
-        events = Event.objects.filter(is_deleted=False,is_published=True)
+        six_months_ago = timezone.now() - datetime.timedelta(days=180)
+        events = Event.objects.filter(is_deleted=False,is_published=True, start_date_and_time__gte=six_months_ago)
         columns = ["Title", "Description", "Start Date", "End Date", "Location", "Event Type", "Link", "Image", "Tags", "Community"]
         data = [columns]
         
@@ -2390,13 +2394,15 @@ class DownloadStore:
                 "Image": event.image.file.url if event.image else "",
                 "Tags": ", ".join([f"{tag.name}:{tag.tag_collection.name if tag.tag_collection else ''}" for tag in event.tags.all()]),
                 "Community": event.community.name if event.community else "",
+                "order":event.id,
             })
             data.append(cell)
         return data
     
 
     def _export_all_events_for_wp(self, community_id=None):
-        events = Event.objects.filter(is_deleted=False,is_published=True)
+        six_months_ago = timezone.now() - datetime.timedelta(days=180)
+        events = Event.objects.filter(is_deleted=False,is_published=True,start_date_and_time__gte=six_months_ago )
         if community_id:
             events = events.filter(community__id=community_id)
         columns = [
