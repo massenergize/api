@@ -2242,7 +2242,7 @@ class DownloadStore:
 
     def _community_vendors_download(self, community_id):
         vendors = Vendor.objects.filter(communities__id=community_id, is_deleted=False, is_published=True)
-        columns = ["Name", "Logo", "Description", "Website", "Key Contact", "Key Contact Email", "Communities Serviced", "Service Area"]
+        columns = ["Name", "Logo", "Description", "Website", "Key Contact", "Key Contact Email", "Communities Serviced", "Service Area",  "Order"]
         data = [columns]
         for vendor in vendors:
             image_url = vendor.logo.file.url if vendor.logo else ""
@@ -2257,14 +2257,16 @@ class DownloadStore:
                 "Key Contact Email": key_contact.get("email") if key_contact else "",
                 "Communities Serviced": ", ".join([community.name for community in vendor.communities.all()]),
                 "Service Area": vendor.service_area,
+                "Order":vendor.id,
             })
             data.append(cell)
         return data
     
 
     def _community_events_download(self, community_id):
-        events = Event.objects.filter(community__id=community_id, is_deleted=False, is_published=True)
-        columns = ["Title", "Description", "Start Date", "End Date", "Location", "Event Type", "Link", "Image", "Tags"]
+        six_months_ago = timezone.now() - datetime.timedelta(days=180)
+        events = Event.objects.filter(community__id=community_id, is_deleted=False, is_published=True, start_date_and_time__gte=six_months_ago)
+        columns = ["Title", "Description", "Start Date", "End Date", "Location", "Event Type", "Link", "Image", "Tags",  "Order"]
         data = [columns]
         
         for event in events:
@@ -2279,7 +2281,8 @@ class DownloadStore:
                 "Event Type": event.event_type,
                 "Link": event.external_link if event.external_link else "",
                 "Image": compressed_image_url if event.image else "",
-                "Tags": ", ".join([tag.name for tag in event.tags.all()])
+                "Tags": ", ".join([tag.name for tag in event.tags.all()]),
+                "Order": event.rank if event.rank else event.id,
             })
             data.append(cell)
         return data
@@ -2287,7 +2290,7 @@ class DownloadStore:
 
     def _community_testimonials_download(self, community_id):
         testimonials = Testimonial.objects.filter(community__id=community_id, is_deleted=False, is_published=True)
-        columns = ["Title", "Body","User","Related Action", "Related Vendor", "Image", "Tags",  "Email"]
+        columns = ["Title", "Body","User","Related Action", "Related Vendor", "Image", "Tags",  "Email",  "Order"]
         data = [columns]
         
         for testimonial in testimonials:
@@ -2301,14 +2304,15 @@ class DownloadStore:
                 "Related Vendor": testimonial.vendor.name if testimonial.vendor else "",
                 "Image": compressed_image_url,
                 "Tags": ", ".join([f"{tag.name}:{tag.tag_collection.name if tag.tag_collection else ''}" for tag in testimonial.tags.all()]),
-                "Email": testimonial.user.email if testimonial.user else ""
+                "Email": testimonial.user.email if testimonial.user else "",
+                "Order": testimonial.rank if testimonial.rank else testimonial.id,
             })
             data.append(cell)
         return data
     
     def _export_community_actions(self, community_id):
         actions = Action.objects.filter(community__id=community_id, is_deleted=False,is_published=True)
-        columns = ["Title", "Description", "Steps to Take", "Deep Dive", "Image", "CC Action", "Tags"]
+        columns = ["Title", "Description", "Steps to Take", "Deep Dive", "Image", "CC Action", "Tags", "Order" ]
         data = [columns]
         
         for action in actions:
@@ -2323,7 +2327,7 @@ class DownloadStore:
                 "Image": compressed_image_url,
                 "CC Action": action.calculator_action.name if action.calculator_action else "",
                 "Tags": ", ".join([f"{tag.name}:{tag.tag_collection.name if tag.tag_collection else ''}" for tag in action.tags.all()]),
-                "order":action.rank if action.rank else action.id,
+                "Order":action.rank if action.rank else action.id
             })
             data.append(cell)
         return data
@@ -2331,7 +2335,7 @@ class DownloadStore:
 
     def _export_all_actions(self):
         actions = Action.objects.filter(is_deleted=False,is_published=True)
-        columns = ["Title", "Description", "Steps to Take", "Deep Dive", "Image", "CC Action", "Tags", "Community"]
+        columns = ["Title", "Description", "Steps to Take", "Deep Dive", "Image", "CC Action", "Tags", "Community",  "Order"]
         data = [columns]
 
         for action in actions:
@@ -2347,7 +2351,7 @@ class DownloadStore:
                 "CC Action": action.calculator_action.name if action.calculator_action else "",
                 "Tags": ", ".join([f"{tag.name}:{tag.tag_collection.name if tag.tag_collection else ''}" for tag in action.tags.all()]),
                 "Community": action.community.name if action.community else "",
-                "order":action.rank if action.rank else action.id,
+                 "Order":action.rank if action.rank else action.id,
             })
             data.append(cell)
         return data
@@ -2355,7 +2359,7 @@ class DownloadStore:
 
     def _export_all_testimonials(self):
         testimonials = Testimonial.objects.filter(is_deleted=False,is_published=True)
-        columns = ["Title", "Body", "User", "Related Action", "Related Vendor", "Image", "Tags", "Email", "Community"]
+        columns = ["Title", "Body", "User", "Related Action", "Related Vendor", "Image", "Tags", "Email", "Community",  "Order"]
         data = [columns]
         
         for testimonial in testimonials:
@@ -2369,7 +2373,7 @@ class DownloadStore:
                 "Tags": ", ".join([f"{tag.name}:{tag.tag_collection.name if tag.tag_collection else ''}" for tag in testimonial.tags.all()]),
                 "Email": testimonial.user.email if testimonial.user else "",
                 "Community": testimonial.community.name if testimonial.community else "",
-                "order":testimonial.rank if testimonial.rank else testimonial.id,
+                 "Order":testimonial.rank if testimonial.rank else testimonial.id,
             })
             data.append(cell)
         return data
@@ -2377,7 +2381,7 @@ class DownloadStore:
     def _export_all_events(self):
         six_months_ago = timezone.now() - datetime.timedelta(days=180)
         events = Event.objects.filter(is_deleted=False,is_published=True, start_date_and_time__gte=six_months_ago)
-        columns = ["Title", "Description", "Start Date", "End Date", "Location", "Event Type", "Link", "Image", "Tags", "Community"]
+        columns = ["Title", "Description", "Start Date", "End Date", "Location", "Event Type", "Link", "Image", "Tags", "Community",  "Order"]
         data = [columns]
         
         for event in events:
@@ -2394,7 +2398,7 @@ class DownloadStore:
                 "Image": event.image.file.url if event.image else "",
                 "Tags": ", ".join([f"{tag.name}:{tag.tag_collection.name if tag.tag_collection else ''}" for tag in event.tags.all()]),
                 "Community": event.community.name if event.community else "",
-                "order":event.id,
+                 "Order":event.id,
             })
             data.append(cell)
         return data
